@@ -532,179 +532,9 @@ fn MOZ_Crash();
 
 fn MOZ_Assert(++arg0: *c_char, ++arg1: *c_char, ++arg2: c_int);
 
-fn JS_Abort();
-
-fn js_malloc(++arg0: size_t) -> *c_void;
-
-fn js_calloc(++arg0: size_t) -> *c_void;
-
-fn js_realloc(++arg0: *c_void, ++arg1: size_t) -> *c_void;
-
-fn js_free(++arg0: *c_void);
-
-fn js_memcpy(++arg0: *c_void, ++arg1: *c_void, ++arg2: size_t) -> *c_void;
-
-fn JSDOUBLE_IS_NEGZERO(++arg0: c_double) -> JSBool;
-
-fn JSDOUBLE_IS_INT32(++arg0: c_double, ++arg1: *int32_t) -> JSBool;
-
-fn BUILD_JSVAL(++arg0: JSValueTag, ++arg1: uint64_t) -> jsval_layout;
-
-fn JSVAL_IS_DOUBLE_IMPL(++arg0: jsval_layout) -> JSBool;
-
-fn DOUBLE_TO_JSVAL_IMPL(++arg0: c_double) -> jsval_layout;
-
-fn JSVAL_IS_INT32_IMPL(++arg0: jsval_layout) -> JSBool;
-
-fn JSVAL_TO_INT32_IMPL(++arg0: jsval_layout) -> int32_t;
-
-fn INT32_TO_JSVAL_IMPL(++arg0: int32_t) -> jsval_layout;
-
-fn JSVAL_IS_NUMBER_IMPL(++arg0: jsval_layout) -> JSBool;
-
-fn JSVAL_IS_UNDEFINED_IMPL(++arg0: jsval_layout) -> JSBool;
-
-fn JSVAL_IS_STRING_IMPL(++arg0: jsval_layout) -> JSBool;
-
-fn STRING_TO_JSVAL_IMPL(++arg0: *JSString) -> jsval_layout;
-
-fn JSVAL_TO_STRING_IMPL(++arg0: jsval_layout) -> *JSString;
-
-fn JSVAL_IS_BOOLEAN_IMPL(++arg0: jsval_layout) -> JSBool;
-
-fn JSVAL_TO_BOOLEAN_IMPL(++arg0: jsval_layout) -> JSBool;
-
-fn BOOLEAN_TO_JSVAL_IMPL(++arg0: JSBool) -> jsval_layout;
-
-fn JSVAL_IS_MAGIC_IMPL(++arg0: jsval_layout) -> JSBool;
-
-fn JSVAL_IS_PRIMITIVE_IMPL(++arg0: jsval_layout) -> JSBool;
-
-fn JSVAL_IS_OBJECT_IMPL(++arg0: jsval_layout) -> JSBool;
-
-fn JSVAL_IS_OBJECT_OR_NULL_IMPL(++arg0: jsval_layout) -> JSBool;
-
-fn JSVAL_TO_OBJECT_IMPL(++arg0: jsval_layout) -> *JSObject;
-
-fn OBJECT_TO_JSVAL_IMPL(++arg0: *JSObject) -> jsval_layout;
-
-fn JSVAL_IS_NULL_IMPL(++arg0: jsval_layout) -> JSBool;
-
-fn JSVAL_IS_GCTHING_IMPL(++arg0: jsval_layout) -> JSBool;
-
-fn JSVAL_TO_GCTHING_IMPL(++arg0: jsval_layout) -> *c_void;
-
-fn JSVAL_IS_TRACEABLE_IMPL(++arg0: jsval_layout) -> JSBool;
-
-fn JSVAL_TRACE_KIND_IMPL(++arg0: jsval_layout) -> uint32_t;
-
-fn PRIVATE_PTR_TO_JSVAL_IMPL(++arg0: *c_void) -> jsval_layout;
-
-fn JSVAL_TO_PRIVATE_PTR_IMPL(++arg0: jsval_layout) -> *c_void;
-
-fn JSVAL_IS_SPECIFIC_INT32_IMPL(++arg0: jsval_layout, ++arg1: int32_t) -> JSBool;
-
-fn JSVAL_IS_SPECIFIC_BOOLEAN(++arg0: jsval_layout, ++arg1: JSBool) -> JSBool;
-
-fn MAGIC_TO_JSVAL_IMPL(++arg0: JSWhyMagic) -> jsval_layout;
-
-fn JSVAL_SAME_TYPE_IMPL(++arg0: jsval_layout, ++arg1: jsval_layout) -> JSBool;
-
-fn PRIVATE_UINT32_TO_JSVAL_IMPL(++arg0: uint32_t) -> jsval_layout;
-
-fn JSVAL_TO_PRIVATE_UINT32_IMPL(++arg0: jsval_layout) -> uint32_t;
-
-fn JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(++arg0: jsval_layout) -> JSValueType;
-
-fn JS_CANONICALIZE_NAN(++arg0: c_double) -> c_double;
-
-fn JSVAL_TO_IMPL(++arg0: jsval) -> jsval_layout;
-
-fn IMPL_TO_JSVAL(++arg0: jsval_layout) -> jsval;
-
-fn JSVAL_IS_NULL(++arg0: jsval) -> JSBool;
-
-fn JSVAL_IS_VOID(++arg0: jsval) -> JSBool;
-
-fn JSVAL_IS_INT(++arg0: jsval) -> JSBool;
-
-fn JSVAL_TO_INT(++arg0: jsval) -> int32_t;
-
-fn INT_TO_JSVAL(++arg0: int32_t) -> jsval;
-
-fn JSVAL_IS_DOUBLE(++arg0: jsval) -> JSBool;
-
-fn JSVAL_TO_DOUBLE(++arg0: jsval) -> c_double;
-
-fn DOUBLE_TO_JSVAL(++arg0: c_double) -> jsval;
-
-fn UINT_TO_JSVAL(++arg0: uint32_t) -> jsval;
-
-fn JSVAL_IS_NUMBER(++arg0: jsval) -> JSBool;
-
-fn JSVAL_IS_STRING(++arg0: jsval) -> JSBool;
-
-fn JSVAL_TO_STRING(++arg0: jsval) -> *JSString;
-
-fn STRING_TO_JSVAL(++arg0: *JSString) -> jsval;
-
-fn JSVAL_IS_OBJECT(++arg0: jsval) -> JSBool;
-
-fn JSVAL_TO_OBJECT(++arg0: jsval) -> *JSObject;
-
-fn OBJECT_TO_JSVAL(++arg0: *JSObject) -> jsval;
-
-fn JSVAL_IS_BOOLEAN(++arg0: jsval) -> JSBool;
-
-fn JSVAL_TO_BOOLEAN(++arg0: jsval) -> JSBool;
-
-fn BOOLEAN_TO_JSVAL(++arg0: JSBool) -> jsval;
-
-fn JSVAL_IS_PRIMITIVE(++arg0: jsval) -> JSBool;
-
-fn JSVAL_IS_GCTHING(++arg0: jsval) -> JSBool;
-
-fn JSVAL_TO_GCTHING(++arg0: jsval) -> *c_void;
-
-fn PRIVATE_TO_JSVAL(++arg0: *c_void) -> jsval;
-
-fn JSVAL_TO_PRIVATE(++arg0: jsval) -> *c_void;
-
-fn JSID_IS_STRING(++arg0: jsid) -> JSBool;
-
-fn JSID_TO_STRING(++arg0: jsid) -> *JSString;
-
-fn JSID_IS_ZERO(++arg0: jsid) -> JSBool;
+//fn JS_Abort();
 
 fn JS_StringHasBeenInterned(++arg0: *JSContext, ++arg1: *JSString) -> JSBool;
-
-fn INTERNED_STRING_TO_JSID(++arg0: *JSContext, ++arg1: *JSString) -> jsid;
-
-fn JSID_IS_INT(++arg0: jsid) -> JSBool;
-
-fn JSID_TO_INT(++arg0: jsid) -> int32_t;
-
-fn INT_FITS_IN_JSID(++arg0: int32_t) -> JSBool;
-
-fn INT_TO_JSID(++arg0: int32_t) -> jsid;
-
-fn JSID_IS_OBJECT(++arg0: jsid) -> JSBool;
-
-fn JSID_TO_OBJECT(++arg0: jsid) -> *JSObject;
-
-fn OBJECT_TO_JSID(++arg0: *JSObject) -> jsid;
-
-fn JSID_IS_GCTHING(++arg0: jsid) -> JSBool;
-
-fn JSID_TO_GCTHING(++arg0: jsid) -> *c_void;
-
-fn JSID_IS_DEFAULT_XML_NAMESPACE(++arg0: jsid) -> JSBool;
-
-fn JSID_IS_VOID(++arg0: jsid) -> JSBool;
-
-fn JSID_IS_EMPTY(++arg0: jsid) -> JSBool;
-
-fn JSVAL_IS_UNIVERSAL(++arg0: jsval) -> JSBool;
 
 fn JS_CallOnce(++arg0: *JSCallOnceType, ++arg1: JSInitCallback) -> JSBool;
 
@@ -943,12 +773,6 @@ fn JS_UnlockGCThing(++arg0: *JSContext, ++arg1: *c_void) -> JSBool;
 fn JS_UnlockGCThingRT(++arg0: *JSRuntime, ++arg1: *c_void) -> JSBool;
 
 fn JS_SetExtraGCRootsTracer(++arg0: *JSRuntime, ++arg1: JSTraceDataOp, ++arg2: *c_void);
-
-fn JSVAL_IS_TRACEABLE(++arg0: jsval) -> JSBool;
-
-fn JSVAL_TO_TRACEABLE(++arg0: jsval) -> *c_void;
-
-fn JSVAL_TRACE_KIND(++arg0: jsval) -> JSGCTraceKind;
 
 fn JS_CallTracer(++arg0: *JSTracer, ++arg1: *c_void, ++arg2: JSGCTraceKind);
 
@@ -1360,12 +1184,6 @@ fn JS_FlattenString(++arg0: *JSContext, ++arg1: *JSString) -> *JSFlatString;
 
 fn JS_GetFlatStringChars(++arg0: *JSFlatString) -> *jschar;
 
-fn JSID_TO_FLAT_STRING(++arg0: jsid) -> *JSFlatString;
-
-fn JS_ASSERT_STRING_IS_FLAT(++arg0: *JSString) -> *JSFlatString;
-
-fn JS_FORGET_STRING_FLATNESS(++arg0: *JSFlatString) -> *JSString;
-
 fn JS_FlatStringEqualsAscii(++arg0: *JSFlatString, ++arg1: *c_char) -> JSBool;
 
 fn JS_PutEscapedFlatString(++arg0: *c_char, ++arg1: size_t, ++arg2: *JSFlatString, ++arg3: c_char) -> size_t;
@@ -1499,8 +1317,6 @@ fn JS_AbortIfWrongThread(++arg0: *JSRuntime);
 fn JS_ClearRuntimeThread(++arg0: *JSRuntime);
 
 fn JS_SetRuntimeThread(++arg0: *JSRuntime);
-
-fn JS_IsConstructing(++arg0: *JSContext, ++arg1: *jsval) -> JSBool;
 
 fn JS_NewObjectForConstructor(++arg0: *JSContext, ++arg1: *JSClass, ++arg2: *jsval) -> *JSObject;
 
