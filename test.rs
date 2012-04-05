@@ -56,6 +56,22 @@ fn test() {
         )
     };
 
+    /* Create the global object in a new compartment. */
     let global = JS_NewCompartmentAndGlobalObject(cx, ptr::addr_of(global_class), ptr::null());
     if ptr::is_null(global) { fail }
+
+    /* Populate the global object with the standard globals, like Object and Array. */
+    if !(JS_InitStandardClasses(cx, global) as bool) { fail }
+
+    let code = "print(\"this is a test\")";
+    let script = str::as_c_str(code) {|codebuf|
+        str::as_c_str("test") {|name|
+            JS_CompileScript(cx, global, codebuf, str::len(code), name, 0 as c_uint)
+        }
+    };
+    JS_ExecuteScript(cx, global, script, ptr::null());
+
+    JS_DestroyContext(cx);
+    JS_DestroyRuntime(rt);
+    JS_ShutDown();
 }
