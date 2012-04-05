@@ -28,7 +28,7 @@ fn test() {
     let global_name = "global";
     let global_class = {
         name: str::as_c_str(global_name) {|buf| buf},
-        flags: 0 as uint32_t,
+        flags: JSCLASS_GLOBAL_FLAGS,
         addProperty: crust::JS_PropertyStub,
         delProperty: crust::JS_PropertyStub,
         getProperty: crust::JS_PropertyStub,
