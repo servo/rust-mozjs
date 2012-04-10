@@ -5,20 +5,6 @@ import jsapi::*;
 import ptr::null;
 import void = c_void;
 
-mod jsrust {
-	/* Additional features. */
-    fn JSRust_NewContext(rt : *JSRuntime, stackChunkSize : size_t)
-        -> *JSContext { fail }
-    fn JSRust_SetErrorChannel(cx : *JSContext, chan : chan<error_report>)
-	-> bool { fail }
-    fn JSRust_SetLogChannel(cx : *JSContext, object : *JSObject, chan : chan<log_message>)
-	-> bool { fail }
-    fn JSRust_InitRustLibrary(cx : *JSContext, object : *JSObject) -> bool { fail }
-    fn JSRust_SetDataOnObject(cx : *JSContext, object : *JSObject, val : *c_char, vallen: u32) { fail }
-    fn JSRust_GetThreadRuntime(maxbytes : u32) -> *JSRuntime { fail }
-    fn JSRust_Exit(code : c_int) { fail }
-}
-
 type error_report = {
 	message: str,
 	filename: str,
@@ -67,10 +53,6 @@ fn new_runtime(maxbytes : u32) -> runtime {
     ret runtime(js::JS_Init(maxbytes));
 }
 
-fn get_thread_runtime(maxbytes : u32) -> runtime {
-    ret runtime(jsrust::JSRust_GetThreadRuntime(maxbytes));
-}
-
 fn shut_down() {
     js::JS_ShutDown();
 }
@@ -78,7 +60,7 @@ fn shut_down() {
 /* Contexts */
 
 fn new_context(rt : runtime, stack_chunk_size : size_t) -> context {
-    ret context(jsrust::JSRust_NewContext(*rt, stack_chunk_size));
+    ret context(js::JS_NewContext(*rt, stack_chunk_size));
 }
 
 /* Options */
@@ -236,29 +218,3 @@ fn get_int(cx : context, num : jsval) -> i32 unsafe {
     js::JS_ValueToInt32(*cx, num, ptr::addr_of(oparam));
     ret oparam;
 }
-
-fn set_data_property(cx : context, obj : object, value : str) {
-    ret str::as_c_str(value) {|buf|
-        jsrust::JSRust_SetDataOnObject(*cx, *obj, buf, value.len() as u32);
-    }
-}
-
-/** Rust extensions to the JavaScript language bindings. */
-mod ext {
-	fn set_error_channel(cx : context, chan : chan<error_report>) {
-		if !jsrust::JSRust_SetErrorChannel(*cx, chan) { fail; }
-	}
-
-	fn set_log_channel(cx : context, object : object, chan : chan<log_message>) {
-		if !jsrust::JSRust_SetLogChannel(*cx, *object, chan) { fail; }
-	}
-
-	fn init_rust_library(cx : context, object : object) {
-		if !jsrust::JSRust_InitRustLibrary(*cx, *object) { fail; }
-	}
-
-	fn rust_exit_now(code : int) {
-		jsrust::JSRust_Exit(code as c_int);
-	}
-}
-
