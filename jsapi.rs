@@ -2,9 +2,27 @@
 
 import libc::*;
 
-type JSBool = c_int;
+type JSIntn = c_int;
+
+type JSUintn = c_uint;
+
+type JSBool = JSIntn;
+
+type JSPackedBool = uint8_t;
+
+type intN = JSIntn;
+
+type uintN = JSUintn;
 
 type jsid = ptrdiff_t;
+
+type jsint = int32_t;
+
+type jsuint = uint32_t;
+
+type jsdouble = c_double;
+
+type jsrefcount = int32_t;
 
 type jschar = uint16_t;
 
@@ -101,7 +119,8 @@ const JSENUMERATE_DESTROY: u32 = 3_u32;
 
 type JSIterateOp = enum_JSIterateOp;
 
-type enum_unnamed1 = c_uint;
+
+type JSGCTraceKind = c_uint;
 const JSTRACE_OBJECT: u32 = 0_u32;
 const JSTRACE_STRING: u32 = 1_u32;
 const JSTRACE_SCRIPT: u32 = 2_u32;
@@ -110,8 +129,6 @@ const JSTRACE_SHAPE: u32 = 4_u32;
 const JSTRACE_BASE_SHAPE: u32 = 5_u32;
 const JSTRACE_TYPE_OBJECT: u32 = 6_u32;
 const JSTRACE_LAST: u32 = 6_u32;
-
-type JSGCTraceKind = enum_unnamed1;
 
 type JSClass = struct_JSClass;
 
@@ -191,6 +208,10 @@ type JSStructuredCloneWriter = struct_JSStructuredCloneWriter;
 
 type JSTracer = struct_JSTracer;
 
+type struct_JSXDRState = c_void;
+
+type JSXDRState = struct_JSXDRState;
+
 type struct_JSFlatString = c_void;
 
 type JSFlatString = struct_JSFlatString;
@@ -215,29 +236,21 @@ type JSValueShiftedTag = uint64_t;
 
 type enum_JSWhyMagic = c_uint;
 const JS_ARRAY_HOLE: u32 = 0_u32;
-const JS_NATIVE_ENUMERATE: u32 = 1_u32;
-const JS_NO_ITER_VALUE: u32 = 2_u32;
-const JS_GENERATOR_CLOSING: u32 = 3_u32;
-const JS_NO_CONSTANT: u32 = 4_u32;
-const JS_THIS_POISON: u32 = 5_u32;
-const JS_ARG_POISON: u32 = 6_u32;
-const JS_SERIALIZE_NO_NODE: u32 = 7_u32;
-const JS_LAZY_ARGUMENTS: u32 = 8_u32;
-const JS_UNASSIGNED_ARGUMENTS: u32 = 9_u32;
-const JS_OPTIMIZED_ARGUMENTS: u32 = 10_u32;
-const JS_IS_CONSTRUCTING: u32 = 11_u32;
-const JS_OVERWRITTEN_CALLEE: u32 = 12_u32;
-const JS_GENERIC_MAGIC: u32 = 13_u32;
+const JS_ARGS_HOLE: u32 = 1_u32;
+const JS_NATIVE_ENUMERATE: u32 = 2_u32;
+const JS_NO_ITER_VALUE: u32 = 3_u32;
+const JS_GENERATOR_CLOSING: u32 = 4_u32;
+const JS_NO_CONSTANT: u32 = 5_u32;
+const JS_THIS_POISON: u32 = 6_u32;
+const JS_ARG_POISON: u32 = 7_u32;
+const JS_SERIALIZE_NO_NODE: u32 = 8_u32;
+const JS_LAZY_ARGUMENTS: u32 = 9_u32;
+const JS_IS_CONSTRUCTING: u32 = 10_u32;
+const JS_GENERIC_MAGIC: u32 = 11_u32;
 
 type JSWhyMagic = enum_JSWhyMagic;
 
 type union_jsval_layout = c_void /* FIXME: union type */;
-
-type struct_unnamed2 = {
-    payload: union_unnamed3,
-};
-
-type union_unnamed3 = c_void /* FIXME: union type */;
 
 type jsval_layout = union_jsval_layout;
 
@@ -265,13 +278,11 @@ type JSTypeOfOp = *u8;
 
 type JSFinalizeOp = *u8;
 
-type JSStringFinalizer = struct_JSStringFinalizer;
-
-type struct_JSStringFinalizer = {
-    finalize: *u8,
-};
+type JSStringFinalizeOp = *u8;
 
 type JSCheckAccessOp = *u8;
+
+type JSXDRObjectOp = *u8;
 
 type JSHasInstanceOp = *u8;
 
@@ -294,18 +305,12 @@ type JSContextCallback = *u8;
 type enum_JSGCStatus = c_uint;
 const JSGC_BEGIN: u32 = 0_u32;
 const JSGC_END: u32 = 1_u32;
+const JSGC_MARK_END: u32 = 2_u32;
+const JSGC_FINALIZE_END: u32 = 3_u32;
 
 type JSGCStatus = enum_JSGCStatus;
 
 type JSGCCallback = *u8;
-
-type enum_JSFinalizeStatus = c_uint;
-const JSFINALIZE_START: u32 = 0_u32;
-const JSFINALIZE_END: u32 = 1_u32;
-
-type JSFinalizeStatus = enum_JSFinalizeStatus;
-
-type JSFinalizeCallback = *u8;
 
 type JSTraceDataOp = *u8;
 
@@ -345,9 +350,7 @@ type JSLocaleCompare = *u8;
 
 type JSLocaleToUnicode = *u8;
 
-type JSDestroyPrincipalsOp = *u8;
-
-type JSSubsumePrincipalsOp = *u8;
+type JSPrincipalsTranscoder = *u8;
 
 type JSObjectPrincipalsFinder = *u8;
 
@@ -357,10 +360,9 @@ type JSWrapObjectCallback = *u8;
 
 type JSPreWrapCallback = *u8;
 
-type enum_unnamed4 = c_uint;
-const JSCOMPARTMENT_DESTROY: u32 = 0_u32;
 
-type JSCompartmentOp = enum_unnamed4;
+type JSCompartmentOp = c_uint;
+const JSCOMPARTMENT_DESTROY: u32 = 0_u32;
 
 type JSCompartmentCallback = *u8;
 
@@ -382,8 +384,6 @@ type StructuredCloneErrorOp = *u8;
 
 /* FIXME: global variable JSVAL_VOID */
 
-type JSIterateCompartmentCallback = *u8;
-
 type JSEnumerateDiagnosticMemoryCallback = *u8;
 
 type enum_JSGCRootType = c_uint;
@@ -398,6 +398,7 @@ type JSTraceCallback = *u8;
 
 type struct_JSTracer = {
     runtime: *JSRuntime,
+    context: *JSContext,
     callback: JSTraceCallback,
     debugPrinter: JSTraceNamePrinter,
     debugPrintArg: *c_void,
@@ -414,15 +415,12 @@ const JSGC_MAX_CODE_CACHE_BYTES: u32 = 5_u32;
 const JSGC_MODE: u32 = 6_u32;
 const JSGC_UNUSED_CHUNKS: u32 = 7_u32;
 const JSGC_TOTAL_CHUNKS: u32 = 8_u32;
-const JSGC_SLICE_TIME_BUDGET: u32 = 9_u32;
-const JSGC_MARK_STACK_LIMIT: u32 = 10_u32;
 
 type JSGCParamKey = enum_JSGCParamKey;
 
 type enum_JSGCMode = c_uint;
 const JSGC_MODE_GLOBAL: u32 = 0_u32;
 const JSGC_MODE_COMPARTMENT: u32 = 1_u32;
-const JSGC_MODE_INCREMENTAL: u32 = 2_u32;
 
 type JSGCMode = enum_JSGCMode;
 
@@ -439,16 +437,19 @@ type struct_JSClass = {
     resolve: JSResolveOp,
     convert: JSConvertOp,
     finalize: JSFinalizeOp,
+    reserved0: JSClassInternal,
     checkAccess: JSCheckAccessOp,
     call: JSNative,
     construct: JSNative,
+    xdrObject: JSXDRObjectOp,
     hasInstance: JSHasInstanceOp,
     trace: JSTraceOp,
+    reserved1: JSClassInternal,
     reserved: (*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void),
 };
 
 type struct_JSConstDoubleSpec = {
-    dval: c_double,
+    dval: jsdouble,
     name: *c_char,
     flags: uint8_t,
     spare: (uint8_t,uint8_t,uint8_t),
@@ -471,20 +472,23 @@ type struct_JSFunctionSpec = {
 
 type struct_JSPropertyDescriptor = {
     obj: *JSObject,
-    attrs: c_uint,
+    attrs: uintN,
     getter: JSPropertyOp,
     setter: JSStrictPropertyOp,
     value: jsval,
-    shortid: c_uint,
+    shortid: uintN,
 };
 
 type struct_JSPrincipals = {
-    refcount: c_int,
+    codebase: *c_char,
+    refcount: jsrefcount,
+    destroy: *u8,
+    subsume: *u8,
 };
 
 type struct_JSSecurityCallbacks = {
     checkObjectAccess: JSCheckAccessOp,
-    subsumePrincipals: JSSubsumePrincipalsOp,
+    principalsTranscoder: JSPrincipalsTranscoder,
     findObjectPrincipals: JSObjectPrincipalsFinder,
     contentSecurityPolicyAllows: JSCSPEvalChecker,
 };
@@ -514,25 +518,27 @@ type struct_JSLocaleCallbacks = {
 type struct_JSErrorReport = {
     filename: *c_char,
     originPrincipals: *JSPrincipals,
-    lineno: c_uint,
+    lineno: uintN,
     linebuf: *c_char,
     tokenptr: *c_char,
     uclinebuf: *jschar,
     uctokenptr: *jschar,
-    flags: c_uint,
-    errorNumber: c_uint,
+    flags: uintN,
+    errorNumber: uintN,
     ucmessage: *jschar,
     messageArgs: **jschar,
 };
 
+type struct_unnamed1 = {
+    payload: union_unnamed2,
+};
+
+type union_unnamed2 = c_void /* FIXME: union type */;
+
 #[link_name="mozjs"]
 native mod bindgen {
 
-fn MOZ_Crash();
-
-fn MOZ_Assert(++arg0: *c_char, ++arg1: *c_char, ++arg2: c_int);
-
-//fn JS_Abort();
+fn JS_Assert(++arg0: *c_char, ++arg1: *c_char, ++arg2: c_int);
 
 fn JS_StringHasBeenInterned(++arg0: *JSContext, ++arg1: *JSString) -> JSBool;
 
@@ -550,7 +556,7 @@ fn JS_GetEmptyStringValue(++arg0: *JSContext) -> jsval;
 
 fn JS_GetEmptyString(++arg0: *JSRuntime) -> *JSString;
 
-fn JS_ConvertArguments(++arg0: *JSContext, ++arg1: c_uint, ++arg2: *jsval, ++arg3: *c_char/* FIXME: variadic arguments */) -> JSBool;
+fn JS_ConvertArguments(++arg0: *JSContext, ++arg1: uintN, ++arg2: *jsval, ++arg3: *c_char/* FIXME: variadic arguments */) -> JSBool;
 
 fn JS_ConvertValue(++arg0: *JSContext, ++arg1: jsval, ++arg2: JSType, ++arg3: *jsval) -> JSBool;
 
@@ -564,13 +570,13 @@ fn JS_ValueToString(++arg0: *JSContext, ++arg1: jsval) -> *JSString;
 
 fn JS_ValueToSource(++arg0: *JSContext, ++arg1: jsval) -> *JSString;
 
-fn JS_ValueToNumber(++arg0: *JSContext, ++arg1: jsval, ++arg2: *c_double) -> JSBool;
+fn JS_ValueToNumber(++arg0: *JSContext, ++arg1: jsval, ++arg2: *jsdouble) -> JSBool;
 
-fn JS_DoubleIsInt32(++arg0: c_double, ++arg1: *int32_t) -> JSBool;
+fn JS_DoubleIsInt32(++arg0: jsdouble, ++arg1: *jsint) -> JSBool;
 
-fn JS_DoubleToInt32(++arg0: c_double) -> int32_t;
+fn JS_DoubleToInt32(++arg0: jsdouble) -> int32_t;
 
-fn JS_DoubleToUint32(++arg0: c_double) -> uint32_t;
+fn JS_DoubleToUint32(++arg0: jsdouble) -> uint32_t;
 
 fn JS_ValueToECMAInt32(++arg0: *JSContext, ++arg1: jsval, ++arg2: *int32_t) -> JSBool;
 
@@ -614,9 +620,9 @@ fn JS_EndRequest(++arg0: *JSContext);
 
 fn JS_YieldRequest(++arg0: *JSContext);
 
-fn JS_SuspendRequest(++arg0: *JSContext) -> c_uint;
+fn JS_SuspendRequest(++arg0: *JSContext) -> jsrefcount;
 
-fn JS_ResumeRequest(++arg0: *JSContext, ++arg1: c_uint);
+fn JS_ResumeRequest(++arg0: *JSContext, ++arg1: jsrefcount);
 
 fn JS_IsInRequest(++arg0: *JSRuntime) -> JSBool;
 
@@ -642,6 +648,8 @@ fn JS_SetSecondContextPrivate(++arg0: *JSContext, ++arg1: *c_void);
 
 fn JS_ContextIterator(++arg0: *JSRuntime, ++arg1: **JSContext) -> *JSContext;
 
+fn JS_ContextIteratorUnlocked(++arg0: *JSRuntime, ++arg1: **JSContext) -> *JSContext;
+
 fn JS_GetVersion(++arg0: *JSContext) -> JSVersion;
 
 fn JS_SetVersion(++arg0: *JSContext, ++arg1: JSVersion) -> JSVersion;
@@ -656,8 +664,6 @@ fn JS_SetOptions(++arg0: *JSContext, ++arg1: uint32_t) -> uint32_t;
 
 fn JS_ToggleOptions(++arg0: *JSContext, ++arg1: uint32_t) -> uint32_t;
 
-fn JS_SetJitHardening(++arg0: *JSRuntime, ++arg1: JSBool);
-
 fn JS_GetImplementationVersion() -> *c_char;
 
 fn JS_SetCompartmentCallback(++arg0: *JSRuntime, ++arg1: JSCompartmentCallback) -> JSCompartmentCallback;
@@ -668,9 +674,9 @@ fn JS_EnterCrossCompartmentCall(++arg0: *JSContext, ++arg1: *JSObject) -> *JSCro
 
 fn JS_LeaveCrossCompartmentCall(++arg0: *JSCrossCompartmentCall);
 
-fn JS_SetCompartmentPrivate(++arg0: *JSCompartment, ++arg1: *c_void);
+fn JS_SetCompartmentPrivate(++arg0: *JSContext, ++arg1: *JSCompartment, ++arg2: *c_void) -> *c_void;
 
-fn JS_GetCompartmentPrivate(++arg0: *JSCompartment) -> *c_void;
+fn JS_GetCompartmentPrivate(++arg0: *JSContext, ++arg1: *JSCompartment) -> *c_void;
 
 fn JS_WrapObject(++arg0: *JSContext, ++arg1: **JSObject) -> JSBool;
 
@@ -680,7 +686,7 @@ fn JS_TransplantObject(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSObject)
 
 fn js_TransplantObjectWithWrapper(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSObject, ++arg3: *JSObject, ++arg4: *JSObject) -> *JSObject;
 
-fn JS_IterateCompartments(++arg0: *JSRuntime, ++arg1: *c_void, ++arg2: JSIterateCompartmentCallback);
+fn js_GetCompartmentPrivate(++arg0: *JSCompartment) -> *c_void;
 
 fn JS_GetGlobalObject(++arg0: *JSContext) -> *JSObject;
 
@@ -696,10 +702,6 @@ fn JS_EnumerateResolvedStandardClasses(++arg0: *JSContext, ++arg1: *JSObject, ++
 
 fn JS_GetClassObject(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: JSProtoKey, ++arg3: **JSObject) -> JSBool;
 
-fn JS_GetFunctionPrototype(++arg0: *JSContext, ++arg1: *JSObject) -> *JSObject;
-
-fn JS_GetObjectPrototype(++arg0: *JSContext, ++arg1: *JSObject) -> *JSObject;
-
 fn JS_GetGlobalForObject(++arg0: *JSContext, ++arg1: *JSObject) -> *JSObject;
 
 fn JS_GetGlobalForScopeChain(++arg0: *JSContext) -> *JSObject;
@@ -709,10 +711,6 @@ fn JS_InitReflect(++arg0: *JSContext, ++arg1: *JSObject) -> *JSObject;
 fn JS_EnumerateDiagnosticMemoryRegions(++arg0: JSEnumerateDiagnosticMemoryCallback);
 
 fn JS_ComputeThis(++arg0: *JSContext, ++arg1: *jsval) -> jsval;
-
-fn JS_MallocInCompartment(++arg0: *JSCompartment, ++arg1: size_t);
-
-fn JS_FreeInCompartment(++arg0: *JSCompartment, ++arg1: size_t);
 
 fn JS_malloc(++arg0: *JSContext, ++arg1: size_t) -> *c_void;
 
@@ -724,7 +722,7 @@ fn JS_updateMallocCounter(++arg0: *JSContext, ++arg1: size_t);
 
 fn JS_strdup(++arg0: *JSContext, ++arg1: *c_char) -> *c_char;
 
-fn JS_NewNumberValue(++arg0: *JSContext, ++arg1: c_double, ++arg2: *jsval) -> JSBool;
+fn JS_NewNumberValue(++arg0: *JSContext, ++arg1: jsdouble, ++arg2: *jsval) -> JSBool;
 
 fn JS_AddValueRoot(++arg0: *JSContext, ++arg1: *jsval) -> JSBool;
 
@@ -776,7 +774,7 @@ fn JS_SetExtraGCRootsTracer(++arg0: *JSRuntime, ++arg1: JSTraceDataOp, ++arg2: *
 
 fn JS_CallTracer(++arg0: *JSTracer, ++arg1: *c_void, ++arg2: JSGCTraceKind);
 
-fn JS_TracerInit(++arg0: *JSTracer, ++arg1: *JSRuntime, ++arg2: JSTraceCallback);
+fn JS_TracerInit(++arg0: *JSTracer, ++arg1: *JSContext, ++arg2: JSTraceCallback);
 
 fn JS_TraceChildren(++arg0: *JSTracer, ++arg1: *c_void, ++arg2: JSGCTraceKind);
 
@@ -788,13 +786,13 @@ fn JS_CompartmentGC(++arg0: *JSContext, ++arg1: *JSCompartment);
 
 fn JS_MaybeGC(++arg0: *JSContext);
 
-fn JS_SetGCCallback(++arg0: *JSRuntime, ++arg1: JSGCCallback);
+fn JS_SetGCCallback(++arg0: *JSContext, ++arg1: JSGCCallback) -> JSGCCallback;
 
-fn JS_SetFinalizeCallback(++arg0: *JSRuntime, ++arg1: JSFinalizeCallback);
+fn JS_SetGCCallbackRT(++arg0: *JSRuntime, ++arg1: JSGCCallback) -> JSGCCallback;
 
 fn JS_IsGCMarkingTracer(++arg0: *JSTracer) -> JSBool;
 
-fn JS_IsAboutToBeFinalized(++arg0: *c_void) -> JSBool;
+fn JS_IsAboutToBeFinalized(++arg0: *JSContext, ++arg1: *c_void) -> JSBool;
 
 fn JS_SetGCParameter(++arg0: *JSRuntime, ++arg1: JSGCParamKey, ++arg2: uint32_t);
 
@@ -806,17 +804,25 @@ fn JS_GetGCParameterForThread(++arg0: *JSContext, ++arg1: JSGCParamKey) -> uint3
 
 fn JS_FlushCaches(++arg0: *JSContext);
 
-fn JS_NewExternalString(++arg0: *JSContext, ++arg1: *jschar, ++arg2: size_t, ++arg3: *JSStringFinalizer) -> *JSString;
+fn JS_AddExternalStringFinalizer(++arg0: JSStringFinalizeOp) -> intN;
 
-fn JS_IsExternalString(++arg0: *JSString) -> JSBool;
+fn JS_RemoveExternalStringFinalizer(++arg0: JSStringFinalizeOp) -> intN;
 
-fn JS_GetExternalStringFinalizer(++arg0: *JSString) -> *JSStringFinalizer;
+fn JS_NewExternalString(++arg0: *JSContext, ++arg1: *jschar, ++arg2: size_t, ++arg3: intN) -> *JSString;
 
-fn JS_SetNativeStackQuota(++arg0: *JSRuntime, ++arg1: size_t);
+fn JS_NewExternalStringWithClosure(++arg0: *JSContext, ++arg1: *jschar, ++arg2: size_t, ++arg3: intN, ++arg4: *c_void) -> *JSString;
 
-fn JS_IdArrayLength(++arg0: *JSContext, ++arg1: *JSIdArray) -> c_int;
+fn JS_IsExternalString(++arg0: *JSContext, ++arg1: *JSString) -> JSBool;
 
-fn JS_IdArrayGet(++arg0: *JSContext, ++arg1: *JSIdArray, ++arg2: c_int) -> jsid;
+fn JS_GetExternalStringClosure(++arg0: *JSContext, ++arg1: *JSString) -> *c_void;
+
+fn JS_SetThreadStackLimit(++arg0: *JSContext, ++arg1: uintptr_t);
+
+fn JS_SetNativeStackQuota(++arg0: *JSContext, ++arg1: size_t);
+
+fn JS_IdArrayLength(++arg0: *JSContext, ++arg1: *JSIdArray) -> jsint;
+
+fn JS_IdArrayGet(++arg0: *JSContext, ++arg1: *JSIdArray, ++arg2: jsint) -> jsid;
 
 fn JS_DestroyIdArray(++arg0: *JSContext, ++arg1: *JSIdArray);
 
@@ -836,9 +842,9 @@ fn JS_ResolveStub(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: jsid) -> JSBool
 
 fn JS_ConvertStub(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: JSType, ++arg3: *jsval) -> JSBool;
 
-fn JS_InitClass(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSObject, ++arg3: *JSClass, ++arg4: JSNative, ++arg5: c_uint, ++arg6: *JSPropertySpec, ++arg7: *JSFunctionSpec, ++arg8: *JSPropertySpec, ++arg9: *JSFunctionSpec) -> *JSObject;
+fn JS_FinalizeStub(++arg0: *JSContext, ++arg1: *JSObject);
 
-fn JS_LinkConstructorAndPrototype(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSObject) -> JSBool;
+fn JS_InitClass(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSObject, ++arg3: *JSClass, ++arg4: JSNative, ++arg5: uintN, ++arg6: *JSPropertySpec, ++arg7: *JSFunctionSpec, ++arg8: *JSPropertySpec, ++arg9: *JSFunctionSpec) -> *JSObject;
 
 fn JS_GetClass(++arg0: *JSObject) -> *JSClass;
 
@@ -846,17 +852,17 @@ fn JS_InstanceOf(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSClass, ++arg3
 
 fn JS_HasInstance(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: jsval, ++arg3: *JSBool) -> JSBool;
 
-fn JS_GetPrivate(++arg0: *JSObject) -> *c_void;
+fn JS_GetPrivate(++arg0: *JSContext, ++arg1: *JSObject) -> *c_void;
 
-fn JS_SetPrivate(++arg0: *JSObject, ++arg1: *c_void);
+fn JS_SetPrivate(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_void) -> JSBool;
 
 fn JS_GetInstancePrivate(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSClass, ++arg3: *jsval) -> *c_void;
 
-fn JS_GetPrototype(++arg0: *JSObject) -> *JSObject;
+fn JS_GetPrototype(++arg0: *JSContext, ++arg1: *JSObject) -> *JSObject;
 
 fn JS_SetPrototype(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSObject) -> JSBool;
 
-fn JS_GetParent(++arg0: *JSObject) -> *JSObject;
+fn JS_GetParent(++arg0: *JSContext, ++arg1: *JSObject) -> *JSObject;
 
 fn JS_SetParent(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSObject) -> JSBool;
 
@@ -874,8 +880,6 @@ fn JS_IsExtensible(++arg0: *JSObject) -> JSBool;
 
 fn JS_IsNative(++arg0: *JSObject) -> JSBool;
 
-fn JS_GetObjectRuntime(++arg0: *JSObject) -> *JSRuntime;
-
 fn JS_NewObjectWithGivenProto(++arg0: *JSContext, ++arg1: *JSClass, ++arg2: *JSObject, ++arg3: *JSObject) -> *JSObject;
 
 fn JS_DeepFreezeObject(++arg0: *JSContext, ++arg1: *JSObject) -> JSBool;
@@ -884,31 +888,31 @@ fn JS_FreezeObject(++arg0: *JSContext, ++arg1: *JSObject) -> JSBool;
 
 fn JS_ConstructObject(++arg0: *JSContext, ++arg1: *JSClass, ++arg2: *JSObject) -> *JSObject;
 
-fn JS_ConstructObjectWithArguments(++arg0: *JSContext, ++arg1: *JSClass, ++arg2: *JSObject, ++arg3: c_uint, ++arg4: *jsval) -> *JSObject;
+fn JS_ConstructObjectWithArguments(++arg0: *JSContext, ++arg1: *JSClass, ++arg2: *JSObject, ++arg3: uintN, ++arg4: *jsval) -> *JSObject;
 
-fn JS_New(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: c_uint, ++arg3: *jsval) -> *JSObject;
+fn JS_New(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: uintN, ++arg3: *jsval) -> *JSObject;
 
-fn JS_DefineObject(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++arg3: *JSClass, ++arg4: *JSObject, ++arg5: c_uint) -> *JSObject;
+fn JS_DefineObject(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++arg3: *JSClass, ++arg4: *JSObject, ++arg5: uintN) -> *JSObject;
 
 fn JS_DefineConstDoubles(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSConstDoubleSpec) -> JSBool;
 
 fn JS_DefineProperties(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSPropertySpec) -> JSBool;
 
-fn JS_DefineProperty(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++arg3: jsval, ++arg4: JSPropertyOp, ++arg5: JSStrictPropertyOp, ++arg6: c_uint) -> JSBool;
+fn JS_DefineProperty(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++arg3: jsval, ++arg4: JSPropertyOp, ++arg5: JSStrictPropertyOp, ++arg6: uintN) -> JSBool;
 
-fn JS_DefinePropertyById(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: jsid, ++arg3: jsval, ++arg4: JSPropertyOp, ++arg5: JSStrictPropertyOp, ++arg6: c_uint) -> JSBool;
+fn JS_DefinePropertyById(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: jsid, ++arg3: jsval, ++arg4: JSPropertyOp, ++arg5: JSStrictPropertyOp, ++arg6: uintN) -> JSBool;
 
 fn JS_DefineOwnProperty(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: jsid, ++arg3: jsval, ++arg4: *JSBool) -> JSBool;
 
-fn JS_GetPropertyAttributes(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++arg3: *c_uint, ++arg4: *JSBool) -> JSBool;
+fn JS_GetPropertyAttributes(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++arg3: *uintN, ++arg4: *JSBool) -> JSBool;
 
-fn JS_GetPropertyAttrsGetterAndSetter(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++arg3: *c_uint, ++arg4: *JSBool, ++arg5: *JSPropertyOp, ++arg6: *JSStrictPropertyOp) -> JSBool;
+fn JS_GetPropertyAttrsGetterAndSetter(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++arg3: *uintN, ++arg4: *JSBool, ++arg5: *JSPropertyOp, ++arg6: *JSStrictPropertyOp) -> JSBool;
 
-fn JS_GetPropertyAttrsGetterAndSetterById(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: jsid, ++arg3: *c_uint, ++arg4: *JSBool, ++arg5: *JSPropertyOp, ++arg6: *JSStrictPropertyOp) -> JSBool;
+fn JS_GetPropertyAttrsGetterAndSetterById(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: jsid, ++arg3: *uintN, ++arg4: *JSBool, ++arg5: *JSPropertyOp, ++arg6: *JSStrictPropertyOp) -> JSBool;
 
-fn JS_SetPropertyAttributes(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++arg3: c_uint, ++arg4: *JSBool) -> JSBool;
+fn JS_SetPropertyAttributes(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++arg3: uintN, ++arg4: *JSBool) -> JSBool;
 
-fn JS_DefinePropertyWithTinyId(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++arg3: int8_t, ++arg4: jsval, ++arg5: JSPropertyOp, ++arg6: JSStrictPropertyOp, ++arg7: c_uint) -> JSBool;
+fn JS_DefinePropertyWithTinyId(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++arg3: int8_t, ++arg4: jsval, ++arg5: JSPropertyOp, ++arg6: JSStrictPropertyOp, ++arg7: uintN) -> JSBool;
 
 fn JS_AlreadyHasOwnProperty(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++arg3: *JSBool) -> JSBool;
 
@@ -922,11 +926,11 @@ fn JS_LookupProperty(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++a
 
 fn JS_LookupPropertyById(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: jsid, ++arg3: *jsval) -> JSBool;
 
-fn JS_LookupPropertyWithFlags(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++arg3: c_uint, ++arg4: *jsval) -> JSBool;
+fn JS_LookupPropertyWithFlags(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++arg3: uintN, ++arg4: *jsval) -> JSBool;
 
-fn JS_LookupPropertyWithFlagsById(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: jsid, ++arg3: c_uint, ++arg4: **JSObject, ++arg5: *jsval) -> JSBool;
+fn JS_LookupPropertyWithFlagsById(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: jsid, ++arg3: uintN, ++arg4: **JSObject, ++arg5: *jsval) -> JSBool;
 
-fn JS_GetPropertyDescriptorById(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: jsid, ++arg3: c_uint, ++arg4: *JSPropertyDescriptor) -> JSBool;
+fn JS_GetPropertyDescriptorById(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: jsid, ++arg3: uintN, ++arg4: *JSPropertyDescriptor) -> JSBool;
 
 fn JS_GetOwnPropertyDescriptor(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: jsid, ++arg3: *jsval) -> JSBool;
 
@@ -956,15 +960,15 @@ fn JS_DeletePropertyById(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: jsid) ->
 
 fn JS_DeletePropertyById2(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: jsid, ++arg3: *jsval) -> JSBool;
 
-fn JS_DefineUCProperty(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *jschar, ++arg3: size_t, ++arg4: jsval, ++arg5: JSPropertyOp, ++arg6: JSStrictPropertyOp, ++arg7: c_uint) -> JSBool;
+fn JS_DefineUCProperty(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *jschar, ++arg3: size_t, ++arg4: jsval, ++arg5: JSPropertyOp, ++arg6: JSStrictPropertyOp, ++arg7: uintN) -> JSBool;
 
-fn JS_GetUCPropertyAttributes(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *jschar, ++arg3: size_t, ++arg4: *c_uint, ++arg5: *JSBool) -> JSBool;
+fn JS_GetUCPropertyAttributes(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *jschar, ++arg3: size_t, ++arg4: *uintN, ++arg5: *JSBool) -> JSBool;
 
-fn JS_GetUCPropertyAttrsGetterAndSetter(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *jschar, ++arg3: size_t, ++arg4: *c_uint, ++arg5: *JSBool, ++arg6: *JSPropertyOp, ++arg7: *JSStrictPropertyOp) -> JSBool;
+fn JS_GetUCPropertyAttrsGetterAndSetter(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *jschar, ++arg3: size_t, ++arg4: *uintN, ++arg5: *JSBool, ++arg6: *JSPropertyOp, ++arg7: *JSStrictPropertyOp) -> JSBool;
 
-fn JS_SetUCPropertyAttributes(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *jschar, ++arg3: size_t, ++arg4: c_uint, ++arg5: *JSBool) -> JSBool;
+fn JS_SetUCPropertyAttributes(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *jschar, ++arg3: size_t, ++arg4: uintN, ++arg5: *JSBool) -> JSBool;
 
-fn JS_DefineUCPropertyWithTinyId(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *jschar, ++arg3: size_t, ++arg4: int8_t, ++arg5: jsval, ++arg6: JSPropertyOp, ++arg7: JSStrictPropertyOp, ++arg8: c_uint) -> JSBool;
+fn JS_DefineUCPropertyWithTinyId(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *jschar, ++arg3: size_t, ++arg4: int8_t, ++arg5: jsval, ++arg6: JSPropertyOp, ++arg7: JSStrictPropertyOp, ++arg8: uintN) -> JSBool;
 
 fn JS_AlreadyHasOwnUCProperty(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *jschar, ++arg3: size_t, ++arg4: *JSBool) -> JSBool;
 
@@ -978,15 +982,15 @@ fn JS_SetUCProperty(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *jschar, ++ar
 
 fn JS_DeleteUCProperty2(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *jschar, ++arg3: size_t, ++arg4: *jsval) -> JSBool;
 
-fn JS_NewArrayObject(++arg0: *JSContext, ++arg1: c_int, ++arg2: *jsval) -> *JSObject;
+fn JS_NewArrayObject(++arg0: *JSContext, ++arg1: jsint, ++arg2: *jsval) -> *JSObject;
 
 fn JS_IsArrayObject(++arg0: *JSContext, ++arg1: *JSObject) -> JSBool;
 
-fn JS_GetArrayLength(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *uint32_t) -> JSBool;
+fn JS_GetArrayLength(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *jsuint) -> JSBool;
 
-fn JS_SetArrayLength(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: uint32_t) -> JSBool;
+fn JS_SetArrayLength(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: jsuint) -> JSBool;
 
-fn JS_DefineElement(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: uint32_t, ++arg3: jsval, ++arg4: JSPropertyOp, ++arg5: JSStrictPropertyOp, ++arg6: c_uint) -> JSBool;
+fn JS_DefineElement(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: uint32_t, ++arg3: jsval, ++arg4: JSPropertyOp, ++arg5: JSStrictPropertyOp, ++arg6: uintN) -> JSBool;
 
 fn JS_AlreadyHasOwnElement(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: uint32_t, ++arg3: *JSBool) -> JSBool;
 
@@ -1014,37 +1018,31 @@ fn JS_NewPropertyIterator(++arg0: *JSContext, ++arg1: *JSObject) -> *JSObject;
 
 fn JS_NextProperty(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *jsid) -> JSBool;
 
-fn JS_NewElementIterator(++arg0: *JSContext, ++arg1: *JSObject) -> *JSObject;
+fn JS_CheckAccess(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: jsid, ++arg3: JSAccessMode, ++arg4: *jsval, ++arg5: *uintN) -> JSBool;
 
-fn JS_ElementIteratorStub(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: JSBool) -> *JSObject;
+fn JS_GetReservedSlot(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: uint32_t, ++arg3: *jsval) -> JSBool;
 
-fn JS_CheckAccess(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: jsid, ++arg3: JSAccessMode, ++arg4: *jsval, ++arg5: *c_uint) -> JSBool;
+fn JS_SetReservedSlot(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: uint32_t, ++arg3: jsval) -> JSBool;
 
-fn JS_GetReservedSlot(++arg0: *JSObject, ++arg1: uint32_t) -> jsval;
+fn JS_SetRuntimeSecurityCallbacks(++arg0: *JSRuntime, ++arg1: *JSSecurityCallbacks) -> *JSSecurityCallbacks;
 
-fn JS_SetReservedSlot(++arg0: *JSObject, ++arg1: uint32_t, ++arg2: jsval);
+fn JS_GetRuntimeSecurityCallbacks(++arg0: *JSRuntime) -> *JSSecurityCallbacks;
 
-fn JS_HoldPrincipals(++arg0: *JSPrincipals);
+fn JS_SetContextSecurityCallbacks(++arg0: *JSContext, ++arg1: *JSSecurityCallbacks) -> *JSSecurityCallbacks;
 
-fn JS_DropPrincipals(++arg0: *JSRuntime, ++arg1: *JSPrincipals);
-
-fn JS_SetSecurityCallbacks(++arg0: *JSRuntime, ++arg1: *JSSecurityCallbacks);
-
-fn JS_GetSecurityCallbacks(++arg0: *JSRuntime) -> *JSSecurityCallbacks;
+fn JS_GetSecurityCallbacks(++arg0: *JSContext) -> *JSSecurityCallbacks;
 
 fn JS_SetTrustedPrincipals(++arg0: *JSRuntime, ++arg1: *JSPrincipals);
 
-fn JS_InitDestroyPrincipalsCallback(++arg0: *JSRuntime, ++arg1: JSDestroyPrincipalsOp);
+fn JS_NewFunction(++arg0: *JSContext, ++arg1: JSNative, ++arg2: uintN, ++arg3: uintN, ++arg4: *JSObject, ++arg5: *c_char) -> *JSFunction;
 
-fn JS_NewFunction(++arg0: *JSContext, ++arg1: JSNative, ++arg2: c_uint, ++arg3: c_uint, ++arg4: *JSObject, ++arg5: *c_char) -> *JSFunction;
-
-fn JS_NewFunctionById(++arg0: *JSContext, ++arg1: JSNative, ++arg2: c_uint, ++arg3: c_uint, ++arg4: *JSObject, ++arg5: jsid) -> *JSFunction;
+fn JS_NewFunctionById(++arg0: *JSContext, ++arg1: JSNative, ++arg2: uintN, ++arg3: uintN, ++arg4: *JSObject, ++arg5: jsid) -> *JSFunction;
 
 fn JS_GetFunctionObject(++arg0: *JSFunction) -> *JSObject;
 
 fn JS_GetFunctionId(++arg0: *JSFunction) -> *JSString;
 
-fn JS_GetFunctionFlags(++arg0: *JSFunction) -> c_uint;
+fn JS_GetFunctionFlags(++arg0: *JSFunction) -> uintN;
 
 fn JS_GetFunctionArity(++arg0: *JSFunction) -> uint16_t;
 
@@ -1056,29 +1054,27 @@ fn JS_IsNativeFunction(++arg0: *JSObject, ++arg1: JSNative) -> JSBool;
 
 fn JS_DefineFunctions(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSFunctionSpec) -> JSBool;
 
-fn JS_DefineFunction(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++arg3: JSNative, ++arg4: c_uint, ++arg5: c_uint) -> *JSFunction;
+fn JS_DefineFunction(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++arg3: JSNative, ++arg4: uintN, ++arg5: uintN) -> *JSFunction;
 
-fn JS_DefineUCFunction(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *jschar, ++arg3: size_t, ++arg4: JSNative, ++arg5: c_uint, ++arg6: c_uint) -> *JSFunction;
+fn JS_DefineUCFunction(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *jschar, ++arg3: size_t, ++arg4: JSNative, ++arg5: uintN, ++arg6: uintN) -> *JSFunction;
 
-fn JS_DefineFunctionById(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: jsid, ++arg3: JSNative, ++arg4: c_uint, ++arg5: c_uint) -> *JSFunction;
+fn JS_DefineFunctionById(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: jsid, ++arg3: JSNative, ++arg4: uintN, ++arg5: uintN) -> *JSFunction;
 
 fn JS_CloneFunctionObject(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSObject) -> *JSObject;
 
 fn JS_BufferIsCompilableUnit(++arg0: *JSContext, ++arg1: JSBool, ++arg2: *JSObject, ++arg3: *c_char, ++arg4: size_t) -> JSBool;
 
-fn JS_CompileScript(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++arg3: size_t, ++arg4: *c_char, ++arg5: c_uint) -> *JSScript;
+fn JS_CompileScript(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++arg3: size_t, ++arg4: *c_char, ++arg5: uintN) -> *JSScript;
 
-fn JS_CompileScriptForPrincipals(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSPrincipals, ++arg3: *c_char, ++arg4: size_t, ++arg5: *c_char, ++arg6: c_uint) -> *JSScript;
+fn JS_CompileScriptForPrincipals(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSPrincipals, ++arg3: *c_char, ++arg4: size_t, ++arg5: *c_char, ++arg6: uintN) -> *JSScript;
 
-fn JS_CompileScriptForPrincipalsVersion(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSPrincipals, ++arg3: *c_char, ++arg4: size_t, ++arg5: *c_char, ++arg6: c_uint, ++arg7: JSVersion) -> *JSScript;
+fn JS_CompileScriptForPrincipalsVersion(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSPrincipals, ++arg3: *c_char, ++arg4: size_t, ++arg5: *c_char, ++arg6: uintN, ++arg7: JSVersion) -> *JSScript;
 
-fn JS_CompileUCScript(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *jschar, ++arg3: size_t, ++arg4: *c_char, ++arg5: c_uint) -> *JSScript;
+fn JS_CompileUCScript(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *jschar, ++arg3: size_t, ++arg4: *c_char, ++arg5: uintN) -> *JSScript;
 
-fn JS_CompileUCScriptForPrincipals(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSPrincipals, ++arg3: *jschar, ++arg4: size_t, ++arg5: *c_char, ++arg6: c_uint) -> *JSScript;
+fn JS_CompileUCScriptForPrincipals(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSPrincipals, ++arg3: *jschar, ++arg4: size_t, ++arg5: *c_char, ++arg6: uintN) -> *JSScript;
 
-fn JS_CompileUCScriptForPrincipalsVersion(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSPrincipals, ++arg3: *jschar, ++arg4: size_t, ++arg5: *c_char, ++arg6: c_uint, ++arg7: JSVersion) -> *JSScript;
-
-fn JS_CompileUCScriptForPrincipalsVersionOrigin(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSPrincipals, ++arg3: *JSPrincipals, ++arg4: *jschar, ++arg5: size_t, ++arg6: *c_char, ++arg7: c_uint, ++arg8: JSVersion) -> *JSScript;
+fn JS_CompileUCScriptForPrincipalsVersion(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSPrincipals, ++arg3: *jschar, ++arg4: size_t, ++arg5: *c_char, ++arg6: uintN, ++arg7: JSVersion) -> *JSScript;
 
 fn JS_CompileUTF8File(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char) -> *JSScript;
 
@@ -1090,51 +1086,53 @@ fn JS_CompileUTF8FileHandleForPrincipalsVersion(++arg0: *JSContext, ++arg1: *JSO
 
 fn JS_GetGlobalFromScript(++arg0: *JSScript) -> *JSObject;
 
-fn JS_CompileFunction(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++arg3: c_uint, ++arg4: **c_char, ++arg5: *c_char, ++arg6: size_t, ++arg7: *c_char, ++arg8: c_uint) -> *JSFunction;
+fn JS_CompileFunction(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++arg3: uintN, ++arg4: **c_char, ++arg5: *c_char, ++arg6: size_t, ++arg7: *c_char, ++arg8: uintN) -> *JSFunction;
 
-fn JS_CompileFunctionForPrincipals(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSPrincipals, ++arg3: *c_char, ++arg4: c_uint, ++arg5: **c_char, ++arg6: *c_char, ++arg7: size_t, ++arg8: *c_char, ++arg9: c_uint) -> *JSFunction;
+fn JS_CompileFunctionForPrincipals(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSPrincipals, ++arg3: *c_char, ++arg4: uintN, ++arg5: **c_char, ++arg6: *c_char, ++arg7: size_t, ++arg8: *c_char, ++arg9: uintN) -> *JSFunction;
 
-fn JS_CompileUCFunction(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++arg3: c_uint, ++arg4: **c_char, ++arg5: *jschar, ++arg6: size_t, ++arg7: *c_char, ++arg8: c_uint) -> *JSFunction;
+fn JS_CompileUCFunction(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++arg3: uintN, ++arg4: **c_char, ++arg5: *jschar, ++arg6: size_t, ++arg7: *c_char, ++arg8: uintN) -> *JSFunction;
 
-fn JS_CompileUCFunctionForPrincipals(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSPrincipals, ++arg3: *c_char, ++arg4: c_uint, ++arg5: **c_char, ++arg6: *jschar, ++arg7: size_t, ++arg8: *c_char, ++arg9: c_uint) -> *JSFunction;
+fn JS_CompileUCFunctionForPrincipals(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSPrincipals, ++arg3: *c_char, ++arg4: uintN, ++arg5: **c_char, ++arg6: *jschar, ++arg7: size_t, ++arg8: *c_char, ++arg9: uintN) -> *JSFunction;
 
-fn JS_CompileUCFunctionForPrincipalsVersion(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSPrincipals, ++arg3: *c_char, ++arg4: c_uint, ++arg5: **c_char, ++arg6: *jschar, ++arg7: size_t, ++arg8: *c_char, ++arg9: c_uint, ++arg10: JSVersion) -> *JSFunction;
+fn JS_CompileUCFunctionForPrincipalsVersion(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSPrincipals, ++arg3: *c_char, ++arg4: uintN, ++arg5: **c_char, ++arg6: *jschar, ++arg7: size_t, ++arg8: *c_char, ++arg9: uintN, ++arg10: JSVersion) -> *JSFunction;
 
-fn JS_DecompileScript(++arg0: *JSContext, ++arg1: *JSScript, ++arg2: *c_char, ++arg3: c_uint) -> *JSString;
+fn JS_DecompileScript(++arg0: *JSContext, ++arg1: *JSScript, ++arg2: *c_char, ++arg3: uintN) -> *JSString;
 
-fn JS_DecompileFunction(++arg0: *JSContext, ++arg1: *JSFunction, ++arg2: c_uint) -> *JSString;
+fn JS_DecompileFunction(++arg0: *JSContext, ++arg1: *JSFunction, ++arg2: uintN) -> *JSString;
 
-fn JS_DecompileFunctionBody(++arg0: *JSContext, ++arg1: *JSFunction, ++arg2: c_uint) -> *JSString;
+fn JS_DecompileFunctionBody(++arg0: *JSContext, ++arg1: *JSFunction, ++arg2: uintN) -> *JSString;
 
 fn JS_ExecuteScript(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSScript, ++arg3: *jsval) -> JSBool;
 
 fn JS_ExecuteScriptVersion(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSScript, ++arg3: *jsval, ++arg4: JSVersion) -> JSBool;
 
-fn JS_EvaluateScript(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++arg3: c_uint, ++arg4: *c_char, ++arg5: c_uint, ++arg6: *jsval) -> JSBool;
+fn JS_EvaluateScript(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++arg3: uintN, ++arg4: *c_char, ++arg5: uintN, ++arg6: *jsval) -> JSBool;
 
-fn JS_EvaluateScriptForPrincipals(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSPrincipals, ++arg3: *c_char, ++arg4: c_uint, ++arg5: *c_char, ++arg6: c_uint, ++arg7: *jsval) -> JSBool;
+fn JS_EvaluateScriptForPrincipals(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSPrincipals, ++arg3: *c_char, ++arg4: uintN, ++arg5: *c_char, ++arg6: uintN, ++arg7: *jsval) -> JSBool;
 
-fn JS_EvaluateScriptForPrincipalsVersion(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSPrincipals, ++arg3: *c_char, ++arg4: c_uint, ++arg5: *c_char, ++arg6: c_uint, ++arg7: *jsval, ++arg8: JSVersion) -> JSBool;
+fn JS_EvaluateScriptForPrincipalsVersion(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSPrincipals, ++arg3: *c_char, ++arg4: uintN, ++arg5: *c_char, ++arg6: uintN, ++arg7: *jsval, ++arg8: JSVersion) -> JSBool;
 
-fn JS_EvaluateUCScript(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *jschar, ++arg3: c_uint, ++arg4: *c_char, ++arg5: c_uint, ++arg6: *jsval) -> JSBool;
+fn JS_EvaluateUCScript(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *jschar, ++arg3: uintN, ++arg4: *c_char, ++arg5: uintN, ++arg6: *jsval) -> JSBool;
 
-fn JS_EvaluateUCScriptForPrincipals(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSPrincipals, ++arg3: *jschar, ++arg4: c_uint, ++arg5: *c_char, ++arg6: c_uint, ++arg7: *jsval) -> JSBool;
+fn JS_EvaluateUCScriptForPrincipals(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSPrincipals, ++arg3: *jschar, ++arg4: uintN, ++arg5: *c_char, ++arg6: uintN, ++arg7: *jsval) -> JSBool;
 
-fn JS_EvaluateUCScriptForPrincipalsVersion(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSPrincipals, ++arg3: *jschar, ++arg4: c_uint, ++arg5: *c_char, ++arg6: c_uint, ++arg7: *jsval, ++arg8: JSVersion) -> JSBool;
+fn JS_EvaluateUCScriptForPrincipalsVersion(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSPrincipals, ++arg3: *jschar, ++arg4: uintN, ++arg5: *c_char, ++arg6: uintN, ++arg7: *jsval, ++arg8: JSVersion) -> JSBool;
 
-fn JS_EvaluateUCScriptForPrincipalsVersionOrigin(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSPrincipals, ++arg3: *JSPrincipals, ++arg4: *jschar, ++arg5: c_uint, ++arg6: *c_char, ++arg7: c_uint, ++arg8: *jsval, ++arg9: JSVersion) -> JSBool;
+fn JS_EvaluateUCScriptForPrincipalsVersionOrigin(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSPrincipals, ++arg3: *JSPrincipals, ++arg4: *jschar, ++arg5: uintN, ++arg6: *c_char, ++arg7: uintN, ++arg8: *jsval, ++arg9: JSVersion) -> JSBool;
 
-fn JS_CallFunction(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSFunction, ++arg3: c_uint, ++arg4: *jsval, ++arg5: *jsval) -> JSBool;
+fn JS_CallFunction(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSFunction, ++arg3: uintN, ++arg4: *jsval, ++arg5: *jsval) -> JSBool;
 
-fn JS_CallFunctionName(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++arg3: c_uint, ++arg4: *jsval, ++arg5: *jsval) -> JSBool;
+fn JS_CallFunctionName(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++arg3: uintN, ++arg4: *jsval, ++arg5: *jsval) -> JSBool;
 
-fn JS_CallFunctionValue(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: jsval, ++arg3: c_uint, ++arg4: *jsval, ++arg5: *jsval) -> JSBool;
+fn JS_CallFunctionValue(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: jsval, ++arg3: uintN, ++arg4: *jsval, ++arg5: *jsval) -> JSBool;
 
 fn JS_SetOperationCallback(++arg0: *JSContext, ++arg1: JSOperationCallback) -> JSOperationCallback;
 
 fn JS_GetOperationCallback(++arg0: *JSContext) -> JSOperationCallback;
 
-fn JS_TriggerOperationCallback(++arg0: *JSRuntime);
+fn JS_TriggerOperationCallback(++arg0: *JSContext);
+
+fn JS_TriggerRuntimeOperationCallback(++arg0: *JSRuntime);
 
 fn JS_IsRunning(++arg0: *JSContext) -> JSBool;
 
@@ -1242,15 +1240,15 @@ fn JS_GetLocaleCallbacks(++arg0: *JSContext) -> *JSLocaleCallbacks;
 
 fn JS_ReportError(++arg0: *JSContext, ++arg1: *c_char/* FIXME: variadic arguments */);
 
-fn JS_ReportErrorNumber(++arg0: *JSContext, ++arg1: JSErrorCallback, ++arg2: *c_void, ++arg3: c_uint/* FIXME: variadic arguments */);
+fn JS_ReportErrorNumber(++arg0: *JSContext, ++arg1: JSErrorCallback, ++arg2: *c_void, ++arg3: uintN/* FIXME: variadic arguments */);
 
-fn JS_ReportErrorNumberUC(++arg0: *JSContext, ++arg1: JSErrorCallback, ++arg2: *c_void, ++arg3: c_uint/* FIXME: variadic arguments */);
+fn JS_ReportErrorNumberUC(++arg0: *JSContext, ++arg1: JSErrorCallback, ++arg2: *c_void, ++arg3: uintN/* FIXME: variadic arguments */);
 
 fn JS_ReportWarning(++arg0: *JSContext, ++arg1: *c_char/* FIXME: variadic arguments */) -> JSBool;
 
-fn JS_ReportErrorFlagsAndNumber(++arg0: *JSContext, ++arg1: c_uint, ++arg2: JSErrorCallback, ++arg3: *c_void, ++arg4: c_uint/* FIXME: variadic arguments */) -> JSBool;
+fn JS_ReportErrorFlagsAndNumber(++arg0: *JSContext, ++arg1: uintN, ++arg2: JSErrorCallback, ++arg3: *c_void, ++arg4: uintN/* FIXME: variadic arguments */) -> JSBool;
 
-fn JS_ReportErrorFlagsAndNumberUC(++arg0: *JSContext, ++arg1: c_uint, ++arg2: JSErrorCallback, ++arg3: *c_void, ++arg4: c_uint/* FIXME: variadic arguments */) -> JSBool;
+fn JS_ReportErrorFlagsAndNumberUC(++arg0: *JSContext, ++arg1: uintN, ++arg2: JSErrorCallback, ++arg3: *c_void, ++arg4: uintN/* FIXME: variadic arguments */) -> JSBool;
 
 fn JS_ReportOutOfMemory(++arg0: *JSContext);
 
@@ -1262,13 +1260,13 @@ fn JS_SetErrorReporter(++arg0: *JSContext, ++arg1: JSErrorReporter) -> JSErrorRe
 
 fn JS_NewDateObject(++arg0: *JSContext, ++arg1: c_int, ++arg2: c_int, ++arg3: c_int, ++arg4: c_int, ++arg5: c_int, ++arg6: c_int) -> *JSObject;
 
-fn JS_NewDateObjectMsec(++arg0: *JSContext, ++arg1: c_double) -> *JSObject;
+fn JS_NewDateObjectMsec(++arg0: *JSContext, ++arg1: jsdouble) -> *JSObject;
 
 fn JS_ObjectIsDate(++arg0: *JSContext, ++arg1: *JSObject) -> JSBool;
 
-fn JS_NewRegExpObject(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++arg3: size_t, ++arg4: c_uint) -> *JSObject;
+fn JS_NewRegExpObject(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *c_char, ++arg3: size_t, ++arg4: uintN) -> *JSObject;
 
-fn JS_NewUCRegExpObject(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *jschar, ++arg3: size_t, ++arg4: c_uint) -> *JSObject;
+fn JS_NewUCRegExpObject(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *jschar, ++arg3: size_t, ++arg4: uintN) -> *JSObject;
 
 fn JS_SetRegExpInput(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSString, ++arg3: JSBool);
 
@@ -1276,15 +1274,15 @@ fn JS_ClearRegExpStatics(++arg0: *JSContext, ++arg1: *JSObject);
 
 fn JS_ExecuteRegExp(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSObject, ++arg3: *jschar, ++arg4: size_t, ++arg5: *size_t, ++arg6: JSBool, ++arg7: *jsval) -> JSBool;
 
-fn JS_NewRegExpObjectNoStatics(++arg0: *JSContext, ++arg1: *c_char, ++arg2: size_t, ++arg3: c_uint) -> *JSObject;
+fn JS_NewRegExpObjectNoStatics(++arg0: *JSContext, ++arg1: *c_char, ++arg2: size_t, ++arg3: uintN) -> *JSObject;
 
-fn JS_NewUCRegExpObjectNoStatics(++arg0: *JSContext, ++arg1: *jschar, ++arg2: size_t, ++arg3: c_uint) -> *JSObject;
+fn JS_NewUCRegExpObjectNoStatics(++arg0: *JSContext, ++arg1: *jschar, ++arg2: size_t, ++arg3: uintN) -> *JSObject;
 
 fn JS_ExecuteRegExpNoStatics(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *jschar, ++arg3: size_t, ++arg4: *size_t, ++arg5: JSBool, ++arg6: *jsval) -> JSBool;
 
 fn JS_ObjectIsRegExp(++arg0: *JSContext, ++arg1: *JSObject) -> JSBool;
 
-fn JS_GetRegExpFlags(++arg0: *JSContext, ++arg1: *JSObject) -> c_uint;
+fn JS_GetRegExpFlags(++arg0: *JSContext, ++arg1: *JSObject) -> uintN;
 
 fn JS_GetRegExpSource(++arg0: *JSContext, ++arg1: *JSObject) -> *JSString;
 
@@ -1318,20 +1316,10 @@ fn JS_ClearRuntimeThread(++arg0: *JSRuntime);
 
 fn JS_SetRuntimeThread(++arg0: *JSRuntime);
 
-fn JS_NewObjectForConstructor(++arg0: *JSContext, ++arg1: *JSClass, ++arg2: *jsval) -> *JSObject;
+fn JS_NewObjectForConstructor(++arg0: *JSContext, ++arg1: *jsval) -> *JSObject;
 
 fn JS_IndexToId(++arg0: *JSContext, ++arg1: uint32_t, ++arg2: *jsid) -> JSBool;
 
 fn JS_IsIdentifier(++arg0: *JSContext, ++arg1: *JSString, ++arg2: *JSBool) -> JSBool;
-
-fn JS_DescribeScriptedCaller(++arg0: *JSContext, ++arg1: **JSScript, ++arg2: *c_uint) -> JSBool;
-
-fn JS_EncodeScript(++arg0: *JSContext, ++arg1: *JSScript, ++arg2: *uint32_t) -> *c_void;
-
-fn JS_EncodeInterpretedFunction(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *uint32_t) -> *c_void;
-
-fn JS_DecodeScript(++arg0: *JSContext, ++arg1: *c_void, ++arg2: uint32_t, ++arg3: *JSPrincipals, ++arg4: *JSPrincipals) -> *JSScript;
-
-fn JS_DecodeInterpretedFunction(++arg0: *JSContext, ++arg1: *c_void, ++arg2: uint32_t, ++arg3: *JSPrincipals, ++arg4: *JSPrincipals) -> *JSObject;
 
 }
