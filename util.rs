@@ -6,14 +6,6 @@ import ptr::null;
 import void = c_void;
 
 mod jsrust {
-    /* Bindings to work around Rust's missing features. */
-    fn JSRust_GetPropertyStub() -> JSPropertyOp { fail }
-    fn JSRust_GetStrictPropertyStub() -> JSStrictPropertyOp { fail }
-    fn JSRust_GetEnumerateStub() -> JSEnumerateOp { fail }
-    fn JSRust_GetResolveStub() -> JSResolveOp { fail }
-    fn JSRust_GetConvertStub() -> JSConvertOp { fail }
-    fn JSRust_GetFinalizeStub() -> JSFinalizeOp { fail }
-
 	/* Additional features. */
     fn JSRust_NewContext(rt : *JSRuntime, stackChunkSize : size_t)
         -> *JSContext { fail }
@@ -143,14 +135,14 @@ fn new_class(spec : class_spec) -> @class unsafe {
             name: str::as_c_str(*name, { |b| b }),
             flags: spec.flags,
 
-            addProperty: jsrust::JSRust_GetPropertyStub(),
-            delProperty: jsrust::JSRust_GetPropertyStub(),
-            getProperty: jsrust::JSRust_GetPropertyStub(),
-            setProperty: jsrust::JSRust_GetStrictPropertyStub(),
-            enumerate: jsrust::JSRust_GetEnumerateStub(),
-            resolve: jsrust::JSRust_GetResolveStub(),
-            convert: jsrust::JSRust_GetConvertStub(),
-            finalize: jsrust::JSRust_GetFinalizeStub(),
+            addProperty: crust::JS_PropertyStub,
+            delProperty: crust::JS_PropertyStub,
+            getProperty: crust::JS_PropertyStub,
+            setProperty: crust::JS_StrictPropertyStub,
+            enumerate: crust::JS_EnumerateStub,
+            resolve: crust::JS_ResolveStub,
+            convert: crust::JS_ConvertStub,
+            finalize: crust::JS_FinalizeStub,
 
             reserved0: unsafe::reinterpret_cast(0),
             checkAccess: unsafe::reinterpret_cast(0),
