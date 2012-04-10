@@ -49,7 +49,7 @@ mod crust {
         bindgen::JS_ConvertStub(arg0, arg1, arg2, arg3)
     }
 
-    crust fn JS_FinalizeStub(++arg0: *JSContext, ++arg2: *JSObject) {
-        bindgen::JS_FinalizeStub(arg0, arg2);
+    crust fn JS_FinalizeStub(++_arg0: *JSContext, ++_arg2: *JSObject) {
+        // There doesn't seem to be a native implementation of this anymore?
     }
 }

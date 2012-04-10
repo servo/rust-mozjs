@@ -538,8 +538,6 @@ type union_unnamed2 = c_void /* FIXME: union type */;
 #[link_name="mozjs"]
 native mod bindgen {
 
-fn JS_Assert(++arg0: *c_char, ++arg1: *c_char, ++arg2: c_int);
-
 fn JS_StringHasBeenInterned(++arg0: *JSContext, ++arg1: *JSString) -> JSBool;
 
 fn JS_CallOnce(++arg0: *JSCallOnceType, ++arg1: JSInitCallback) -> JSBool;
@@ -636,8 +634,6 @@ fn JS_DestroyContext(++arg0: *JSContext);
 
 fn JS_DestroyContextNoGC(++arg0: *JSContext);
 
-fn JS_DestroyContextMaybeGC(++arg0: *JSContext);
-
 fn JS_GetContextPrivate(++arg0: *JSContext) -> *c_void;
 
 fn JS_SetContextPrivate(++arg0: *JSContext, ++arg1: *c_void);
@@ -647,8 +643,6 @@ fn JS_GetSecondContextPrivate(++arg0: *JSContext) -> *c_void;
 fn JS_SetSecondContextPrivate(++arg0: *JSContext, ++arg1: *c_void);
 
 fn JS_ContextIterator(++arg0: *JSRuntime, ++arg1: **JSContext) -> *JSContext;
-
-fn JS_ContextIteratorUnlocked(++arg0: *JSRuntime, ++arg1: **JSContext) -> *JSContext;
 
 fn JS_GetVersion(++arg0: *JSContext) -> JSVersion;
 
@@ -666,8 +660,6 @@ fn JS_ToggleOptions(++arg0: *JSContext, ++arg1: uint32_t) -> uint32_t;
 
 fn JS_GetImplementationVersion() -> *c_char;
 
-fn JS_SetCompartmentCallback(++arg0: *JSRuntime, ++arg1: JSCompartmentCallback) -> JSCompartmentCallback;
-
 fn JS_SetWrapObjectCallbacks(++arg0: *JSRuntime, ++arg1: JSWrapObjectCallback, ++arg2: JSPreWrapCallback) -> JSWrapObjectCallback;
 
 fn JS_EnterCrossCompartmentCall(++arg0: *JSContext, ++arg1: *JSObject) -> *JSCrossCompartmentCall;
@@ -676,8 +668,6 @@ fn JS_LeaveCrossCompartmentCall(++arg0: *JSCrossCompartmentCall);
 
 fn JS_SetCompartmentPrivate(++arg0: *JSContext, ++arg1: *JSCompartment, ++arg2: *c_void) -> *c_void;
 
-fn JS_GetCompartmentPrivate(++arg0: *JSContext, ++arg1: *JSCompartment) -> *c_void;
-
 fn JS_WrapObject(++arg0: *JSContext, ++arg1: **JSObject) -> JSBool;
 
 fn JS_WrapValue(++arg0: *JSContext, ++arg1: *jsval) -> JSBool;
@@ -685,8 +675,6 @@ fn JS_WrapValue(++arg0: *JSContext, ++arg1: *jsval) -> JSBool;
 fn JS_TransplantObject(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSObject) -> *JSObject;
 
 fn js_TransplantObjectWithWrapper(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSObject, ++arg3: *JSObject, ++arg4: *JSObject) -> *JSObject;
-
-fn js_GetCompartmentPrivate(++arg0: *JSCompartment) -> *c_void;
 
 fn JS_GetGlobalObject(++arg0: *JSContext) -> *JSObject;
 
@@ -782,13 +770,9 @@ fn JS_TraceRuntime(++arg0: *JSTracer);
 
 fn JS_GC(++arg0: *JSContext);
 
-fn JS_CompartmentGC(++arg0: *JSContext, ++arg1: *JSCompartment);
-
 fn JS_MaybeGC(++arg0: *JSContext);
 
 fn JS_SetGCCallback(++arg0: *JSContext, ++arg1: JSGCCallback) -> JSGCCallback;
-
-fn JS_SetGCCallbackRT(++arg0: *JSRuntime, ++arg1: JSGCCallback) -> JSGCCallback;
 
 fn JS_IsGCMarkingTracer(++arg0: *JSTracer) -> JSBool;
 
@@ -802,21 +786,9 @@ fn JS_SetGCParameterForThread(++arg0: *JSContext, ++arg1: JSGCParamKey, ++arg2: 
 
 fn JS_GetGCParameterForThread(++arg0: *JSContext, ++arg1: JSGCParamKey) -> uint32_t;
 
-fn JS_FlushCaches(++arg0: *JSContext);
-
-fn JS_AddExternalStringFinalizer(++arg0: JSStringFinalizeOp) -> intN;
-
-fn JS_RemoveExternalStringFinalizer(++arg0: JSStringFinalizeOp) -> intN;
-
 fn JS_NewExternalString(++arg0: *JSContext, ++arg1: *jschar, ++arg2: size_t, ++arg3: intN) -> *JSString;
 
-fn JS_NewExternalStringWithClosure(++arg0: *JSContext, ++arg1: *jschar, ++arg2: size_t, ++arg3: intN, ++arg4: *c_void) -> *JSString;
-
 fn JS_IsExternalString(++arg0: *JSContext, ++arg1: *JSString) -> JSBool;
-
-fn JS_GetExternalStringClosure(++arg0: *JSContext, ++arg1: *JSString) -> *c_void;
-
-fn JS_SetThreadStackLimit(++arg0: *JSContext, ++arg1: uintptr_t);
 
 fn JS_SetNativeStackQuota(++arg0: *JSContext, ++arg1: size_t);
 
@@ -841,8 +813,6 @@ fn JS_EnumerateStub(++arg0: *JSContext, ++arg1: *JSObject) -> JSBool;
 fn JS_ResolveStub(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: jsid) -> JSBool;
 
 fn JS_ConvertStub(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: JSType, ++arg3: *jsval) -> JSBool;
-
-fn JS_FinalizeStub(++arg0: *JSContext, ++arg1: *JSObject);
 
 fn JS_InitClass(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: *JSObject, ++arg3: *JSClass, ++arg4: JSNative, ++arg5: uintN, ++arg6: *JSPropertySpec, ++arg7: *JSFunctionSpec, ++arg8: *JSPropertySpec, ++arg9: *JSFunctionSpec) -> *JSObject;
 
@@ -1024,12 +994,6 @@ fn JS_GetReservedSlot(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: uint32_t, +
 
 fn JS_SetReservedSlot(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: uint32_t, ++arg3: jsval) -> JSBool;
 
-fn JS_SetRuntimeSecurityCallbacks(++arg0: *JSRuntime, ++arg1: *JSSecurityCallbacks) -> *JSSecurityCallbacks;
-
-fn JS_GetRuntimeSecurityCallbacks(++arg0: *JSRuntime) -> *JSSecurityCallbacks;
-
-fn JS_SetContextSecurityCallbacks(++arg0: *JSContext, ++arg1: *JSSecurityCallbacks) -> *JSSecurityCallbacks;
-
 fn JS_GetSecurityCallbacks(++arg0: *JSContext) -> *JSSecurityCallbacks;
 
 fn JS_SetTrustedPrincipals(++arg0: *JSRuntime, ++arg1: *JSPrincipals);
@@ -1131,8 +1095,6 @@ fn JS_SetOperationCallback(++arg0: *JSContext, ++arg1: JSOperationCallback) -> J
 fn JS_GetOperationCallback(++arg0: *JSContext) -> JSOperationCallback;
 
 fn JS_TriggerOperationCallback(++arg0: *JSContext);
-
-fn JS_TriggerRuntimeOperationCallback(++arg0: *JSRuntime);
 
 fn JS_IsRunning(++arg0: *JSContext) -> JSBool;
 
