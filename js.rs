@@ -50,6 +50,6 @@ mod crust {
     }
 
     crust fn JS_FinalizeStub(++arg0: *JSContext, ++arg2: *JSObject) {
-        // FIXME: Can't find the native implementation of this
+        bindgen::JS_FinalizeStub(arg0, arg2);
     }
 }
