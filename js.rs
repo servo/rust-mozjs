@@ -15,7 +15,10 @@ import JS_UnlockRuntime = jsapi::bindgen::JS_Unlock;
 export JS_UnlockRuntime;
 */
 
-#[link_args = "-L."]
+/* Look in this directory for spidermonkey */
+#[link_args = "-L ."]
+/* Link to the static js library */
+#[link_args = "-ljs_static"]
 native mod m { }
 
 // FIXME: Add the remaining options

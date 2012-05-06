@@ -535,7 +535,7 @@ type struct_unnamed1 = {
 
 type union_unnamed2 = c_void /* FIXME: union type */;
 
-#[link_name="mozjs"]
+#[nolink]
 native mod bindgen {
 
 fn JS_StringHasBeenInterned(++arg0: *JSContext, ++arg1: *JSString) -> JSBool;

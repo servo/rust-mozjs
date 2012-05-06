@@ -210,7 +210,9 @@ fn get_string(cx : context, jsstr : string) -> str unsafe {
         fail;
     }
 
-    ret vec::as_buf(buf) {|buf| str::unsafe::from_c_str_len(buf, len as uint) };
+    ret vec::as_buf(buf) {|buf|
+        str::unsafe::from_c_str_len(buf, len as uint)
+    };
 }
 
 fn get_int(cx : context, num : jsval) -> i32 unsafe {
