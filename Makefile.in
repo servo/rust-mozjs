@@ -12,7 +12,7 @@ libjs.dummy: js.rc $(RUST_SRC)
 	$(RUSTC) $(RUSTFLAGS) $< -o $@
 	touch $@
 
-js-test: js.rc $(JS_SRC)
+js-test: js.rc $(RUST_SRC)
 	$(RUSTC) $(RUSTFLAGS) $< -o $@ --test
 
 check: js-test
