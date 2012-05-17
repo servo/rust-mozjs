@@ -250,7 +250,7 @@ const JS_GENERIC_MAGIC: u32 = 11_u32;
 
 type JSWhyMagic = enum_JSWhyMagic;
 
-type union_jsval_layout = c_void /* FIXME: union type */;
+type union_jsval_layout = u64; // NDM--hand edited
 
 type jsval_layout = union_jsval_layout;
 
