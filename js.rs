@@ -16,7 +16,7 @@ export JS_UnlockRuntime;
 */
 
 /* Look in this directory for spidermonkey */
-#[link_args = "-L ."]
+#[link_args = "-L."]
 /* Link to the static js library */
 #[link_args = "-ljs_static"]
 native mod m { }
