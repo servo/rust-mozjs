@@ -168,7 +168,7 @@ fn compile_script(cx : context, object : object, src : [u8], filename : str,
 
 fn execute_script(cx : context, object : object, script : script)
         -> option<jsval> unsafe {
-    let rv : jsval = unsafe::reinterpret_cast(0);
+    let rv : jsval = unsafe::reinterpret_cast(0_i64);
     if js::JS_ExecuteScript(*cx, *object, *script, ptr::addr_of(rv)) == 0 as JSBool {
         ret none;
     }
