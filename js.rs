@@ -1,5 +1,14 @@
 import libc::types::common::c99::*;
 
+export JSOPTION_STRICT;
+export JSOPTION_WERROR;
+export JSOPTION_VAROBJFIX;
+export JSOPTION_METHODJIT;
+
+export JSCLASS_GLOBAL_FLAGS;
+
+export crust;
+
 export jsapi;
 
 // These are just macros in jsapi.h
