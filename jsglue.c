@@ -1,0 +1,1 @@
+void sanity_check() { }

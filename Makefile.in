@@ -1,6 +1,8 @@
 VPATH=%VPATH%
 
+CC ?= gcc
 RUSTC ?= rustc
+AR ?= ar
 RUSTFLAGS ?=
 
 RUST_SRC = $(shell find $(VPATH)/. -type f -name '*.rs')
@@ -8,12 +10,18 @@ RUST_SRC = $(shell find $(VPATH)/. -type f -name '*.rs')
 .PHONY: all
 all: libjs.dummy
 
-libjs.dummy: js.rc $(RUST_SRC)
+libjs.dummy: js.rc $(RUST_SRC) libjsglue.a
 	$(RUSTC) $(RUSTFLAGS) $< -o $@
 	touch $@
 
-js-test: js.rc $(RUST_SRC)
+js-test: js.rc $(RUST_SRC) libjsglue.a
 	$(RUSTC) $(RUSTFLAGS) $< -o $@ --test
+
+libjsglue.a: jsglue.o
+	$(AR) rcs libjsglue.a jsglue.o
+
+jsglue.o: jsglue.c
+	$(CC) $< -o $@ -c
 
 check: js-test
 	./js-test
