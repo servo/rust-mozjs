@@ -1,5 +1,7 @@
 #[doc = "Rust wrappers around the raw JS apis"];
 
+import bg = jsapi::bindgen;
+
 export rt;
 export cx;
 export jsobj;
@@ -100,6 +102,22 @@ impl methods for cx {
             }
         }
     }
+
+    unsafe fn get_cx_private() -> *() {
+        unsafe::reinterpret_cast(JS_GetContextPrivate(self.ptr))
+    }
+
+    unsafe fn set_cx_private(data: *()) {
+        JS_SetContextPrivate(self.ptr, unsafe::reinterpret_cast(data));
+    }
+
+    unsafe fn get_obj_private(obj: *JSObject) -> *() {
+        unsafe::reinterpret_cast(JS_GetPrivate(self.ptr, obj))
+    }
+
+    unsafe fn set_obj_private(obj: *JSObject, data: *()) {
+        JS_SetPrivate(self.ptr, obj, unsafe::reinterpret_cast(data));
+    }
 }
 
 crust fn reportError(_cx: *JSContext,
@@ -142,6 +160,18 @@ type jsobj = @jsobj_rsrc;
 
 resource jsobj_rsrc(self: {cx: cx, cxptr: *JSContext, ptr: *JSObject}) {
     JS_RemoveObjectRoot(self.cxptr, ptr::addr_of(self.ptr));
+}
+
+// ___________________________________________________________________________
+// random utilities
+
+impl methods for str {
+    fn to_jsstr(cx: cx) -> *JSString {
+        str::as_buf(self) { |buf|
+            let cbuf = unsafe { unsafe::reinterpret_cast(buf) };
+            bg::JS_NewStringCopyN(cx.ptr, cbuf, self.len())
+        }
+    }
 }
 
 #[cfg(test)]

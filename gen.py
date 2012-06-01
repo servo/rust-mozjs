@@ -21,4 +21,5 @@ args += includes + sysincludes
 
 subprocess.call(args)
         
-        
+# To generate jsglue:
+# DYLD_LIBRARY_PATH=~/versioned/rust-mozilla/build/llvm/x86_64-apple-darwin/Release+Asserts/lib/ ~/versioned/rust-bindgen/bindgen ./jsglue.c -I ../../build/src/mozjs/dist/include/ -match glue > glue.rs

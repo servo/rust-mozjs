@@ -21,7 +21,7 @@ libjsglue.a: jsglue.o
 	$(AR) rcs libjsglue.a jsglue.o
 
 jsglue.o: jsglue.c
-	$(CC) $< -o $@ -c
+	$(CC) $(CFLAGS) $< -o $@ -c
 
 check: js-test
 	./js-test
