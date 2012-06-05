@@ -1,5 +1,7 @@
 #[doc = "Rust wrappers around the raw JS apis"];
 
+import libc::types::os::arch::c95::size_t;
+
 export rt;
 export cx;
 export jsobj;
@@ -20,7 +22,7 @@ fn rt() -> rt {
 
 impl methods for rt {
     fn cx() -> cx {
-        @cx_rsrc({ptr: JS_NewContext(self.ptr, default_stacksize),
+        @cx_rsrc({ptr: JS_NewContext(self.ptr, default_stacksize as size_t),
                   rt: self})
     }
 }
