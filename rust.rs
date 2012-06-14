@@ -170,7 +170,7 @@ impl methods for str {
     fn to_jsstr(cx: cx) -> *JSString {
         str::as_buf(self) { |buf|
             let cbuf = unsafe { unsafe::reinterpret_cast(buf) };
-            bg::JS_NewStringCopyN(cx.ptr, cbuf, self.len())
+            bg::JS_NewStringCopyN(cx.ptr, cbuf, self.len() as size_t)
         }
     }
 }
