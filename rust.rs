@@ -1,7 +1,7 @@
 #[doc = "Rust wrappers around the raw JS apis"];
 
 import bg = jsapi::bindgen;
-import core::libc::types::os::arch::c95::size_t;
+import libc::types::os::arch::c95::size_t;
 
 export rt;
 export cx;
@@ -170,7 +170,7 @@ impl methods for str {
     fn to_jsstr(cx: cx) -> *JSString {
         str::as_buf(self) { |buf|
             let cbuf = unsafe { unsafe::reinterpret_cast(buf) };
-            bg::JS_NewStringCopyN(cx.ptr, cbuf, self.len())
+            bg::JS_NewStringCopyN(cx.ptr, cbuf, self.len() as size_t)
         }
     }
 }

@@ -1,5 +1,5 @@
 import ptr::{null, addr_of};
-import result::{result, ok, err, extensions};
+import result::{result, ok, err};
 import libc::c_char;
 import name_pool::{name_pool, methods};
 import str::unsafe::from_c_str;
