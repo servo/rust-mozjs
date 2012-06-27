@@ -13,8 +13,14 @@ export methods;
 
 type rt = @rt_rsrc;
 
-resource rt_rsrc(self: {ptr: *JSRuntime}) {
-    JS_Finish(self.ptr)
+class rt_rsrc {
+    let ptr : *JSRuntime;
+    new(p : {ptr: *JSRuntime}) {
+        self.ptr = p.ptr;
+    }
+    drop {
+        JS_Finish(self.ptr);
+    }
 }
 
 fn rt() -> rt {
@@ -32,10 +38,19 @@ impl methods for rt {
 // contexts
 
 type cx = @cx_rsrc;
-resource cx_rsrc(self: {ptr: *JSContext, rt: rt}) {
-    JS_DestroyContext(self.ptr);
-}
 
+class cx_rsrc {
+    let ptr : *JSContext;
+    let rt: rt;
+    new(rec : {ptr: *JSContext, rt: rt}) {
+        self.ptr = rec.ptr;
+        self.rt = rec.rt;
+    }
+    drop {
+        JS_DestroyContext(self.ptr);
+    }
+}
+    
 impl methods for cx {
     fn rooted_obj(obj: *JSObject) -> jsobj {
         let jsobj = @jsobj_rsrc({cx: self, cxptr: self.ptr, ptr: obj});
@@ -159,8 +174,18 @@ impl methods for compartment {
 
 type jsobj = @jsobj_rsrc;
 
-resource jsobj_rsrc(self: {cx: cx, cxptr: *JSContext, ptr: *JSObject}) {
-    JS_RemoveObjectRoot(self.cxptr, ptr::addr_of(self.ptr));
+class jsobj_rsrc {
+    let cx : cx;
+    let cxptr : *JSContext;
+    let ptr : *JSObject;
+    new(rec : {cx: cx, cxptr: *JSContext, ptr: *JSObject}) {
+        self.cx = rec.cx;
+        self.cxptr = rec.cxptr;
+        self.ptr = rec.ptr;
+    }
+    drop {
+        JS_RemoveObjectRoot(self.cxptr, ptr::addr_of(self.ptr));
+    }
 }
 
 // ___________________________________________________________________________
