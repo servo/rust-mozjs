@@ -155,14 +155,14 @@ type compartment = @{
     cx: cx,
     name_pool: name_pool,
     global_class: @JSClass,
-    mut global_funcs: [@[JSFunctionSpec]],
+    mut global_funcs: [@~[JSFunctionSpec]],
     global_obj: jsobj
 };
 
 impl methods for compartment {
     fn define_functions(specfn: fn(name_pool) -> [JSFunctionSpec]) -> result<(),()> {
         let specvec = @specfn(self.name_pool);
-        self.global_funcs += [specvec];
+        vec::push(self.global_funcs, specvec);
         vec::as_buf(*specvec) { |specs|
             result(JS_DefineFunctions(self.cx.ptr, self.global_obj.ptr, specs))
         }
