@@ -82,24 +82,20 @@ impl methods for cx {
     fn new_compartment(globclsfn: fn(name_pool) -> JSClass) -> result<compartment,()> {
         let np = name_pool();
         let globcls = @globclsfn(np);
-        let globobj =
-            JS_NewCompartmentAndGlobalObject(
-                self.ptr,
-                &*globcls as *JSClass,
-                null());
-        result(JS_InitStandardClasses(self.ptr, globobj)).chain { |_ok|
+        let globobj = JS_NewCompartmentAndGlobalObject(self.ptr, &*globcls as *JSClass, null());
+        result(JS_InitStandardClasses(self.ptr, globobj)).chain(|_ok| {
             ok(@{cx: self,
                  name_pool: np,
                  global_class: globcls,
                  mut global_funcs: [],
-                 global_obj: self.rooted_obj(globobj)})
-        }
+                 global_obj: self.rooted_obj(globobj)
+                })
+        })
     }
 
-    fn evaluate_script(glob: jsobj, bytes: [u8], filename: str,
-                       line_num: uint) -> result<(),()> {
-        vec::as_buf(bytes) { |bytes_ptr|
-            str::as_c_str(filename) { |filename_cstr|
+    fn evaluate_script(glob: jsobj, bytes: [u8], filename: str, line_num: uint) -> result<(),()> {
+        vec::as_buf(bytes, |bytes_ptr| {
+            str::as_c_str(filename, |filename_cstr| {
                 let bytes_ptr = bytes_ptr as *c_char;
                 let v: jsval = 0_u64;
                 #debug["Evaluating script from %s with bytes %?", filename, bytes];
@@ -115,8 +111,8 @@ impl methods for cx {
                     #debug["...ok!"];
                     ok(())
                 }
-            }
-        }
+            })
+        })
     }
 
     unsafe fn get_cx_private() -> *() {
@@ -163,9 +159,9 @@ impl methods for compartment {
     fn define_functions(specfn: fn(name_pool) -> [JSFunctionSpec]) -> result<(),()> {
         let specvec = @specfn(self.name_pool);
         vec::push(self.global_funcs, specvec);
-        vec::as_buf(*specvec) { |specs|
+        vec::as_buf(*specvec, |specs| {
             result(JS_DefineFunctions(self.cx.ptr, self.global_obj.ptr, specs))
-        }
+        })
     }
 }
 
@@ -193,10 +189,10 @@ class jsobj_rsrc {
 
 impl methods for str {
     fn to_jsstr(cx: cx) -> *JSString {
-        str::as_buf(self) { |buf|
+        str::as_buf(self, |buf| {
             let cbuf = unsafe { unsafe::reinterpret_cast(buf) };
             bg::JS_NewStringCopyN(cx.ptr, cbuf, self.len() as size_t)
-        }
+        })
     }
 }
 
@@ -209,7 +205,7 @@ mod test {
         let cx = rt.cx();
         cx.set_default_options_and_version();
         cx.set_logging_error_reporter();
-        cx.new_compartment(global::global_class).chain { |comp|
+        cx.new_compartment(global::global_class).chain |comp| {
             comp.define_functions(global::debug_fns);
 
             let bytes = str::bytes("debug(22);");
