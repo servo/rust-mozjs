@@ -47,7 +47,7 @@ export JSVAL_TRUE;
 #[link_args = "-L."]
 /* Link to the static js library */
 #[link_args = "-ljs_static"]
-native mod m { }
+extern mod m { }
 
 // FIXME: Add the remaining options
 const JSOPTION_STRICT: uint32_t =    0b00000000000001u32;

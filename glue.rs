@@ -3,7 +3,7 @@
 import libc::*;
 
 #[link_name="jsglue"]
-native mod bindgen {
+extern mod bindgen {
 
 fn RUST_JSVAL_IS_NULL(++v: jsval) -> JSBool;
 

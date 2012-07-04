@@ -43,7 +43,7 @@ fn global_class(np: name_pool) -> JSClass {
     basic_class(np, "global")
 }
 
-crust fn debug(cx: *JSContext, argc: uintN, vp: *jsval) -> JSBool {
+extern fn debug(cx: *JSContext, argc: uintN, vp: *jsval) -> JSBool {
     import io::writer_util;
 
     #debug["debug() called with %? arguments", argc];
