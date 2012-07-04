@@ -205,12 +205,12 @@ mod test {
         let cx = rt.cx();
         cx.set_default_options_and_version();
         cx.set_logging_error_reporter();
-        cx.new_compartment(global::global_class).chain |comp| {
+        cx.new_compartment(global::global_class).chain(|comp| {
             comp.define_functions(global::debug_fns);
 
             let bytes = str::bytes("debug(22);");
             cx.evaluate_script(comp.global_obj, bytes, "test", 1u)
-        };
+        });
     }
 
 }
