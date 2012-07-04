@@ -132,7 +132,7 @@ impl methods for cx {
     }
 }
 
-crust fn reportError(_cx: *JSContext,
+extern fn reportError(_cx: *JSContext,
                      msg: *c_char,
                      report: *JSErrorReport) {
     unsafe {
