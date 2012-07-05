@@ -4,9 +4,19 @@ import libc::c_char;
 import name_pool::{name_pool, methods};
 import str::unsafe::from_c_str;
 import io::writer_util;
-import libc::types::common::c99::*;
-import jsapi::*;
-import jsapi::bindgen::*;
+import jsapi::{JSBool, JSClass, JSContext, JSErrorReport, JSFunctionSpec,
+               JSObject, JSRuntime, JSString, JSVERSION_LATEST, jsuint, jsval,
+               uintN};
+import jsapi::bindgen::{JS_free, JS_AddObjectRoot, JS_DefineFunctions,
+                        JS_DestroyContext, JS_EncodeString, JS_EvaluateScript,
+                        JS_Finish, JS_GetContextPrivate, JS_GetPrivate,
+                        JS_Init, JS_InitStandardClasses,
+                        JS_NewCompartmentAndGlobalObject, JS_NewContext,
+                        JS_RemoveObjectRoot, JS_SetContextPrivate,
+                        JS_SetErrorReporter, JS_SetOptions, JS_SetPrivate,
+                        JS_SetVersion, JS_ValueToString};
+import libc::types::common::c99::{int8_t, int16_t, int32_t, int64_t, uint8_t,
+                                  uint16_t, uint32_t, uint64_t};
 
 export JSOPTION_STRICT;
 export JSOPTION_WERROR;
