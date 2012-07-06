@@ -57,6 +57,7 @@ export JSVAL_TRUE;
 #[link_args = "-L."]
 /* Link to the static js library */
 #[link_args = "-ljs_static"]
+#[link_args = "-lstdc++"]
 extern mod m { }
 
 // FIXME: Add the remaining options
