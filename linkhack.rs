@@ -1,6 +1,7 @@
 // Some crumminess to make sure we link correctly
 
 #[cfg(target_os = "linux")]
+#[link_args = "-lpthread -lstdc++"]
 #[nolink]
 extern mod m { }
 
