@@ -27,6 +27,7 @@ export JSCLASS_GLOBAL_FLAGS;
 
 export crust;
 export rust;
+export name_pool;
 
 export jsapi;
 export global;
