@@ -1,12 +1,14 @@
 #[doc = "Rust wrappers around the raw JS apis"];
 
 import bg = jsapi::bindgen;
-import libc::types::os::arch::c95::size_t;
+import libc::types::os::arch::c95::{size_t, c_uint};
+import name_pool::methods;
 
 export rt;
 export cx;
 export jsobj;
 export methods;
+export compartment;
 
 // ___________________________________________________________________________
 // friendly Rustic API to runtimes
@@ -42,9 +44,12 @@ type cx = @cx_rsrc;
 class cx_rsrc {
     let ptr : *JSContext;
     let rt: rt;
+    let mut classes: ~[@JSClass];
+
     new(rec : {ptr: *JSContext, rt: rt}) {
         self.ptr = rec.ptr;
         self.rt = rec.rt;
+        self.classes = ~[];
     }
     drop {
         JS_DestroyContext(self.ptr);
@@ -63,7 +68,7 @@ impl methods for cx {
         self.set_version(JSVERSION_LATEST);
     }
 
-    fn set_options(v: jsuint) {
+    fn set_options(v: c_uint) {
         JS_SetOptions(self.ptr, v);
     }
 
@@ -84,25 +89,28 @@ impl methods for cx {
         let globcls = @globclsfn(np);
         let globobj = JS_NewCompartmentAndGlobalObject(self.ptr, &*globcls as *JSClass, null());
         result(JS_InitStandardClasses(self.ptr, globobj)).chain(|_ok| {
-            ok(@{cx: self,
-                 name_pool: np,
-                 global_class: globcls,
-                 mut global_funcs: ~[],
-                 global_obj: self.rooted_obj(globobj)
-                })
+            let compartment = @{cx: self,
+                                name_pool: np,
+                                mut global_funcs: ~[],
+                                mut global_props: ~[],
+                                global_class: globcls,
+                                global_obj: self.rooted_obj(globobj)
+                               };
+            self.set_cx_private(&*compartment as *());
+            ok(compartment)
         })
     }
 
     fn evaluate_script(glob: jsobj, bytes: ~[u8], filename: ~str, line_num: uint) 
         -> result<(),()> {
-        vec::as_buf(bytes, |bytes_ptr| {
+        vec::as_buf(bytes, |bytes_ptr, bytes_len| {
             str::as_c_str(filename, |filename_cstr| {
                 let bytes_ptr = bytes_ptr as *c_char;
                 let v: jsval = 0_u64;
                 #debug["Evaluating script from %s with bytes %?", filename, bytes];
                 if JS_EvaluateScript(self.ptr, glob.ptr,
-                                     bytes_ptr, bytes.len() as uintN,
-                                     filename_cstr, line_num as uintN,
+                                     bytes_ptr, bytes_len as c_uint,
+                                     filename_cstr, line_num as c_uint,
                                      ptr::addr_of(v)) == ERR {
                     #debug["...err!"];
                     err(())
@@ -125,11 +133,11 @@ impl methods for cx {
     }
 
     unsafe fn get_obj_private(obj: *JSObject) -> *() {
-        unsafe::reinterpret_cast(JS_GetPrivate(self.ptr, obj))
+        unsafe::reinterpret_cast(JS_GetPrivate(obj))
     }
 
     unsafe fn set_obj_private(obj: *JSObject, data: *()) {
-        JS_SetPrivate(self.ptr, obj, unsafe::reinterpret_cast(data));
+        JS_SetPrivate(obj, unsafe::reinterpret_cast(data));
     }
 }
 
@@ -148,25 +156,56 @@ extern fn reportError(_cx: *JSContext,
 // ___________________________________________________________________________
 // compartment
 
-type compartment = @{
+type bare_compartment = {
     cx: cx,
     name_pool: name_pool,
-    global_class: @JSClass,
     mut global_funcs: ~[@~[JSFunctionSpec]],
+    mut global_props: ~[@~[JSPropertySpec]],
+    global_class: @JSClass,
     global_obj: jsobj
 };
 
 trait methods {
     fn define_functions(specfn: fn(name_pool) -> ~[JSFunctionSpec]) -> result<(),()>;
+    fn define_properties(specfn: fn() -> ~[JSPropertySpec]) -> result<(),()>;
+    fn define_property(name: ~str, value: jsval, getter: JSPropertyOp,
+                       setter: JSStrictPropertyOp, attrs: c_uint) -> result<(),()>;
+    fn new_object(class_fn: fn(bare_compartment) -> JSClass, proto: *JSObject, parent: *JSObject)
+        -> result<jsobj, ()>;
+    fn add_name(name: ~str) -> *c_char;
 }
 
-impl methods of methods for compartment {
+type compartment = @bare_compartment;
+
+impl methods of methods for bare_compartment {
     fn define_functions(specfn: fn(name_pool) -> ~[JSFunctionSpec]) -> result<(),()> {
         let specvec = @specfn(self.name_pool);
         vec::push(self.global_funcs, specvec);
-        vec::as_buf(*specvec, |specs| {
+        vec::as_buf(*specvec, |specs, _len| {
             result(JS_DefineFunctions(self.cx.ptr, self.global_obj.ptr, specs))
         })
+    }
+    fn define_properties(specfn: fn() -> ~[JSPropertySpec]) -> result<(),()> {
+        let specvec = @specfn();
+        vec::push(self.global_props, specvec);
+        vec::as_buf(*specvec, |specs, _len| {
+            result(JS_DefineProperties(self.cx.ptr, self.global_obj.ptr, specs))
+        })
+    }
+    fn define_property(name: ~str, value: jsval, getter: JSPropertyOp,
+                       setter: JSStrictPropertyOp, attrs: c_uint) -> result<(),()> {
+        result(JS_DefineProperty(self.cx.ptr, self.global_obj.ptr, self.add_name(name),
+                                 value, getter, setter, attrs))
+    }
+    fn new_object(class_fn: fn(bare_compartment) -> JSClass, proto: *JSObject, parent: *JSObject)
+        -> result<jsobj, ()> {
+        let classptr = @class_fn(self);
+        vec::push(self.cx.classes, classptr);
+        let obj = self.cx.rooted_obj(JS_NewObject(self.cx.ptr, &*classptr as *JSClass, proto, parent));
+        result_obj(obj)
+    }
+    fn add_name(name: ~str) -> *c_char {
+        self.name_pool.add(copy name)
     }
 }
 
@@ -198,9 +237,9 @@ trait to_jsstr {
 
 impl methods of to_jsstr for ~str {
     fn to_jsstr(cx: cx) -> *JSString {
-        str::as_buf(self, |buf| {
+        str::as_buf(self, |buf, len| {
             let cbuf = unsafe { unsafe::reinterpret_cast(buf) };
-            bg::JS_NewStringCopyN(cx.ptr, cbuf, self.len() as size_t)
+            bg::JS_NewStringCopyN(cx.ptr, cbuf, len as size_t)
         })
     }
 }

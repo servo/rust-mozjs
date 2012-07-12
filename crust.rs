@@ -20,7 +20,7 @@ extern fn JS_ConvertStub(++arg0: *JSContext, ++arg1: *JSObject, ++arg2: JSType, 
     bindgen::JS_ConvertStub(arg0, arg1, arg2, arg3)
 }
 
-extern fn JS_FinalizeStub(++_arg0: *JSContext, ++_arg2: *JSObject) {
+extern fn JS_FinalizeStub(++_fop: *JSFreeOp, ++_obj: *JSObject) {
     // There doesn't seem to be a native implementation of this anymore?
 }
 

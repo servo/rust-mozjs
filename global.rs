@@ -4,10 +4,11 @@ Handy functions for creating class objects and so forth.
 
 "];
 
-import name_pool::add;
+import name_pool::methods;
 
 // Can't use spidermonkey::crust::* versions due to Rust #2440
 
+import libc::c_uint;
 export basic_class;
 export global_class;
 export debug_fns;
@@ -23,14 +24,11 @@ fn basic_class(np: name_pool, -name: ~str) -> JSClass {
      resolve: crust::JS_ResolveStub,
      convert: crust::JS_ConvertStub,
      finalize: null(),
-     reserved0: null(),
      checkAccess: null(),
      call: null(),
      construct: null(),
-     xdrObject: null(),
      hasInstance: null(),
      trace: null(),
-     reserved1: null(),
      reserved: (null(), null(), null(), null(), null(),  // 05
                 null(), null(), null(), null(), null(),  // 10
                 null(), null(), null(), null(), null(),  // 15
@@ -45,7 +43,7 @@ fn global_class(np: name_pool) -> JSClass {
     basic_class(np, ~"global")
 }
 
-extern fn debug(cx: *JSContext, argc: uintN, vp: *jsval) -> JSBool {
+extern fn debug(cx: *JSContext, argc: c_uint, vp: *jsval) -> JSBool {
     import io::writer_util;
 
     #debug["debug() called with %? arguments", argc];

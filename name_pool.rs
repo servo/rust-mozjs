@@ -1,6 +1,10 @@
 import libc::c_char;
 import vec::push;
 
+export name_pool;
+export methods;
+export add;
+
 type name_pool = @{
     mut strbufs: ~[~str]
 };
