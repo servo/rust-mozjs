@@ -87,13 +87,13 @@ impl methods for cx {
             ok(@{cx: self,
                  name_pool: np,
                  global_class: globcls,
-                 mut global_funcs: [],
+                 mut global_funcs: ~[],
                  global_obj: self.rooted_obj(globobj)
                 })
         })
     }
 
-    fn evaluate_script(glob: jsobj, bytes: [u8], filename: str, line_num: uint) -> result<(),()> {
+    fn evaluate_script(glob: jsobj, bytes: ~[u8], filename: str, line_num: uint) -> result<(),()> {
         vec::as_buf(bytes, |bytes_ptr| {
             str::as_c_str(filename, |filename_cstr| {
                 let bytes_ptr = bytes_ptr as *c_char;
@@ -151,12 +151,12 @@ type compartment = @{
     cx: cx,
     name_pool: name_pool,
     global_class: @JSClass,
-    mut global_funcs: [@~[JSFunctionSpec]],
+    mut global_funcs: ~[@~[JSFunctionSpec]],
     global_obj: jsobj
 };
 
 impl methods for compartment {
-    fn define_functions(specfn: fn(name_pool) -> [JSFunctionSpec]) -> result<(),()> {
+    fn define_functions(specfn: fn(name_pool) -> ~[JSFunctionSpec]) -> result<(),()> {
         let specvec = @specfn(self.name_pool);
         vec::push(self.global_funcs, specvec);
         vec::as_buf(*specvec, |specs| {

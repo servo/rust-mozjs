@@ -62,9 +62,9 @@ extern fn debug(cx: *JSContext, argc: uintN, vp: *jsval) -> JSBool {
     }
 }
 
-fn debug_fns(np: name_pool) -> [JSFunctionSpec] {
-    [{name: np.add("debug"),
-      call: debug,
-      nargs: 0_u16,
-      flags: 0_u16}]
+fn debug_fns(np: name_pool) -> ~[JSFunctionSpec] {
+    ~[{name: np.add("debug"),
+       call: debug,
+       nargs: 0_u16,
+       flags: 0_u16}]
 }

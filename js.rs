@@ -85,8 +85,8 @@ fn result(n: JSBool) -> result<(),()> {
 }
 
 type named_functions = @{
-    names: [str],
-    funcs: [JSFunctionSpec]
+    names: ~[str],
+    funcs: ~[JSFunctionSpec]
 };
 
 impl ptr_methods<T: copy> for *T {
