@@ -93,7 +93,8 @@ impl methods for cx {
         })
     }
 
-    fn evaluate_script(glob: jsobj, bytes: ~[u8], filename: str, line_num: uint) -> result<(),()> {
+    fn evaluate_script(glob: jsobj, bytes: ~[u8], filename: ~str, line_num: uint) 
+        -> result<(),()> {
         vec::as_buf(bytes, |bytes_ptr| {
             str::as_c_str(filename, |filename_cstr| {
                 let bytes_ptr = bytes_ptr as *c_char;
@@ -137,7 +138,7 @@ extern fn reportError(_cx: *JSContext,
                      report: *JSErrorReport) {
     unsafe {
         let fnptr = (*report).filename;
-        let fname = if fnptr.is_not_null() {from_c_str(fnptr)} else {"none"};
+        let fname = if fnptr.is_not_null() {from_c_str(fnptr)} else {~"none"};
         let lineno = (*report).lineno;
         let msg = from_c_str(msg);
         #error["Error at %s:%?: %s\n", fname, lineno, msg];
@@ -187,7 +188,7 @@ class jsobj_rsrc {
 // ___________________________________________________________________________
 // random utilities
 
-impl methods for str {
+impl methods for ~str {
     fn to_jsstr(cx: cx) -> *JSString {
         str::as_buf(self, |buf| {
             let cbuf = unsafe { unsafe::reinterpret_cast(buf) };
@@ -208,8 +209,8 @@ mod test {
         cx.new_compartment(global::global_class).chain(|comp| {
             comp.define_functions(global::debug_fns);
 
-            let bytes = str::bytes("debug(22);");
-            cx.evaluate_script(comp.global_obj, bytes, "test", 1u)
+            let bytes = str::bytes(~"debug(22);");
+            cx.evaluate_script(comp.global_obj, bytes, ~"test", 1u)
         });
     }
 

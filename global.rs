@@ -10,7 +10,7 @@ export basic_class;
 export global_class;
 export debug_fns;
 
-fn basic_class(np: name_pool, -name: str) -> JSClass {
+fn basic_class(np: name_pool, -name: ~str) -> JSClass {
     {name: np.add(name),
      flags: 0x48000_u32,
      addProperty: crust::JS_PropertyStub,
@@ -40,7 +40,7 @@ fn basic_class(np: name_pool, -name: str) -> JSClass {
 }
 
 fn global_class(np: name_pool) -> JSClass {
-    basic_class(np, "global")
+    basic_class(np, ~"global")
 }
 
 extern fn debug(cx: *JSContext, argc: uintN, vp: *jsval) -> JSBool {
@@ -63,7 +63,7 @@ extern fn debug(cx: *JSContext, argc: uintN, vp: *jsval) -> JSBool {
 }
 
 fn debug_fns(np: name_pool) -> ~[JSFunctionSpec] {
-    ~[{name: np.add("debug"),
+    ~[{name: np.add(~"debug"),
        call: debug,
        nargs: 0_u16,
        flags: 0_u16}]

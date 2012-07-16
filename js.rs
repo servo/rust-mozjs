@@ -85,7 +85,7 @@ fn result(n: JSBool) -> result<(),()> {
 }
 
 type named_functions = @{
-    names: ~[str],
+    names: ~[~str],
     funcs: ~[JSFunctionSpec]
 };
 
