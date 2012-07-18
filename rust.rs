@@ -156,11 +156,11 @@ type compartment = @{
     global_obj: jsobj
 };
 
-trait define_functions {
+trait methods {
     fn define_functions(specfn: fn(name_pool) -> ~[JSFunctionSpec]) -> result<(),()>;
 }
 
-impl methods of define_functions for compartment {
+impl methods of methods for compartment {
     fn define_functions(specfn: fn(name_pool) -> ~[JSFunctionSpec]) -> result<(),()> {
         let specvec = @specfn(self.name_pool);
         vec::push(self.global_funcs, specvec);
