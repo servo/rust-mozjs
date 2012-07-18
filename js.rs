@@ -89,7 +89,12 @@ type named_functions = @{
     funcs: ~[JSFunctionSpec]
 };
 
-impl ptr_methods<T: copy> for *T {
+trait ptr_methods<T> {
+    unsafe fn +(idx: uint) -> *T;
+    unsafe fn [](idx: uint) -> T;
+}
+
+impl ptr_methods<T: copy> of ptr_methods<T> for *T {
     unsafe fn +(idx: uint) -> *T {
         ptr::offset(self, idx)
     }

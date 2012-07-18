@@ -156,7 +156,11 @@ type compartment = @{
     global_obj: jsobj
 };
 
-impl methods for compartment {
+trait define_functions {
+    fn define_functions(specfn: fn(name_pool) -> ~[JSFunctionSpec]) -> result<(),()>;
+}
+
+impl methods of define_functions for compartment {
     fn define_functions(specfn: fn(name_pool) -> ~[JSFunctionSpec]) -> result<(),()> {
         let specvec = @specfn(self.name_pool);
         vec::push(self.global_funcs, specvec);
@@ -188,7 +192,11 @@ class jsobj_rsrc {
 // ___________________________________________________________________________
 // random utilities
 
-impl methods for ~str {
+trait to_jsstr {
+    fn to_jsstr(cx: cx) -> *JSString;
+}
+
+impl methods of to_jsstr for ~str {
     fn to_jsstr(cx: cx) -> *JSString {
         str::as_buf(self, |buf| {
             let cbuf = unsafe { unsafe::reinterpret_cast(buf) };
