@@ -544,7 +544,7 @@ type struct_unnamed1 = {
 
 type union_unnamed2 = c_void /* FIXME: union type */;
 
-#[link_name="mozjs"]
+#[nolink]
 extern mod bindgen {
 
 fn MOZ_Assert(++s: *c_char, ++file: *c_char, ++ln: c_int);
