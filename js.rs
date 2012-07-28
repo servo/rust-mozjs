@@ -131,22 +131,8 @@ type named_functions = @{
     funcs: ~[JSFunctionSpec]
 };
 
-trait ptr_methods<T> {
-    unsafe fn +(idx: uint) -> *T;
-    unsafe fn [](idx: uint) -> T;
-}
-
-impl ptr_methods<T: copy> of ptr_methods<T> for *T {
-    unsafe fn +(idx: uint) -> *T {
-        ptr::offset(self, idx)
-    }
-    unsafe fn [](idx: uint) -> T {
-        *(self + idx)
-    }
-}
-
 unsafe fn JS_ARGV(_cx: *JSContext, vp: *jsval) -> *jsval {
-    vp + 2u
+    ptr::offset(vp, 2u)
 }
 
 unsafe fn JS_SET_RVAL(_cx: *JSContext, vp: *jsval, v: jsval) {
