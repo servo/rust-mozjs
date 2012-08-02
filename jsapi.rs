@@ -1191,7 +1191,7 @@ fn JS_InternUCString(++cx: *JSContext, ++s: *jschar) -> *JSString;
 
 fn JS_CompareStrings(++cx: *JSContext, ++str1: *JSString, ++str2: *JSString, ++result: *int32_t) -> JSBool;
 
-fn JS_StringEqualsAscii(++cx: *JSContext, ++str: *JSString, ++asciiBytes: *c_char, ++match: *JSBool) -> JSBool;
+fn JS_StringEqualsAscii(++cx: *JSContext, ++str: *JSString, ++asciiBytes: *c_char, ++matches: *JSBool) -> JSBool;
 
 fn JS_PutEscapedString(++cx: *JSContext, ++buffer: *c_char, ++size: size_t, ++str: *JSString, ++quote: c_char) -> size_t;
 
