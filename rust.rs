@@ -87,7 +87,7 @@ impl methods for cx {
     fn new_compartment(globclsfn: fn(name_pool) -> JSClass) -> result<compartment,()> {
         let np = name_pool();
         let globcls = @globclsfn(np);
-        let globobj = JS_NewCompartmentAndGlobalObject(self.ptr, &*globcls as *JSClass, null());
+        let globobj = JS_NewCompartmentAndGlobalObject(self.ptr, ptr::assimilate(&*globcls), null());
         result(JS_InitStandardClasses(self.ptr, globobj)).chain(|_ok| {
             let compartment = @{cx: self,
                                 name_pool: np,
@@ -96,7 +96,7 @@ impl methods for cx {
                                 global_class: globcls,
                                 global_obj: self.rooted_obj(globobj)
                                };
-            self.set_cx_private(&*compartment as *());
+            self.set_cx_private(ptr::assimilate(&*compartment) as *());
             ok(compartment)
         })
     }
@@ -201,7 +201,7 @@ impl methods of methods for bare_compartment {
         -> result<jsobj, ()> {
         let classptr = @class_fn(self);
         vec::push(self.cx.classes, classptr);
-        let obj = self.cx.rooted_obj(JS_NewObject(self.cx.ptr, &*classptr as *JSClass, proto, parent));
+        let obj = self.cx.rooted_obj(JS_NewObject(self.cx.ptr, ptr::assimilate(&*classptr), proto, parent));
         result_obj(obj)
     }
     fn add_name(name: ~str) -> *c_char {
