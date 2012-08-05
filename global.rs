@@ -58,7 +58,7 @@ extern fn debug(cx: *JSContext, argc: c_uint, vp: *jsval) -> JSBool {
             #debug["%s", str];
         }
         JS_SET_RVAL(cx, vp, JSVAL_NULL);
-        ret 1_i32;
+        return 1_i32;
     }
 }
 
