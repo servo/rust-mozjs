@@ -2,7 +2,6 @@
 
 import bg = jsapi::bindgen;
 import libc::types::os::arch::c95::{size_t, c_uint};
-import name_pool::methods;
 
 export rt;
 export cx;
@@ -29,7 +28,7 @@ fn rt() -> rt {
     @rt_rsrc({ptr: JS_Init(default_heapsize)})
 }
 
-impl methods for rt {
+impl rt {
     fn cx() -> cx {
         @cx_rsrc({ptr: JS_NewContext(self.ptr, default_stacksize as size_t),
                   rt: self})
@@ -56,7 +55,7 @@ class cx_rsrc {
     }
 }
     
-impl methods for cx {
+impl cx {
     fn rooted_obj(obj: *JSObject) -> jsobj {
         let jsobj = @jsobj_rsrc({cx: self, cxptr: self.ptr, ptr: obj});
         JS_AddObjectRoot(self.ptr, ptr::addr_of(jsobj.ptr));
@@ -177,7 +176,7 @@ trait methods {
 
 type compartment = @bare_compartment;
 
-impl methods of methods for bare_compartment {
+impl bare_compartment : methods {
     fn define_functions(specfn: fn(name_pool) -> ~[JSFunctionSpec]) -> result<(),()> {
         let specvec = @specfn(self.name_pool);
         vec::push(self.global_funcs, specvec);
@@ -235,7 +234,7 @@ trait to_jsstr {
     fn to_jsstr(cx: cx) -> *JSString;
 }
 
-impl methods of to_jsstr for ~str {
+impl ~str : to_jsstr {
     fn to_jsstr(cx: cx) -> *JSString {
         str::as_buf(self, |buf, len| {
             let cbuf = unsafe { unsafe::reinterpret_cast(buf) };

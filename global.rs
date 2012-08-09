@@ -4,8 +4,6 @@ Handy functions for creating class objects and so forth.
 
 "];
 
-import name_pool::methods;
-
 // Can't use spidermonkey::crust::* versions due to Rust #2440
 
 import libc::c_uint;

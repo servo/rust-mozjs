@@ -1,7 +1,7 @@
 import ptr::{null, addr_of};
 import result::{result, ok, err};
 import libc::{c_char, c_uint};
-import name_pool::{name_pool, methods, add};
+import name_pool::{name_pool, add};
 import str::unsafe::from_c_str;
 import io::writer_util;
 import jsapi::{JSBool, JSClass, JSContext, JSErrorReport, JSFunctionSpec,
