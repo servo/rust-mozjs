@@ -3,7 +3,7 @@ import result::{result, ok, err};
 import libc::{c_char, c_uint};
 import name_pool::{name_pool, add};
 import str::unsafe::from_c_str;
-import io::writer_util;
+import io::WriterUtil;
 import jsapi::{JSBool, JSClass, JSContext, JSErrorReport, JSFunctionSpec,
                JSObject, JSRuntime, JSString, JSVERSION_LATEST, /*jsuint,*/ jsval,
                JSPropertySpec, JSPropertyOp, JSStrictPropertyOp};
