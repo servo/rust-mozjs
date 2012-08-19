@@ -14,7 +14,7 @@ export compartment;
 
 type rt = @rt_rsrc;
 
-class rt_rsrc {
+struct rt_rsrc {
     let ptr : *JSRuntime;
     new(p : {ptr: *JSRuntime}) {
         self.ptr = p.ptr;
@@ -40,7 +40,7 @@ impl rt {
 
 type cx = @cx_rsrc;
 
-class cx_rsrc {
+struct cx_rsrc {
     let ptr : *JSContext;
     let rt: rt;
     let mut classes: ~[@JSClass];
@@ -213,7 +213,7 @@ impl bare_compartment : methods {
 
 type jsobj = @jsobj_rsrc;
 
-class jsobj_rsrc {
+struct jsobj_rsrc {
     let cx : cx;
     let cxptr : *JSContext;
     let ptr : *JSObject;
