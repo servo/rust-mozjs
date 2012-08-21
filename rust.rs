@@ -2,6 +2,7 @@
 
 import bg = jsapi::bindgen;
 import libc::types::os::arch::c95::{size_t, c_uint};
+import std::map::{hashmap, str_hash};
 
 export rt;
 export cx;
@@ -43,12 +44,12 @@ type cx = @cx_rsrc;
 struct cx_rsrc {
     let ptr : *JSContext;
     let rt: rt;
-    let mut classes: ~[@JSClass];
+    let classes: hashmap<~str, @JSClass>;
 
     new(rec : {ptr: *JSContext, rt: rt}) {
         self.ptr = rec.ptr;
         self.rt = rec.rt;
-        self.classes = ~[];
+        self.classes = str_hash();
     }
     drop {
         JS_DestroyContext(self.ptr);
@@ -93,7 +94,8 @@ impl cx {
                                 mut global_funcs: ~[],
                                 mut global_props: ~[],
                                 global_class: globcls,
-                                global_obj: self.rooted_obj(globobj)
+                                global_obj: self.rooted_obj(globobj),
+                                global_protos: str_hash()
                                };
             self.set_cx_private(ptr::assimilate(&*compartment) as *());
             ok(compartment)
@@ -161,7 +163,8 @@ type bare_compartment = {
     mut global_funcs: ~[@~[JSFunctionSpec]],
     mut global_props: ~[@~[JSPropertySpec]],
     global_class: @JSClass,
-    global_obj: jsobj
+    global_obj: jsobj,
+    global_protos: hashmap<~str, jsobj>
 };
 
 trait methods {
@@ -169,8 +172,11 @@ trait methods {
     fn define_properties(specfn: fn() -> ~[JSPropertySpec]) -> result<(),()>;
     fn define_property(name: ~str, value: jsval, getter: JSPropertyOp,
                        setter: JSStrictPropertyOp, attrs: c_uint) -> result<(),()>;
-    fn new_object(class_fn: fn(bare_compartment) -> JSClass, proto: *JSObject, parent: *JSObject)
+    fn new_object(class_name: ~str, proto: *JSObject, parent: *JSObject)
         -> result<jsobj, ()>;
+    fn new_object_with_proto(class_name: ~str, proto_name: ~str, parent: *JSObject)
+        -> result<jsobj, ()>;
+    fn register_class(class_fn: fn(bare_compartment) -> JSClass);
     fn add_name(name: ~str) -> *c_char;
 }
 
@@ -196,12 +202,32 @@ impl bare_compartment : methods {
         result(JS_DefineProperty(self.cx.ptr, self.global_obj.ptr, self.add_name(name),
                                  value, getter, setter, attrs))
     }
-    fn new_object(class_fn: fn(bare_compartment) -> JSClass, proto: *JSObject, parent: *JSObject)
+    fn new_object(class_name: ~str, proto: *JSObject, parent: *JSObject)
         -> result<jsobj, ()> {
-        let classptr = @class_fn(self);
-        vec::push(self.cx.classes, classptr);
-        let obj = self.cx.rooted_obj(JS_NewObject(self.cx.ptr, ptr::assimilate(&*classptr), proto, parent));
+        let classptr = self.cx.classes.get(class_name);
+        let obj = self.cx.rooted_obj(JS_NewObject(self.cx.ptr, ptr::assimilate(&*classptr),
+                                                  proto, parent));
+        if obj.ptr.is_not_null() {
+            self.global_protos.insert(
+                unsafe { str::unsafe::from_c_str(classptr.name) }, obj);
+        }
         result_obj(obj)
+    }
+    fn new_object_with_proto(class_name: ~str, proto_name: ~str, parent: *JSObject)
+        -> result<jsobj, ()> {
+        let classptr = self.cx.classes.get(class_name);
+        let proto = self.global_protos.get(proto_name);
+        let obj = self.cx.rooted_obj(JS_NewObject(self.cx.ptr, ptr::assimilate(&*classptr),
+                                                  proto.ptr, parent));
+        result_obj(obj)
+    }
+    fn register_class(class_fn: fn(bare_compartment) -> JSClass) {
+        let classptr = @class_fn(self);
+        if !self.cx.classes.insert(
+            unsafe { str::unsafe::from_c_str(classptr.name) },
+            classptr) {
+            fail ~"Duplicate JSClass registered; you're gonna have a bad time."
+        }
     }
     fn add_name(name: ~str) -> *c_char {
         self.name_pool.add(copy name)

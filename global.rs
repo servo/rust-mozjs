@@ -44,8 +44,6 @@ fn global_class(np: name_pool) -> JSClass {
 extern fn debug(cx: *JSContext, argc: c_uint, vp: *jsval) -> JSBool {
     import io::WriterUtil;
 
-    #debug["debug() called with %? arguments", argc];
-
     unsafe {
         let argv = JS_ARGV(cx, vp);
         for uint::range(0u, argc as uint) |i| {
