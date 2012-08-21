@@ -10,6 +10,7 @@ import libc::c_uint;
 export basic_class;
 export global_class;
 export debug_fns;
+export jsval_to_rust_str;
 
 fn basic_class(np: name_pool, -name: ~str) -> JSClass {
     {name: np.add(name),
@@ -41,6 +42,13 @@ fn global_class(np: name_pool) -> JSClass {
     basic_class(np, ~"global")
 }
 
+unsafe fn jsval_to_rust_str(cx: *JSContext, vp: *jsapi::JSString) -> ~str {
+  let bytes = JS_EncodeString(cx, vp);
+  let s = str::unsafe::from_c_str(bytes);
+  JS_free(cx, unsafe::reinterpret_cast(bytes));
+  s
+}
+
 extern fn debug(cx: *JSContext, argc: c_uint, vp: *jsval) -> JSBool {
     import io::WriterUtil;
 
@@ -48,10 +56,7 @@ extern fn debug(cx: *JSContext, argc: c_uint, vp: *jsval) -> JSBool {
         let argv = JS_ARGV(cx, vp);
         for uint::range(0u, argc as uint) |i| {
             let jsstr = JS_ValueToString(cx, *ptr::offset(argv, i));
-            let bytes = JS_EncodeString(cx, jsstr);
-            let str = str::unsafe::from_c_str(bytes);
-            JS_free(cx, unsafe::reinterpret_cast(bytes));
-            #debug["%s", str];
+            #debug["%s", jsval_to_rust_str(cx, jsstr)];
         }
         JS_SET_RVAL(cx, vp, JSVAL_NULL);
         return 1_i32;
