@@ -125,6 +125,11 @@ impl cx {
         })
     }
 
+    fn lookup_class_name(s: ~str) ->  @JSClass {
+      option::expect(self.classes.find(s),
+           #fmt("Class %s not found in class table", s))
+    }
+
     unsafe fn get_cx_private() -> *() {
         unsafe::reinterpret_cast(JS_GetContextPrivate(self.ptr))
     }
@@ -204,7 +209,7 @@ impl bare_compartment : methods {
     }
     fn new_object(class_name: ~str, proto: *JSObject, parent: *JSObject)
         -> result<jsobj, ()> {
-        let classptr = self.cx.classes.get(class_name);
+        let classptr = self.cx.lookup_class_name(class_name);
         let obj = self.cx.rooted_obj(JS_NewObject(self.cx.ptr, ptr::assimilate(&*classptr),
                                                   proto, parent));
         if obj.ptr.is_not_null() {
@@ -215,8 +220,10 @@ impl bare_compartment : methods {
     }
     fn new_object_with_proto(class_name: ~str, proto_name: ~str, parent: *JSObject)
         -> result<jsobj, ()> {
-        let classptr = self.cx.classes.get(class_name);
-        let proto = self.global_protos.get(proto_name);
+        let classptr = self.cx.lookup_class_name(class_name);
+        let proto = option::expect(self.global_protos.find(proto_name),
+           #fmt("new_object_with_proto: expected to find %s in the proto \
+              table", proto_name));
         let obj = self.cx.rooted_obj(JS_NewObject(self.cx.ptr, ptr::assimilate(&*classptr),
                                                   proto.ptr, parent));
         result_obj(obj)
