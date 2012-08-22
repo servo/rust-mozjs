@@ -182,6 +182,8 @@ trait methods {
     fn new_object_with_proto(class_name: ~str, proto_name: ~str, parent: *JSObject)
         -> result<jsobj, ()>;
     fn register_class(class_fn: fn(bare_compartment) -> JSClass);
+    fn get_global_proto(name: ~str) -> jsobj;
+    fn stash_global_proto(name: ~str, proto: jsobj);
     fn add_name(name: ~str) -> *c_char;
 }
 
@@ -212,10 +214,6 @@ impl bare_compartment : methods {
         let classptr = self.cx.lookup_class_name(class_name);
         let obj = self.cx.rooted_obj(JS_NewObject(self.cx.ptr, ptr::assimilate(&*classptr),
                                                   proto, parent));
-        if obj.ptr.is_not_null() {
-            self.global_protos.insert(
-                unsafe { str::unsafe::from_c_str(classptr.name) }, obj);
-        }
         result_obj(obj)
     }
     fn new_object_with_proto(class_name: ~str, proto_name: ~str, parent: *JSObject)
@@ -227,6 +225,14 @@ impl bare_compartment : methods {
         let obj = self.cx.rooted_obj(JS_NewObject(self.cx.ptr, ptr::assimilate(&*classptr),
                                                   proto.ptr, parent));
         result_obj(obj)
+    }
+    fn get_global_proto(name: ~str) -> jsobj {
+        self.global_protos.get(name)
+    }
+    fn stash_global_proto(name: ~str, proto: jsobj) {
+        if !self.global_protos.insert(name, proto) {
+            fail ~"Duplicate global prototype registered; you're gonna have a bad time."
+        }
     }
     fn register_class(class_fn: fn(bare_compartment) -> JSClass) {
         let classptr = @class_fn(self);
