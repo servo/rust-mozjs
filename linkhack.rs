@@ -6,6 +6,6 @@
 extern mod m { }
 
 #[cfg(target_os = "macos")]
-#[link_args = "-L. -lstdc++"]
+#[link_args = "-L. -lstdc++ -lz"]
 #[nolink]
 extern mod m { }
