@@ -1,5 +1,31 @@
 #include "jsapi.h"
 
+enum StubType {
+    PROPERTY_STUB,
+    STRICT_PROPERTY_STUB,
+    ENUMERATE_STUB,
+    CONVERT_STUB,
+    RESOLVE_STUB,
+};
+
+void*
+GetJSClassHookStubPointer(enum StubType type)
+{
+    switch (type) {
+    case PROPERTY_STUB:
+        return JS_PropertyStub;
+    case STRICT_PROPERTY_STUB:
+        return JS_StrictPropertyStub;
+    case ENUMERATE_STUB:
+        return JS_EnumerateStub;
+    case CONVERT_STUB:
+        return JS_ConvertStub;
+    case RESOLVE_STUB:
+        return JS_ResolveStub;
+    }
+    return NULL;
+}
+
 JSBool
 RUST_JSVAL_IS_NULL(jsval v)
 {
@@ -81,7 +107,7 @@ RUST_STRING_TO_JSVAL(JSString *v)
 JSBool
 RUST_JSVAL_IS_OBJECT(jsval v)
 {
-    return JSVAL_IS_OBJECT(v);
+    return !JSVAL_IS_PRIMITIVE(v) || JSVAL_IS_NULL(v);
 }
 
 JSObject *

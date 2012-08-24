@@ -8,7 +8,7 @@ includes = [
     ]
 sysincludes = [
     "-isystem", "/usr/lib/x86_64-linux-gnu/gcc/x86_64-linux-gnu/4.5/include",
-    "-isystem", "/usr/lib/gcc/x86_64-redhat-linux/4.7.0/include"
+    "-isystem", "/usr/lib/gcc/x86_64-redhat-linux/4.7.0/include",
     ]
 
 args = [
@@ -23,3 +23,9 @@ subprocess.call(args)
         
 # To generate jsglue:
 # DYLD_LIBRARY_PATH=~/versioned/rust-mozilla/build/llvm/x86_64-apple-darwin/Release+Asserts/lib/ ~/versioned/rust-bindgen/bindgen ./jsglue.c -I ../../build/src/mozjs/dist/include/ -match glue > glue.rs
+
+# jdm used
+# LD_LIBRARY_PATH=~/sdb/rust/build/llvm/x86_64-unknown-linux-gnu/Release+Asserts/lib/ ~/sdb/rust-bindgen/bindgen ./jsglue.c -I ../../build/src/mozjs/dist/include/ -isystem /usr/lib/gcc/x86_64-redhat-linux/4.7.0/include/ -match glue >glue.rs
+# on Fedora 17
+#
+# and remember to mark all generated functions as #[rust_stack]
