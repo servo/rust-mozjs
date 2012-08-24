@@ -87,7 +87,7 @@ impl cx {
     fn new_compartment(globclsfn: fn(name_pool) -> JSClass) -> result<compartment,()> {
         let np = name_pool();
         let globcls = @globclsfn(np);
-        let globobj = JS_NewCompartmentAndGlobalObject(self.ptr, ptr::assimilate(&*globcls), null());
+        let globobj = JS_NewGlobalObject(self.ptr, ptr::assimilate(&*globcls), null());
         result(JS_InitStandardClasses(self.ptr, globobj)).chain(|_ok| {
             let compartment = @{cx: self,
                                 name_pool: np,
@@ -107,12 +107,12 @@ impl cx {
         vec::as_buf(bytes, |bytes_ptr, bytes_len| {
             str::as_c_str(filename, |filename_cstr| {
                 let bytes_ptr = bytes_ptr as *c_char;
-                let v: jsval = 0_u64;
+                let rval: jsval = JSVAL_NULL;
                 #debug["Evaluating script from %s with bytes %?", filename, bytes];
                 if JS_EvaluateScript(self.ptr, glob.ptr,
                                      bytes_ptr, bytes_len as c_uint,
                                      filename_cstr, line_num as c_uint,
-                                     ptr::addr_of(v)) == ERR {
+                                     ptr::addr_of(rval)) == ERR {
                     #debug["...err!"];
                     err(())
                 } else {

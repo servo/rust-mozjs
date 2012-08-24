@@ -4,8 +4,8 @@ Handy functions for creating class objects and so forth.
 
 "];
 
-// Can't use spidermonkey::crust::* versions due to Rust #2440
-
+import crust::{JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub,
+               JS_ResolveStub, JS_ConvertStub};
 import libc::c_uint;
 export basic_class;
 export global_class;
@@ -14,19 +14,19 @@ export jsval_to_rust_str;
 
 fn basic_class(np: name_pool, -name: ~str) -> JSClass {
     {name: np.add(name),
-     flags: 0x48000_u32,
-     addProperty: crust::JS_PropertyStub,
-     delProperty: crust::JS_PropertyStub,
-     getProperty: crust::JS_PropertyStub,
-     setProperty: crust::JS_StrictPropertyStub,
-     enumerate: crust::JS_EnumerateStub,
-     resolve: crust::JS_ResolveStub,
-     convert: crust::JS_ConvertStub,
+     flags: JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT),
+     addProperty: JS_PropertyStub,
+     delProperty: JS_PropertyStub,
+     getProperty: JS_PropertyStub,
+     setProperty: JS_StrictPropertyStub,
+     enumerate: JS_EnumerateStub,
+     resolve: JS_ResolveStub,
+     convert: JS_ConvertStub,
      finalize: null(),
      checkAccess: null(),
      call: null(),
-     construct: null(),
      hasInstance: null(),
+     construct: null(),
      trace: null(),
      reserved: (null(), null(), null(), null(), null(),  // 05
                 null(), null(), null(), null(), null(),  // 10
@@ -65,7 +65,9 @@ extern fn debug(cx: *JSContext, argc: c_uint, vp: *jsval) -> JSBool {
 
 fn debug_fns(np: name_pool) -> ~[JSFunctionSpec] {
     ~[{name: np.add(~"debug"),
-       call: debug,
+       call: {op: debug,
+              info: null()},
        nargs: 0_u16,
-       flags: 0_u16}]
+       flags: 0_u16,
+       selfHostedName: null()}]
 }

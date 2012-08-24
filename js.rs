@@ -5,13 +5,13 @@ import name_pool::{name_pool, add};
 import str::unsafe::from_c_str;
 import io::WriterUtil;
 import jsapi::{JSBool, JSClass, JSContext, JSErrorReport, JSFunctionSpec,
-               JSObject, JSRuntime, JSString, JSVERSION_LATEST, /*jsuint,*/ jsval,
+               JSObject, JSRuntime, JSString, JSVERSION_LATEST, jsval,
                JSPropertySpec, JSPropertyOp, JSStrictPropertyOp};
 import jsapi::bindgen::{JS_free, JS_AddObjectRoot, JS_DefineFunctions,
                         JS_DestroyContext, JS_EncodeString, JS_EvaluateScript,
                         JS_Finish, JS_GetContextPrivate, JS_GetPrivate,
                         JS_Init, JS_InitStandardClasses,
-                        JS_NewCompartmentAndGlobalObject, JS_NewContext,
+                        JS_NewGlobalObject, JS_NewContext,
                         JS_RemoveObjectRoot, JS_SetContextPrivate,
                         JS_SetErrorReporter, JS_SetOptions, JS_SetPrivate,
                         JS_SetVersion, JS_ValueToString, JS_DefineProperties,
@@ -28,17 +28,18 @@ export JSOPTION_METHODJIT;
 
 export JSPROP_ENUMERATE;
 export JSPROP_SHARED;
+export JSPROP_NATIVE_ACCESSORS;
 
 export JSCLASS_GLOBAL_FLAGS;
 export JSCLASS_HAS_RESERVED_SLOTS;
 
-export crust;
 export rust;
 export name_pool;
 
 export jsapi;
 export global;
 export glue;
+export crust;
 
 export ptr_methods;
 
@@ -76,9 +77,8 @@ extern mod m { }
 const JSOPTION_STRICT: uint32_t =    0b00000000000001u32;
 const JSOPTION_WERROR: uint32_t =    0b00000000000010u32;
 const JSOPTION_VAROBJFIX: uint32_t = 0b00000000000100u32;
-const JSOPTION_METHODJIT: uint32_t = 0b10000000000000u32;
-
-const JSCLASS_GLOBAL_FLAGS: uint32_t = 0x47d00du32;
+//const JSOPTION_METHODJIT: uint32_t = 0b100000000000000u32;
+const JSOPTION_METHODJIT: uint32_t = (1 << 14) as u32;
 
 const default_heapsize: u32 = 8_u32 * 1024_u32 * 1024_u32;
 const default_stacksize: uint = 8192u;
@@ -110,12 +110,20 @@ const JSVAL_TRUE: u64 = ((JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_BOOLEAN) << JSVAL_TA
 const JSPROP_ENUMERATE: c_uint = 0x01;
 const JSPROP_READONLY: c_uint  = 0x02;
 const JSPROP_SHARED: c_uint =    0x40;
+const JSPROP_NATIVE_ACCESSORS: c_uint = 0x08;
 
 const JSCLASS_RESERVED_SLOTS_SHIFT: c_uint = 8;
 const JSCLASS_RESERVED_SLOTS_WIDTH: c_uint = 8;
 const JSCLASS_RESERVED_SLOTS_MASK: c_uint = ((1 << JSCLASS_RESERVED_SLOTS_WIDTH) - 1);
 
-fn JSCLASS_HAS_RESERVED_SLOTS(n: c_uint) -> c_uint {
+const JSCLASS_HIGH_FLAGS_SHIFT: c_uint =
+    JSCLASS_RESERVED_SLOTS_SHIFT + JSCLASS_RESERVED_SLOTS_WIDTH;
+const JSCLASS_IS_GLOBAL: c_uint = (1<<(JSCLASS_HIGH_FLAGS_SHIFT+1));
+
+// The 41 is derived from the number of entries in jsproto.tbl. See jsapi.h for more info.
+const JSCLASS_GLOBAL_SLOT_COUNT: c_uint = 41 * 3 + 24;
+
+pure fn JSCLASS_HAS_RESERVED_SLOTS(n: c_uint) -> c_uint {
     (n & JSCLASS_RESERVED_SLOTS_MASK) << JSCLASS_RESERVED_SLOTS_SHIFT
 }
 
@@ -131,6 +139,7 @@ type named_functions = @{
     funcs: ~[JSFunctionSpec]
 };
 
+#[always_inline]
 unsafe fn JS_ARGV(_cx: *JSContext, vp: *jsval) -> *jsval {
     ptr::offset(vp, 2u)
 }
@@ -140,6 +149,7 @@ unsafe fn JS_SET_RVAL(_cx: *JSContext, vp: *jsval, v: jsval) {
     *vp = v;
 }
 
+#[always_inline]
 unsafe fn JS_THIS_OBJECT(cx: *JSContext, vp: *jsval) -> *JSObject {
     let r = RUST_JSVAL_TO_OBJECT(JS_ComputeThis(cx, vp));
     r

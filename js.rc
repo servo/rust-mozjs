@@ -7,7 +7,7 @@ use std;
 mod jsapi;
 mod linkhack;
 mod name_pool;
-mod crust;
 mod rust;
 mod global;
 mod glue;
+mod crust;

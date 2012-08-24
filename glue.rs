@@ -5,14 +5,17 @@ import libc::*;
 #[link_name="jsglue"]
 extern mod bindgen {
 
+#[rust_stack]
 fn RUST_JSVAL_IS_NULL(++v: jsval) -> JSBool;
 
 fn RUST_JSVAL_IS_VOID(++v: jsval) -> JSBool;
 
 fn RUST_JSVAL_IS_INT(++v: jsval) -> JSBool;
 
+#[rust_stack]
 fn RUST_JSVAL_TO_INT(++v: jsval) -> int32_t;
 
+#[rust_stack]
 fn RUST_INT_TO_JSVAL(++v: int32_t) -> jsval;
 
 fn RUST_JSVAL_IS_DOUBLE(++v: jsval) -> JSBool;
@@ -31,10 +34,13 @@ fn RUST_JSVAL_TO_STRING(++v: jsval) -> *JSString;
 
 fn RUST_STRING_TO_JSVAL(++v: *JSString) -> jsval;
 
+#[rust_stack]
 fn RUST_JSVAL_IS_OBJECT(++v: jsval) -> JSBool;
 
+#[rust_stack]
 fn RUST_JSVAL_TO_OBJECT(++v: jsval) -> *JSObject;
 
+#[rust_stack]
 fn RUST_OBJECT_TO_JSVAL(++v: *JSObject) -> jsval;
 
 fn RUST_JSVAL_IS_BOOLEAN(++v: jsval) -> JSBool;
@@ -49,8 +55,10 @@ fn RUST_JSVAL_IS_GCTHING(++v: jsval) -> JSBool;
 
 fn RUST_JSVAL_TO_GCTHING(++v: jsval) -> *c_void;
 
+#[rust_stack]
 fn RUST_PRIVATE_TO_JSVAL(++v: *c_void) -> jsval;
 
+#[rust_stack]
 fn RUST_JSVAL_TO_PRIVATE(++v: jsval) -> *c_void;
 
 }

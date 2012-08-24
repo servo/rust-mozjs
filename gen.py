@@ -2,13 +2,13 @@ import argparse, subprocess;
 
 bindgen = "bindgen";
 
-jsapi = "../mozjs/mozilla-central/js/src/jsapi.h"
+jsapi = "../mozjs/js/src/jsapi.h"
 includes = [
-    "-I", "../mozjs/mozilla-central/js/src/dist/include"
+    "-I", "../mozjs/js/src/dist/include",
     ]
 sysincludes = [
     "-isystem", "/usr/lib/x86_64-linux-gnu/gcc/x86_64-linux-gnu/4.5/include",
-    "-isystem", "/usr/lib/gcc/x86_64-linux-gnu/4.6/include"
+    "-isystem", "/usr/lib/gcc/x86_64-redhat-linux/4.7.0/include"
     ]
 
 args = [
