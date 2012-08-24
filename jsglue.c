@@ -78,12 +78,6 @@ RUST_STRING_TO_JSVAL(JSString *v)
     return STRING_TO_JSVAL(v);
 }
 
-JSBool
-RUST_JSVAL_IS_OBJECT(jsval v)
-{
-    return JSVAL_IS_OBJECT(v);
-}
-
 JSObject *
 RUST_JSVAL_TO_OBJECT(jsval v)
 {
