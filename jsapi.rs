@@ -607,24 +607,24 @@ type struct_unnamed1 = {
 
 type union_unnamed2 = c_void /* FIXME: union type */;
 
-#[link_name="mozjs"]
+#[nolink]
 extern mod bindgen {
 
 fn JS_Assert(++s: *c_char, ++file: *c_char, ++ln: c_int);
 
-fn JS_Abort();
+//fn JS_Abort();
 
-fn JS_CreateHandleObject(++cx: *JSContext, ++obj: *JSObject, ++phandle: *JSHandleObject) -> JSBool;
+//fn JS_CreateHandleObject(++cx: *JSContext, ++obj: *JSObject, ++phandle: *JSHandleObject) -> JSBool;
 
-fn JS_DestroyHandleObject(++cx: *JSContext, ++handle: JSHandleObject);
+//fn JS_DestroyHandleObject(++cx: *JSContext, ++handle: JSHandleObject);
 
-fn JS_CreateMutableHandleObject(++cx: *JSContext, ++obj: *JSObject, ++phandle: *JSMutableHandleObject) -> JSBool;
+//fn JS_CreateMutableHandleObject(++cx: *JSContext, ++obj: *JSObject, ++phandle: *JSMutableHandleObject) -> JSBool;
 
-fn JS_DestroyMutableHandleObject(++cx: *JSContext, ++handle: JSMutableHandleObject);
+//fn JS_DestroyMutableHandleObject(++cx: *JSContext, ++handle: JSMutableHandleObject);
 
-fn JS_CreateHandleId(++cx: *JSContext, ++id: jsid, ++phandle: *JSHandleId) -> JSBool;
+//fn JS_CreateHandleId(++cx: *JSContext, ++id: jsid, ++phandle: *JSHandleId) -> JSBool;
 
-fn JS_DestroyHandleId(++cx: *JSContext, ++handle: JSHandleId);
+//fn JS_DestroyHandleId(++cx: *JSContext, ++handle: JSHandleId);
 
 fn JS_StringHasBeenInterned(++cx: *JSContext, ++str: *JSString) -> JSBool;
 
@@ -869,8 +869,6 @@ fn JS_RemoveValueRootRT(++rt: *JSRuntime, ++vp: *jsval);
 fn JS_RemoveStringRootRT(++rt: *JSRuntime, ++rp: **JSString);
 
 fn JS_RemoveObjectRootRT(++rt: *JSRuntime, ++rp: **JSObject);
-
-fn JS_RemoveScriptRootRT(++rt: *JSRuntime, ++rp: **JSScript);
 
 fn js_AddRootRT(++rt: *JSRuntime, ++vp: *jsval, ++name: *c_char) -> JSBool;
 

@@ -55,9 +55,6 @@ fn RUST_JSVAL_TO_STRING(++v: jsval) -> *JSString;
 fn RUST_STRING_TO_JSVAL(++v: *JSString) -> jsval;
 
 #[rust_stack]
-fn RUST_JSVAL_IS_OBJECT(++v: jsval) -> JSBool;
-
-#[rust_stack]
 fn RUST_JSVAL_TO_OBJECT(++v: jsval) -> *JSObject;
 
 #[rust_stack]
