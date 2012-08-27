@@ -18,7 +18,7 @@ import jsapi::bindgen::{JS_free, JS_AddObjectRoot, JS_DefineFunctions,
                         JS_DefineProperty, JS_NewObject, JS_ComputeThis};
 import libc::types::common::c99::{int8_t, int16_t, int32_t, int64_t, uint8_t,
                                   uint16_t, uint32_t, uint64_t};
-import glue::bindgen::RUST_JSVAL_TO_OBJECT;
+import glue::bindgen::{RUST_JSVAL_TO_OBJECT, RUST_JSVAL_IS_PRIMITIVE};
 import rust::jsobj;
 
 export JSOPTION_STRICT;
@@ -139,7 +139,7 @@ type named_functions = @{
     funcs: ~[JSFunctionSpec]
 };
 
-#[always_inline]
+#[inline(always)]
 unsafe fn JS_ARGV(_cx: *JSContext, vp: *jsval) -> *jsval {
     ptr::offset(vp, 2u)
 }
@@ -149,9 +149,14 @@ unsafe fn JS_SET_RVAL(_cx: *JSContext, vp: *jsval, v: jsval) {
     *vp = v;
 }
 
-#[always_inline]
-unsafe fn JS_THIS_OBJECT(cx: *JSContext, vp: *jsval) -> *JSObject {
-    let r = RUST_JSVAL_TO_OBJECT(JS_ComputeThis(cx, vp));
+#[inline(always)]
+unsafe fn JS_THIS_OBJECT(cx: *JSContext, vp: *jsval) -> *JSObject unsafe {
+    let r = RUST_JSVAL_TO_OBJECT(
+        if RUST_JSVAL_IS_PRIMITIVE(*ptr::offset(vp, 1)) == 0 {
+            JS_ComputeThis(cx, vp)
+        } else {
+            *ptr::offset(vp, 1)
+        });
     r
 }
 

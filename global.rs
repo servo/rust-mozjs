@@ -4,8 +4,9 @@ Handy functions for creating class objects and so forth.
 
 "];
 
-import crust::{JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub,
-               JS_ResolveStub, JS_ConvertStub};
+import glue::bindgen::GetJSClassHookStubPointer;
+import glue::{PROPERTY_STUB, STRICT_PROPERTY_STUB, ENUMERATE_STUB,
+              RESOLVE_STUB, CONVERT_STUB};
 import libc::c_uint;
 export basic_class;
 export global_class;
@@ -15,13 +16,13 @@ export jsval_to_rust_str;
 fn basic_class(np: name_pool, -name: ~str) -> JSClass {
     {name: np.add(name),
      flags: JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT),
-     addProperty: JS_PropertyStub,
-     delProperty: JS_PropertyStub,
-     getProperty: JS_PropertyStub,
-     setProperty: JS_StrictPropertyStub,
-     enumerate: JS_EnumerateStub,
-     resolve: JS_ResolveStub,
-     convert: JS_ConvertStub,
+     addProperty: GetJSClassHookStubPointer(PROPERTY_STUB) as *u8,
+     delProperty: GetJSClassHookStubPointer(PROPERTY_STUB) as *u8,
+     getProperty: GetJSClassHookStubPointer(PROPERTY_STUB) as *u8,
+     setProperty: GetJSClassHookStubPointer(STRICT_PROPERTY_STUB) as *u8,
+     enumerate: GetJSClassHookStubPointer(ENUMERATE_STUB) as *u8,
+     resolve: GetJSClassHookStubPointer(RESOLVE_STUB) as *u8,
+     convert: GetJSClassHookStubPointer(CONVERT_STUB) as *u8,
      finalize: null(),
      checkAccess: null(),
      call: null(),

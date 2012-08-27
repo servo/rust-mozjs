@@ -816,6 +816,7 @@ fn JS_InitReflect(++cx: *JSContext, ++global: *JSObject) -> *JSObject;
 
 fn JS_EnumerateDiagnosticMemoryRegions(++callback: JSEnumerateDiagnosticMemoryCallback);
 
+#[rust_stack]
 fn JS_ComputeThis(++cx: *JSContext, ++vp: *jsval) -> jsval;
 
 fn JS_MallocInCompartment(++comp: *JSCompartment, ++nbytes: size_t);
@@ -1128,6 +1129,7 @@ fn JS_ArrayIterator(++cx: *JSContext, ++argc: c_uint, ++vp: *jsval) -> JSBool;
 
 fn JS_CheckAccess(++cx: *JSContext, ++obj: *JSObject, ++id: jsid, ++mode: JSAccessMode, ++vp: *jsval, ++attrsp: *c_uint) -> JSBool;
 
+#[rust_stack]
 fn JS_GetReservedSlot(++obj: JSRawObject, ++index: uint32_t) -> jsval;
 
 fn JS_SetReservedSlot(++obj: JSRawObject, ++index: uint32_t, ++v: jsval);
