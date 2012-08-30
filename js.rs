@@ -1,5 +1,5 @@
 import ptr::{null, addr_of};
-import result::{result, ok, err};
+import result::{Result, Ok, Err};
 import libc::{c_char, c_uint};
 import name_pool::{name_pool, add};
 import str::unsafe::from_c_str;
@@ -127,11 +127,11 @@ pure fn JSCLASS_HAS_RESERVED_SLOTS(n: c_uint) -> c_uint {
     (n & JSCLASS_RESERVED_SLOTS_MASK) << JSCLASS_RESERVED_SLOTS_SHIFT
 }
 
-fn result(n: JSBool) -> result<(),()> {
-    if n != ERR {ok(())} else {err(())}
+fn result(n: JSBool) -> Result<(),()> {
+    if n != ERR {Ok(())} else {Err(())}
 }
-fn result_obj(o: jsobj) -> result<jsobj, ()> {
-    if o.ptr != null() {ok(o)} else {err(())}
+fn result_obj(o: jsobj) -> Result<jsobj, ()> {
+    if o.ptr != null() {Ok(o)} else {Err(())}
 }
 
 type named_functions = @{

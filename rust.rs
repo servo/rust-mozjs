@@ -84,10 +84,10 @@ impl cx {
         JS_SetErrorReporter(self.ptr, reportfn);
     }
 
-    fn new_compartment(globclsfn: fn(name_pool) -> JSClass) -> result<compartment,()> {
+    fn new_compartment(globclsfn: fn(name_pool) -> JSClass) -> Result<compartment,()> {
         let np = name_pool();
         let globcls = @globclsfn(np);
-        let globobj = JS_NewGlobalObject(self.ptr, ptr::assimilate(&*globcls), null());
+        let globobj = JS_NewGlobalObject(self.ptr, ptr::to_unsafe_ptr(&*globcls), null());
         result(JS_InitStandardClasses(self.ptr, globobj)).chain(|_ok| {
             let compartment = @{cx: self,
                                 name_pool: np,
@@ -97,13 +97,13 @@ impl cx {
                                 global_obj: self.rooted_obj(globobj),
                                 global_protos: str_hash()
                                };
-            self.set_cx_private(ptr::assimilate(&*compartment) as *());
-            ok(compartment)
+            self.set_cx_private(ptr::to_unsafe_ptr(&*compartment) as *());
+            Ok(compartment)
         })
     }
 
     fn evaluate_script(glob: jsobj, bytes: ~[u8], filename: ~str, line_num: uint) 
-        -> result<(),()> {
+                    -> Result<(),()> {
         vec::as_buf(bytes, |bytes_ptr, bytes_len| {
             str::as_c_str(filename, |filename_cstr| {
                 let bytes_ptr = bytes_ptr as *c_char;
@@ -114,12 +114,12 @@ impl cx {
                                      filename_cstr, line_num as c_uint,
                                      ptr::addr_of(rval)) == ERR {
                     #debug["...err!"];
-                    err(())
+                    Err(())
                 } else {
                     // we could return the script result but then we'd have
                     // to root it and so forth and, really, who cares?
                     #debug["...ok!"];
-                    ok(())
+                    Ok(())
                 }
             })
         })
@@ -173,14 +173,13 @@ type bare_compartment = {
 };
 
 trait methods {
-    fn define_functions(specfn: fn(name_pool) -> ~[JSFunctionSpec]) -> result<(),()>;
-    fn define_properties(specfn: fn() -> ~[JSPropertySpec]) -> result<(),()>;
+    fn define_functions(specfn: fn(name_pool) -> ~[JSFunctionSpec]) -> Result<(),()>;
+    fn define_properties(specfn: fn() -> ~[JSPropertySpec]) -> Result<(),()>;
     fn define_property(name: ~str, value: jsval, getter: JSPropertyOp,
-                       setter: JSStrictPropertyOp, attrs: c_uint) -> result<(),()>;
-    fn new_object(class_name: ~str, proto: *JSObject, parent: *JSObject)
-        -> result<jsobj, ()>;
+                       setter: JSStrictPropertyOp, attrs: c_uint) -> Result<(),()>;
+    fn new_object(class_name: ~str, proto: *JSObject, parent: *JSObject) -> Result<jsobj, ()>;
     fn new_object_with_proto(class_name: ~str, proto_name: ~str, parent: *JSObject)
-        -> result<jsobj, ()>;
+                          -> Result<jsobj, ()>;
     fn register_class(class_fn: fn(bare_compartment) -> JSClass);
     fn get_global_proto(name: ~str) -> jsobj;
     fn stash_global_proto(name: ~str, proto: jsobj);
@@ -190,39 +189,40 @@ trait methods {
 type compartment = @bare_compartment;
 
 impl bare_compartment : methods {
-    fn define_functions(specfn: fn(name_pool) -> ~[JSFunctionSpec]) -> result<(),()> {
+    fn define_functions(specfn: fn(name_pool) -> ~[JSFunctionSpec]) -> Result<(),()> {
         let specvec = @specfn(self.name_pool);
         vec::push(self.global_funcs, specvec);
         vec::as_buf(*specvec, |specs, _len| {
             result(JS_DefineFunctions(self.cx.ptr, self.global_obj.ptr, specs))
         })
     }
-    fn define_properties(specfn: fn() -> ~[JSPropertySpec]) -> result<(),()> {
+    fn define_properties(specfn: fn() -> ~[JSPropertySpec]) -> Result<(),()> {
         let specvec = @specfn();
         vec::push(self.global_props, specvec);
         vec::as_buf(*specvec, |specs, _len| {
             result(JS_DefineProperties(self.cx.ptr, self.global_obj.ptr, specs))
         })
     }
-    fn define_property(name: ~str, value: jsval, getter: JSPropertyOp,
-                       setter: JSStrictPropertyOp, attrs: c_uint) -> result<(),()> {
+    fn define_property(name: ~str, value: jsval, getter: JSPropertyOp, setter: JSStrictPropertyOp,
+                       attrs: c_uint)
+                    -> Result<(),()> {
         result(JS_DefineProperty(self.cx.ptr, self.global_obj.ptr, self.add_name(name),
                                  value, getter, setter, attrs))
     }
     fn new_object(class_name: ~str, proto: *JSObject, parent: *JSObject)
-        -> result<jsobj, ()> {
+               -> Result<jsobj, ()> {
         let classptr = self.cx.lookup_class_name(class_name);
-        let obj = self.cx.rooted_obj(JS_NewObject(self.cx.ptr, ptr::assimilate(&*classptr),
+        let obj = self.cx.rooted_obj(JS_NewObject(self.cx.ptr, ptr::to_unsafe_ptr(&*classptr),
                                                   proto, parent));
         result_obj(obj)
     }
     fn new_object_with_proto(class_name: ~str, proto_name: ~str, parent: *JSObject)
-        -> result<jsobj, ()> {
+                          -> Result<jsobj, ()> {
         let classptr = self.cx.lookup_class_name(class_name);
         let proto = option::expect(self.global_protos.find(proto_name),
            #fmt("new_object_with_proto: expected to find %s in the proto \
               table", proto_name));
-        let obj = self.cx.rooted_obj(JS_NewObject(self.cx.ptr, ptr::assimilate(&*classptr),
+        let obj = self.cx.rooted_obj(JS_NewObject(self.cx.ptr, ptr::to_unsafe_ptr(&*classptr),
                                                   proto.ptr, parent));
         result_obj(obj)
     }
