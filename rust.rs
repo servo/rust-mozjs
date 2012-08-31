@@ -294,7 +294,7 @@ mod test {
         cx.new_compartment(global::global_class).chain(|comp| {
             comp.define_functions(global::debug_fns);
 
-            let bytes = str::bytes(~"debug(22);");
+            let bytes = str::to_bytes(~"debug(22);");
             cx.evaluate_script(comp.global_obj, bytes, ~"test", 1u)
         });
     }
