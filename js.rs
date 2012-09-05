@@ -145,7 +145,7 @@ unsafe fn JS_ARGV(_cx: *JSContext, vp: *jsval) -> *jsval {
 }
 
 unsafe fn JS_SET_RVAL(_cx: *JSContext, vp: *jsval, v: jsval) {
-    let vp: *mut jsval = unsafe::reinterpret_cast(vp);
+    let vp: *mut jsval = unsafe::reinterpret_cast(&vp);
     *vp = v;
 }
 

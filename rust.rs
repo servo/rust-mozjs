@@ -131,19 +131,19 @@ impl cx {
     }
 
     unsafe fn get_cx_private() -> *() {
-        unsafe::reinterpret_cast(JS_GetContextPrivate(self.ptr))
+        unsafe::reinterpret_cast(&JS_GetContextPrivate(self.ptr))
     }
 
     unsafe fn set_cx_private(data: *()) {
-        JS_SetContextPrivate(self.ptr, unsafe::reinterpret_cast(data));
+        JS_SetContextPrivate(self.ptr, unsafe::reinterpret_cast(&data));
     }
 
     unsafe fn get_obj_private(obj: *JSObject) -> *() {
-        unsafe::reinterpret_cast(JS_GetPrivate(obj))
+        unsafe::reinterpret_cast(&JS_GetPrivate(obj))
     }
 
     unsafe fn set_obj_private(obj: *JSObject, data: *()) {
-        JS_SetPrivate(obj, unsafe::reinterpret_cast(data));
+        JS_SetPrivate(obj, unsafe::reinterpret_cast(&data));
     }
 }
 
@@ -276,7 +276,7 @@ trait to_jsstr {
 impl ~str : to_jsstr {
     fn to_jsstr(cx: cx) -> *JSString {
         str::as_buf(self, |buf, len| {
-            let cbuf = unsafe { unsafe::reinterpret_cast(buf) };
+            let cbuf = unsafe { unsafe::reinterpret_cast(&buf) };
             bg::JS_NewStringCopyN(cx.ptr, cbuf, len as size_t)
         })
     }
