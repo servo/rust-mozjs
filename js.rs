@@ -66,9 +66,6 @@ export JSVAL_ONE;
 export JSVAL_FALSE;
 export JSVAL_TRUE;
 
-/* Look in this directory for spidermonkey */
-extern mod m { }
-
 // FIXME: Add the remaining options
 const JSOPTION_STRICT: uint32_t =    0b00000000000001u32;
 const JSOPTION_WERROR: uint32_t =    0b00000000000010u32;
