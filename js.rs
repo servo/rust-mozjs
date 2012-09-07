@@ -67,10 +67,6 @@ export JSVAL_FALSE;
 export JSVAL_TRUE;
 
 /* Look in this directory for spidermonkey */
-#[link_args = "-L."]
-/* Link to the static js library */
-#[link_args = "-ljs_static"]
-#[link_args = "-lstdc++"]
 extern mod m { }
 
 // FIXME: Add the remaining options
