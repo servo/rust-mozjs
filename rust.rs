@@ -16,24 +16,28 @@ export compartment;
 type rt = @rt_rsrc;
 
 struct rt_rsrc {
-    let ptr : *JSRuntime;
-    new(p : {ptr: *JSRuntime}) {
-        self.ptr = p.ptr;
-    }
+    ptr : *JSRuntime,
     drop {
         JS_Finish(self.ptr);
     }
 }
 
-fn rt() -> rt {
-    @rt_rsrc({ptr: JS_Init(default_heapsize)})
+fn new_runtime(p : {ptr: *JSRuntime}) -> rt {
+    return @rt_rsrc {
+        ptr: p.ptr 
+    }
 }
 
 impl rt {
     fn cx() -> cx {
-        @cx_rsrc({ptr: JS_NewContext(self.ptr, default_stacksize as size_t),
-                  rt: self})
+        new_context({ ptr: JS_NewContext(self.ptr, default_stacksize as size_t),
+                      rt: self})
     }
+}
+
+
+fn rt() -> rt {
+    return new_runtime({ptr: JS_Init(default_heapsize)})
 }
 
 // ___________________________________________________________________________
@@ -42,23 +46,26 @@ impl rt {
 type cx = @cx_rsrc;
 
 struct cx_rsrc {
-    let ptr : *JSContext;
-    let rt: rt;
-    let classes: hashmap<~str, @JSClass>;
+    ptr : *JSContext,
+    rt: rt,
+    classes: hashmap<~str, @JSClass>,
 
-    new(rec : {ptr: *JSContext, rt: rt}) {
-        self.ptr = rec.ptr;
-        self.rt = rec.rt;
-        self.classes = str_hash();
-    }
     drop {
         JS_DestroyContext(self.ptr);
+    }
+}
+
+fn new_context(rec : {ptr: *JSContext, rt: rt}) -> cx {
+    return @cx_rsrc {
+        ptr: rec.ptr,
+        rt: rec.rt,
+        classes: str_hash()
     }
 }
     
 impl cx {
     fn rooted_obj(obj: *JSObject) -> jsobj {
-        let jsobj = @jsobj_rsrc({cx: self, cxptr: self.ptr, ptr: obj});
+        let jsobj = @jsobj_rsrc {cx: self, cxptr: self.ptr, ptr: obj};
         JS_AddObjectRoot(self.ptr, ptr::addr_of(jsobj.ptr));
         jsobj
     }
@@ -253,16 +260,21 @@ impl bare_compartment : methods {
 type jsobj = @jsobj_rsrc;
 
 struct jsobj_rsrc {
-    let cx : cx;
-    let cxptr : *JSContext;
-    let ptr : *JSObject;
-    new(rec : {cx: cx, cxptr: *JSContext, ptr: *JSObject}) {
-        self.cx = rec.cx;
-        self.cxptr = rec.cxptr;
-        self.ptr = rec.ptr;
-    }
+    cx : cx,
+    cxptr : *JSContext,
+    ptr : *JSObject,
     drop {
         JS_RemoveObjectRoot(self.cxptr, ptr::addr_of(self.ptr));
+    }
+}
+
+impl jsobj_rsrc {
+    fn new_object(rec : {cx: cx, cxptr: *JSContext, ptr: *JSObject}) -> jsobj {
+        return @jsobj_rsrc {
+            cx: rec.cx,
+            cxptr: rec.cxptr,
+            ptr: rec.ptr
+        }
     }
 }
 
