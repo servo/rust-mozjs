@@ -1,5 +1,5 @@
-import libc::c_char;
-import vec::push;
+use libc::c_char;
+use vec::push;
 
 export name_pool;
 export methods;

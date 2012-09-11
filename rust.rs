@@ -1,8 +1,8 @@
 #[doc = "Rust wrappers around the raw JS apis"];
 
-import bg = jsapi::bindgen;
-import libc::types::os::arch::c95::{size_t, c_uint};
-import std::map::{hashmap, str_hash};
+use bg = jsapi::bindgen;
+use libc::types::os::arch::c95::{size_t, c_uint};
+use std::map::{hashmap, str_hash};
 
 export rt;
 export cx;

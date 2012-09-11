@@ -1,4 +1,4 @@
-import jsapi::*;
+use jsapi::*;
 
 extern fn JS_PropertyStub(++cx: *JSContext, ++obj: JSHandleObject, ++id: JSHandleId, ++vp: JSMutableHandleValue) -> JSBool {
     bindgen::JS_PropertyStub(cx, obj, id, vp)

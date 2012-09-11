@@ -1,13 +1,13 @@
-import ptr::{null, addr_of};
-import result::{Result, Ok, Err};
-import libc::{c_char, c_uint};
-import name_pool::{name_pool, add};
-import str::unsafe::from_c_str;
-import io::WriterUtil;
-import jsapi::{JSBool, JSClass, JSContext, JSErrorReport, JSFunctionSpec,
+use ptr::{null, addr_of};
+use result::{Result, Ok, Err};
+use libc::{c_char, c_uint};
+use name_pool::{name_pool, add};
+use str::unsafe::from_c_str;
+use io::WriterUtil;
+use jsapi::{JSBool, JSClass, JSContext, JSErrorReport, JSFunctionSpec,
                JSObject, JSRuntime, JSString, JSVERSION_LATEST, jsval,
                JSPropertySpec, JSPropertyOp, JSStrictPropertyOp};
-import jsapi::bindgen::{JS_free, JS_AddObjectRoot, JS_DefineFunctions,
+use jsapi::bindgen::{JS_free, JS_AddObjectRoot, JS_DefineFunctions,
                         JS_DestroyContext, JS_EncodeString, JS_EvaluateScript,
                         JS_Finish, JS_GetContextPrivate, JS_GetPrivate,
                         JS_Init, JS_InitStandardClasses,
@@ -16,10 +16,10 @@ import jsapi::bindgen::{JS_free, JS_AddObjectRoot, JS_DefineFunctions,
                         JS_SetErrorReporter, JS_SetOptions, JS_SetPrivate,
                         JS_SetVersion, JS_ValueToString, JS_DefineProperties,
                         JS_DefineProperty, JS_NewObject, JS_ComputeThis};
-import libc::types::common::c99::{int8_t, int16_t, int32_t, int64_t, uint8_t,
+use libc::types::common::c99::{int8_t, int16_t, int32_t, int64_t, uint8_t,
                                   uint16_t, uint32_t, uint64_t};
-import glue::bindgen::{RUST_JSVAL_TO_OBJECT, RUST_JSVAL_IS_PRIMITIVE};
-import rust::jsobj;
+use glue::bindgen::{RUST_JSVAL_TO_OBJECT, RUST_JSVAL_IS_PRIMITIVE};
+use rust::jsobj;
 
 export JSOPTION_STRICT;
 export JSOPTION_WERROR;
@@ -44,15 +44,15 @@ export crust;
 export ptr_methods;
 
 // These are just macros in jsapi.h
-import JS_NewRuntime = jsapi::bindgen::JS_Init;
+use JS_NewRuntime = jsapi::bindgen::JS_Init;
 export JS_NewRuntime;
-import JS_DestroyRuntime = jsapi::bindgen::JS_Finish;
+use JS_DestroyRuntime = jsapi::bindgen::JS_Finish;
 export JS_DestroyRuntime;
 /*
 FIXME: Not sure where JS_Lock is
-import JS_LockRuntime = jsapi::bindgen::JS_Lock;
+use JS_LockRuntime = jsapi::bindgen::JS_Lock;
 export JS_LockRuntime;
-import JS_UnlockRuntime = jsapi::bindgen::JS_Unlock;
+use JS_UnlockRuntime = jsapi::bindgen::JS_Unlock;
 export JS_UnlockRuntime;
 */
 

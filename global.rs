@@ -4,10 +4,10 @@ Handy functions for creating class objects and so forth.
 
 "];
 
-import glue::bindgen::GetJSClassHookStubPointer;
-import glue::{PROPERTY_STUB, STRICT_PROPERTY_STUB, ENUMERATE_STUB,
+use glue::bindgen::GetJSClassHookStubPointer;
+use glue::{PROPERTY_STUB, STRICT_PROPERTY_STUB, ENUMERATE_STUB,
               RESOLVE_STUB, CONVERT_STUB};
-import libc::c_uint;
+use libc::c_uint;
 export basic_class;
 export global_class;
 export debug_fns;
@@ -51,7 +51,7 @@ unsafe fn jsval_to_rust_str(cx: *JSContext, vp: *jsapi::JSString) -> ~str {
 }
 
 extern fn debug(cx: *JSContext, argc: c_uint, vp: *jsval) -> JSBool {
-    import io::WriterUtil;
+    use io::WriterUtil;
 
     unsafe {
         let argv = JS_ARGV(cx, vp);
