@@ -2,7 +2,7 @@
 
 use bg = jsapi::bindgen;
 use libc::types::os::arch::c95::{size_t, c_uint};
-use std::map::{hashmap, str_hash};
+use std::map::{HashMap, str_hash};
 
 export rt;
 export cx;
@@ -48,7 +48,7 @@ type cx = @cx_rsrc;
 struct cx_rsrc {
     ptr : *JSContext,
     rt: rt,
-    classes: hashmap<~str, @JSClass>,
+    classes: HashMap<~str, @JSClass>,
 
     drop {
         JS_DestroyContext(self.ptr);
@@ -176,7 +176,7 @@ type bare_compartment = {
     mut global_props: ~[@~[JSPropertySpec]],
     global_class: @JSClass,
     global_obj: jsobj,
-    global_protos: hashmap<~str, jsobj>
+    global_protos: HashMap<~str, jsobj>
 };
 
 trait methods {
