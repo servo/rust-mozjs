@@ -2,7 +2,7 @@ use ptr::{null, addr_of};
 use result::{Result, Ok, Err};
 use libc::{c_char, c_uint};
 use name_pool::{name_pool, add};
-use str::unsafe::from_c_str;
+use str::raw::from_c_str;
 use io::WriterUtil;
 use jsapi::{JSBool, JSClass, JSContext, JSErrorReport, JSFunctionSpec,
                JSObject, JSRuntime, JSString, JSVERSION_LATEST, jsval,

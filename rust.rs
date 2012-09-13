@@ -111,7 +111,7 @@ impl cx {
 
     fn evaluate_script(glob: jsobj, bytes: ~[u8], filename: ~str, line_num: uint) 
                     -> Result<(),()> {
-        vec::as_buf(bytes, |bytes_ptr, bytes_len| {
+        vec::as_imm_buf(bytes, |bytes_ptr, bytes_len| {
             str::as_c_str(filename, |filename_cstr| {
                 let bytes_ptr = bytes_ptr as *c_char;
                 let rval: jsval = JSVAL_NULL;
@@ -199,14 +199,14 @@ impl bare_compartment : methods {
     fn define_functions(specfn: fn(name_pool) -> ~[JSFunctionSpec]) -> Result<(),()> {
         let specvec = @specfn(self.name_pool);
         vec::push(self.global_funcs, specvec);
-        vec::as_buf(*specvec, |specs, _len| {
+        vec::as_imm_buf(*specvec, |specs, _len| {
             result(JS_DefineFunctions(self.cx.ptr, self.global_obj.ptr, specs))
         })
     }
     fn define_properties(specfn: fn() -> ~[JSPropertySpec]) -> Result<(),()> {
         let specvec = @specfn();
         vec::push(self.global_props, specvec);
-        vec::as_buf(*specvec, |specs, _len| {
+        vec::as_imm_buf(*specvec, |specs, _len| {
             result(JS_DefineProperties(self.cx.ptr, self.global_obj.ptr, specs))
         })
     }
@@ -244,7 +244,7 @@ impl bare_compartment : methods {
     fn register_class(class_fn: fn(bare_compartment) -> JSClass) {
         let classptr = @class_fn(self);
         if !self.cx.classes.insert(
-            unsafe { str::unsafe::from_c_str(classptr.name) },
+            unsafe { str::raw::from_c_str(classptr.name) },
             classptr) {
             fail ~"Duplicate JSClass registered; you're gonna have a bad time."
         }
