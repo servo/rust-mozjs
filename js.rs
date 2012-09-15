@@ -113,8 +113,7 @@ const JSCLASS_HIGH_FLAGS_SHIFT: c_uint =
     JSCLASS_RESERVED_SLOTS_SHIFT + JSCLASS_RESERVED_SLOTS_WIDTH;
 const JSCLASS_IS_GLOBAL: c_uint = (1<<(JSCLASS_HIGH_FLAGS_SHIFT+1));
 
-// The 41 is derived from the number of entries in jsproto.tbl. See jsapi.h for more info.
-const JSCLASS_GLOBAL_SLOT_COUNT: c_uint = 41 * 3 + 24;
+const JSCLASS_GLOBAL_SLOT_COUNT: c_uint = JSProto_LIMIT * 3 + 24;
 
 pure fn JSCLASS_HAS_RESERVED_SLOTS(n: c_uint) -> c_uint {
     (n & JSCLASS_RESERVED_SLOTS_MASK) << JSCLASS_RESERVED_SLOTS_SHIFT
