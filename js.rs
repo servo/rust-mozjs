@@ -6,7 +6,7 @@ use str::raw::from_c_str;
 use io::WriterUtil;
 use jsapi::{JSBool, JSClass, JSContext, JSErrorReport, JSFunctionSpec,
                JSObject, JSRuntime, JSString, JSVERSION_LATEST, jsval,
-               JSPropertySpec, JSPropertyOp, JSStrictPropertyOp};
+               JSPropertySpec, JSPropertyOp, JSStrictPropertyOp, JSProto_LIMIT};
 use jsapi::bindgen::{JS_free, JS_AddObjectRoot, JS_DefineFunctions,
                         JS_DestroyContext, JS_EncodeString, JS_EvaluateScript,
                         JS_Finish, JS_GetContextPrivate, JS_GetPrivate,
