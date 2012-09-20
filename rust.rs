@@ -2,7 +2,7 @@
 
 use bg = jsapi::bindgen;
 use libc::types::os::arch::c95::{size_t, c_uint};
-use std::map::{HashMap, str_hash};
+use std::map::HashMap;
 
 export rt;
 export cx;
@@ -59,7 +59,7 @@ fn new_context(rec : {ptr: *JSContext, rt: rt}) -> cx {
     return @cx_rsrc {
         ptr: rec.ptr,
         rt: rec.rt,
-        classes: str_hash()
+        classes: HashMap()
     }
 }
     
@@ -102,7 +102,7 @@ impl cx {
                                 mut global_props: ~[],
                                 global_class: globcls,
                                 global_obj: self.rooted_obj(globobj),
-                                global_protos: str_hash()
+                                global_protos: HashMap()
                                };
             self.set_cx_private(ptr::to_unsafe_ptr(&*compartment) as *());
             Ok(compartment)
@@ -138,19 +138,19 @@ impl cx {
     }
 
     unsafe fn get_cx_private() -> *() {
-        unsafe::reinterpret_cast(&JS_GetContextPrivate(self.ptr))
+        cast::reinterpret_cast(&JS_GetContextPrivate(self.ptr))
     }
 
     unsafe fn set_cx_private(data: *()) {
-        JS_SetContextPrivate(self.ptr, unsafe::reinterpret_cast(&data));
+        JS_SetContextPrivate(self.ptr, cast::reinterpret_cast(&data));
     }
 
     unsafe fn get_obj_private(obj: *JSObject) -> *() {
-        unsafe::reinterpret_cast(&JS_GetPrivate(obj))
+        cast::reinterpret_cast(&JS_GetPrivate(obj))
     }
 
     unsafe fn set_obj_private(obj: *JSObject, data: *()) {
-        JS_SetPrivate(obj, unsafe::reinterpret_cast(&data));
+        JS_SetPrivate(obj, cast::reinterpret_cast(&data));
     }
 }
 
@@ -288,7 +288,7 @@ trait to_jsstr {
 impl ~str : to_jsstr {
     fn to_jsstr(cx: cx) -> *JSString {
         str::as_buf(self, |buf, len| {
-            let cbuf = unsafe { unsafe::reinterpret_cast(&buf) };
+            let cbuf = unsafe { cast::reinterpret_cast(&buf) };
             bg::JS_NewStringCopyN(cx.ptr, cbuf, len as size_t)
         })
     }
