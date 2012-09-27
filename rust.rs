@@ -133,7 +133,7 @@ impl cx {
     }
 
     fn lookup_class_name(s: ~str) ->  @JSClass {
-      option::expect(self.classes.find(s),
+      option::expect(&self.classes.find(s),
            #fmt("Class %s not found in class table", s))
     }
 
@@ -198,14 +198,14 @@ type compartment = @bare_compartment;
 impl bare_compartment : methods {
     fn define_functions(specfn: fn(name_pool) -> ~[JSFunctionSpec]) -> Result<(),()> {
         let specvec = @specfn(self.name_pool);
-        vec::push(self.global_funcs, specvec);
+        vec::push(&mut self.global_funcs, specvec);
         vec::as_imm_buf(*specvec, |specs, _len| {
             result(JS_DefineFunctions(self.cx.ptr, self.global_obj.ptr, specs))
         })
     }
     fn define_properties(specfn: fn() -> ~[JSPropertySpec]) -> Result<(),()> {
         let specvec = @specfn();
-        vec::push(self.global_props, specvec);
+        vec::push(&mut self.global_props, specvec);
         vec::as_imm_buf(*specvec, |specs, _len| {
             result(JS_DefineProperties(self.cx.ptr, self.global_obj.ptr, specs))
         })
@@ -226,7 +226,7 @@ impl bare_compartment : methods {
     fn new_object_with_proto(class_name: ~str, proto_name: ~str, parent: *JSObject)
                           -> Result<jsobj, ()> {
         let classptr = self.cx.lookup_class_name(class_name);
-        let proto = option::expect(self.global_protos.find(proto_name),
+        let proto = option::expect(&self.global_protos.find(proto_name),
            #fmt("new_object_with_proto: expected to find %s in the proto \
               table", proto_name));
         let obj = self.cx.rooted_obj(JS_NewObject(self.cx.ptr, ptr::to_unsafe_ptr(&*classptr),

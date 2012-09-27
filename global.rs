@@ -8,12 +8,8 @@ use glue::bindgen::GetJSClassHookStubPointer;
 use glue::{PROPERTY_STUB, STRICT_PROPERTY_STUB, ENUMERATE_STUB,
               RESOLVE_STUB, CONVERT_STUB};
 use libc::c_uint;
-export basic_class;
-export global_class;
-export debug_fns;
-export jsval_to_rust_str;
 
-fn basic_class(np: name_pool, -name: ~str) -> JSClass {
+pub fn basic_class(np: name_pool, -name: ~str) -> JSClass {
     {name: np.add(name),
      flags: JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT),
      addProperty: GetJSClassHookStubPointer(PROPERTY_STUB) as *u8,
@@ -39,18 +35,18 @@ fn basic_class(np: name_pool, -name: ~str) -> JSClass {
                 null(), null(), null(), null(), null())} // 40
 }
 
-fn global_class(np: name_pool) -> JSClass {
+pub fn global_class(np: name_pool) -> JSClass {
     basic_class(np, ~"global")
 }
 
-unsafe fn jsval_to_rust_str(cx: *JSContext, vp: *jsapi::JSString) -> ~str {
+pub unsafe fn jsval_to_rust_str(cx: *JSContext, vp: *jsapi::JSString) -> ~str {
   let bytes = JS_EncodeString(cx, vp);
   let s = str::raw::from_c_str(bytes);
   JS_free(cx, cast::reinterpret_cast(&bytes));
   s
 }
 
-extern fn debug(cx: *JSContext, argc: c_uint, vp: *jsval) -> JSBool {
+pub extern fn debug(cx: *JSContext, argc: c_uint, vp: *jsval) -> JSBool {
     use io::WriterUtil;
 
     unsafe {
@@ -64,7 +60,7 @@ extern fn debug(cx: *JSContext, argc: c_uint, vp: *jsval) -> JSBool {
     }
 }
 
-fn debug_fns(np: name_pool) -> ~[JSFunctionSpec] {
+pub fn debug_fns(np: name_pool) -> ~[JSFunctionSpec] {
     ~[{name: np.add(~"debug"),
        call: {op: debug,
               info: null()},

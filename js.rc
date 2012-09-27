@@ -4,10 +4,10 @@
 
 extern mod std;
 
-mod jsapi;
-mod linkhack;
-mod name_pool;
-mod rust;
-mod global;
-mod glue;
-mod crust;
+pub mod jsapi;
+pub mod linkhack;
+pub mod name_pool;
+pub mod rust;
+pub mod global;
+pub mod glue;
+pub mod crust;
