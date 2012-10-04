@@ -13,16 +13,16 @@ export compartment;
 // ___________________________________________________________________________
 // friendly Rustic API to runtimes
 
-type rt = @rt_rsrc;
+pub type rt = @rt_rsrc;
 
-struct rt_rsrc {
+pub struct rt_rsrc {
     ptr : *JSRuntime,
     drop {
         JS_Finish(self.ptr);
     }
 }
 
-fn new_runtime(p : {ptr: *JSRuntime}) -> rt {
+pub fn new_runtime(p : {ptr: *JSRuntime}) -> rt {
     return @rt_rsrc {
         ptr: p.ptr 
     }
@@ -36,16 +36,16 @@ impl rt {
 }
 
 
-fn rt() -> rt {
+pub fn rt() -> rt {
     return new_runtime({ptr: JS_Init(default_heapsize)})
 }
 
 // ___________________________________________________________________________
 // contexts
 
-type cx = @cx_rsrc;
+pub type cx = @cx_rsrc;
 
-struct cx_rsrc {
+pub struct cx_rsrc {
     ptr : *JSContext,
     rt: rt,
     classes: HashMap<~str, @JSClass>,
@@ -55,7 +55,7 @@ struct cx_rsrc {
     }
 }
 
-fn new_context(rec : {ptr: *JSContext, rt: rt}) -> cx {
+pub fn new_context(rec : {ptr: *JSContext, rt: rt}) -> cx {
     return @cx_rsrc {
         ptr: rec.ptr,
         rt: rec.rt,
@@ -66,7 +66,7 @@ fn new_context(rec : {ptr: *JSContext, rt: rt}) -> cx {
 impl cx {
     fn rooted_obj(obj: *JSObject) -> jsobj {
         let jsobj = @jsobj_rsrc {cx: self, cxptr: self.ptr, ptr: obj};
-        JS_AddObjectRoot(self.ptr, ptr::addr_of(jsobj.ptr));
+        JS_AddObjectRoot(self.ptr, ptr::to_unsafe_ptr(&jsobj.ptr));
         jsobj
     }
 
@@ -119,7 +119,7 @@ impl cx {
                 if JS_EvaluateScript(self.ptr, glob.ptr,
                                      bytes_ptr, bytes_len as c_uint,
                                      filename_cstr, line_num as c_uint,
-                                     ptr::addr_of(rval)) == ERR {
+                                     ptr::to_unsafe_ptr(&rval)) == ERR {
                     #debug["...err!"];
                     Err(())
                 } else {
@@ -154,9 +154,7 @@ impl cx {
     }
 }
 
-extern fn reportError(_cx: *JSContext,
-                     msg: *c_char,
-                     report: *JSErrorReport) {
+pub extern fn reportError(_cx: *JSContext, msg: *c_char, report: *JSErrorReport) {
     unsafe {
         let fnptr = (*report).filename;
         let fname = if fnptr.is_not_null() {from_c_str(fnptr)} else {~"none"};
@@ -169,7 +167,7 @@ extern fn reportError(_cx: *JSContext,
 // ___________________________________________________________________________
 // compartment
 
-type bare_compartment = {
+pub type bare_compartment = {
     cx: cx,
     name_pool: name_pool,
     mut global_funcs: ~[@~[JSFunctionSpec]],
@@ -179,7 +177,7 @@ type bare_compartment = {
     global_protos: HashMap<~str, jsobj>
 };
 
-trait methods {
+pub trait methods {
     fn define_functions(specfn: fn(name_pool) -> ~[JSFunctionSpec]) -> Result<(),()>;
     fn define_properties(specfn: fn() -> ~[JSPropertySpec]) -> Result<(),()>;
     fn define_property(name: ~str, value: jsval, getter: JSPropertyOp,
@@ -193,7 +191,7 @@ trait methods {
     fn add_name(name: ~str) -> *c_char;
 }
 
-type compartment = @bare_compartment;
+pub type compartment = @bare_compartment;
 
 impl bare_compartment : methods {
     fn define_functions(specfn: fn(name_pool) -> ~[JSFunctionSpec]) -> Result<(),()> {
@@ -257,14 +255,14 @@ impl bare_compartment : methods {
 // ___________________________________________________________________________
 // objects
 
-type jsobj = @jsobj_rsrc;
+pub type jsobj = @jsobj_rsrc;
 
-struct jsobj_rsrc {
+pub struct jsobj_rsrc {
     cx : cx,
     cxptr : *JSContext,
     ptr : *JSObject,
     drop {
-        JS_RemoveObjectRoot(self.cxptr, ptr::addr_of(self.ptr));
+        JS_RemoveObjectRoot(self.cxptr, ptr::to_unsafe_ptr(&self.ptr));
     }
 }
 
@@ -281,7 +279,7 @@ impl jsobj_rsrc {
 // ___________________________________________________________________________
 // random utilities
 
-trait to_jsstr {
+pub trait to_jsstr {
     fn to_jsstr(cx: cx) -> *JSString;
 }
 
@@ -295,10 +293,10 @@ impl ~str : to_jsstr {
 }
 
 #[cfg(test)]
-mod test {
+pub mod test {
 
     #[test]
-    fn dummy() {
+    pub fn dummy() {
         let rt = rt();
         let cx = rt.cx();
         cx.set_default_options_and_version();

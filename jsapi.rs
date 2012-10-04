@@ -608,7 +608,7 @@ pub type struct_unnamed1 = {
 pub type union_unnamed2 = c_void /* FIXME: union type */;
 
 #[nolink]
-extern mod bindgen {
+pub extern mod bindgen {
 
 pub fn JS_Assert(++s: *c_char, ++file: *c_char, ++ln: c_int);
 
