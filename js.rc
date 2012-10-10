@@ -11,3 +11,4 @@ pub mod rust;
 pub mod global;
 pub mod glue;
 pub mod crust;
+pub mod jsval;
