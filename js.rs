@@ -5,7 +5,7 @@ use name_pool::{name_pool, add};
 use str::raw::from_c_str;
 use io::WriterUtil;
 use jsapi::{JSBool, JSClass, JSContext, JSErrorReport, JSFunctionSpec,
-               JSObject, JSRuntime, JSString, JSVERSION_LATEST, jsval,
+               JSObject, JSRuntime, JSString, JSVERSION_LATEST, jsval, jsid,
                JSPropertySpec, JSPropertyOp, JSStrictPropertyOp, JSProto_LIMIT};
 use jsapi::bindgen::{JS_free, JS_AddObjectRoot, JS_DefineFunctions,
                         JS_DestroyContext, JS_EncodeString, JS_EvaluateScript,
@@ -123,3 +123,59 @@ pub unsafe fn JS_THIS_OBJECT(cx: *JSContext, vp: *jsval) -> *JSObject unsafe {
     r
 }
 
+// This is a duplication of the shadow stuff from jsfriendapi.h.  Here
+// there be dragons!
+mod shadow {
+    struct TypeObject {
+        proto: *JSObject
+    }
+
+    struct BaseShape {
+        clasp: *JSClass,
+        parent: *JSObject
+    }
+
+    struct Shape {
+        base: *BaseShape,
+        _1: jsid,
+        slotInfo: u32
+    }
+    const FIXED_SLOTS_SHIFT: u32 = 27;
+
+    pub struct Object {
+        shape: *Shape,
+        objType: *TypeObject,
+        slots: *jsval,
+        _1: *jsval,
+        // Hack so we can point to the first slot
+        fixedSlot0: jsval
+    }
+
+    impl Object {
+        #[inline(always)]
+        pure fn numFixedSlots() -> libc::size_t unsafe {
+            ((*self.shape).slotInfo >> FIXED_SLOTS_SHIFT) as libc::size_t
+        }
+        
+        #[inline(always)]
+        fn fixedSlots() -> *jsval {
+            ptr::to_unsafe_ptr(&self.fixedSlot0)
+        }
+
+        // Like slotRef, but just returns the value, not a reference
+        #[inline(always)]
+        pure fn slotVal(slot: libc::size_t) -> jsval unsafe {
+            let nfixed : libc::size_t = self.numFixedSlots();
+            if slot < nfixed {
+                return *ptr::offset(self.fixedSlots(), slot as uint)
+            }
+            return *ptr::offset(self.slots, (slot - nfixed) as uint)
+        }
+    }
+}
+
+#[inline(always)]
+pub unsafe fn GetReservedSlot(obj: *JSObject, slot: libc::size_t) -> jsval {
+    let s = obj as *shadow::Object;
+    return (*s).slotVal(slot)
+}
