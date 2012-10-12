@@ -41,8 +41,8 @@ pub use JS_UnlockRuntime = jsapi::bindgen::JS_Unlock;
 pub const JSOPTION_STRICT: uint32_t =    0b00000000000001u32;
 pub const JSOPTION_WERROR: uint32_t =    0b00000000000010u32;
 pub const JSOPTION_VAROBJFIX: uint32_t = 0b00000000000100u32;
-//pub const JSOPTION_METHODJIT: uint32_t = 0b100000000000000u32;
 pub const JSOPTION_METHODJIT: uint32_t = (1 << 14) as u32;
+pub const JSOPTION_TYPE_INFERENCE: uint32_t = (1 << 18) as u32;
 
 pub const default_heapsize: u32 = 8_u32 * 1024_u32 * 1024_u32;
 pub const default_stacksize: uint = 8192u;
@@ -147,8 +147,6 @@ mod shadow {
         objType: *TypeObject,
         slots: *jsval,
         _1: *jsval,
-        // Hack so we can point to the first slot
-        fixedSlot0: jsval
     }
 
     impl Object {
@@ -159,7 +157,7 @@ mod shadow {
         
         #[inline(always)]
         fn fixedSlots() -> *jsval {
-            ptr::to_unsafe_ptr(&self.fixedSlot0)
+            (ptr::offset(ptr::to_unsafe_ptr(&self), 1)) as *jsval
         }
 
         // Like slotRef, but just returns the value, not a reference

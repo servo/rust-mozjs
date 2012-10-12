@@ -71,7 +71,8 @@ impl cx {
     }
 
     fn set_default_options_and_version() {
-        self.set_options(JSOPTION_VAROBJFIX | JSOPTION_METHODJIT);
+        self.set_options(JSOPTION_VAROBJFIX | JSOPTION_METHODJIT |
+                         JSOPTION_TYPE_INFERENCE);
         self.set_version(JSVERSION_LATEST);
     }
 
