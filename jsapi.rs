@@ -251,7 +251,7 @@ pub type jsval_layout = union_jsval_layout;
 
 pub type moz_static_assert5 = c_int;
 
-pub type jsval = u64; //XXXjdm hand modified
+pub type JSVal = u64; //XXXjdm hand modified
 
 pub type moz_static_assert6 = c_int;
 
@@ -260,7 +260,7 @@ pub type JSHandleObject = {
 };
 
 pub type JSHandleValue = {
-    unnamed: jsval,
+    unnamed: JSVal,
 };
 
 pub type JSHandleString = {
@@ -276,7 +276,7 @@ pub type JSHandleId = {
 };
 
 pub type JSMutableHandleValue = {
-    unnamed: *jsval,
+    unnamed: *JSVal,
 };
 
 pub type JSRawObject = *JSObject;
@@ -549,7 +549,7 @@ pub type struct_JSPropertyDescriptor = {
     shortid: c_uint,
     getter: JSPropertyOp,
     setter: JSStrictPropertyOp,
-    value: jsval,
+    value: JSVal,
 };
 
 pub type struct_JSPrincipals = {
@@ -634,31 +634,31 @@ pub fn JS_CallOnce(++once: *JSCallOnceType, ++func: JSInitCallback) -> JSBool;
 
 pub fn JS_Now() -> int64_t;
 
-pub fn JS_GetNaNValue(++cx: *JSContext) -> jsval;
+pub fn JS_GetNaNValue(++cx: *JSContext) -> JSVal;
 
-pub fn JS_GetNegativeInfinityValue(++cx: *JSContext) -> jsval;
+pub fn JS_GetNegativeInfinityValue(++cx: *JSContext) -> JSVal;
 
-pub fn JS_GetPositiveInfinityValue(++cx: *JSContext) -> jsval;
+pub fn JS_GetPositiveInfinityValue(++cx: *JSContext) -> JSVal;
 
-pub fn JS_GetEmptyStringValue(++cx: *JSContext) -> jsval;
+pub fn JS_GetEmptyStringValue(++cx: *JSContext) -> JSVal;
 
 pub fn JS_GetEmptyString(++rt: *JSRuntime) -> *JSString;
 
-pub fn JS_ConvertArguments(++cx: *JSContext, ++argc: c_uint, ++argv: *jsval, ++format: *c_char/* FIXME: variadic function */) -> JSBool;
+pub fn JS_ConvertArguments(++cx: *JSContext, ++argc: c_uint, ++argv: *JSVal, ++format: *c_char/* FIXME: variadic function */) -> JSBool;
 
-pub fn JS_ConvertValue(++cx: *JSContext, ++v: jsval, ++_type: JSType, ++vp: *jsval) -> JSBool;
+pub fn JS_ConvertValue(++cx: *JSContext, ++v: JSVal, ++_type: JSType, ++vp: *JSVal) -> JSBool;
 
-pub fn JS_ValueToObject(++cx: *JSContext, ++v: jsval, ++objp: **JSObject) -> JSBool;
+pub fn JS_ValueToObject(++cx: *JSContext, ++v: JSVal, ++objp: **JSObject) -> JSBool;
 
-pub fn JS_ValueToFunction(++cx: *JSContext, ++v: jsval) -> *JSFunction;
+pub fn JS_ValueToFunction(++cx: *JSContext, ++v: JSVal) -> *JSFunction;
 
-pub fn JS_ValueToConstructor(++cx: *JSContext, ++v: jsval) -> *JSFunction;
+pub fn JS_ValueToConstructor(++cx: *JSContext, ++v: JSVal) -> *JSFunction;
 
-pub fn JS_ValueToString(++cx: *JSContext, ++v: jsval) -> *JSString;
+pub fn JS_ValueToString(++cx: *JSContext, ++v: JSVal) -> *JSString;
 
-pub fn JS_ValueToSource(++cx: *JSContext, ++v: jsval) -> *JSString;
+pub fn JS_ValueToSource(++cx: *JSContext, ++v: JSVal) -> *JSString;
 
-pub fn JS_ValueToNumber(++cx: *JSContext, ++v: jsval, ++dp: *c_double) -> JSBool;
+pub fn JS_ValueToNumber(++cx: *JSContext, ++v: JSVal, ++dp: *c_double) -> JSBool;
 
 pub fn JS_DoubleIsInt32(++d: c_double, ++ip: *int32_t) -> JSBool;
 
@@ -666,29 +666,29 @@ pub fn JS_DoubleToInt32(++d: c_double) -> int32_t;
 
 pub fn JS_DoubleToUint32(++d: c_double) -> uint32_t;
 
-pub fn JS_ValueToECMAInt32(++cx: *JSContext, ++v: jsval, ++ip: *int32_t) -> JSBool;
+pub fn JS_ValueToECMAInt32(++cx: *JSContext, ++v: JSVal, ++ip: *int32_t) -> JSBool;
 
-pub fn JS_ValueToInt64(++cx: *JSContext, ++v: jsval, ++ip: *int64_t) -> JSBool;
+pub fn JS_ValueToInt64(++cx: *JSContext, ++v: JSVal, ++ip: *int64_t) -> JSBool;
 
-pub fn JS_ValueToUint64(++cx: *JSContext, ++v: jsval, ++ip: *uint64_t) -> JSBool;
+pub fn JS_ValueToUint64(++cx: *JSContext, ++v: JSVal, ++ip: *uint64_t) -> JSBool;
 
-pub fn JS_ValueToECMAUint32(++cx: *JSContext, ++v: jsval, ++ip: *uint32_t) -> JSBool;
+pub fn JS_ValueToECMAUint32(++cx: *JSContext, ++v: JSVal, ++ip: *uint32_t) -> JSBool;
 
-pub fn JS_ValueToInt32(++cx: *JSContext, ++v: jsval, ++ip: *int32_t) -> JSBool;
+pub fn JS_ValueToInt32(++cx: *JSContext, ++v: JSVal, ++ip: *int32_t) -> JSBool;
 
-pub fn JS_ValueToUint16(++cx: *JSContext, ++v: jsval, ++ip: *uint16_t) -> JSBool;
+pub fn JS_ValueToUint16(++cx: *JSContext, ++v: JSVal, ++ip: *uint16_t) -> JSBool;
 
-pub fn JS_ValueToBoolean(++cx: *JSContext, ++v: jsval, ++bp: *JSBool) -> JSBool;
+pub fn JS_ValueToBoolean(++cx: *JSContext, ++v: JSVal, ++bp: *JSBool) -> JSBool;
 
-pub fn JS_TypeOfValue(++cx: *JSContext, ++v: jsval) -> JSType;
+pub fn JS_TypeOfValue(++cx: *JSContext, ++v: JSVal) -> JSType;
 
 pub fn JS_GetTypeName(++cx: *JSContext, ++_type: JSType) -> *c_char;
 
-pub fn JS_StrictlyEqual(++cx: *JSContext, ++v1: jsval, ++v2: jsval, ++equal: *JSBool) -> JSBool;
+pub fn JS_StrictlyEqual(++cx: *JSContext, ++v1: JSVal, ++v2: JSVal, ++equal: *JSBool) -> JSBool;
 
-pub fn JS_LooselyEqual(++cx: *JSContext, ++v1: jsval, ++v2: jsval, ++equal: *JSBool) -> JSBool;
+pub fn JS_LooselyEqual(++cx: *JSContext, ++v1: JSVal, ++v2: JSVal, ++equal: *JSBool) -> JSBool;
 
-pub fn JS_SameValue(++cx: *JSContext, ++v1: jsval, ++v2: jsval, ++same: *JSBool) -> JSBool;
+pub fn JS_SameValue(++cx: *JSContext, ++v1: JSVal, ++v2: JSVal, ++same: *JSBool) -> JSBool;
 
 pub fn JS_IsBuiltinEvalFunction(++fun: *JSFunction) -> JSBool;
 
@@ -772,7 +772,7 @@ pub fn JS_GetCompartmentPrivate(++compartment: *JSCompartment) -> *c_void;
 
 pub fn JS_WrapObject(++cx: *JSContext, ++objp: **JSObject) -> JSBool;
 
-pub fn JS_WrapValue(++cx: *JSContext, ++vp: *jsval) -> JSBool;
+pub fn JS_WrapValue(++cx: *JSContext, ++vp: *JSVal) -> JSBool;
 
 pub fn JS_TransplantObject(++cx: *JSContext, ++origobj: *JSObject, ++target: *JSObject) -> *JSObject;
 
@@ -817,7 +817,7 @@ pub fn JS_InitReflect(++cx: *JSContext, ++global: *JSObject) -> *JSObject;
 pub fn JS_EnumerateDiagnosticMemoryRegions(++callback: JSEnumerateDiagnosticMemoryCallback);
 
 #[rust_stack]
-pub fn JS_ComputeThis(++cx: *JSContext, ++vp: *jsval) -> jsval;
+pub fn JS_ComputeThis(++cx: *JSContext, ++vp: *JSVal) -> JSVal;
 
 pub fn JS_MallocInCompartment(++comp: *JSCompartment, ++nbytes: size_t);
 
@@ -837,7 +837,7 @@ pub fn JS_updateMallocCounter(++cx: *JSContext, ++nbytes: size_t);
 
 pub fn JS_strdup(++cx: *JSContext, ++s: *c_char) -> *c_char;
 
-pub fn JS_AddValueRoot(++cx: *JSContext, ++vp: *jsval) -> JSBool;
+pub fn JS_AddValueRoot(++cx: *JSContext, ++vp: *JSVal) -> JSBool;
 
 pub fn JS_AddStringRoot(++cx: *JSContext, ++rp: **JSString) -> JSBool;
 
@@ -845,7 +845,7 @@ pub fn JS_AddObjectRoot(++cx: *JSContext, ++rp: **JSObject) -> JSBool;
 
 pub fn JS_AddGCThingRoot(++cx: *JSContext, ++rp: **c_void) -> JSBool;
 
-pub fn JS_AddNamedValueRoot(++cx: *JSContext, ++vp: *jsval, ++name: *c_char) -> JSBool;
+pub fn JS_AddNamedValueRoot(++cx: *JSContext, ++vp: *JSVal, ++name: *c_char) -> JSBool;
 
 pub fn JS_AddNamedStringRoot(++cx: *JSContext, ++rp: **JSString, ++name: *c_char) -> JSBool;
 
@@ -855,7 +855,7 @@ pub fn JS_AddNamedScriptRoot(++cx: *JSContext, ++rp: **JSScript, ++name: *c_char
 
 pub fn JS_AddNamedGCThingRoot(++cx: *JSContext, ++rp: **c_void, ++name: *c_char) -> JSBool;
 
-pub fn JS_RemoveValueRoot(++cx: *JSContext, ++vp: *jsval);
+pub fn JS_RemoveValueRoot(++cx: *JSContext, ++vp: *JSVal);
 
 pub fn JS_RemoveStringRoot(++cx: *JSContext, ++rp: **JSString);
 
@@ -865,13 +865,13 @@ pub fn JS_RemoveScriptRoot(++cx: *JSContext, ++rp: **JSScript);
 
 pub fn JS_RemoveGCThingRoot(++cx: *JSContext, ++rp: **c_void);
 
-pub fn JS_RemoveValueRootRT(++rt: *JSRuntime, ++vp: *jsval);
+pub fn JS_RemoveValueRootRT(++rt: *JSRuntime, ++vp: *JSVal);
 
 pub fn JS_RemoveStringRootRT(++rt: *JSRuntime, ++rp: **JSString);
 
 pub fn JS_RemoveObjectRootRT(++rt: *JSRuntime, ++rp: **JSObject);
 
-pub fn js_AddRootRT(++rt: *JSRuntime, ++vp: *jsval, ++name: *c_char) -> JSBool;
+pub fn js_AddRootRT(++rt: *JSRuntime, ++vp: *JSVal, ++name: *c_char) -> JSBool;
 
 pub fn js_AddGCThingRootRT(++rt: *JSRuntime, ++rp: **c_void, ++name: *c_char) -> JSBool;
 
@@ -937,11 +937,11 @@ pub fn JS_IdArrayGet(++cx: *JSContext, ++ida: *JSIdArray, ++index: c_int) -> jsi
 
 pub fn JS_DestroyIdArray(++cx: *JSContext, ++ida: *JSIdArray);
 
-pub fn JS_ValueToId(++cx: *JSContext, ++v: jsval, ++idp: *jsid) -> JSBool;
+pub fn JS_ValueToId(++cx: *JSContext, ++v: JSVal, ++idp: *jsid) -> JSBool;
 
-pub fn JS_IdToValue(++cx: *JSContext, ++id: jsid, ++vp: *jsval) -> JSBool;
+pub fn JS_IdToValue(++cx: *JSContext, ++id: jsid, ++vp: *JSVal) -> JSBool;
 
-pub fn JS_DefaultValue(++cx: *JSContext, ++obj: *JSObject, ++hint: JSType, ++vp: *jsval) -> JSBool;
+pub fn JS_DefaultValue(++cx: *JSContext, ++obj: *JSObject, ++hint: JSType, ++vp: *JSVal) -> JSBool;
 
 pub fn JS_PropertyStub(++cx: *JSContext, ++obj: JSHandleObject, ++id: JSHandleId, ++vp: JSMutableHandleValue) -> JSBool;
 
@@ -959,15 +959,15 @@ pub fn JS_LinkConstructorAndPrototype(++cx: *JSContext, ++ctor: *JSObject, ++pro
 
 pub fn JS_GetClass(++obj: JSRawObject) -> *JSClass;
 
-pub fn JS_InstanceOf(++cx: *JSContext, ++obj: *JSObject, ++clasp: *JSClass, ++argv: *jsval) -> JSBool;
+pub fn JS_InstanceOf(++cx: *JSContext, ++obj: *JSObject, ++clasp: *JSClass, ++argv: *JSVal) -> JSBool;
 
-pub fn JS_HasInstance(++cx: *JSContext, ++obj: *JSObject, ++v: jsval, ++bp: *JSBool) -> JSBool;
+pub fn JS_HasInstance(++cx: *JSContext, ++obj: *JSObject, ++v: JSVal, ++bp: *JSBool) -> JSBool;
 
 pub fn JS_GetPrivate(++obj: JSRawObject) -> *c_void;
 
 pub fn JS_SetPrivate(++obj: JSRawObject, ++data: *c_void);
 
-pub fn JS_GetInstancePrivate(++cx: *JSContext, ++obj: *JSObject, ++clasp: *JSClass, ++argv: *jsval) -> *c_void;
+pub fn JS_GetInstancePrivate(++cx: *JSContext, ++obj: *JSObject, ++clasp: *JSClass, ++argv: *JSVal) -> *c_void;
 
 pub fn JS_GetPrototype(++obj: JSRawObject) -> *JSObject;
 
@@ -997,7 +997,7 @@ pub fn JS_DeepFreezeObject(++cx: *JSContext, ++obj: *JSObject) -> JSBool;
 
 pub fn JS_FreezeObject(++cx: *JSContext, ++obj: *JSObject) -> JSBool;
 
-pub fn JS_New(++cx: *JSContext, ++ctor: *JSObject, ++argc: c_uint, ++argv: *jsval) -> *JSObject;
+pub fn JS_New(++cx: *JSContext, ++ctor: *JSObject, ++argc: c_uint, ++argv: *JSVal) -> *JSObject;
 
 pub fn JS_DefineObject(++cx: *JSContext, ++obj: *JSObject, ++name: *c_char, ++clasp: *JSClass, ++proto: *JSObject, ++attrs: c_uint) -> *JSObject;
 
@@ -1005,11 +1005,11 @@ pub fn JS_DefineConstDoubles(++cx: *JSContext, ++obj: *JSObject, ++cds: *JSConst
 
 pub fn JS_DefineProperties(++cx: *JSContext, ++obj: *JSObject, ++ps: *JSPropertySpec) -> JSBool;
 
-pub fn JS_DefineProperty(++cx: *JSContext, ++obj: *JSObject, ++name: *c_char, ++value: jsval, ++getter: JSPropertyOp, ++setter: JSStrictPropertyOp, ++attrs: c_uint) -> JSBool;
+pub fn JS_DefineProperty(++cx: *JSContext, ++obj: *JSObject, ++name: *c_char, ++value: JSVal, ++getter: JSPropertyOp, ++setter: JSStrictPropertyOp, ++attrs: c_uint) -> JSBool;
 
-pub fn JS_DefinePropertyById(++cx: *JSContext, ++obj: *JSObject, ++id: jsid, ++value: jsval, ++getter: JSPropertyOp, ++setter: JSStrictPropertyOp, ++attrs: c_uint) -> JSBool;
+pub fn JS_DefinePropertyById(++cx: *JSContext, ++obj: *JSObject, ++id: jsid, ++value: JSVal, ++getter: JSPropertyOp, ++setter: JSStrictPropertyOp, ++attrs: c_uint) -> JSBool;
 
-pub fn JS_DefineOwnProperty(++cx: *JSContext, ++obj: *JSObject, ++id: jsid, ++descriptor: jsval, ++bp: *JSBool) -> JSBool;
+pub fn JS_DefineOwnProperty(++cx: *JSContext, ++obj: *JSObject, ++id: jsid, ++descriptor: JSVal, ++bp: *JSBool) -> JSBool;
 
 pub fn JS_GetPropertyAttributes(++cx: *JSContext, ++obj: *JSObject, ++name: *c_char, ++attrsp: *c_uint, ++foundp: *JSBool) -> JSBool;
 
@@ -1019,7 +1019,7 @@ pub fn JS_GetPropertyAttrsGetterAndSetterById(++cx: *JSContext, ++obj: *JSObject
 
 pub fn JS_SetPropertyAttributes(++cx: *JSContext, ++obj: *JSObject, ++name: *c_char, ++attrs: c_uint, ++foundp: *JSBool) -> JSBool;
 
-pub fn JS_DefinePropertyWithTinyId(++cx: *JSContext, ++obj: *JSObject, ++name: *c_char, ++tinyid: int8_t, ++value: jsval, ++getter: JSPropertyOp, ++setter: JSStrictPropertyOp, ++attrs: c_uint) -> JSBool;
+pub fn JS_DefinePropertyWithTinyId(++cx: *JSContext, ++obj: *JSObject, ++name: *c_char, ++tinyid: int8_t, ++value: JSVal, ++getter: JSPropertyOp, ++setter: JSStrictPropertyOp, ++attrs: c_uint) -> JSBool;
 
 pub fn JS_AlreadyHasOwnProperty(++cx: *JSContext, ++obj: *JSObject, ++name: *c_char, ++foundp: *JSBool) -> JSBool;
 
@@ -1029,45 +1029,45 @@ pub fn JS_HasProperty(++cx: *JSContext, ++obj: *JSObject, ++name: *c_char, ++fou
 
 pub fn JS_HasPropertyById(++cx: *JSContext, ++obj: *JSObject, ++id: jsid, ++foundp: *JSBool) -> JSBool;
 
-pub fn JS_LookupProperty(++cx: *JSContext, ++obj: *JSObject, ++name: *c_char, ++vp: *jsval) -> JSBool;
+pub fn JS_LookupProperty(++cx: *JSContext, ++obj: *JSObject, ++name: *c_char, ++vp: *JSVal) -> JSBool;
 
-pub fn JS_LookupPropertyById(++cx: *JSContext, ++obj: *JSObject, ++id: jsid, ++vp: *jsval) -> JSBool;
+pub fn JS_LookupPropertyById(++cx: *JSContext, ++obj: *JSObject, ++id: jsid, ++vp: *JSVal) -> JSBool;
 
-pub fn JS_LookupPropertyWithFlags(++cx: *JSContext, ++obj: *JSObject, ++name: *c_char, ++flags: c_uint, ++vp: *jsval) -> JSBool;
+pub fn JS_LookupPropertyWithFlags(++cx: *JSContext, ++obj: *JSObject, ++name: *c_char, ++flags: c_uint, ++vp: *JSVal) -> JSBool;
 
-pub fn JS_LookupPropertyWithFlagsById(++cx: *JSContext, ++obj: *JSObject, ++id: jsid, ++flags: c_uint, ++objp: **JSObject, ++vp: *jsval) -> JSBool;
+pub fn JS_LookupPropertyWithFlagsById(++cx: *JSContext, ++obj: *JSObject, ++id: jsid, ++flags: c_uint, ++objp: **JSObject, ++vp: *JSVal) -> JSBool;
 
 pub fn JS_GetPropertyDescriptorById(++cx: *JSContext, ++obj: *JSObject, ++id: jsid, ++flags: c_uint, ++desc: *JSPropertyDescriptor) -> JSBool;
 
-pub fn JS_GetOwnPropertyDescriptor(++cx: *JSContext, ++obj: *JSObject, ++id: jsid, ++vp: *jsval) -> JSBool;
+pub fn JS_GetOwnPropertyDescriptor(++cx: *JSContext, ++obj: *JSObject, ++id: jsid, ++vp: *JSVal) -> JSBool;
 
-pub fn JS_GetProperty(++cx: *JSContext, ++obj: *JSObject, ++name: *c_char, ++vp: *jsval) -> JSBool;
+pub fn JS_GetProperty(++cx: *JSContext, ++obj: *JSObject, ++name: *c_char, ++vp: *JSVal) -> JSBool;
 
-pub fn JS_GetPropertyDefault(++cx: *JSContext, ++obj: *JSObject, ++name: *c_char, ++def: jsval, ++vp: *jsval) -> JSBool;
+pub fn JS_GetPropertyDefault(++cx: *JSContext, ++obj: *JSObject, ++name: *c_char, ++def: JSVal, ++vp: *JSVal) -> JSBool;
 
-pub fn JS_GetPropertyById(++cx: *JSContext, ++obj: *JSObject, ++id: jsid, ++vp: *jsval) -> JSBool;
+pub fn JS_GetPropertyById(++cx: *JSContext, ++obj: *JSObject, ++id: jsid, ++vp: *JSVal) -> JSBool;
 
-pub fn JS_GetPropertyByIdDefault(++cx: *JSContext, ++obj: *JSObject, ++id: jsid, ++def: jsval, ++vp: *jsval) -> JSBool;
+pub fn JS_GetPropertyByIdDefault(++cx: *JSContext, ++obj: *JSObject, ++id: jsid, ++def: JSVal, ++vp: *JSVal) -> JSBool;
 
-pub fn JS_ForwardGetPropertyTo(++cx: *JSContext, ++obj: *JSObject, ++id: jsid, ++onBehalfOf: *JSObject, ++vp: *jsval) -> JSBool;
+pub fn JS_ForwardGetPropertyTo(++cx: *JSContext, ++obj: *JSObject, ++id: jsid, ++onBehalfOf: *JSObject, ++vp: *JSVal) -> JSBool;
 
-pub fn JS_GetMethodById(++cx: *JSContext, ++obj: *JSObject, ++id: jsid, ++objp: **JSObject, ++vp: *jsval) -> JSBool;
+pub fn JS_GetMethodById(++cx: *JSContext, ++obj: *JSObject, ++id: jsid, ++objp: **JSObject, ++vp: *JSVal) -> JSBool;
 
-pub fn JS_GetMethod(++cx: *JSContext, ++obj: *JSObject, ++name: *c_char, ++objp: **JSObject, ++vp: *jsval) -> JSBool;
+pub fn JS_GetMethod(++cx: *JSContext, ++obj: *JSObject, ++name: *c_char, ++objp: **JSObject, ++vp: *JSVal) -> JSBool;
 
-pub fn JS_SetProperty(++cx: *JSContext, ++obj: *JSObject, ++name: *c_char, ++vp: *jsval) -> JSBool;
+pub fn JS_SetProperty(++cx: *JSContext, ++obj: *JSObject, ++name: *c_char, ++vp: *JSVal) -> JSBool;
 
-pub fn JS_SetPropertyById(++cx: *JSContext, ++obj: *JSObject, ++id: jsid, ++vp: *jsval) -> JSBool;
+pub fn JS_SetPropertyById(++cx: *JSContext, ++obj: *JSObject, ++id: jsid, ++vp: *JSVal) -> JSBool;
 
 pub fn JS_DeleteProperty(++cx: *JSContext, ++obj: *JSObject, ++name: *c_char) -> JSBool;
 
-pub fn JS_DeleteProperty2(++cx: *JSContext, ++obj: *JSObject, ++name: *c_char, ++rval: *jsval) -> JSBool;
+pub fn JS_DeleteProperty2(++cx: *JSContext, ++obj: *JSObject, ++name: *c_char, ++rval: *JSVal) -> JSBool;
 
 pub fn JS_DeletePropertyById(++cx: *JSContext, ++obj: *JSObject, ++id: jsid) -> JSBool;
 
-pub fn JS_DeletePropertyById2(++cx: *JSContext, ++obj: *JSObject, ++id: jsid, ++rval: *jsval) -> JSBool;
+pub fn JS_DeletePropertyById2(++cx: *JSContext, ++obj: *JSObject, ++id: jsid, ++rval: *JSVal) -> JSBool;
 
-pub fn JS_DefineUCProperty(++cx: *JSContext, ++obj: *JSObject, ++name: *jschar, ++namelen: size_t, ++value: jsval, ++getter: JSPropertyOp, ++setter: JSStrictPropertyOp, ++attrs: c_uint) -> JSBool;
+pub fn JS_DefineUCProperty(++cx: *JSContext, ++obj: *JSObject, ++name: *jschar, ++namelen: size_t, ++value: JSVal, ++getter: JSPropertyOp, ++setter: JSStrictPropertyOp, ++attrs: c_uint) -> JSBool;
 
 pub fn JS_GetUCPropertyAttributes(++cx: *JSContext, ++obj: *JSObject, ++name: *jschar, ++namelen: size_t, ++attrsp: *c_uint, ++foundp: *JSBool) -> JSBool;
 
@@ -1075,21 +1075,21 @@ pub fn JS_GetUCPropertyAttrsGetterAndSetter(++cx: *JSContext, ++obj: *JSObject, 
 
 pub fn JS_SetUCPropertyAttributes(++cx: *JSContext, ++obj: *JSObject, ++name: *jschar, ++namelen: size_t, ++attrs: c_uint, ++foundp: *JSBool) -> JSBool;
 
-pub fn JS_DefineUCPropertyWithTinyId(++cx: *JSContext, ++obj: *JSObject, ++name: *jschar, ++namelen: size_t, ++tinyid: int8_t, ++value: jsval, ++getter: JSPropertyOp, ++setter: JSStrictPropertyOp, ++attrs: c_uint) -> JSBool;
+pub fn JS_DefineUCPropertyWithTinyId(++cx: *JSContext, ++obj: *JSObject, ++name: *jschar, ++namelen: size_t, ++tinyid: int8_t, ++value: JSVal, ++getter: JSPropertyOp, ++setter: JSStrictPropertyOp, ++attrs: c_uint) -> JSBool;
 
 pub fn JS_AlreadyHasOwnUCProperty(++cx: *JSContext, ++obj: *JSObject, ++name: *jschar, ++namelen: size_t, ++foundp: *JSBool) -> JSBool;
 
 pub fn JS_HasUCProperty(++cx: *JSContext, ++obj: *JSObject, ++name: *jschar, ++namelen: size_t, ++vp: *JSBool) -> JSBool;
 
-pub fn JS_LookupUCProperty(++cx: *JSContext, ++obj: *JSObject, ++name: *jschar, ++namelen: size_t, ++vp: *jsval) -> JSBool;
+pub fn JS_LookupUCProperty(++cx: *JSContext, ++obj: *JSObject, ++name: *jschar, ++namelen: size_t, ++vp: *JSVal) -> JSBool;
 
-pub fn JS_GetUCProperty(++cx: *JSContext, ++obj: *JSObject, ++name: *jschar, ++namelen: size_t, ++vp: *jsval) -> JSBool;
+pub fn JS_GetUCProperty(++cx: *JSContext, ++obj: *JSObject, ++name: *jschar, ++namelen: size_t, ++vp: *JSVal) -> JSBool;
 
-pub fn JS_SetUCProperty(++cx: *JSContext, ++obj: *JSObject, ++name: *jschar, ++namelen: size_t, ++vp: *jsval) -> JSBool;
+pub fn JS_SetUCProperty(++cx: *JSContext, ++obj: *JSObject, ++name: *jschar, ++namelen: size_t, ++vp: *JSVal) -> JSBool;
 
-pub fn JS_DeleteUCProperty2(++cx: *JSContext, ++obj: *JSObject, ++name: *jschar, ++namelen: size_t, ++rval: *jsval) -> JSBool;
+pub fn JS_DeleteUCProperty2(++cx: *JSContext, ++obj: *JSObject, ++name: *jschar, ++namelen: size_t, ++rval: *JSVal) -> JSBool;
 
-pub fn JS_NewArrayObject(++cx: *JSContext, ++length: c_int, ++vector: *jsval) -> *JSObject;
+pub fn JS_NewArrayObject(++cx: *JSContext, ++length: c_int, ++vector: *JSVal) -> *JSObject;
 
 pub fn JS_IsArrayObject(++cx: *JSContext, ++obj: *JSObject) -> JSBool;
 
@@ -1097,25 +1097,25 @@ pub fn JS_GetArrayLength(++cx: *JSContext, ++obj: *JSObject, ++lengthp: *uint32_
 
 pub fn JS_SetArrayLength(++cx: *JSContext, ++obj: *JSObject, ++length: uint32_t) -> JSBool;
 
-pub fn JS_DefineElement(++cx: *JSContext, ++obj: *JSObject, ++index: uint32_t, ++value: jsval, ++getter: JSPropertyOp, ++setter: JSStrictPropertyOp, ++attrs: c_uint) -> JSBool;
+pub fn JS_DefineElement(++cx: *JSContext, ++obj: *JSObject, ++index: uint32_t, ++value: JSVal, ++getter: JSPropertyOp, ++setter: JSStrictPropertyOp, ++attrs: c_uint) -> JSBool;
 
 pub fn JS_AlreadyHasOwnElement(++cx: *JSContext, ++obj: *JSObject, ++index: uint32_t, ++foundp: *JSBool) -> JSBool;
 
 pub fn JS_HasElement(++cx: *JSContext, ++obj: *JSObject, ++index: uint32_t, ++foundp: *JSBool) -> JSBool;
 
-pub fn JS_LookupElement(++cx: *JSContext, ++obj: *JSObject, ++index: uint32_t, ++vp: *jsval) -> JSBool;
+pub fn JS_LookupElement(++cx: *JSContext, ++obj: *JSObject, ++index: uint32_t, ++vp: *JSVal) -> JSBool;
 
-pub fn JS_GetElement(++cx: *JSContext, ++obj: *JSObject, ++index: uint32_t, ++vp: *jsval) -> JSBool;
+pub fn JS_GetElement(++cx: *JSContext, ++obj: *JSObject, ++index: uint32_t, ++vp: *JSVal) -> JSBool;
 
-pub fn JS_ForwardGetElementTo(++cx: *JSContext, ++obj: *JSObject, ++index: uint32_t, ++onBehalfOf: *JSObject, ++vp: *jsval) -> JSBool;
+pub fn JS_ForwardGetElementTo(++cx: *JSContext, ++obj: *JSObject, ++index: uint32_t, ++onBehalfOf: *JSObject, ++vp: *JSVal) -> JSBool;
 
-pub fn JS_GetElementIfPresent(++cx: *JSContext, ++obj: *JSObject, ++index: uint32_t, ++onBehalfOf: *JSObject, ++vp: *jsval, ++present: *JSBool) -> JSBool;
+pub fn JS_GetElementIfPresent(++cx: *JSContext, ++obj: *JSObject, ++index: uint32_t, ++onBehalfOf: *JSObject, ++vp: *JSVal, ++present: *JSBool) -> JSBool;
 
-pub fn JS_SetElement(++cx: *JSContext, ++obj: *JSObject, ++index: uint32_t, ++vp: *jsval) -> JSBool;
+pub fn JS_SetElement(++cx: *JSContext, ++obj: *JSObject, ++index: uint32_t, ++vp: *JSVal) -> JSBool;
 
 pub fn JS_DeleteElement(++cx: *JSContext, ++obj: *JSObject, ++index: uint32_t) -> JSBool;
 
-pub fn JS_DeleteElement2(++cx: *JSContext, ++obj: *JSObject, ++index: uint32_t, ++rval: *jsval) -> JSBool;
+pub fn JS_DeleteElement2(++cx: *JSContext, ++obj: *JSObject, ++index: uint32_t, ++rval: *JSVal) -> JSBool;
 
 pub fn JS_ClearScope(++cx: *JSContext, ++obj: *JSObject);
 
@@ -1125,14 +1125,14 @@ pub fn JS_NewPropertyIterator(++cx: *JSContext, ++obj: *JSObject) -> *JSObject;
 
 pub fn JS_NextProperty(++cx: *JSContext, ++iterobj: *JSObject, ++idp: *jsid) -> JSBool;
 
-pub fn JS_ArrayIterator(++cx: *JSContext, ++argc: c_uint, ++vp: *jsval) -> JSBool;
+pub fn JS_ArrayIterator(++cx: *JSContext, ++argc: c_uint, ++vp: *JSVal) -> JSBool;
 
-pub fn JS_CheckAccess(++cx: *JSContext, ++obj: *JSObject, ++id: jsid, ++mode: JSAccessMode, ++vp: *jsval, ++attrsp: *c_uint) -> JSBool;
+pub fn JS_CheckAccess(++cx: *JSContext, ++obj: *JSObject, ++id: jsid, ++mode: JSAccessMode, ++vp: *JSVal, ++attrsp: *c_uint) -> JSBool;
 
 #[rust_stack]
-pub fn JS_GetReservedSlot(++obj: JSRawObject, ++index: uint32_t) -> jsval;
+pub fn JS_GetReservedSlot(++obj: JSRawObject, ++index: uint32_t) -> JSVal;
 
-pub fn JS_SetReservedSlot(++obj: JSRawObject, ++index: uint32_t, ++v: jsval);
+pub fn JS_SetReservedSlot(++obj: JSRawObject, ++index: uint32_t, ++v: JSVal);
 
 pub fn JS_HoldPrincipals(++principals: *JSPrincipals);
 
@@ -1220,29 +1220,29 @@ pub fn JS_DecompileFunction(++cx: *JSContext, ++fun: *JSFunction, ++indent: c_ui
 
 pub fn JS_DecompileFunctionBody(++cx: *JSContext, ++fun: *JSFunction, ++indent: c_uint) -> *JSString;
 
-pub fn JS_ExecuteScript(++cx: *JSContext, ++obj: *JSObject, ++script: *JSScript, ++rval: *jsval) -> JSBool;
+pub fn JS_ExecuteScript(++cx: *JSContext, ++obj: *JSObject, ++script: *JSScript, ++rval: *JSVal) -> JSBool;
 
-pub fn JS_ExecuteScriptVersion(++cx: *JSContext, ++obj: *JSObject, ++script: *JSScript, ++rval: *jsval, ++version: JSVersion) -> JSBool;
+pub fn JS_ExecuteScriptVersion(++cx: *JSContext, ++obj: *JSObject, ++script: *JSScript, ++rval: *JSVal, ++version: JSVersion) -> JSBool;
 
-pub fn JS_EvaluateScript(++cx: *JSContext, ++obj: *JSObject, ++bytes: *c_char, ++length: c_uint, ++filename: *c_char, ++lineno: c_uint, ++rval: *jsval) -> JSBool;
+pub fn JS_EvaluateScript(++cx: *JSContext, ++obj: *JSObject, ++bytes: *c_char, ++length: c_uint, ++filename: *c_char, ++lineno: c_uint, ++rval: *JSVal) -> JSBool;
 
-pub fn JS_EvaluateScriptForPrincipals(++cx: *JSContext, ++obj: *JSObject, ++principals: *JSPrincipals, ++bytes: *c_char, ++length: c_uint, ++filename: *c_char, ++lineno: c_uint, ++rval: *jsval) -> JSBool;
+pub fn JS_EvaluateScriptForPrincipals(++cx: *JSContext, ++obj: *JSObject, ++principals: *JSPrincipals, ++bytes: *c_char, ++length: c_uint, ++filename: *c_char, ++lineno: c_uint, ++rval: *JSVal) -> JSBool;
 
-pub fn JS_EvaluateScriptForPrincipalsVersion(++cx: *JSContext, ++obj: *JSObject, ++principals: *JSPrincipals, ++bytes: *c_char, ++length: c_uint, ++filename: *c_char, ++lineno: c_uint, ++rval: *jsval, ++version: JSVersion) -> JSBool;
+pub fn JS_EvaluateScriptForPrincipalsVersion(++cx: *JSContext, ++obj: *JSObject, ++principals: *JSPrincipals, ++bytes: *c_char, ++length: c_uint, ++filename: *c_char, ++lineno: c_uint, ++rval: *JSVal, ++version: JSVersion) -> JSBool;
 
-pub fn JS_EvaluateUCScript(++cx: *JSContext, ++obj: *JSObject, ++chars: *jschar, ++length: c_uint, ++filename: *c_char, ++lineno: c_uint, ++rval: *jsval) -> JSBool;
+pub fn JS_EvaluateUCScript(++cx: *JSContext, ++obj: *JSObject, ++chars: *jschar, ++length: c_uint, ++filename: *c_char, ++lineno: c_uint, ++rval: *JSVal) -> JSBool;
 
-pub fn JS_EvaluateUCScriptForPrincipals(++cx: *JSContext, ++obj: *JSObject, ++principals: *JSPrincipals, ++chars: *jschar, ++length: c_uint, ++filename: *c_char, ++lineno: c_uint, ++rval: *jsval) -> JSBool;
+pub fn JS_EvaluateUCScriptForPrincipals(++cx: *JSContext, ++obj: *JSObject, ++principals: *JSPrincipals, ++chars: *jschar, ++length: c_uint, ++filename: *c_char, ++lineno: c_uint, ++rval: *JSVal) -> JSBool;
 
-pub fn JS_EvaluateUCScriptForPrincipalsVersion(++cx: *JSContext, ++obj: *JSObject, ++principals: *JSPrincipals, ++chars: *jschar, ++length: c_uint, ++filename: *c_char, ++lineno: c_uint, ++rval: *jsval, ++version: JSVersion) -> JSBool;
+pub fn JS_EvaluateUCScriptForPrincipalsVersion(++cx: *JSContext, ++obj: *JSObject, ++principals: *JSPrincipals, ++chars: *jschar, ++length: c_uint, ++filename: *c_char, ++lineno: c_uint, ++rval: *JSVal, ++version: JSVersion) -> JSBool;
 
-pub fn JS_EvaluateUCScriptForPrincipalsVersionOrigin(++cx: *JSContext, ++obj: *JSObject, ++principals: *JSPrincipals, ++originPrincipals: *JSPrincipals, ++chars: *jschar, ++length: c_uint, ++filename: *c_char, ++lineno: c_uint, ++rval: *jsval, ++version: JSVersion) -> JSBool;
+pub fn JS_EvaluateUCScriptForPrincipalsVersionOrigin(++cx: *JSContext, ++obj: *JSObject, ++principals: *JSPrincipals, ++originPrincipals: *JSPrincipals, ++chars: *jschar, ++length: c_uint, ++filename: *c_char, ++lineno: c_uint, ++rval: *JSVal, ++version: JSVersion) -> JSBool;
 
-pub fn JS_CallFunction(++cx: *JSContext, ++obj: *JSObject, ++fun: *JSFunction, ++argc: c_uint, ++argv: *jsval, ++rval: *jsval) -> JSBool;
+pub fn JS_CallFunction(++cx: *JSContext, ++obj: *JSObject, ++fun: *JSFunction, ++argc: c_uint, ++argv: *JSVal, ++rval: *JSVal) -> JSBool;
 
-pub fn JS_CallFunctionName(++cx: *JSContext, ++obj: *JSObject, ++name: *c_char, ++argc: c_uint, ++argv: *jsval, ++rval: *jsval) -> JSBool;
+pub fn JS_CallFunctionName(++cx: *JSContext, ++obj: *JSObject, ++name: *c_char, ++argc: c_uint, ++argv: *JSVal, ++rval: *JSVal) -> JSBool;
 
-pub fn JS_CallFunctionValue(++cx: *JSContext, ++obj: *JSObject, ++fval: jsval, ++argc: c_uint, ++argv: *jsval, ++rval: *jsval) -> JSBool;
+pub fn JS_CallFunctionValue(++cx: *JSContext, ++obj: *JSObject, ++fval: JSVal, ++argc: c_uint, ++argv: *JSVal, ++rval: *JSVal) -> JSBool;
 
 pub fn JS_SetOperationCallback(++cx: *JSContext, ++callback: JSOperationCallback) -> JSOperationCallback;
 
@@ -1330,17 +1330,17 @@ pub fn JS_GetStringEncodingLength(++cx: *JSContext, ++str: *JSString) -> size_t;
 
 pub fn JS_EncodeStringToBuffer(++str: *JSString, ++buffer: *c_char, ++length: size_t) -> size_t;
 
-pub fn JS_Stringify(++cx: *JSContext, ++vp: *jsval, ++replacer: *JSObject, ++space: jsval, ++callback: JSONWriteCallback, ++data: *c_void) -> JSBool;
+pub fn JS_Stringify(++cx: *JSContext, ++vp: *JSVal, ++replacer: *JSObject, ++space: JSVal, ++callback: JSONWriteCallback, ++data: *c_void) -> JSBool;
 
-pub fn JS_ParseJSON(++cx: *JSContext, ++chars: *jschar, ++len: uint32_t, ++vp: *jsval) -> JSBool;
+pub fn JS_ParseJSON(++cx: *JSContext, ++chars: *jschar, ++len: uint32_t, ++vp: *JSVal) -> JSBool;
 
-pub fn JS_ParseJSONWithReviver(++cx: *JSContext, ++chars: *jschar, ++len: uint32_t, ++reviver: jsval, ++vp: *jsval) -> JSBool;
+pub fn JS_ParseJSONWithReviver(++cx: *JSContext, ++chars: *jschar, ++len: uint32_t, ++reviver: JSVal, ++vp: *JSVal) -> JSBool;
 
-pub fn JS_ReadStructuredClone(++cx: *JSContext, ++data: *uint64_t, ++nbytes: size_t, ++version: uint32_t, ++vp: *jsval, ++optionalCallbacks: *JSStructuredCloneCallbacks, ++closure: *c_void) -> JSBool;
+pub fn JS_ReadStructuredClone(++cx: *JSContext, ++data: *uint64_t, ++nbytes: size_t, ++version: uint32_t, ++vp: *JSVal, ++optionalCallbacks: *JSStructuredCloneCallbacks, ++closure: *c_void) -> JSBool;
 
-pub fn JS_WriteStructuredClone(++cx: *JSContext, ++v: jsval, ++datap: **uint64_t, ++nbytesp: *size_t, ++optionalCallbacks: *JSStructuredCloneCallbacks, ++closure: *c_void) -> JSBool;
+pub fn JS_WriteStructuredClone(++cx: *JSContext, ++v: JSVal, ++datap: **uint64_t, ++nbytesp: *size_t, ++optionalCallbacks: *JSStructuredCloneCallbacks, ++closure: *c_void) -> JSBool;
 
-pub fn JS_StructuredClone(++cx: *JSContext, ++v: jsval, ++vp: *jsval, ++optionalCallbacks: *JSStructuredCloneCallbacks, ++closure: *c_void) -> JSBool;
+pub fn JS_StructuredClone(++cx: *JSContext, ++v: JSVal, ++vp: *JSVal, ++optionalCallbacks: *JSStructuredCloneCallbacks, ++closure: *c_void) -> JSBool;
 
 pub fn JS_SetStructuredCloneCallbacks(++rt: *JSRuntime, ++callbacks: *JSStructuredCloneCallbacks);
 
@@ -1348,13 +1348,13 @@ pub fn JS_ReadUint32Pair(++r: *JSStructuredCloneReader, ++p1: *uint32_t, ++p2: *
 
 pub fn JS_ReadBytes(++r: *JSStructuredCloneReader, ++p: *c_void, ++len: size_t) -> JSBool;
 
-pub fn JS_ReadTypedArray(++r: *JSStructuredCloneReader, ++vp: *jsval) -> JSBool;
+pub fn JS_ReadTypedArray(++r: *JSStructuredCloneReader, ++vp: *JSVal) -> JSBool;
 
 pub fn JS_WriteUint32Pair(++w: *JSStructuredCloneWriter, ++tag: uint32_t, ++data: uint32_t) -> JSBool;
 
 pub fn JS_WriteBytes(++w: *JSStructuredCloneWriter, ++p: *c_void, ++len: size_t) -> JSBool;
 
-pub fn JS_WriteTypedArray(++w: *JSStructuredCloneWriter, ++v: jsval) -> JSBool;
+pub fn JS_WriteTypedArray(++w: *JSStructuredCloneWriter, ++v: JSVal) -> JSBool;
 
 pub fn JS_SetLocaleCallbacks(++cx: *JSContext, ++callbacks: *JSLocaleCallbacks);
 
@@ -1396,13 +1396,13 @@ pub fn JS_SetRegExpInput(++cx: *JSContext, ++obj: *JSObject, ++input: *JSString,
 
 pub fn JS_ClearRegExpStatics(++cx: *JSContext, ++obj: *JSObject);
 
-pub fn JS_ExecuteRegExp(++cx: *JSContext, ++obj: *JSObject, ++reobj: *JSObject, ++chars: *jschar, ++length: size_t, ++indexp: *size_t, ++test: JSBool, ++rval: *jsval) -> JSBool;
+pub fn JS_ExecuteRegExp(++cx: *JSContext, ++obj: *JSObject, ++reobj: *JSObject, ++chars: *jschar, ++length: size_t, ++indexp: *size_t, ++test: JSBool, ++rval: *JSVal) -> JSBool;
 
 pub fn JS_NewRegExpObjectNoStatics(++cx: *JSContext, ++bytes: *c_char, ++length: size_t, ++flags: c_uint) -> *JSObject;
 
 pub fn JS_NewUCRegExpObjectNoStatics(++cx: *JSContext, ++chars: *jschar, ++length: size_t, ++flags: c_uint) -> *JSObject;
 
-pub fn JS_ExecuteRegExpNoStatics(++cx: *JSContext, ++reobj: *JSObject, ++chars: *jschar, ++length: size_t, ++indexp: *size_t, ++test: JSBool, ++rval: *jsval) -> JSBool;
+pub fn JS_ExecuteRegExpNoStatics(++cx: *JSContext, ++reobj: *JSObject, ++chars: *jschar, ++length: size_t, ++indexp: *size_t, ++test: JSBool, ++rval: *JSVal) -> JSBool;
 
 pub fn JS_ObjectIsRegExp(++cx: *JSContext, ++obj: *JSObject) -> JSBool;
 
@@ -1412,9 +1412,9 @@ pub fn JS_GetRegExpSource(++cx: *JSContext, ++obj: *JSObject) -> *JSString;
 
 pub fn JS_IsExceptionPending(++cx: *JSContext) -> JSBool;
 
-pub fn JS_GetPendingException(++cx: *JSContext, ++vp: *jsval) -> JSBool;
+pub fn JS_GetPendingException(++cx: *JSContext, ++vp: *JSVal) -> JSBool;
 
-pub fn JS_SetPendingException(++cx: *JSContext, ++v: jsval);
+pub fn JS_SetPendingException(++cx: *JSContext, ++v: JSVal);
 
 pub fn JS_ClearPendingException(++cx: *JSContext);
 
@@ -1426,7 +1426,7 @@ pub fn JS_RestoreExceptionState(++cx: *JSContext, ++state: *JSExceptionState);
 
 pub fn JS_DropExceptionState(++cx: *JSContext, ++state: *JSExceptionState);
 
-pub fn JS_ErrorFromException(++cx: *JSContext, ++v: jsval) -> *JSErrorReport;
+pub fn JS_ErrorFromException(++cx: *JSContext, ++v: JSVal) -> *JSErrorReport;
 
 pub fn JS_ThrowReportedError(++cx: *JSContext, ++message: *c_char, ++reportp: *JSErrorReport) -> JSBool;
 
@@ -1440,7 +1440,7 @@ pub fn JS_ClearRuntimeThread(++rt: *JSRuntime);
 
 pub fn JS_SetRuntimeThread(++rt: *JSRuntime);
 
-pub fn JS_NewObjectForConstructor(++cx: *JSContext, ++clasp: *JSClass, ++vp: *jsval) -> *JSObject;
+pub fn JS_NewObjectForConstructor(++cx: *JSContext, ++clasp: *JSClass, ++vp: *JSVal) -> *JSObject;
 
 pub fn JS_IndexToId(++cx: *JSContext, ++index: uint32_t, ++id: *jsid) -> JSBool;
 

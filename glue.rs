@@ -16,72 +16,72 @@ pub extern mod bindgen {
 pub fn GetJSClassHookStubPointer(++_type: enum_StubType) -> *c_void;
 
 #[rust_stack]
-pub fn RUST_JSVAL_IS_NULL(++v: jsval) -> JSBool;
+pub fn RUST_JSVAL_IS_NULL(++v: JSVal) -> JSBool;
 
 #[rust_stack]
-pub fn RUST_JSVAL_IS_VOID(++v: jsval) -> JSBool;
+pub fn RUST_JSVAL_IS_VOID(++v: JSVal) -> JSBool;
 
 #[rust_stack]
-pub fn RUST_JSVAL_IS_INT(++v: jsval) -> JSBool;
+pub fn RUST_JSVAL_IS_INT(++v: JSVal) -> JSBool;
 
 #[rust_stack]
-pub fn RUST_JSVAL_TO_INT(++v: jsval) -> int32_t;
+pub fn RUST_JSVAL_TO_INT(++v: JSVal) -> int32_t;
 
 #[rust_stack]
-pub fn RUST_INT_TO_JSVAL(++v: int32_t) -> jsval;
+pub fn RUST_INT_TO_JSVAL(++v: int32_t) -> JSVal;
 
 #[rust_stack]
-pub fn RUST_JSVAL_IS_DOUBLE(++v: jsval) -> JSBool;
+pub fn RUST_JSVAL_IS_DOUBLE(++v: JSVal) -> JSBool;
 
 #[rust_stack]
-pub fn RUST_JSVAL_TO_DOUBLE(++v: jsval) -> c_double;
+pub fn RUST_JSVAL_TO_DOUBLE(++v: JSVal) -> c_double;
 
 #[rust_stack]
-pub fn RUST_DOUBLE_TO_JSVAL(++v: c_double) -> jsval;
+pub fn RUST_DOUBLE_TO_JSVAL(++v: c_double) -> JSVal;
 
 #[rust_stack]
-pub fn RUST_UINT_TO_JSVAL(++v: uint32_t) -> jsval;
+pub fn RUST_UINT_TO_JSVAL(++v: uint32_t) -> JSVal;
 
 #[rust_stack]
-pub fn RUST_JSVAL_IS_NUMBER(++v: jsval) -> JSBool;
+pub fn RUST_JSVAL_IS_NUMBER(++v: JSVal) -> JSBool;
 
 #[rust_stack]
-pub fn RUST_JSVAL_IS_STRING(++v: jsval) -> JSBool;
+pub fn RUST_JSVAL_IS_STRING(++v: JSVal) -> JSBool;
 
 #[rust_stack]
-pub fn RUST_JSVAL_TO_STRING(++v: jsval) -> *JSString;
+pub fn RUST_JSVAL_TO_STRING(++v: JSVal) -> *JSString;
 
 #[rust_stack]
-pub fn RUST_STRING_TO_JSVAL(++v: *JSString) -> jsval;
+pub fn RUST_STRING_TO_JSVAL(++v: *JSString) -> JSVal;
 
 #[rust_stack]
-pub fn RUST_JSVAL_TO_OBJECT(++v: jsval) -> *JSObject;
+pub fn RUST_JSVAL_TO_OBJECT(++v: JSVal) -> *JSObject;
 
 #[rust_stack]
-pub fn RUST_OBJECT_TO_JSVAL(++v: *JSObject) -> jsval;
+pub fn RUST_OBJECT_TO_JSVAL(++v: *JSObject) -> JSVal;
 
 #[rust_stack]
-pub fn RUST_JSVAL_IS_BOOLEAN(++v: jsval) -> JSBool;
+pub fn RUST_JSVAL_IS_BOOLEAN(++v: JSVal) -> JSBool;
 
 #[rust_stack]
-pub fn RUST_JSVAL_TO_BOOLEAN(++v: jsval) -> JSBool;
+pub fn RUST_JSVAL_TO_BOOLEAN(++v: JSVal) -> JSBool;
 
 #[rust_stack]
-pub fn RUST_BOOLEAN_TO_JSVAL(++v: JSBool) -> jsval;
+pub fn RUST_BOOLEAN_TO_JSVAL(++v: JSBool) -> JSVal;
 
 #[rust_stack]
-pub fn RUST_JSVAL_IS_PRIMITIVE(++v: jsval) -> JSBool;
+pub fn RUST_JSVAL_IS_PRIMITIVE(++v: JSVal) -> JSBool;
 
 #[rust_stack]
-pub fn RUST_JSVAL_IS_GCTHING(++v: jsval) -> JSBool;
+pub fn RUST_JSVAL_IS_GCTHING(++v: JSVal) -> JSBool;
 
 #[rust_stack]
-pub fn RUST_JSVAL_TO_GCTHING(++v: jsval) -> *c_void;
+pub fn RUST_JSVAL_TO_GCTHING(++v: JSVal) -> *c_void;
 
 #[rust_stack]
-pub fn RUST_PRIVATE_TO_JSVAL(++v: *c_void) -> jsval;
+pub fn RUST_PRIVATE_TO_JSVAL(++v: *c_void) -> JSVal;
 
 #[rust_stack]
-pub fn RUST_JSVAL_TO_PRIVATE(++v: jsval) -> *c_void;
+pub fn RUST_JSVAL_TO_PRIVATE(++v: JSVal) -> *c_void;
 
 }

@@ -22,24 +22,24 @@ export JSVAL_IS_PRIMITIVE;
 export JSVAL_TO_PRIVATE;
 
 #[inline(always)]
-pub fn INT_TO_JSVAL(i: i32) -> jsval {
+pub fn INT_TO_JSVAL(i: i32) -> JSVal {
   ((JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_INT32) << JSVAL_TAG_SHIFT) | (i as u64)
 }
 
 #[inline(always)]
-pub fn JSVAL_TO_OBJECT(v: jsval) -> *JSObject {
+pub fn JSVAL_TO_OBJECT(v: JSVal) -> *JSObject {
   let bits = (v & JSVAL_PAYLOAD_MASK);
   assert bits & 0x7 == 0;
   bits as *JSObject
 }
 
 #[inline(always)]
-pub fn JSVAL_IS_PRIMITIVE(v: jsval) -> bool {
+pub fn JSVAL_IS_PRIMITIVE(v: JSVal) -> bool {
   v < JSVAL_SHIFTED_TAG_OBJECT
 }
 
 #[inline(always)]
-pub fn JSVAL_TO_PRIVATE(v: jsval) -> *() {
+pub fn JSVAL_TO_PRIVATE(v: JSVal) -> *() {
   assert v & 0x8000000000000000 == 0;
   (v << 1) as *()
 }

@@ -1,11 +1,11 @@
 use ptr::{null, addr_of};
 use result::{Result, Ok, Err};
 use libc::{c_char, c_uint};
-use name_pool::{name_pool, add};
+use name_pool::{NamePool, add};
 use str::raw::from_c_str;
 use io::WriterUtil;
 use jsapi::{JSBool, JSClass, JSContext, JSErrorReport, JSFunctionSpec,
-               JSObject, JSRuntime, JSString, JSVERSION_LATEST, jsval, jsid,
+               JSObject, JSRuntime, JSString, JSVERSION_LATEST, JSVal, jsid,
                JSPropertySpec, JSPropertyOp, JSStrictPropertyOp, JSProto_LIMIT};
 use jsapi::bindgen::{JS_free, JS_AddObjectRoot, JS_DefineFunctions,
                         JS_DestroyContext, JS_EncodeString, JS_EvaluateScript,
@@ -23,7 +23,7 @@ use glue::bindgen::{RUST_JSVAL_TO_OBJECT, RUST_JSVAL_IS_PRIMITIVE};
 use rust::jsobj;
 pub use rust;
 
-pub use name_pool;
+pub use NamePool;
 pub use mod jsapi;
 pub use mod glue;
 pub use mod crust;
@@ -103,17 +103,17 @@ pub type named_functions = @{
 };
 
 #[inline(always)]
-pub unsafe fn JS_ARGV(_cx: *JSContext, vp: *jsval) -> *jsval {
+pub unsafe fn JS_ARGV(_cx: *JSContext, vp: *JSVal) -> *JSVal {
     ptr::offset(vp, 2u)
 }
 
-pub unsafe fn JS_SET_RVAL(_cx: *JSContext, vp: *jsval, v: jsval) {
-    let vp: *mut jsval = cast::reinterpret_cast(&vp);
+pub unsafe fn JS_SET_RVAL(_cx: *JSContext, vp: *JSVal, v: JSVal) {
+    let vp: *mut JSVal = cast::reinterpret_cast(&vp);
     *vp = v;
 }
 
 #[inline(always)]
-pub unsafe fn JS_THIS_OBJECT(cx: *JSContext, vp: *jsval) -> *JSObject unsafe {
+pub unsafe fn JS_THIS_OBJECT(cx: *JSContext, vp: *JSVal) -> *JSObject unsafe {
     let r = JSVAL_TO_OBJECT(
         if JSVAL_IS_PRIMITIVE(*ptr::offset(vp, 1)) {
             JS_ComputeThis(cx, vp)
@@ -145,8 +145,8 @@ mod shadow {
     pub struct Object {
         shape: *Shape,
         objType: *TypeObject,
-        slots: *jsval,
-        _1: *jsval,
+        slots: *JSVal,
+        _1: *JSVal,
     }
 
     impl Object {
@@ -157,12 +157,12 @@ mod shadow {
         
         #[inline(always)]
         fn fixedSlots() -> *jsval {
-            (ptr::offset(ptr::to_unsafe_ptr(&self), 1)) as *jsval
+            (ptr::offset(ptr::to_unsafe_ptr(&self), 1)) as *JSVal
         }
 
         // Like slotRef, but just returns the value, not a reference
         #[inline(always)]
-        pure fn slotVal(slot: libc::size_t) -> jsval unsafe {
+        pure fn slotVal(slot: libc::size_t) -> JSVal unsafe {
             let nfixed : libc::size_t = self.numFixedSlots();
             if slot < nfixed {
                 return *ptr::offset(self.fixedSlots(), slot as uint)
@@ -173,7 +173,7 @@ mod shadow {
 }
 
 #[inline(always)]
-pub unsafe fn GetReservedSlot(obj: *JSObject, slot: libc::size_t) -> jsval {
+pub unsafe fn GetReservedSlot(obj: *JSObject, slot: libc::size_t) -> JSVal {
     let s = obj as *shadow::Object;
     return (*s).slotVal(slot)
 }
