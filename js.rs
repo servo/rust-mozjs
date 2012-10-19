@@ -156,7 +156,7 @@ mod shadow {
         }
         
         #[inline(always)]
-        fn fixedSlots() -> *jsval {
+        fn fixedSlots() -> *JSVal {
             (ptr::offset(ptr::to_unsafe_ptr(&self), 1)) as *JSVal
         }
 
