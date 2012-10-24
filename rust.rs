@@ -136,7 +136,7 @@ impl cx {
     fn lookup_class_name(s: ~str) ->  @JSClass {
         // FIXME: expect should really take a lambda...
         let error_msg = fmt!("class %s not found in class table", s);
-        option::expect(&self.classes.find(move s), move error_msg)
+        option::expect(self.classes.find(move s), move error_msg)
     }
 
     unsafe fn get_cx_private() -> *() {
@@ -226,7 +226,7 @@ impl bare_compartment : methods {
     fn new_object_with_proto(class_name: ~str, proto_name: ~str, parent: *JSObject)
                           -> Result<jsobj, ()> {
         let classptr = self.cx.lookup_class_name(move class_name);
-        let proto = option::expect(&self.global_protos.find(copy proto_name),
+        let proto = option::expect(self.global_protos.find(copy proto_name),
            #fmt("new_object_with_proto: expected to find %s in the proto \
               table", proto_name));
         let obj = self.cx.rooted_obj(JS_NewObject(self.cx.ptr, ptr::to_unsafe_ptr(&*classptr),
