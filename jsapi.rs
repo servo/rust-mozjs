@@ -630,7 +630,7 @@ pub fn JS_StringHasBeenInterned(++cx: *JSContext, ++str: *JSString) -> JSBool;
 
 pub fn INTERNED_STRING_TO_JSID(++cx: *JSContext, ++str: *JSString) -> jsid;
 
-pub fn JS_CallOnce(++once: *JSCallOnceType, ++func: JSInitCallback) -> JSBool;
+pub fn JS_CallOnce(++once_: *JSCallOnceType, ++func: JSInitCallback) -> JSBool;
 
 pub fn JS_Now() -> int64_t;
 
