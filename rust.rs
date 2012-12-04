@@ -116,17 +116,17 @@ impl cx {
             str::as_c_str(filename, |filename_cstr| {
                 let bytes_ptr = bytes_ptr as *c_char;
                 let rval: JSVal = JSVAL_NULL;
-                #debug["Evaluating script from %s with bytes %?", filename, bytes];
+                debug!("Evaluating script from %s with bytes %?", filename, bytes);
                 if JS_EvaluateScript(self.ptr, glob.ptr,
                                      bytes_ptr, bytes_len as c_uint,
                                      filename_cstr, line_num as c_uint,
                                      ptr::to_unsafe_ptr(&rval)) == ERR {
-                    #debug["...err!"];
+                    debug!("...err!");
                     Err(())
                 } else {
                     // we could return the script result but then we'd have
                     // to root it and so forth and, really, who cares?
-                    #debug["...ok!"];
+                    debug!("...ok!");
                     Ok(())
                 }
             })
@@ -162,7 +162,7 @@ pub extern fn reportError(_cx: *JSContext, msg: *c_char, report: *JSErrorReport)
         let fname = if fnptr.is_not_null() {from_c_str(fnptr)} else {~"none"};
         let lineno = (*report).lineno;
         let msg = from_c_str(msg);
-        #error["Error at %s:%?: %s\n", fname, lineno, msg];
+        error!("Error at %s:%?: %s\n", fname, lineno, msg);
     }
 }
 

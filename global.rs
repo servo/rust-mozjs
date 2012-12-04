@@ -53,7 +53,7 @@ pub extern fn debug(cx: *JSContext, argc: c_uint, vp: *JSVal) -> JSBool {
         let argv = JS_ARGV(cx, vp);
         for uint::range(0u, argc as uint) |i| {
             let jsstr = JS_ValueToString(cx, *ptr::offset(argv, i));
-            #debug["%s", jsval_to_rust_str(cx, jsstr)];
+            debug!("%s", jsval_to_rust_str(cx, jsstr));
         }
         JS_SET_RVAL(cx, vp, JSVAL_NULL);
         return 1_i32;
