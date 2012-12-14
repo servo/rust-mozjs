@@ -227,7 +227,7 @@ impl bare_compartment : methods {
                           -> Result<jsobj, ()> {
         let classptr = self.cx.lookup_class_name(move class_name);
         let proto = option::expect(self.global_protos.find(copy proto_name),
-           #fmt("new_object_with_proto: expected to find %s in the proto \
+           fmt!("new_object_with_proto: expected to find %s in the proto \
               table", proto_name));
         let obj = self.cx.rooted_obj(JS_NewObject(self.cx.ptr, ptr::to_unsafe_ptr(&*classptr),
                                                   proto.ptr, parent));
