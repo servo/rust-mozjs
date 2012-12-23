@@ -136,7 +136,7 @@ impl cx {
     fn lookup_class_name(s: ~str) ->  @JSClass {
         // FIXME: expect should really take a lambda...
         let error_msg = fmt!("class %s not found in class table", s);
-        option::expect(self.classes.find(move s), move error_msg)
+        option::expect(self.classes.find(move s), error_msg)
     }
 
     unsafe fn get_cx_private() -> *() {
