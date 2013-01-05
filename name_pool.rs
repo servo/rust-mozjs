@@ -10,11 +10,11 @@ pub fn NamePool() -> NamePool {
 }
 
 pub trait add {
-    fn add(-s: ~str) -> *c_char;
+    fn add(s: ~str) -> *c_char;
 }
 
 impl NamePool : add {
-    fn add(-s: ~str) -> *c_char {
+    fn add(s: ~str) -> *c_char {
         let c_str = str::as_c_str(s, |bytes| bytes);
         push(&mut self.strbufs, move s); // in theory, this should *move* the str in here..
         return c_str; // ...and so this ptr ought to be valid.

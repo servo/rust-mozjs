@@ -9,7 +9,7 @@ use glue::{PROPERTY_STUB, STRICT_PROPERTY_STUB, ENUMERATE_STUB,
               RESOLVE_STUB, CONVERT_STUB};
 use libc::c_uint;
 
-pub fn basic_class(np: NamePool, -name: ~str) -> JSClass {
+pub fn basic_class(np: NamePool, name: ~str) -> JSClass {
     {name: np.add(move name),
      flags: JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT),
      addProperty: GetJSClassHookStubPointer(PROPERTY_STUB) as *u8,

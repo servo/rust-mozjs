@@ -1,5 +1,7 @@
 #[doc = "Rust wrappers around the raw JS apis"];
 
+#[allow(non_implicitly_copyable_typarams)];
+
 use bg = jsapi::bindgen;
 use libc::types::os::arch::c95::{size_t, c_uint};
 use std::map::HashMap;
