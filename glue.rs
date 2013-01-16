@@ -85,4 +85,7 @@ pub fn RUST_PRIVATE_TO_JSVAL(++v: *c_void) -> JSVal;
 #[rust_stack]
 pub fn RUST_JSVAL_TO_PRIVATE(++v: JSVal) -> *c_void;
 
+#[rust_stack]
+pub fn RUST_JS_NumberValue(++d: f64) -> JSVal;
+
 }

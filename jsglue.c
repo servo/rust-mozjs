@@ -169,3 +169,9 @@ RUST_JSVAL_TO_PRIVATE(jsval v)
 {
     return JSVAL_TO_PRIVATE(v);
 }
+
+jsval
+RUST_JS_NumberValue(double d)
+{
+    return JS_NumberValue(d);
+}
