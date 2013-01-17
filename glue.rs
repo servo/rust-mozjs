@@ -88,4 +88,9 @@ pub fn RUST_JSVAL_TO_PRIVATE(++v: JSVal) -> *c_void;
 #[rust_stack]
 pub fn RUST_JS_NumberValue(++d: f64) -> JSVal;
 
+#[rust_stack]
+pub fn CallJitPropertyOp(++info: *JSJitInfo, ++cx: *JSContext, ++thisObj: *JSObject, ++specializedThis: *libc::c_void, ++vp: *JSVal) -> JSBool;
+
+#[rust_stack]
+pub fn RUST_FUNCTION_VALUE_TO_JITINFO(++v: *JSVal) -> *JSJitInfo;
 }

@@ -1,4 +1,8 @@
+//XXXjdm whyyyyyyyyyyy
+#define UINT32_MAX ((uint32_t)-1)
+
 #include "jsapi.h"
+#include "jsfriendapi.h"
 
 enum StubType {
     PROPERTY_STUB,
@@ -8,20 +12,22 @@ enum StubType {
     RESOLVE_STUB,
 };
 
+extern "C" {
+
 void*
 GetJSClassHookStubPointer(enum StubType type)
 {
     switch (type) {
     case PROPERTY_STUB:
-        return JS_PropertyStub;
+        return (void*)JS_PropertyStub;
     case STRICT_PROPERTY_STUB:
-        return JS_StrictPropertyStub;
+        return (void*)JS_StrictPropertyStub;
     case ENUMERATE_STUB:
-        return JS_EnumerateStub;
+        return (void*)JS_EnumerateStub;
     case CONVERT_STUB:
-        return JS_ConvertStub;
+        return (void*)JS_ConvertStub;
     case RESOLVE_STUB:
-        return JS_ResolveStub;
+        return (void*)JS_ResolveStub;
     }
     return NULL;
 }
@@ -175,3 +181,19 @@ RUST_JS_NumberValue(double d)
 {
     return JS_NumberValue(d);
 }
+
+const JSJitInfo*
+RUST_FUNCTION_VALUE_TO_JITINFO(jsval* v)
+{
+    return FUNCTION_VALUE_TO_JITINFO(*v);
+}
+
+JSBool
+CallJitPropertyOp(JSJitInfo *info, JSContext* cx, JSObject* thisObj, void *specializedThis, jsval *vp)
+{
+    JSHandleObject* tmp = (JSHandleObject*)&thisObj;
+    //XXXjdm sort out how we can do the handle thing here.
+    return ((JSJitPropertyOp)info->op)(cx, *(JSHandleObject*)&tmp, specializedThis, vp);
+}
+
+} // extern "C"

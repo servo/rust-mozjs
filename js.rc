@@ -12,6 +12,7 @@ pub mod global;
 pub mod glue;
 pub mod crust;
 pub mod jsval;
+pub mod jsfriendapi;
 
 use ptr::{null, addr_of};
 use result::{Result, Ok, Err};
@@ -139,6 +140,13 @@ pub unsafe fn JS_THIS_OBJECT(cx: *JSContext, vp: *JSVal) -> *JSObject {
         r
     }
 }
+
+#[inline(always)]
+pub unsafe fn JS_CALLEE(_cx: *JSContext, vp: *JSVal) -> *JSVal {
+    vp
+}
+
+pub use jsfriendapi::bindgen::JSJitInfo;
 
 // This is a duplication of the shadow stuff from jsfriendapi.h.  Here
 // there be dragons!
