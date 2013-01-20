@@ -141,6 +141,8 @@ pub unsafe fn JS_THIS_OBJECT(cx: *JSContext, vp: *JSVal) -> *JSObject unsafe {
 // This is a duplication of the shadow stuff from jsfriendapi.h.  Here
 // there be dragons!
 mod shadow {
+    use jsapi::{JSObject, JSClass, jsid, JSVal};
+
     struct TypeObject {
         proto: *JSObject
     }

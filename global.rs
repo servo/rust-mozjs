@@ -8,6 +8,17 @@ use glue::bindgen::GetJSClassHookStubPointer;
 use glue::{PROPERTY_STUB, STRICT_PROPERTY_STUB, ENUMERATE_STUB,
               RESOLVE_STUB, CONVERT_STUB};
 use libc::c_uint;
+use name_pool::*;
+use ptr::null;
+use jsapi;
+use jsapi::{JSClass, JSContext, JSVal, JSFunctionSpec, JSBool};
+use jsapi::bindgen::{JS_EncodeString, JS_free, JS_ValueToString};
+use JSCLASS_IS_GLOBAL;
+use JSCLASS_HAS_RESERVED_SLOTS;
+use JSCLASS_GLOBAL_SLOT_COUNT;
+use JS_ARGV;
+use JSVAL_NULL;
+use JS_SET_RVAL;
 
 pub fn basic_class(np: NamePool, name: ~str) -> JSClass {
     {name: np.add(move name),

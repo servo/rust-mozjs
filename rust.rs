@@ -5,6 +5,20 @@
 use bg = jsapi::bindgen;
 use libc::types::os::arch::c95::{size_t, c_uint};
 use std::map::HashMap;
+use jsapi::*;
+use jsapi::bindgen::*;
+use default_stacksize;
+use default_heapsize;
+use JSOPTION_VAROBJFIX;
+use JSOPTION_METHODJIT;
+use JSOPTION_TYPE_INFERENCE;
+use JSVAL_NULL;
+use ERR;
+use name_pool::*;
+use ptr::null;
+use result;
+use result_obj;
+use str::raw::from_c_str;
 
 export rt;
 export cx;

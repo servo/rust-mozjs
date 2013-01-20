@@ -1,3 +1,5 @@
+use jsapi::{JSVal, JSObject};
+
 const JSVAL_TAG_MAX_DOUBLE: u64 = 0x1FFF0;
 
 const JSVAL_TYPE_DOUBLE: u64 = 0x00;
