@@ -312,6 +312,8 @@ impl ~str : to_jsstr {
 
 #[cfg(test)]
 pub mod test {
+    use rt;
+    use global;
 
     #[test]
     pub fn dummy() {
