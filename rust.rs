@@ -34,7 +34,9 @@ pub type rt = @rt_rsrc;
 pub struct rt_rsrc {
     ptr : *JSRuntime,
     drop {
-        JS_Finish(self.ptr);
+        unsafe {
+            JS_Finish(self.ptr);
+        }
     }
 }
 
@@ -46,14 +48,18 @@ pub fn new_runtime(p : {ptr: *JSRuntime}) -> rt {
 
 impl rt {
     fn cx() -> cx {
-        new_context({ ptr: JS_NewContext(self.ptr, default_stacksize as size_t),
-                      rt: self})
+        unsafe {
+            new_context({ ptr: JS_NewContext(self.ptr, default_stacksize as size_t),
+                         rt: self})
+        }
     }
 }
 
 
 pub fn rt() -> rt {
-    return new_runtime({ptr: JS_Init(default_heapsize)})
+    unsafe {
+        return new_runtime({ptr: JS_Init(default_heapsize)})
+    }
 }
 
 // ___________________________________________________________________________
@@ -67,7 +73,9 @@ pub struct cx_rsrc {
     classes: HashMap<~str, @JSClass>,
 
     drop {
-        JS_DestroyContext(self.ptr);
+        unsafe {
+            JS_DestroyContext(self.ptr);
+        }
     }
 }
 
@@ -82,7 +90,9 @@ pub fn new_context(rec : {ptr: *JSContext, rt: rt}) -> cx {
 impl cx {
     fn rooted_obj(obj: *JSObject) -> jsobj {
         let jsobj = @jsobj_rsrc {cx: self, cxptr: self.ptr, ptr: obj};
-        JS_AddObjectRoot(self.ptr, ptr::to_unsafe_ptr(&jsobj.ptr));
+        unsafe {
+            JS_AddObjectRoot(self.ptr, ptr::to_unsafe_ptr(&jsobj.ptr));
+        }
         jsobj
     }
 
@@ -93,37 +103,47 @@ impl cx {
     }
 
     fn set_options(v: c_uint) {
-        JS_SetOptions(self.ptr, v);
+        unsafe {
+            JS_SetOptions(self.ptr, v);
+        }
     }
 
     fn set_version(v: i32) {
-        JS_SetVersion(self.ptr, v);
+        unsafe {
+            JS_SetVersion(self.ptr, v);
+        }
     }
 
     fn set_logging_error_reporter() {
-        JS_SetErrorReporter(self.ptr, reportError);
+        unsafe {
+            JS_SetErrorReporter(self.ptr, reportError);
+        }
     }
 
     fn set_error_reporter(reportfn: *u8) {
-        JS_SetErrorReporter(self.ptr, reportfn);
+        unsafe {
+            JS_SetErrorReporter(self.ptr, reportfn);
+        }
     }
 
     fn new_compartment(globclsfn: fn(NamePool) -> JSClass) -> Result<compartment,()> {
-        let np = NamePool();
-        let globcls = @globclsfn(np);
-        let globobj = JS_NewGlobalObject(self.ptr, ptr::to_unsafe_ptr(&*globcls), null());
-        result(JS_InitStandardClasses(self.ptr, globobj)).chain(|_ok| {
-            let compartment = @{cx: self,
-                                name_pool: np,
-                                mut global_funcs: ~[],
-                                mut global_props: ~[],
-                                global_class: globcls,
-                                global_obj: self.rooted_obj(globobj),
-                                global_protos: HashMap()
-                               };
-            self.set_cx_private(ptr::to_unsafe_ptr(&*compartment) as *());
-            Ok(compartment)
-        })
+        unsafe {
+            let np = NamePool();
+            let globcls = @globclsfn(np);
+            let globobj = JS_NewGlobalObject(self.ptr, ptr::to_unsafe_ptr(&*globcls), null());
+            result(JS_InitStandardClasses(self.ptr, globobj)).chain(|_ok| {
+                let compartment = @{cx: self,
+                                    name_pool: np,
+                                    mut global_funcs: ~[],
+                                    mut global_props: ~[],
+                                    global_class: globcls,
+                                    global_obj: self.rooted_obj(globobj),
+                                    global_protos: HashMap()
+                                   };
+                self.set_cx_private(ptr::to_unsafe_ptr(&*compartment) as *());
+                Ok(compartment)
+            })
+        }
     }
 
     fn evaluate_script(glob: jsobj, bytes: ~[u8], filename: ~str, line_num: uint) 
@@ -133,17 +153,19 @@ impl cx {
                 let bytes_ptr = bytes_ptr as *c_char;
                 let rval: JSVal = JSVAL_NULL;
                 debug!("Evaluating script from %s with bytes %?", filename, bytes);
-                if JS_EvaluateScript(self.ptr, glob.ptr,
-                                     bytes_ptr, bytes_len as c_uint,
-                                     filename_cstr, line_num as c_uint,
-                                     ptr::to_unsafe_ptr(&rval)) == ERR {
-                    debug!("...err!");
-                    Err(())
-                } else {
-                    // we could return the script result but then we'd have
-                    // to root it and so forth and, really, who cares?
-                    debug!("...ok!");
-                    Ok(())
+                unsafe {
+                    if JS_EvaluateScript(self.ptr, glob.ptr,
+                                         bytes_ptr, bytes_len as c_uint,
+                                         filename_cstr, line_num as c_uint,
+                                         ptr::to_unsafe_ptr(&rval)) == ERR {
+                        debug!("...err!");
+                        Err(())
+                    } else {
+                        // we could return the script result but then we'd have
+                        // to root it and so forth and, really, who cares?
+                        debug!("...ok!");
+                        Ok(())
+                    }
                 }
             })
         })
@@ -216,28 +238,36 @@ impl bare_compartment : methods {
         let specvec = @specfn(self.name_pool);
         vec::push(&mut self.global_funcs, specvec);
         vec::as_imm_buf(*specvec, |specs, _len| {
-            result(JS_DefineFunctions(self.cx.ptr, self.global_obj.ptr, specs))
+            unsafe {
+                result(JS_DefineFunctions(self.cx.ptr, self.global_obj.ptr, specs))
+            }
         })
     }
     fn define_properties(specfn: fn() -> ~[JSPropertySpec]) -> Result<(),()> {
         let specvec = @specfn();
         vec::push(&mut self.global_props, specvec);
         vec::as_imm_buf(*specvec, |specs, _len| {
-            result(JS_DefineProperties(self.cx.ptr, self.global_obj.ptr, specs))
+            unsafe {
+                result(JS_DefineProperties(self.cx.ptr, self.global_obj.ptr, specs))
+            }
         })
     }
     fn define_property(name: ~str, value: JSVal, getter: JSPropertyOp, setter: JSStrictPropertyOp,
                        attrs: c_uint)
                     -> Result<(),()> {
-        result(JS_DefineProperty(self.cx.ptr, self.global_obj.ptr, self.add_name(move name),
-                                 value, getter, setter, attrs))
+        unsafe {
+            result(JS_DefineProperty(self.cx.ptr, self.global_obj.ptr, self.add_name(move name),
+                                     value, getter, setter, attrs))
+        }
     }
     fn new_object(class_name: ~str, proto: *JSObject, parent: *JSObject)
                -> Result<jsobj, ()> {
-        let classptr = self.cx.lookup_class_name(move class_name);
-        let obj = self.cx.rooted_obj(JS_NewObject(self.cx.ptr, ptr::to_unsafe_ptr(&*classptr),
-                                                  proto, parent));
-        result_obj(obj)
+        unsafe {
+            let classptr = self.cx.lookup_class_name(move class_name);
+            let obj = self.cx.rooted_obj(JS_NewObject(self.cx.ptr, ptr::to_unsafe_ptr(&*classptr),
+                                                      proto, parent));
+            result_obj(obj)
+        }
     }
     fn new_object_with_proto(class_name: ~str, proto_name: ~str, parent: *JSObject)
                           -> Result<jsobj, ()> {
@@ -245,9 +275,11 @@ impl bare_compartment : methods {
         let proto = option::expect(self.global_protos.find(copy proto_name),
            fmt!("new_object_with_proto: expected to find %s in the proto \
               table", proto_name));
-        let obj = self.cx.rooted_obj(JS_NewObject(self.cx.ptr, ptr::to_unsafe_ptr(&*classptr),
-                                                  proto.ptr, parent));
-        result_obj(obj)
+        unsafe {
+            let obj = self.cx.rooted_obj(JS_NewObject(self.cx.ptr, ptr::to_unsafe_ptr(&*classptr),
+                                                      proto.ptr, parent));
+            result_obj(obj)
+        }
     }
     fn get_global_proto(name: ~str) -> jsobj {
         self.global_protos.get(move name)
@@ -280,7 +312,9 @@ pub struct jsobj_rsrc {
     cxptr : *JSContext,
     ptr : *JSObject,
     drop {
-        JS_RemoveObjectRoot(self.cxptr, ptr::to_unsafe_ptr(&self.ptr));
+        unsafe {
+            JS_RemoveObjectRoot(self.cxptr, ptr::to_unsafe_ptr(&self.ptr));
+        }
     }
 }
 
@@ -304,8 +338,10 @@ pub trait to_jsstr {
 impl ~str : to_jsstr {
     fn to_jsstr(cx: cx) -> *JSString {
         str::as_buf(self, |buf, len| {
-            let cbuf = unsafe { cast::reinterpret_cast(&buf) };
-            bg::JS_NewStringCopyN(cx.ptr, cbuf, len as size_t)
+            unsafe {
+                let cbuf = cast::reinterpret_cast(&buf);
+                bg::JS_NewStringCopyN(cx.ptr, cbuf, len as size_t)
+            }
         })
     }
 }

@@ -128,14 +128,16 @@ pub unsafe fn JS_SET_RVAL(_cx: *JSContext, vp: *JSVal, v: JSVal) {
 }
 
 #[inline(always)]
-pub unsafe fn JS_THIS_OBJECT(cx: *JSContext, vp: *JSVal) -> *JSObject unsafe {
-    let r = JSVAL_TO_OBJECT(
-        if JSVAL_IS_PRIMITIVE(*ptr::offset(vp, 1)) {
-            JS_ComputeThis(cx, vp)
-        } else {
-            *ptr::offset(vp, 1)
-        });
-    r
+pub unsafe fn JS_THIS_OBJECT(cx: *JSContext, vp: *JSVal) -> *JSObject {
+    unsafe {
+        let r = JSVAL_TO_OBJECT(
+            if JSVAL_IS_PRIMITIVE(*ptr::offset(vp, 1)) {
+                JS_ComputeThis(cx, vp)
+            } else {
+                *ptr::offset(vp, 1)
+            });
+        r
+    }
 }
 
 // This is a duplication of the shadow stuff from jsfriendapi.h.  Here
@@ -168,8 +170,8 @@ mod shadow {
 
     impl Object {
         #[inline(always)]
-        pure fn numFixedSlots() -> libc::size_t unsafe {
-            ((*self.shape).slotInfo >> FIXED_SLOTS_SHIFT) as libc::size_t
+        pure fn numFixedSlots() -> libc::size_t {
+            unsafe { ((*self.shape).slotInfo >> FIXED_SLOTS_SHIFT) as libc::size_t }
         }
         
         #[inline(always)]
@@ -179,12 +181,14 @@ mod shadow {
 
         // Like slotRef, but just returns the value, not a reference
         #[inline(always)]
-        pure fn slotVal(slot: libc::size_t) -> JSVal unsafe {
-            let nfixed : libc::size_t = self.numFixedSlots();
-            if slot < nfixed {
-                return *ptr::offset(self.fixedSlots(), slot as uint)
+        pure fn slotVal(slot: libc::size_t) -> JSVal {
+            unsafe {
+                let nfixed : libc::size_t = self.numFixedSlots();
+                if slot < nfixed {
+                    return *ptr::offset(self.fixedSlots(), slot as uint)
+                }
+                return *ptr::offset(self.slots, (slot - nfixed) as uint)
             }
-            return *ptr::offset(self.slots, (slot - nfixed) as uint)
         }
     }
 }
