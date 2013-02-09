@@ -18,11 +18,6 @@ const JSVAL_TAG_SHIFT: int = 47;
 
 const JSVAL_PAYLOAD_MASK: u64 = 0x00007FFFFFFFFFFF;
 
-export INT_TO_JSVAL;
-export JSVAL_TO_OBJECT;
-export JSVAL_IS_PRIMITIVE;
-export JSVAL_TO_PRIVATE;
-
 #[inline(always)]
 pub fn INT_TO_JSVAL(i: i32) -> JSVal {
   ((JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_INT32) << JSVAL_TAG_SHIFT) | (i as u64)

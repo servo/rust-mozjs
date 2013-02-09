@@ -125,8 +125,6 @@ pub const JSTRACE_BASE_SHAPE: u32 = 5_u32;
 pub const JSTRACE_TYPE_OBJECT: u32 = 6_u32;
 pub const JSTRACE_LAST: u32 = 6_u32;
 
-pub type JSClass = struct_JSClass;
-
 pub type struct_JSCompartment = c_void;
 
 pub type JSCompartment = struct_JSCompartment;
@@ -150,8 +148,6 @@ pub type JSExceptionState = struct_JSExceptionState;
 pub type struct_JSFunction = c_void;
 
 pub type JSFunction = struct_JSFunction;
-
-pub type JSFunctionSpec = struct_JSFunctionSpec;
 
 pub type struct_JSIdArray = c_void;
 
@@ -476,7 +472,7 @@ pub type JSGCMode = enum_JSGCMode;
 
 pub type JSClassInternal = *u8;
 
-pub type struct_JSClass = {
+pub struct JSClass {
     name: *c_char,
     flags: uint32_t,
     addProperty: JSPropertyOp,
@@ -493,7 +489,7 @@ pub type struct_JSClass = {
     construct: JSNative,
     trace: JSTraceOp,
     reserved: (*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void),
-};
+}
 
 pub type struct_JSConstDoubleSpec = {
     dval: c_double,
@@ -520,12 +516,10 @@ pub type struct_JSPropertyOpWrapper = {
 
 pub type JSPropertyOpWrapper = struct_JSPropertyOpWrapper;
 
-pub type struct_JSNativeWrapper = {
+pub struct JSNativeWrapper {
     op: JSNative,
     info: *JSJitInfo,
-};
-
-pub type JSNativeWrapper = struct_JSNativeWrapper;
+}
 
 pub type struct_JSPropertySpec = {
     name: *c_char,
@@ -535,13 +529,13 @@ pub type struct_JSPropertySpec = {
     setter: JSStrictPropertyOpWrapper,
 };
 
-pub type struct_JSFunctionSpec = {
+pub struct JSFunctionSpec {
     name: *c_char,
     call: JSNativeWrapper,
     nargs: uint16_t,
     flags: uint16_t,
     selfHostedName: *c_char,
-};
+}
 
 pub type struct_JSPropertyDescriptor = {
     obj: *JSObject,

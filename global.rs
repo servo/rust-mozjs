@@ -11,7 +11,7 @@ use libc::c_uint;
 use name_pool::*;
 use ptr::null;
 use jsapi;
-use jsapi::{JSClass, JSContext, JSVal, JSFunctionSpec, JSBool};
+use jsapi::{JSClass, JSContext, JSVal, JSFunctionSpec, JSBool, JSNativeWrapper};
 use jsapi::bindgen::{JS_EncodeString, JS_free, JS_ValueToString};
 use JSCLASS_IS_GLOBAL;
 use JSCLASS_HAS_RESERVED_SLOTS;
@@ -20,33 +20,35 @@ use JS_ARGV;
 use JSVAL_NULL;
 use JS_SET_RVAL;
 
-pub fn basic_class(np: NamePool, name: ~str) -> JSClass {
-    {name: np.add(move name),
-     flags: JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT),
-     addProperty: unsafe { GetJSClassHookStubPointer(PROPERTY_STUB) as *u8 },
-     delProperty: unsafe { GetJSClassHookStubPointer(PROPERTY_STUB) as *u8 },
-     getProperty: unsafe { GetJSClassHookStubPointer(PROPERTY_STUB) as *u8 },
-     setProperty: unsafe { GetJSClassHookStubPointer(STRICT_PROPERTY_STUB) as *u8 },
-     enumerate: unsafe { GetJSClassHookStubPointer(ENUMERATE_STUB) as *u8 },
-     resolve: unsafe { GetJSClassHookStubPointer(RESOLVE_STUB) as *u8 },
-     convert: unsafe { GetJSClassHookStubPointer(CONVERT_STUB) as *u8 },
-     finalize: null(),
-     checkAccess: null(),
-     call: null(),
-     hasInstance: null(),
-     construct: null(),
-     trace: null(),
-     reserved: (null(), null(), null(), null(), null(),  // 05
-                null(), null(), null(), null(), null(),  // 10
-                null(), null(), null(), null(), null(),  // 15
-                null(), null(), null(), null(), null(),  // 20
-                null(), null(), null(), null(), null(),  // 25
-                null(), null(), null(), null(), null(),  // 30
-                null(), null(), null(), null(), null(),  // 35
-                null(), null(), null(), null(), null())} // 40
+pub fn basic_class(np: @mut NamePool, name: ~str) -> JSClass {
+    JSClass {
+        name: np.add(move name),
+        flags: JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT),
+        addProperty: unsafe { GetJSClassHookStubPointer(PROPERTY_STUB) as *u8 },
+        delProperty: unsafe { GetJSClassHookStubPointer(PROPERTY_STUB) as *u8 },
+        getProperty: unsafe { GetJSClassHookStubPointer(PROPERTY_STUB) as *u8 },
+        setProperty: unsafe { GetJSClassHookStubPointer(STRICT_PROPERTY_STUB) as *u8 },
+        enumerate: unsafe { GetJSClassHookStubPointer(ENUMERATE_STUB) as *u8 },
+        resolve: unsafe { GetJSClassHookStubPointer(RESOLVE_STUB) as *u8 },
+        convert: unsafe { GetJSClassHookStubPointer(CONVERT_STUB) as *u8 },
+        finalize: null(),
+        checkAccess: null(),
+        call: null(),
+        hasInstance: null(),
+        construct: null(),
+        trace: null(),
+        reserved: (null(), null(), null(), null(), null(),  // 05
+                   null(), null(), null(), null(), null(),  // 10
+                   null(), null(), null(), null(), null(),  // 15
+                   null(), null(), null(), null(), null(),  // 20
+                   null(), null(), null(), null(), null(),  // 25
+                   null(), null(), null(), null(), null(),  // 30
+                   null(), null(), null(), null(), null(),  // 35
+                   null(), null(), null(), null(), null())  // 40
+    }
 }
 
-pub fn global_class(np: NamePool) -> JSClass {
+pub fn global_class(np: @mut NamePool) -> JSClass {
     basic_class(np, ~"global")
 }
 
@@ -71,11 +73,18 @@ pub extern fn debug(cx: *JSContext, argc: c_uint, vp: *JSVal) -> JSBool {
     }
 }
 
-pub fn debug_fns(np: NamePool) -> ~[JSFunctionSpec] {
-    ~[{name: np.add(~"debug"),
-       call: {op: debug,
-              info: null()},
-       nargs: 0_u16,
-       flags: 0_u16,
-       selfHostedName: null()}]
+pub fn debug_fns(np: @mut NamePool) -> ~[JSFunctionSpec] {
+    ~[
+        JSFunctionSpec {
+            name: np.add(~"debug"),
+            call: JSNativeWrapper {
+                op: debug,
+                info: null()
+            },
+            nargs: 0,
+            flags: 0,
+            selfHostedName: null()
+        }
+    ]
 }
+

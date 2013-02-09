@@ -16,7 +16,7 @@ pub mod jsval;
 use ptr::{null, addr_of};
 use result::{Result, Ok, Err};
 use libc::{c_char, c_uint};
-use name_pool::{NamePool, add};
+use name_pool::NamePool;
 use str::raw::from_c_str;
 use io::WriterUtil;
 use jsapi::{JSBool, JSClass, JSContext, JSErrorReport, JSFunctionSpec,
