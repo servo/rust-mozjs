@@ -102,6 +102,9 @@ pub const JSCLASS_IS_GLOBAL: c_uint = (1<<(JSCLASS_HIGH_FLAGS_SHIFT+1));
 
 pub const JSCLASS_GLOBAL_SLOT_COUNT: c_uint = JSProto_LIMIT * 3 + 24;
 
+pub const JSCLASS_IS_DOMJSCLASS: u32 = 1 << 4;
+pub const JSCLASS_USERBIT1: u32 = 1 << 7;
+
 pub pure fn JSCLASS_HAS_RESERVED_SLOTS(n: c_uint) -> c_uint {
     (n & JSCLASS_RESERVED_SLOTS_MASK) << JSCLASS_RESERVED_SLOTS_SHIFT
 }
