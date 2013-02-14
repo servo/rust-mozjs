@@ -13,8 +13,9 @@ pub fn NamePool() -> @mut NamePool {
 
 impl NamePool {
     fn add(&mut self, s: ~str) -> *c_char {
-        let c_str = str::as_c_str(s, |bytes| bytes);
-        push(&mut self.strbufs, move s); // in theory, this should *move* the str in here..
-        return c_str; // ...and so this ptr ought to be valid.
+        unsafe {
+            push(&mut self.strbufs, s);
+            return cast::transmute(&self.strbufs[self.strbufs.len() - 1][0]);
+        }
     }
 }
