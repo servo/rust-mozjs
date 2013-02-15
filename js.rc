@@ -87,8 +87,11 @@ pub const JSVAL_ONE: u64 = ((JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_INT32) << JSVAL_T
 pub const JSVAL_FALSE: u64 = (JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_BOOLEAN) << JSVAL_TAG_SHIFT;
 pub const JSVAL_TRUE: u64 = ((JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_BOOLEAN) << JSVAL_TAG_SHIFT) | 1;
 
+pub const JSFUN_CONSTRUCTOR: u32 = 0x400; /* native that can be called as a ctor */
+
 pub const JSPROP_ENUMERATE: c_uint = 0x01;
 pub const JSPROP_READONLY: c_uint  = 0x02;
+pub const JSPROP_PERMANENT: c_uint = 0x04;
 pub const JSPROP_SHARED: c_uint =    0x40;
 pub const JSPROP_NATIVE_ACCESSORS: c_uint = 0x08;
 
@@ -149,7 +152,7 @@ pub unsafe fn JS_CALLEE(_cx: *JSContext, vp: *JSVal) -> *JSVal {
     vp
 }
 
-pub use jsfriendapi::bindgen::JSJitInfo;
+pub use jsfriendapi::JSJitInfo;
 
 // This is a duplication of the shadow stuff from jsfriendapi.h.  Here
 // there be dragons!

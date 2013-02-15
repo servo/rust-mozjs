@@ -93,4 +93,7 @@ pub fn CallJitPropertyOp(++info: *JSJitInfo, ++cx: *JSContext, ++thisObj: *JSObj
 
 #[rust_stack]
 pub fn RUST_FUNCTION_VALUE_TO_JITINFO(++v: *JSVal) -> *JSJitInfo;
+
+pub fn SetFunctionNativeReserved(fun: *JSObject, which: libc::size_t, val: *JSVal);
+pub fn GetFunctionNativeReserved(fun: *JSObject, which: libc::size_t) -> *JSVal;
 }

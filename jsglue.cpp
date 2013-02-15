@@ -196,4 +196,16 @@ CallJitPropertyOp(JSJitInfo *info, JSContext* cx, JSObject* thisObj, void *speci
     return ((JSJitPropertyOp)info->op)(cx, *(JSHandleObject*)&tmp, specializedThis, vp);
 }
 
+void
+SetFunctionNativeReserved(JSObject* fun, size_t which, js::Value* val)
+{
+    js::SetFunctionNativeReserved(fun, which, *val);
+}
+
+const js::Value*
+GetFunctionNativeReserved(JSObject* fun, size_t which)
+{
+    return &js::GetFunctionNativeReserved(fun, which);
+}
+
 } // extern "C"
