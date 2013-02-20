@@ -168,7 +168,7 @@ impl Cx {
     fn lookup_class_name(@self, s: ~str) ->  @JSClass {
         // FIXME: expect should really take a lambda...
         let error_msg = fmt!("class %s not found in class table", s);
-        option::expect(self.classes.find(&move s), error_msg)
+        option::expect(self.classes.find(&s), error_msg)
     }
 
     unsafe fn get_cx_private(@self) -> *() {
@@ -239,22 +239,26 @@ impl Compartment {
                        attrs: c_uint)
                     -> Result<(),()> {
         unsafe {
-            result(JS_DefineProperty(self.cx.ptr, self.global_obj.ptr, self.add_name(move name),
-                                     value, getter, setter, attrs))
+            result(JS_DefineProperty(self.cx.ptr,
+                                     self.global_obj.ptr,
+                                     self.add_name(name),
+                                     value,
+                                     getter,
+                                     setter,
+                                     attrs))
         }
     }
     fn new_object(@mut self, class_name: ~str, proto: *JSObject, parent: *JSObject)
                -> Result<jsobj, ()> {
         unsafe {
-            let classptr = self.cx.lookup_class_name(move class_name);
-            let obj = self.cx.rooted_obj(JS_NewObject(self.cx.ptr, ptr::to_unsafe_ptr(&*classptr),
-                                                      proto, parent));
+            let classptr = self.cx.lookup_class_name(class_name);
+            let obj = self.cx.rooted_obj(JS_NewObject(self.cx.ptr, &*classptr, proto, parent));
             result_obj(obj)
         }
     }
     fn new_object_with_proto(@mut self, class_name: ~str, proto_name: ~str, parent: *JSObject)
                           -> Result<jsobj, ()> {
-        let classptr = self.cx.lookup_class_name(move class_name);
+        let classptr = self.cx.lookup_class_name(class_name);
         let proto = option::expect(self.global_protos.find(&copy proto_name),
            fmt!("new_object_with_proto: expected to find %s in the proto \
               table", proto_name));
@@ -265,11 +269,11 @@ impl Compartment {
         }
     }
     fn get_global_proto(@mut self, name: ~str) -> jsobj {
-        self.global_protos.get(&move name)
+        self.global_protos.get(&name)
     }
     fn stash_global_proto(@mut self, name: ~str, proto: jsobj) {
         let global_protos = self.global_protos;
-        if !global_protos.insert(move name, move proto) {
+        if !global_protos.insert(name, proto) {
             fail!(~"Duplicate global prototype registered; you're gonna have a bad time.")
         }
     }
@@ -319,7 +323,7 @@ pub trait to_jsstr {
     fn to_jsstr(cx: @Cx) -> *JSString;
 }
 
-impl ~str : to_jsstr {
+impl to_jsstr for ~str {
     fn to_jsstr(cx: @Cx) -> *JSString {
         str::as_buf(self, |buf, len| {
             unsafe {

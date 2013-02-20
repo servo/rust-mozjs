@@ -22,7 +22,7 @@ use JS_SET_RVAL;
 
 pub fn basic_class(np: @mut NamePool, name: ~str) -> JSClass {
     JSClass {
-        name: np.add(move name),
+        name: np.add(name),
         flags: JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT),
         addProperty: unsafe { GetJSClassHookStubPointer(PROPERTY_STUB) as *u8 },
         delProperty: unsafe { GetJSClassHookStubPointer(PROPERTY_STUB) as *u8 },
@@ -56,7 +56,7 @@ pub unsafe fn jsval_to_rust_str(cx: *JSContext, vp: *jsapi::JSString) -> ~str {
   let bytes = JS_EncodeString(cx, vp);
   let s = str::raw::from_c_str(bytes);
   JS_free(cx, cast::reinterpret_cast(&bytes));
-  move s
+  s
 }
 
 pub extern fn debug(cx: *JSContext, argc: c_uint, vp: *JSVal) -> JSBool {
