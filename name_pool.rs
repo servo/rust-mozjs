@@ -2,7 +2,7 @@ use libc::c_char;
 use vec::push;
 
 pub struct NamePool {
-    strbufs: ~[~str]
+    strbufs: ~[~[u8]]
 }
 
 pub fn NamePool() -> @mut NamePool {
@@ -14,7 +14,13 @@ pub fn NamePool() -> @mut NamePool {
 impl NamePool {
     fn add(&mut self, s: ~str) -> *c_char {
         unsafe {
-            push(&mut self.strbufs, s);
+            let mut strbuf = ~[];
+            for uint::range(0, s.len()) |i| {
+                strbuf.push(s[i]);
+            }
+            strbuf.push(0);
+
+            push(&mut self.strbufs, strbuf);
             return cast::transmute(&self.strbufs[self.strbufs.len() - 1][0]);
         }
     }

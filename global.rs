@@ -84,6 +84,16 @@ pub fn debug_fns(np: @mut NamePool) -> ~[JSFunctionSpec] {
             nargs: 0,
             flags: 0,
             selfHostedName: null()
+        },
+        JSFunctionSpec {
+            name: null(),
+            call: JSNativeWrapper {
+                op: null(),
+                info: null(),
+            },
+            nargs: 0,
+            flags: 0,
+            selfHostedName: null()
         }
     ]
 }
