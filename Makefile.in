@@ -24,7 +24,7 @@ libjsglue.a: jsglue.o
 	$(AR) rcs libjsglue.a jsglue.o
 
 jsglue.o: jsglue.cpp
-	$(CXX) $(CFLAGS) $< -o $@ -c
+	$(CXX) $(CFLAGS) -fno-rtti $< -o $@ -c
 
 check: js-test
 	./js-test

@@ -10,6 +10,37 @@ pub const ENUMERATE_STUB: u32 = 2_u32;
 pub const CONVERT_STUB: u32 = 3_u32;
 pub const RESOLVE_STUB: u32 = 4_u32;
 
+pub struct ProxyTraps {
+    getPropertyDescriptor: *u8,
+    getOwnPropertyDescriptor: *u8,
+    defineProperty: *u8,
+    getOwnPropertyNames: *u8,
+    delete_: *u8,
+    enumerate: *u8,
+
+    has: *u8,
+    hasOwn: *u8,
+    get: *u8,
+    set: *u8,
+    keys: *u8,
+    iterate: *u8,
+
+    call: *u8,
+    construct: *u8,
+    nativeCall: *u8,
+    hasInstance: *u8,
+    typeOf: *u8,
+    objectClassIs: *u8,
+    obj_toString: *u8,
+    fun_toString: *u8,
+    //regexp_toShared: *u8,
+    defaultValue: *u8,
+    iteratorNext: *u8,
+    finalize: *u8,
+    getElementIfPresent: *u8,
+    getPrototypeOf: *u8
+}
+
 #[link_name="jsglue"]
 pub extern mod bindgen {
 
@@ -92,8 +123,16 @@ pub fn RUST_JS_NumberValue(++d: f64) -> JSVal;
 pub fn CallJitPropertyOp(++info: *JSJitInfo, ++cx: *JSContext, ++thisObj: *JSObject, ++specializedThis: *libc::c_void, ++vp: *JSVal) -> JSBool;
 
 #[rust_stack]
+pub fn CallJitMethodOp(++info: *JSJitInfo, ++cx: *JSContext, ++thisObj: *JSObject, ++specializedThis: *libc::c_void, ++argc: libc::c_uint, ++vp: *JSVal) -> JSBool;
+
+#[rust_stack]
 pub fn RUST_FUNCTION_VALUE_TO_JITINFO(++v: *JSVal) -> *JSJitInfo;
 
 pub fn SetFunctionNativeReserved(fun: *JSObject, which: libc::size_t, val: *JSVal);
 pub fn GetFunctionNativeReserved(fun: *JSObject, which: libc::size_t) -> *JSVal;
+
+pub fn CreateProxyHandler(traps: *ProxyTraps) -> *libc::c_void;
+pub fn NewProxyObject(cx: *JSContext, handler: *libc::c_void, priv_: *JSVal,
+                      proto: *JSObject, parent: *JSObject, call: *JSObject,
+                      construct: *JSObject) -> *JSObject;
 }
