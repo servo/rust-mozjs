@@ -171,8 +171,6 @@ pub type struct_JSPropertyName = c_void;
 
 pub type JSPropertyName = struct_JSPropertyName;
 
-pub type JSPropertySpec = struct_JSPropertySpec;
-
 pub type struct_JSRuntime = c_void;
 
 pub type JSRuntime = struct_JSRuntime;
@@ -502,32 +500,28 @@ pub type struct_JSJitInfo = c_void;
 
 pub type JSJitInfo = struct_JSJitInfo;
 
-pub type struct_JSStrictPropertyOpWrapper = {
+pub struct JSStrictPropertyOpWrapper {
     op: JSStrictPropertyOp,
     info: *JSJitInfo,
-};
+}
 
-pub type JSStrictPropertyOpWrapper = struct_JSStrictPropertyOpWrapper;
-
-pub type struct_JSPropertyOpWrapper = {
+pub struct JSPropertyOpWrapper {
     op: JSPropertyOp,
     info: *JSJitInfo,
-};
-
-pub type JSPropertyOpWrapper = struct_JSPropertyOpWrapper;
+}
 
 pub struct JSNativeWrapper {
     op: JSNative,
     info: *JSJitInfo,
 }
 
-pub type struct_JSPropertySpec = {
+pub struct JSPropertySpec {
     name: *c_char,
     tinyid: int8_t,
     flags: uint8_t,
     getter: JSPropertyOpWrapper,
     setter: JSStrictPropertyOpWrapper,
-};
+}
 
 pub struct JSFunctionSpec {
     name: *c_char,
