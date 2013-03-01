@@ -466,4 +466,16 @@ NewProxyObject(JSContext* aCx, void* aHandler, const js::Value* priv,
                               parent, call, construct);
 }
 
+jsval
+GetProxyExtra(JSObject* obj, uint slot)
+{
+    return js::GetProxyExtra(obj, slot);
+}
+
+JSObject*
+GetObjectProto(JSObject* obj)
+{
+    return js::GetObjectProto(obj);
+}
+
 } // extern "C"

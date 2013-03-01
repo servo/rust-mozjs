@@ -119,10 +119,10 @@ pub fn RUST_JSVAL_TO_PRIVATE(++v: JSVal) -> *c_void;
 #[rust_stack]
 pub fn RUST_JS_NumberValue(++d: f64) -> JSVal;
 
-#[rust_stack]
+//#[rust_stack]
 pub fn CallJitPropertyOp(++info: *JSJitInfo, ++cx: *JSContext, ++thisObj: *JSObject, ++specializedThis: *libc::c_void, ++vp: *JSVal) -> JSBool;
 
-#[rust_stack]
+//#[rust_stack]
 pub fn CallJitMethodOp(++info: *JSJitInfo, ++cx: *JSContext, ++thisObj: *JSObject, ++specializedThis: *libc::c_void, ++argc: libc::c_uint, ++vp: *JSVal) -> JSBool;
 
 #[rust_stack]
@@ -135,4 +135,8 @@ pub fn CreateProxyHandler(traps: *ProxyTraps) -> *libc::c_void;
 pub fn NewProxyObject(cx: *JSContext, handler: *libc::c_void, priv_: *JSVal,
                       proto: *JSObject, parent: *JSObject, call: *JSObject,
                       construct: *JSObject) -> *JSObject;
+
+pub fn GetProxyExtra(obj: *JSObject, slot: c_uint) -> JSVal;
+
+pub fn GetObjectProto(obj: *JSObject) -> *JSObject;
 }

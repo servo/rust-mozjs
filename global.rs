@@ -53,10 +53,14 @@ pub fn global_class(np: @mut NamePool) -> JSClass {
 }
 
 pub unsafe fn jsval_to_rust_str(cx: *JSContext, vp: *jsapi::JSString) -> ~str {
-  let bytes = JS_EncodeString(cx, vp);
-  let s = str::raw::from_c_str(bytes);
-  JS_free(cx, cast::reinterpret_cast(&bytes));
-  s
+    if vp.is_null() {
+        ~""
+    } else {
+        let bytes = JS_EncodeString(cx, vp);
+        let s = str::raw::from_c_str(bytes);
+        JS_free(cx, cast::reinterpret_cast(&bytes));
+        s
+    }
 }
 
 pub extern fn debug(cx: *JSContext, argc: c_uint, vp: *JSVal) -> JSBool {
