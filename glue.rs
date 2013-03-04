@@ -137,6 +137,14 @@ pub fn NewProxyObject(cx: *JSContext, handler: *libc::c_void, priv_: *JSVal,
                       construct: *JSObject) -> *JSObject;
 
 pub fn GetProxyExtra(obj: *JSObject, slot: c_uint) -> JSVal;
+pub fn GetProxyPrivate(obj: *JSObject) -> JSVal;
 
 pub fn GetObjectProto(obj: *JSObject) -> *JSObject;
+
+pub fn RUST_JSID_IS_INT(id: jsid) -> JSBool;
+pub fn RUST_JSID_TO_INT(id: jsid) -> libc::c_int;
+
+pub fn RUST_SET_JITINFO(func: *JSFunction, info: *JSJitInfo);
+
+pub fn RUST_INTERNED_STRING_TO_JSID(cx: *JSContext, str: *JSString) -> jsid;
 }

@@ -426,17 +426,19 @@ RUST_FUNCTION_VALUE_TO_JITINFO(jsval* v)
 JSBool
 CallJitPropertyOp(JSJitInfo *info, JSContext* cx, JSObject* thisObj, void *specializedThis, jsval *vp)
 {
-    JSHandleObject* tmp = (JSHandleObject*)&thisObj;
-    //XXXjdm sort out how we can do the handle thing here.
-    return ((JSJitPropertyOp)info->op)(cx, *(JSHandleObject*)&tmp, specializedThis, vp);
+    struct {
+        JSObject** obj;
+    } tmp = { &thisObj };
+    return ((JSJitPropertyOp)info->op)(cx, *reinterpret_cast<JSHandleObject*>(&tmp), specializedThis, vp);
 }
 
 JSBool
 CallJitMethodOp(JSJitInfo *info, JSContext* cx, JSObject* thisObj, void *specializedThis, uint argc, jsval *vp)
 {
-    JSHandleObject* tmp = (JSHandleObject*)&thisObj;
-    //XXXjdm sort out how we can do the handle thing here.
-    return ((JSJitMethodOp)info->op)(cx, *(JSHandleObject*)&tmp, specializedThis, argc, vp);
+    struct {
+        JSObject** obj;
+    } tmp = { &thisObj };
+    return ((JSJitMethodOp)info->op)(cx, *reinterpret_cast<JSHandleObject*>(&tmp), specializedThis, argc, vp);
 }
 
 void
@@ -472,10 +474,38 @@ GetProxyExtra(JSObject* obj, uint slot)
     return js::GetProxyExtra(obj, slot);
 }
 
+jsval
+GetProxyPrivate(JSObject* obj)
+{
+    return js::GetProxyPrivate(obj);
+}
+
 JSObject*
 GetObjectProto(JSObject* obj)
 {
     return js::GetObjectProto(obj);
+}
+
+JSBool
+RUST_JSID_IS_INT(jsid id)
+{
+    return JSID_IS_INT(id);
+}
+
+int
+RUST_JSID_TO_INT(jsid id)
+{
+    return JSID_TO_INT(id);
+}
+
+void
+RUST_SET_JITINFO(JSFunction* func, const JSJitInfo* info) {
+    SET_JITINFO(func, info);
+}
+
+jsid
+RUST_INTERNED_STRING_TO_JSID(JSContext* cx, JSString* str) {
+    return INTERNED_STRING_TO_JSID(cx, str);
 }
 
 } // extern "C"
