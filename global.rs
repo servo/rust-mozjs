@@ -7,9 +7,11 @@ Handy functions for creating class objects and so forth.
 use glue::bindgen::GetJSClassHookStubPointer;
 use glue::{PROPERTY_STUB, STRICT_PROPERTY_STUB, ENUMERATE_STUB,
               RESOLVE_STUB, CONVERT_STUB};
-use libc::c_uint;
+use core::libc::c_uint;
+use core::str::raw::from_c_str;
+use core::cast::reinterpret_cast;
 use name_pool::*;
-use ptr::null;
+use core::ptr::null;
 use jsapi;
 use jsapi::{JSClass, JSContext, JSVal, JSFunctionSpec, JSBool, JSNativeWrapper};
 use jsapi::bindgen::{JS_EncodeString, JS_free, JS_ValueToString};
@@ -57,14 +59,14 @@ pub unsafe fn jsval_to_rust_str(cx: *JSContext, vp: *jsapi::JSString) -> ~str {
         ~""
     } else {
         let bytes = JS_EncodeString(cx, vp);
-        let s = str::raw::from_c_str(bytes);
-        JS_free(cx, cast::reinterpret_cast(&bytes));
+        let s = from_c_str(bytes);
+        JS_free(cx, reinterpret_cast(&bytes));
         s
     }
 }
 
 pub extern fn debug(cx: *JSContext, argc: c_uint, vp: *JSVal) -> JSBool {
-    use io::WriterUtil;
+    use core::io::WriterUtil;
 
     unsafe {
         let argv = JS_ARGV(cx, vp);

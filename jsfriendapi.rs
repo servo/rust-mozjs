@@ -16,11 +16,11 @@ pub struct JSJitInfo {
 #[nolink]
 pub extern mod bindgen {
 pub fn DefineFunctionWithReserved(cx: *JSContext, obj: *JSObject,
-                                  name: *libc::c_char, call: JSNative, nargs: uint,
-                                  attrs: uint) -> *JSObject;
+                                  name: *libc::c_char, call: JSNative, nargs: libc::c_uint,
+                                  attrs: libc::c_uint) -> *JSObject;
 pub fn GetObjectJSClass(obj: *JSObject) -> *JSClass;
 pub fn js_GetErrorMessage(userRef: *libc::c_void, locale: *libc::c_char,
-                          errorNumber: uint) -> *JSErrorFormatString;
+                          errorNumber: libc::c_uint) -> *JSErrorFormatString;
 pub fn JS_NewObjectWithUniqueType(cx: *JSContext, clasp: *JSClass,
                                   proto: *JSObject, parent: *JSObject) -> *JSObject;
 }

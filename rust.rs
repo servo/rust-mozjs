@@ -3,7 +3,8 @@
 #[allow(non_implicitly_copyable_typarams)];
 
 use bg = jsapi::bindgen;
-use libc::types::os::arch::c95::{size_t, c_uint};
+use core::libc::types::os::arch::c95::{size_t, c_uint};
+use core::libc::c_char;
 use std::oldmap::HashMap;
 use jsapi::*;
 use jsapi::bindgen::*;
@@ -15,10 +16,10 @@ use JSOPTION_TYPE_INFERENCE;
 use JSVAL_NULL;
 use ERR;
 use name_pool::*;
-use ptr::null;
+use core::ptr::null;
 use result;
 use result_obj;
-use str::raw::from_c_str;
+use core::str::raw::from_c_str;
 
 // ___________________________________________________________________________
 // friendly Rustic API to runtimes
@@ -40,8 +41,8 @@ pub fn new_runtime(p: *JSRuntime) -> rt {
     }
 }
 
-impl rt {
-    fn cx() -> @Cx {
+pub impl rt {
+    fn cx(self) -> @Cx {
         unsafe {
             new_context(JS_NewContext(self.ptr, default_stacksize as size_t), self)
         }
@@ -78,7 +79,7 @@ pub fn new_context(ptr: *JSContext, rt: rt) -> @Cx {
     }
 }
     
-impl Cx {
+pub impl Cx {
     fn rooted_obj(@self, obj: *JSObject) -> jsobj {
         let jsobj = @jsobj_rsrc {cx: self, cxptr: self.ptr, ptr: obj};
         unsafe {
@@ -211,7 +212,7 @@ pub struct Compartment {
     global_protos: HashMap<~str, jsobj>
 }
 
-impl Compartment {
+pub impl Compartment {
     fn define_functions(@mut self,
                         specfn: fn(@mut NamePool) -> ~[JSFunctionSpec])
                      -> Result<(),()> {
@@ -280,7 +281,7 @@ impl Compartment {
     fn register_class(@mut self, class_fn: fn(x: @mut Compartment) -> JSClass) {
         let classptr = @class_fn(self);
         if !self.cx.classes.insert(
-            unsafe { str::raw::from_c_str(classptr.name) },
+            unsafe { from_c_str(classptr.name) },
             classptr) {
             fail!(~"Duplicate JSClass registered; you're gonna have a bad time.")
         }
@@ -307,7 +308,7 @@ pub struct jsobj_rsrc {
 }
 
 impl jsobj_rsrc {
-    fn new_object(rec : {cx: @Cx, cxptr: *JSContext, ptr: *JSObject}) -> jsobj {
+    fn new_object(&self, rec : {cx: @Cx, cxptr: *JSContext, ptr: *JSObject}) -> jsobj {
         return @jsobj_rsrc {
             cx: rec.cx,
             cxptr: rec.cxptr,
@@ -320,11 +321,11 @@ impl jsobj_rsrc {
 // random utilities
 
 pub trait to_jsstr {
-    fn to_jsstr(cx: @Cx) -> *JSString;
+    fn to_jsstr(self, cx: @Cx) -> *JSString;
 }
 
 impl to_jsstr for ~str {
-    fn to_jsstr(cx: @Cx) -> *JSString {
+    fn to_jsstr(self, cx: @Cx) -> *JSString {
         str::as_buf(self, |buf, len| {
             unsafe {
                 let cbuf = cast::reinterpret_cast(&buf);

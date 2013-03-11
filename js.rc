@@ -14,12 +14,12 @@ pub mod crust;
 pub mod jsval;
 pub mod jsfriendapi;
 
-use ptr::{null, addr_of};
-use result::{Result, Ok, Err};
-use libc::{c_char, c_uint};
+use core::ptr::{null, addr_of};
+use core::result::{Result, Ok, Err};
+use core::libc::{c_char, c_uint};
 use name_pool::NamePool;
-use str::raw::from_c_str;
-use io::WriterUtil;
+use core::str::raw::from_c_str;
+use core::io::WriterUtil;
 use jsapi::{JSBool, JSClass, JSContext, JSErrorReport, JSFunctionSpec,
                JSObject, JSRuntime, JSString, JSVERSION_LATEST, JSVal, jsid,
                JSPropertySpec, JSPropertyOp, JSStrictPropertyOp, JSProto_LIMIT};
@@ -32,14 +32,14 @@ use jsapi::bindgen::{JS_free, JS_AddObjectRoot, JS_DefineFunctions,
                         JS_SetErrorReporter, JS_SetOptions, JS_SetPrivate,
                         JS_SetVersion, JS_ValueToString, JS_DefineProperties,
                         JS_DefineProperty, JS_NewObject, JS_ComputeThis};
-use libc::types::common::c99::{int8_t, int16_t, int32_t, int64_t, uint8_t,
-                                  uint16_t, uint32_t, uint64_t};
+use core::libc::types::common::c99::{int8_t, int16_t, int32_t, int64_t, uint8_t,
+                                     uint16_t, uint32_t, uint64_t};
 use jsval::{JSVAL_TO_OBJECT, JSVAL_IS_PRIMITIVE};
 use glue::bindgen::{RUST_JSVAL_TO_OBJECT, RUST_JSVAL_IS_PRIMITIVE};
 use rust::jsobj;
-pub use rust;
+pub use mod rust;
 
-pub use NamePool;
+pub use name_pool::NamePool;
 pub use mod jsapi;
 pub use mod glue;
 pub use mod crust;
@@ -195,20 +195,20 @@ mod shadow {
         _1: *JSVal,
     }
 
-    impl Object {
+    pub impl Object {
         #[inline(always)]
-        pure fn numFixedSlots() -> libc::size_t {
+        pure fn numFixedSlots(&self) -> libc::size_t {
             unsafe { ((*self.shape).slotInfo >> FIXED_SLOTS_SHIFT) as libc::size_t }
         }
         
         #[inline(always)]
-        fn fixedSlots() -> *JSVal {
+        fn fixedSlots(&self) -> *JSVal {
             (ptr::offset(ptr::to_unsafe_ptr(&self), 1)) as *JSVal
         }
 
         // Like slotRef, but just returns the value, not a reference
         #[inline(always)]
-        pure fn slotVal(slot: libc::size_t) -> JSVal {
+        pure fn slotVal(&self, slot: libc::size_t) -> JSVal {
             unsafe {
                 let nfixed : libc::size_t = self.numFixedSlots();
                 if slot < nfixed {

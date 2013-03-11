@@ -30,7 +30,7 @@ pub extern fn JS_ConvertStub(++cx: *JSContext, ++obj: JSHandleObject, ++_type: J
     }
 }
 
-pub extern fn JS_ArrayIterator(++cx: *JSContext, ++argc: c_uint, ++vp: *JSVal) -> JSBool {
+pub extern fn JS_ArrayIterator(++cx: *JSContext, ++argc: libc::c_uint, ++vp: *JSVal) -> JSBool {
     unsafe {
         bindgen::JS_ArrayIterator(cx, argc, vp)
     }

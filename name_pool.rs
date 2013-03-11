@@ -1,5 +1,5 @@
-use libc::c_char;
-use vec::push;
+use core::libc::c_char;
+use core::vec::push;
 
 pub struct NamePool {
     strbufs: ~[~[u8]]
@@ -11,7 +11,7 @@ pub fn NamePool() -> @mut NamePool {
     }
 }
 
-impl NamePool {
+pub impl NamePool {
     fn add(&mut self, s: ~str) -> *c_char {
         unsafe {
             let mut strbuf = ~[];
