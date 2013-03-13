@@ -148,4 +148,11 @@ pub fn RUST_JSID_TO_INT(id: jsid) -> libc::c_int;
 pub fn RUST_SET_JITINFO(func: *JSFunction, info: *JSJitInfo);
 
 pub fn RUST_INTERNED_STRING_TO_JSID(cx: *JSContext, str: *JSString) -> jsid;
+
+pub fn DefineFunctionWithReserved(cx: *JSContext, obj: *JSObject,
+                                  name: *libc::c_char, call: JSNative, nargs: libc::c_uint,
+                                  attrs: libc::c_uint) -> *JSObject;
+pub fn GetObjectJSClass(obj: *JSObject) -> *JSClass;
+pub fn js_GetErrorMessage(userRef: *libc::c_void, locale: *libc::c_char,
+                          errorNumber: libc::c_uint) -> *JSErrorFormatString;
 }

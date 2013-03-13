@@ -66,8 +66,6 @@ pub unsafe fn jsval_to_rust_str(cx: *JSContext, vp: *jsapi::JSString) -> ~str {
 }
 
 pub extern fn debug(cx: *JSContext, argc: c_uint, vp: *JSVal) -> JSBool {
-    use core::io::WriterUtil;
-
     unsafe {
         let argv = JS_ARGV(cx, vp);
         for uint::range(0u, argc as uint) |i| {

@@ -17,9 +17,6 @@ pub mod jsfriendapi;
 use core::ptr::{null, addr_of};
 use core::result::{Result, Ok, Err};
 use core::libc::{c_char, c_uint};
-use name_pool::NamePool;
-use core::str::raw::from_c_str;
-use core::io::WriterUtil;
 use jsapi::{JSBool, JSClass, JSContext, JSErrorReport, JSFunctionSpec,
                JSObject, JSRuntime, JSString, JSVERSION_LATEST, JSVal, jsid,
                JSPropertySpec, JSPropertyOp, JSStrictPropertyOp, JSProto_LIMIT};
@@ -35,7 +32,6 @@ use jsapi::bindgen::{JS_free, JS_AddObjectRoot, JS_DefineFunctions,
 use core::libc::types::common::c99::{int8_t, int16_t, int32_t, int64_t, uint8_t,
                                      uint16_t, uint32_t, uint64_t};
 use jsval::{JSVAL_TO_OBJECT, JSVAL_IS_PRIMITIVE};
-use glue::bindgen::{RUST_JSVAL_TO_OBJECT, RUST_JSVAL_IS_PRIMITIVE};
 use rust::jsobj;
 pub use mod rust;
 
@@ -131,11 +127,6 @@ pub fn result(n: JSBool) -> Result<(),()> {
 pub fn result_obj(o: jsobj) -> Result<jsobj, ()> {
     if o.ptr != null() {Ok(o)} else {Err(())}
 }
-
-pub type named_functions = @{
-    names: ~[~str],
-    funcs: ~[JSFunctionSpec]
-};
 
 #[inline(always)]
 pub unsafe fn JS_ARGV(_cx: *JSContext, vp: *JSVal) -> *JSVal {

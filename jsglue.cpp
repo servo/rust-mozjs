@@ -508,4 +508,23 @@ RUST_INTERNED_STRING_TO_JSID(JSContext* cx, JSString* str) {
     return INTERNED_STRING_TO_JSID(cx, str);
 }
 
+JSFunction*
+DefineFunctionWithReserved(JSContext* cx, JSObject* obj, char* name, JSNative call,
+                           uint32_t nargs, uint32_t attrs)
+{
+    return js::DefineFunctionWithReserved(cx, obj, name, call, nargs, attrs);
+}
+
+JSClass*
+GetObjectJSClass(JSObject* obj)
+{
+    return js::GetObjectJSClass(obj);
+}
+
+JSErrorFormatString*
+js_GetErrorMessage(void* userRef, char* locale, uint errorNumber)
+{
+    return js_GetErrorMessage(userRef, locale, errorNumber);
+}
+
 } // extern "C"

@@ -28,7 +28,10 @@ pub type rt = @rt_rsrc;
 
 pub struct rt_rsrc {
     ptr : *JSRuntime,
-    drop {
+}
+
+impl Drop for rt_rsrc {
+    fn finalize(&self) {
         unsafe {
             JS_Finish(self.ptr);
         }
@@ -42,9 +45,9 @@ pub fn new_runtime(p: *JSRuntime) -> rt {
 }
 
 pub impl rt {
-    fn cx(self) -> @Cx {
+    fn cx(&self) -> @Cx {
         unsafe {
-            new_context(JS_NewContext(self.ptr, default_stacksize as size_t), self)
+            new_context(JS_NewContext(self.ptr, default_stacksize as size_t), *self)
         }
     }
 }
@@ -63,8 +66,10 @@ pub struct Cx {
     ptr: *JSContext,
     rt: rt,
     classes: HashMap<~str, @JSClass>,
+}
 
-    drop {
+impl Drop for Cx {
+    fn finalize(&self) {
         unsafe {
             JS_DestroyContext(self.ptr);
         }
@@ -214,7 +219,7 @@ pub struct Compartment {
 
 pub impl Compartment {
     fn define_functions(@mut self,
-                        specfn: fn(@mut NamePool) -> ~[JSFunctionSpec])
+                        specfn: &fn(@mut NamePool) -> ~[JSFunctionSpec])
                      -> Result<(),()> {
         let specvec = @specfn(self.name_pool);
         vec::push(&mut self.global_funcs, specvec);
@@ -278,7 +283,7 @@ pub impl Compartment {
             fail!(~"Duplicate global prototype registered; you're gonna have a bad time.")
         }
     }
-    fn register_class(@mut self, class_fn: fn(x: @mut Compartment) -> JSClass) {
+    fn register_class(@mut self, class_fn: &fn(x: @mut Compartment) -> JSClass) {
         let classptr = @class_fn(self);
         if !self.cx.classes.insert(
             unsafe { from_c_str(classptr.name) },
@@ -300,7 +305,10 @@ pub struct jsobj_rsrc {
     cx: @Cx,
     cxptr: *JSContext,
     ptr: *JSObject,
-    drop {
+}
+
+impl Drop for jsobj_rsrc {
+    fn finalize(&self) {
         unsafe {
             JS_RemoveObjectRoot(self.cxptr, ptr::to_unsafe_ptr(&self.ptr));
         }
@@ -308,11 +316,11 @@ pub struct jsobj_rsrc {
 }
 
 impl jsobj_rsrc {
-    fn new_object(&self, rec : {cx: @Cx, cxptr: *JSContext, ptr: *JSObject}) -> jsobj {
+    fn new_object(&self, cx: @Cx, cxptr: *JSContext, ptr: *JSObject) -> jsobj {
         return @jsobj_rsrc {
-            cx: rec.cx,
-            cxptr: rec.cxptr,
-            ptr: rec.ptr
+            cx: cx,
+            cxptr: cxptr,
+            ptr: ptr
         }
     }
 }

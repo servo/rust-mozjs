@@ -26,7 +26,7 @@ pub fn INT_TO_JSVAL(i: i32) -> JSVal {
 #[inline(always)]
 pub fn JSVAL_TO_OBJECT(v: JSVal) -> *JSObject {
   let bits = (v & JSVAL_PAYLOAD_MASK);
-  assert bits & 0x7 == 0;
+  fail_unless!(bits & 0x7 == 0);
   bits as *JSObject
 }
 
@@ -37,6 +37,6 @@ pub fn JSVAL_IS_PRIMITIVE(v: JSVal) -> bool {
 
 #[inline(always)]
 pub fn JSVAL_TO_PRIVATE(v: JSVal) -> *() {
-  assert v & 0x8000000000000000 == 0;
+  fail_unless!(v & 0x8000000000000000 == 0);
   (v << 1) as *()
 }

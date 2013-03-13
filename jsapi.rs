@@ -250,29 +250,29 @@ pub type JSVal = u64; //XXXjdm hand modified
 
 pub type moz_static_assert6 = c_int;
 
-pub type JSHandleObject = {
+pub struct JSHandleObject {
     unnamed: **JSObject,
-};
+}
 
-pub type JSHandleValue = {
+pub struct JSHandleValue {
     unnamed: JSVal,
-};
+}
 
-pub type JSHandleString = {
+pub struct JSHandleString {
     unnamed: **JSString,
-};
+}
 
-pub type JSMutableHandleObject = {
+pub struct JSMutableHandleObject {
     unnamed: **JSObject,
-};
+}
 
-pub type JSHandleId = {
+pub struct JSHandleId {
     unnamed: *jsid,
-};
+}
 
-pub type JSMutableHandleValue = {
+pub struct JSMutableHandleValue {
     unnamed: *JSVal,
-};
+}
 
 pub type JSRawObject = *JSObject;
 
@@ -294,17 +294,17 @@ pub type JSTypeOfOp = *u8;
 
 pub type JSFreeOp = struct_JSFreeOp;
 
-pub type struct_JSFreeOp = {
+pub struct struct_JSFreeOp {
     runtime: *JSRuntime,
-};
+}
 
 pub type JSFinalizeOp = *u8;
 
 pub type JSStringFinalizer = struct_JSStringFinalizer;
 
-pub type struct_JSStringFinalizer = {
+pub struct struct_JSStringFinalizer {
     finalize: *u8,
-};
+}
 
 pub type JSCheckAccessOp = *u8;
 
@@ -362,11 +362,11 @@ pub const JSEXN_LIMIT: i32 = 8_i32;
 
 pub type JSExnType = enum_JSExnType;
 
-pub type struct_JSErrorFormatString = {
+pub struct struct_JSErrorFormatString {
     format: *c_char,
     argCount: uint16_t,
     exnType: int16_t,
-};
+}
 
 pub type JSErrorFormatString = struct_JSErrorFormatString;
 
@@ -430,14 +430,14 @@ pub type JSGCRootMapFun = *u8;
 
 pub type JSTraceCallback = *u8;
 
-pub type struct_JSTracer = {
+pub struct struct_JSTracer {
     runtime: *JSRuntime,
     callback: JSTraceCallback,
     debugPrinter: JSTraceNamePrinter,
     debugPrintArg: *c_void,
     debugPrintIndex: size_t,
     eagerlyTraceWeakMaps: JSBool,
-};
+}
 
 pub type enum_JSGCParamKey = c_uint;
 pub const JSGC_MAX_BYTES: u32 = 0_u32;
@@ -490,12 +490,12 @@ pub struct JSClass {
     reserved: (*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void),
 }
 
-pub type struct_JSConstDoubleSpec = {
+pub struct struct_JSConstDoubleSpec {
     dval: c_double,
     name: *c_char,
     flags: uint8_t,
     spare: (uint8_t,uint8_t,uint8_t),
-};
+}
 
 pub type struct_JSJitInfo = c_void;
 
@@ -532,25 +532,25 @@ pub struct JSFunctionSpec {
     selfHostedName: *c_char,
 }
 
-pub type struct_JSPropertyDescriptor = {
+pub struct struct_JSPropertyDescriptor {
     obj: *JSObject,
     attrs: c_uint,
     shortid: c_uint,
     getter: JSPropertyOp,
     setter: JSStrictPropertyOp,
     value: JSVal,
-};
+}
 
-pub type struct_JSPrincipals = {
+pub struct struct_JSPrincipals {
     refcount: c_int,
-};
+}
 
-pub type struct_JSSecurityCallbacks = {
+pub struct struct_JSSecurityCallbacks {
     checkObjectAccess: JSCheckAccessOp,
     subsumePrincipals: JSSubsumePrincipalsOp,
     findObjectPrincipals: JSObjectPrincipalsFinder,
     contentSecurityPolicyAllows: JSCSPEvalChecker,
-};
+}
 
 pub type enum_JSExecPart = c_uint;
 pub const JSEXEC_PROLOG: u32 = 0_u32;
@@ -560,21 +560,21 @@ pub type JSExecPart = enum_JSExecPart;
 
 pub type JSONWriteCallback = *u8;
 
-pub type struct_JSStructuredCloneCallbacks = {
+pub struct struct_JSStructuredCloneCallbacks {
     read: ReadStructuredCloneOp,
     write: WriteStructuredCloneOp,
     reportError: StructuredCloneErrorOp,
-};
+}
 
-pub type struct_JSLocaleCallbacks = {
+pub struct struct_JSLocaleCallbacks {
     localeToUpperCase: JSLocaleToUpperCase,
     localeToLowerCase: JSLocaleToLowerCase,
     localeCompare: JSLocaleCompare,
     localeToUnicode: JSLocaleToUnicode,
     localeGetErrorMessage: JSErrorCallback,
-};
+}
 
-pub type struct_JSErrorReport = {
+pub struct struct_JSErrorReport {
     filename: *c_char,
     originPrincipals: *JSPrincipals,
     lineno: c_uint,
@@ -588,11 +588,11 @@ pub type struct_JSErrorReport = {
     messageArgs: **jschar,
     exnType: int16_t,
     column: c_uint,
-};
+}
 
-pub type struct_unnamed1 = {
+pub struct struct_unnamed1 {
     payload: union_unnamed2,
-};
+}
 
 pub type union_unnamed2 = c_void /* FIXME: union type */;
 
