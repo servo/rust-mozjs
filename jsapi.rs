@@ -22,109 +22,109 @@ pub type jsid = ptrdiff_t;
 pub type jschar = uint16_t;
 
 pub type enum_JSVersion = c_int;
-pub const JSVERSION_1_0: i32 = 100_i32;
-pub const JSVERSION_1_1: i32 = 110_i32;
-pub const JSVERSION_1_2: i32 = 120_i32;
-pub const JSVERSION_1_3: i32 = 130_i32;
-pub const JSVERSION_1_4: i32 = 140_i32;
-pub const JSVERSION_ECMA_3: i32 = 148_i32;
-pub const JSVERSION_1_5: i32 = 150_i32;
-pub const JSVERSION_1_6: i32 = 160_i32;
-pub const JSVERSION_1_7: i32 = 170_i32;
-pub const JSVERSION_1_8: i32 = 180_i32;
-pub const JSVERSION_ECMA_5: i32 = 185_i32;
-pub const JSVERSION_DEFAULT: i32 = 0_i32;
-pub const JSVERSION_UNKNOWN: i32 = -1_i32;
-pub const JSVERSION_LATEST: i32 = 185_i32;
+pub static JSVERSION_1_0: i32 = 100_i32;
+pub static JSVERSION_1_1: i32 = 110_i32;
+pub static JSVERSION_1_2: i32 = 120_i32;
+pub static JSVERSION_1_3: i32 = 130_i32;
+pub static JSVERSION_1_4: i32 = 140_i32;
+pub static JSVERSION_ECMA_3: i32 = 148_i32;
+pub static JSVERSION_1_5: i32 = 150_i32;
+pub static JSVERSION_1_6: i32 = 160_i32;
+pub static JSVERSION_1_7: i32 = 170_i32;
+pub static JSVERSION_1_8: i32 = 180_i32;
+pub static JSVERSION_ECMA_5: i32 = 185_i32;
+pub static JSVERSION_DEFAULT: i32 = 0_i32;
+pub static JSVERSION_UNKNOWN: i32 = -1_i32;
+pub static JSVERSION_LATEST: i32 = 185_i32;
 
 pub type JSVersion = enum_JSVersion;
 
 pub type enum_JSType = c_uint;
-pub const JSTYPE_VOID: u32 = 0_u32;
-pub const JSTYPE_OBJECT: u32 = 1_u32;
-pub const JSTYPE_FUNCTION: u32 = 2_u32;
-pub const JSTYPE_STRING: u32 = 3_u32;
-pub const JSTYPE_NUMBER: u32 = 4_u32;
-pub const JSTYPE_BOOLEAN: u32 = 5_u32;
-pub const JSTYPE_NULL: u32 = 6_u32;
-pub const JSTYPE_XML: u32 = 7_u32;
-pub const JSTYPE_LIMIT: u32 = 8_u32;
+pub static JSTYPE_VOID: u32 = 0_u32;
+pub static JSTYPE_OBJECT: u32 = 1_u32;
+pub static JSTYPE_FUNCTION: u32 = 2_u32;
+pub static JSTYPE_STRING: u32 = 3_u32;
+pub static JSTYPE_NUMBER: u32 = 4_u32;
+pub static JSTYPE_BOOLEAN: u32 = 5_u32;
+pub static JSTYPE_NULL: u32 = 6_u32;
+pub static JSTYPE_XML: u32 = 7_u32;
+pub static JSTYPE_LIMIT: u32 = 8_u32;
 
 pub type JSType = enum_JSType;
 
 pub type enum_JSProtoKey = c_uint;
-pub const JSProto_Null: u32 = 0_u32;
-pub const JSProto_Object: u32 = 1_u32;
-pub const JSProto_Function: u32 = 2_u32;
-pub const JSProto_Array: u32 = 3_u32;
-pub const JSProto_Boolean: u32 = 4_u32;
-pub const JSProto_JSON: u32 = 5_u32;
-pub const JSProto_Date: u32 = 6_u32;
-pub const JSProto_Math: u32 = 7_u32;
-pub const JSProto_Number: u32 = 8_u32;
-pub const JSProto_String: u32 = 9_u32;
-pub const JSProto_RegExp: u32 = 10_u32;
-pub const JSProto_XML: u32 = 11_u32;
-pub const JSProto_Namespace: u32 = 12_u32;
-pub const JSProto_QName: u32 = 13_u32;
-pub const JSProto_Error: u32 = 14_u32;
-pub const JSProto_InternalError: u32 = 15_u32;
-pub const JSProto_EvalError: u32 = 16_u32;
-pub const JSProto_RangeError: u32 = 17_u32;
-pub const JSProto_ReferenceError: u32 = 18_u32;
-pub const JSProto_SyntaxError: u32 = 19_u32;
-pub const JSProto_TypeError: u32 = 20_u32;
-pub const JSProto_URIError: u32 = 21_u32;
-pub const JSProto_Iterator: u32 = 22_u32;
-pub const JSProto_StopIteration: u32 = 23_u32;
-pub const JSProto_ArrayBuffer: u32 = 24_u32;
-pub const JSProto_Int8Array: u32 = 25_u32;
-pub const JSProto_Uint8Array: u32 = 26_u32;
-pub const JSProto_Int16Array: u32 = 27_u32;
-pub const JSProto_Uint16Array: u32 = 28_u32;
-pub const JSProto_Int32Array: u32 = 29_u32;
-pub const JSProto_Uint32Array: u32 = 30_u32;
-pub const JSProto_Float32Array: u32 = 31_u32;
-pub const JSProto_Float64Array: u32 = 32_u32;
-pub const JSProto_Uint8ClampedArray: u32 = 33_u32;
-pub const JSProto_Proxy: u32 = 34_u32;
-pub const JSProto_AnyName: u32 = 35_u32;
-pub const JSProto_WeakMap: u32 = 36_u32;
-pub const JSProto_Map: u32 = 37_u32;
-pub const JSProto_Set: u32 = 38_u32;
-pub const JSProto_DataView: u32 = 39_u32;
-pub const JSProto_ParallelArray: u32 = 40_u32;
-pub const JSProto_LIMIT: u32 = 41_u32;
+pub static JSProto_Null: u32 = 0_u32;
+pub static JSProto_Object: u32 = 1_u32;
+pub static JSProto_Function: u32 = 2_u32;
+pub static JSProto_Array: u32 = 3_u32;
+pub static JSProto_Boolean: u32 = 4_u32;
+pub static JSProto_JSON: u32 = 5_u32;
+pub static JSProto_Date: u32 = 6_u32;
+pub static JSProto_Math: u32 = 7_u32;
+pub static JSProto_Number: u32 = 8_u32;
+pub static JSProto_String: u32 = 9_u32;
+pub static JSProto_RegExp: u32 = 10_u32;
+pub static JSProto_XML: u32 = 11_u32;
+pub static JSProto_Namespace: u32 = 12_u32;
+pub static JSProto_QName: u32 = 13_u32;
+pub static JSProto_Error: u32 = 14_u32;
+pub static JSProto_InternalError: u32 = 15_u32;
+pub static JSProto_EvalError: u32 = 16_u32;
+pub static JSProto_RangeError: u32 = 17_u32;
+pub static JSProto_ReferenceError: u32 = 18_u32;
+pub static JSProto_SyntaxError: u32 = 19_u32;
+pub static JSProto_TypeError: u32 = 20_u32;
+pub static JSProto_URIError: u32 = 21_u32;
+pub static JSProto_Iterator: u32 = 22_u32;
+pub static JSProto_StopIteration: u32 = 23_u32;
+pub static JSProto_ArrayBuffer: u32 = 24_u32;
+pub static JSProto_Int8Array: u32 = 25_u32;
+pub static JSProto_Uint8Array: u32 = 26_u32;
+pub static JSProto_Int16Array: u32 = 27_u32;
+pub static JSProto_Uint16Array: u32 = 28_u32;
+pub static JSProto_Int32Array: u32 = 29_u32;
+pub static JSProto_Uint32Array: u32 = 30_u32;
+pub static JSProto_Float32Array: u32 = 31_u32;
+pub static JSProto_Float64Array: u32 = 32_u32;
+pub static JSProto_Uint8ClampedArray: u32 = 33_u32;
+pub static JSProto_Proxy: u32 = 34_u32;
+pub static JSProto_AnyName: u32 = 35_u32;
+pub static JSProto_WeakMap: u32 = 36_u32;
+pub static JSProto_Map: u32 = 37_u32;
+pub static JSProto_Set: u32 = 38_u32;
+pub static JSProto_DataView: u32 = 39_u32;
+pub static JSProto_ParallelArray: u32 = 40_u32;
+pub static JSProto_LIMIT: u32 = 41_u32;
 
 pub type JSProtoKey = enum_JSProtoKey;
 
 pub type enum_JSAccessMode = c_uint;
-pub const JSACC_PROTO: u32 = 0_u32;
-pub const JSACC_WATCH: u32 = 3_u32;
-pub const JSACC_READ: u32 = 4_u32;
-pub const JSACC_WRITE: u32 = 8_u32;
-pub const JSACC_LIMIT: u32 = 9_u32;
+pub static JSACC_PROTO: u32 = 0_u32;
+pub static JSACC_WATCH: u32 = 3_u32;
+pub static JSACC_READ: u32 = 4_u32;
+pub static JSACC_WRITE: u32 = 8_u32;
+pub static JSACC_LIMIT: u32 = 9_u32;
 
 pub type JSAccessMode = enum_JSAccessMode;
 
 pub type enum_JSIterateOp = c_uint;
-pub const JSENUMERATE_INIT: u32 = 0_u32;
-pub const JSENUMERATE_INIT_ALL: u32 = 1_u32;
-pub const JSENUMERATE_NEXT: u32 = 2_u32;
-pub const JSENUMERATE_DESTROY: u32 = 3_u32;
+pub static JSENUMERATE_INIT: u32 = 0_u32;
+pub static JSENUMERATE_INIT_ALL: u32 = 1_u32;
+pub static JSENUMERATE_NEXT: u32 = 2_u32;
+pub static JSENUMERATE_DESTROY: u32 = 3_u32;
 
 pub type JSIterateOp = enum_JSIterateOp;
 
 
 pub type JSGCTraceKind = c_uint;
-pub const JSTRACE_OBJECT: u32 = 0_u32;
-pub const JSTRACE_STRING: u32 = 1_u32;
-pub const JSTRACE_SCRIPT: u32 = 2_u32;
-pub const JSTRACE_XML: u32 = 3_u32;
-pub const JSTRACE_SHAPE: u32 = 4_u32;
-pub const JSTRACE_BASE_SHAPE: u32 = 5_u32;
-pub const JSTRACE_TYPE_OBJECT: u32 = 6_u32;
-pub const JSTRACE_LAST: u32 = 6_u32;
+pub static JSTRACE_OBJECT: u32 = 0_u32;
+pub static JSTRACE_STRING: u32 = 1_u32;
+pub static JSTRACE_SCRIPT: u32 = 2_u32;
+pub static JSTRACE_XML: u32 = 3_u32;
+pub static JSTRACE_SHAPE: u32 = 4_u32;
+pub static JSTRACE_BASE_SHAPE: u32 = 5_u32;
+pub static JSTRACE_TYPE_OBJECT: u32 = 6_u32;
+pub static JSTRACE_LAST: u32 = 6_u32;
 
 pub type struct_JSCompartment = c_void;
 
@@ -221,22 +221,22 @@ pub type JSValueTag = uint32_t;
 pub type JSValueShiftedTag = uint64_t;
 
 pub type enum_JSWhyMagic = c_uint;
-pub const JS_ARRAY_HOLE: u32 = 0_u32;
-pub const JS_NATIVE_ENUMERATE: u32 = 1_u32;
-pub const JS_NO_ITER_VALUE: u32 = 2_u32;
-pub const JS_GENERATOR_CLOSING: u32 = 3_u32;
-pub const JS_NO_CONSTANT: u32 = 4_u32;
-pub const JS_THIS_POISON: u32 = 5_u32;
-pub const JS_ARG_POISON: u32 = 6_u32;
-pub const JS_SERIALIZE_NO_NODE: u32 = 7_u32;
-pub const JS_LAZY_ARGUMENTS: u32 = 8_u32;
-pub const JS_OPTIMIZED_ARGUMENTS: u32 = 9_u32;
-pub const JS_IS_CONSTRUCTING: u32 = 10_u32;
-pub const JS_OVERWRITTEN_CALLEE: u32 = 11_u32;
-pub const JS_FORWARD_TO_CALL_OBJECT: u32 = 12_u32;
-pub const JS_BLOCK_NEEDS_CLONE: u32 = 13_u32;
-pub const JS_HASH_KEY_EMPTY: u32 = 14_u32;
-pub const JS_GENERIC_MAGIC: u32 = 15_u32;
+pub static JS_ARRAY_HOLE: u32 = 0_u32;
+pub static JS_NATIVE_ENUMERATE: u32 = 1_u32;
+pub static JS_NO_ITER_VALUE: u32 = 2_u32;
+pub static JS_GENERATOR_CLOSING: u32 = 3_u32;
+pub static JS_NO_CONSTANT: u32 = 4_u32;
+pub static JS_THIS_POISON: u32 = 5_u32;
+pub static JS_ARG_POISON: u32 = 6_u32;
+pub static JS_SERIALIZE_NO_NODE: u32 = 7_u32;
+pub static JS_LAZY_ARGUMENTS: u32 = 8_u32;
+pub static JS_OPTIMIZED_ARGUMENTS: u32 = 9_u32;
+pub static JS_IS_CONSTRUCTING: u32 = 10_u32;
+pub static JS_OVERWRITTEN_CALLEE: u32 = 11_u32;
+pub static JS_FORWARD_TO_CALL_OBJECT: u32 = 12_u32;
+pub static JS_BLOCK_NEEDS_CLONE: u32 = 13_u32;
+pub static JS_HASH_KEY_EMPTY: u32 = 14_u32;
+pub static JS_GENERIC_MAGIC: u32 = 15_u32;
 
 pub type JSWhyMagic = enum_JSWhyMagic;
 
@@ -319,24 +319,24 @@ pub type JSEqualityOp = *u8;
 pub type JSNative = *u8;
 
 pub type enum_JSContextOp = c_uint;
-pub const JSCONTEXT_NEW: u32 = 0_u32;
-pub const JSCONTEXT_DESTROY: u32 = 1_u32;
+pub static JSCONTEXT_NEW: u32 = 0_u32;
+pub static JSCONTEXT_DESTROY: u32 = 1_u32;
 
 pub type JSContextOp = enum_JSContextOp;
 
 pub type JSContextCallback = *u8;
 
 pub type enum_JSGCStatus = c_uint;
-pub const JSGC_BEGIN: u32 = 0_u32;
-pub const JSGC_END: u32 = 1_u32;
+pub static JSGC_BEGIN: u32 = 0_u32;
+pub static JSGC_END: u32 = 1_u32;
 
 pub type JSGCStatus = enum_JSGCStatus;
 
 pub type JSGCCallback = *u8;
 
 pub type enum_JSFinalizeStatus = c_uint;
-pub const JSFINALIZE_START: u32 = 0_u32;
-pub const JSFINALIZE_END: u32 = 1_u32;
+pub static JSFINALIZE_START: u32 = 0_u32;
+pub static JSFINALIZE_END: u32 = 1_u32;
 
 pub type JSFinalizeStatus = enum_JSFinalizeStatus;
 
@@ -349,16 +349,16 @@ pub type JSOperationCallback = *u8;
 pub type JSErrorReporter = *u8;
 
 pub type enum_JSExnType = c_int;
-pub const JSEXN_NONE: i32 = -1_i32;
-pub const JSEXN_ERR: i32 = 0_i32;
-pub const JSEXN_INTERNALERR: i32 = 1_i32;
-pub const JSEXN_EVALERR: i32 = 2_i32;
-pub const JSEXN_RANGEERR: i32 = 3_i32;
-pub const JSEXN_REFERENCEERR: i32 = 4_i32;
-pub const JSEXN_SYNTAXERR: i32 = 5_i32;
-pub const JSEXN_TYPEERR: i32 = 6_i32;
-pub const JSEXN_URIERR: i32 = 7_i32;
-pub const JSEXN_LIMIT: i32 = 8_i32;
+pub static JSEXN_NONE: i32 = -1_i32;
+pub static JSEXN_ERR: i32 = 0_i32;
+pub static JSEXN_INTERNALERR: i32 = 1_i32;
+pub static JSEXN_EVALERR: i32 = 2_i32;
+pub static JSEXN_RANGEERR: i32 = 3_i32;
+pub static JSEXN_REFERENCEERR: i32 = 4_i32;
+pub static JSEXN_SYNTAXERR: i32 = 5_i32;
+pub static JSEXN_TYPEERR: i32 = 6_i32;
+pub static JSEXN_URIERR: i32 = 7_i32;
+pub static JSEXN_LIMIT: i32 = 8_i32;
 
 pub type JSExnType = enum_JSExnType;
 
@@ -421,8 +421,8 @@ pub type JSIterateCompartmentCallback = *u8;
 pub type JSEnumerateDiagnosticMemoryCallback = *u8;
 
 pub type enum_JSGCRootType = c_uint;
-pub const JS_GC_ROOT_VALUE_PTR: u32 = 0_u32;
-pub const JS_GC_ROOT_GCTHING_PTR: u32 = 1_u32;
+pub static JS_GC_ROOT_VALUE_PTR: u32 = 0_u32;
+pub static JS_GC_ROOT_GCTHING_PTR: u32 = 1_u32;
 
 pub type JSGCRootType = enum_JSGCRootType;
 
@@ -440,32 +440,32 @@ pub struct struct_JSTracer {
 }
 
 pub type enum_JSGCParamKey = c_uint;
-pub const JSGC_MAX_BYTES: u32 = 0_u32;
-pub const JSGC_MAX_MALLOC_BYTES: u32 = 1_u32;
-pub const JSGC_BYTES: u32 = 3_u32;
-pub const JSGC_NUMBER: u32 = 4_u32;
-pub const JSGC_MAX_CODE_CACHE_BYTES: u32 = 5_u32;
-pub const JSGC_MODE: u32 = 6_u32;
-pub const JSGC_UNUSED_CHUNKS: u32 = 7_u32;
-pub const JSGC_TOTAL_CHUNKS: u32 = 8_u32;
-pub const JSGC_SLICE_TIME_BUDGET: u32 = 9_u32;
-pub const JSGC_MARK_STACK_LIMIT: u32 = 10_u32;
-pub const JSGC_HIGH_FREQUENCY_TIME_LIMIT: u32 = 11_u32;
-pub const JSGC_HIGH_FREQUENCY_LOW_LIMIT: u32 = 12_u32;
-pub const JSGC_HIGH_FREQUENCY_HIGH_LIMIT: u32 = 13_u32;
-pub const JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX: u32 = 14_u32;
-pub const JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN: u32 = 15_u32;
-pub const JSGC_LOW_FREQUENCY_HEAP_GROWTH: u32 = 16_u32;
-pub const JSGC_DYNAMIC_HEAP_GROWTH: u32 = 17_u32;
-pub const JSGC_DYNAMIC_MARK_SLICE: u32 = 18_u32;
-pub const JSGC_ANALYSIS_PURGE_TRIGGER: u32 = 19_u32;
+pub static JSGC_MAX_BYTES: u32 = 0_u32;
+pub static JSGC_MAX_MALLOC_BYTES: u32 = 1_u32;
+pub static JSGC_BYTES: u32 = 3_u32;
+pub static JSGC_NUMBER: u32 = 4_u32;
+pub static JSGC_MAX_CODE_CACHE_BYTES: u32 = 5_u32;
+pub static JSGC_MODE: u32 = 6_u32;
+pub static JSGC_UNUSED_CHUNKS: u32 = 7_u32;
+pub static JSGC_TOTAL_CHUNKS: u32 = 8_u32;
+pub static JSGC_SLICE_TIME_BUDGET: u32 = 9_u32;
+pub static JSGC_MARK_STACK_LIMIT: u32 = 10_u32;
+pub static JSGC_HIGH_FREQUENCY_TIME_LIMIT: u32 = 11_u32;
+pub static JSGC_HIGH_FREQUENCY_LOW_LIMIT: u32 = 12_u32;
+pub static JSGC_HIGH_FREQUENCY_HIGH_LIMIT: u32 = 13_u32;
+pub static JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX: u32 = 14_u32;
+pub static JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN: u32 = 15_u32;
+pub static JSGC_LOW_FREQUENCY_HEAP_GROWTH: u32 = 16_u32;
+pub static JSGC_DYNAMIC_HEAP_GROWTH: u32 = 17_u32;
+pub static JSGC_DYNAMIC_MARK_SLICE: u32 = 18_u32;
+pub static JSGC_ANALYSIS_PURGE_TRIGGER: u32 = 19_u32;
 
 pub type JSGCParamKey = enum_JSGCParamKey;
 
 pub type enum_JSGCMode = c_uint;
-pub const JSGC_MODE_GLOBAL: u32 = 0_u32;
-pub const JSGC_MODE_COMPARTMENT: u32 = 1_u32;
-pub const JSGC_MODE_INCREMENTAL: u32 = 2_u32;
+pub static JSGC_MODE_GLOBAL: u32 = 0_u32;
+pub static JSGC_MODE_COMPARTMENT: u32 = 1_u32;
+pub static JSGC_MODE_INCREMENTAL: u32 = 2_u32;
 
 pub type JSGCMode = enum_JSGCMode;
 
@@ -553,8 +553,8 @@ pub struct struct_JSSecurityCallbacks {
 }
 
 pub type enum_JSExecPart = c_uint;
-pub const JSEXEC_PROLOG: u32 = 0_u32;
-pub const JSEXEC_MAIN: u32 = 1_u32;
+pub static JSEXEC_PROLOG: u32 = 0_u32;
+pub static JSEXEC_MAIN: u32 = 1_u32;
 
 pub type JSExecPart = enum_JSExecPart;
 
