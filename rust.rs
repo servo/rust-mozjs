@@ -5,7 +5,7 @@
 use bg = jsapi::bindgen;
 use core::libc::types::os::arch::c95::{size_t, c_uint};
 use core::libc::c_char;
-use std::oldmap::HashMap;
+use core::hashmap::linear::LinearMap;
 use jsapi::*;
 use jsapi::bindgen::*;
 use default_stacksize;
@@ -44,10 +44,10 @@ pub fn new_runtime(p: *JSRuntime) -> rt {
     }
 }
 
-pub impl rt {
-    fn cx(&self) -> @Cx {
+pub impl rt_rsrc {
+    fn cx(@self) -> @Cx {
         unsafe {
-            new_context(JS_NewContext(self.ptr, default_stacksize as size_t), *self)
+            new_context(JS_NewContext(self.ptr, default_stacksize as size_t), self)
         }
     }
 }
@@ -65,9 +65,10 @@ pub fn rt() -> rt {
 pub struct Cx {
     ptr: *JSContext,
     rt: rt,
-    classes: HashMap<~str, @JSClass>,
+    classes: @mut LinearMap<~str, @JSClass>,
 }
 
+#[unsafe_destructor]
 impl Drop for Cx {
     fn finalize(&self) {
         unsafe {
@@ -80,7 +81,7 @@ pub fn new_context(ptr: *JSContext, rt: rt) -> @Cx {
     return @Cx {
         ptr: ptr,
         rt: rt,
-        classes: HashMap()
+        classes: @mut LinearMap::new()
     }
 }
     
@@ -138,7 +139,7 @@ pub impl Cx {
                     global_props: ~[],
                     global_class: globcls,
                     global_obj: self.rooted_obj(globobj),
-                    global_protos: HashMap()
+                    global_protos: @mut LinearMap::new()
                 };
                 self.set_cx_private(ptr::to_unsafe_ptr(&*compartment) as *());
                 Ok(compartment)
@@ -174,7 +175,7 @@ pub impl Cx {
     fn lookup_class_name(@self, s: ~str) ->  @JSClass {
         // FIXME: expect should really take a lambda...
         let error_msg = fmt!("class %s not found in class table", s);
-        option::expect(self.classes.find(&s), error_msg)
+        *(self.classes.find(&s).expect(error_msg))
     }
 
     unsafe fn get_cx_private(@self) -> *() {
@@ -214,7 +215,7 @@ pub struct Compartment {
     global_props: ~[@~[JSPropertySpec]],
     global_class: @JSClass,
     global_obj: jsobj,
-    global_protos: HashMap<~str, jsobj>
+    global_protos: @mut LinearMap<~str, jsobj>
 }
 
 pub impl Compartment {
@@ -265,9 +266,9 @@ pub impl Compartment {
     fn new_object_with_proto(@mut self, class_name: ~str, proto_name: ~str, parent: *JSObject)
                           -> Result<jsobj, ()> {
         let classptr = self.cx.lookup_class_name(class_name);
-        let proto = option::expect(self.global_protos.find(&copy proto_name),
-           fmt!("new_object_with_proto: expected to find %s in the proto \
-              table", proto_name));
+        let proto = self.global_protos.find(&copy proto_name).expect(
+            fmt!("new_object_with_proto: expected to find %s in the proto \
+                  table", proto_name));
         unsafe {
             let obj = self.cx.rooted_obj(JS_NewObject(self.cx.ptr, ptr::to_unsafe_ptr(&*classptr),
                                                       proto.ptr, parent));
@@ -275,7 +276,7 @@ pub impl Compartment {
         }
     }
     fn get_global_proto(@mut self, name: ~str) -> jsobj {
-        self.global_protos.get(&name)
+        *(self.global_protos.get(&name))
     }
     fn stash_global_proto(@mut self, name: ~str, proto: jsobj) {
         let global_protos = self.global_protos;
@@ -307,6 +308,7 @@ pub struct jsobj_rsrc {
     ptr: *JSObject,
 }
 
+#[unsafe_destructor]
 impl Drop for jsobj_rsrc {
     fn finalize(&self) {
         unsafe {
