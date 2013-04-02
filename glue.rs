@@ -5,11 +5,11 @@ use jsapi::*;
 use jsfriendapi::JSJitInfo;
 
 pub type enum_StubType = c_uint;
-pub const PROPERTY_STUB: u32 = 0_u32;
-pub const STRICT_PROPERTY_STUB: u32 = 1_u32;
-pub const ENUMERATE_STUB: u32 = 2_u32;
-pub const CONVERT_STUB: u32 = 3_u32;
-pub const RESOLVE_STUB: u32 = 4_u32;
+pub static PROPERTY_STUB: u32 = 0_u32;
+pub static STRICT_PROPERTY_STUB: u32 = 1_u32;
+pub static ENUMERATE_STUB: u32 = 2_u32;
+pub static CONVERT_STUB: u32 = 3_u32;
+pub static RESOLVE_STUB: u32 = 4_u32;
 
 pub struct ProxyTraps {
     getPropertyDescriptor: *u8,

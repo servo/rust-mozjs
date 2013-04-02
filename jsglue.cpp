@@ -455,7 +455,7 @@ CallJitPropertyOp(JSJitInfo *info, JSContext* cx, JSObject* thisObj, void *speci
 }
 
 JSBool
-CallJitMethodOp(JSJitInfo *info, JSContext* cx, JSObject* thisObj, void *specializedThis, uint argc, jsval *vp)
+CallJitMethodOp(JSJitInfo *info, JSContext* cx, JSObject* thisObj, void *specializedThis, uint32_t argc, jsval *vp)
 {
     struct {
         JSObject** obj;
@@ -491,7 +491,7 @@ NewProxyObject(JSContext* aCx, void* aHandler, const js::Value* priv,
 }
 
 uint64_t
-GetProxyExtra(JSObject* obj, uint slot)
+GetProxyExtra(JSObject* obj, uint32_t slot)
 {
     return jsval_to_uint64(js::GetProxyExtra(obj, slot));
 }
@@ -544,7 +544,7 @@ GetObjectJSClass(JSObject* obj)
 }
 
 JSErrorFormatString*
-js_GetErrorMessage(void* userRef, char* locale, uint errorNumber)
+js_GetErrorMessage(void* userRef, char* locale, uint32_t errorNumber)
 {
     return js_GetErrorMessage(userRef, locale, errorNumber);
 }

@@ -13,7 +13,7 @@ pub struct JSJitInfo {
 
 #[nolink]
 pub mod bindgen {
-    use jsapi::{JSContext, JSObject, JSNative, JSErrorFormatString, JSClass};
+    use jsapi::{JSContext, JSObject, JSClass};
 
     pub extern {
         fn JS_NewObjectWithUniqueType(cx: *JSContext, clasp: *JSClass,
