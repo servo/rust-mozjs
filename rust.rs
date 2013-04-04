@@ -347,8 +347,8 @@ impl to_jsstr for ~str {
 
 #[cfg(test)]
 pub mod test {
-    use rt;
-    use global;
+    use super::rt;
+    use super::super::global;
 
     #[test]
     pub fn dummy() {
