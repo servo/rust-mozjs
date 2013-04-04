@@ -5,7 +5,7 @@
 use bg = jsapi::bindgen;
 use core::libc::types::os::arch::c95::{size_t, c_uint};
 use core::libc::c_char;
-use core::hashmap::linear::LinearMap;
+use core::hashmap::HashMap;
 use jsapi::*;
 use jsapi::bindgen::*;
 use default_stacksize;
@@ -65,7 +65,7 @@ pub fn rt() -> rt {
 pub struct Cx {
     ptr: *JSContext,
     rt: rt,
-    classes: @mut LinearMap<~str, @JSClass>,
+    classes: @mut HashMap<~str, @JSClass>,
 }
 
 #[unsafe_destructor]
@@ -81,7 +81,7 @@ pub fn new_context(ptr: *JSContext, rt: rt) -> @Cx {
     return @Cx {
         ptr: ptr,
         rt: rt,
-        classes: @mut LinearMap::new()
+        classes: @mut HashMap::new()
     }
 }
     
@@ -139,7 +139,7 @@ pub impl Cx {
                     global_props: ~[],
                     global_class: globcls,
                     global_obj: self.rooted_obj(globobj),
-                    global_protos: @mut LinearMap::new()
+                    global_protos: @mut HashMap::new()
                 };
                 self.set_cx_private(ptr::to_unsafe_ptr(&*compartment) as *());
                 Ok(compartment)
@@ -215,7 +215,7 @@ pub struct Compartment {
     global_props: ~[@~[JSPropertySpec]],
     global_class: @JSClass,
     global_obj: jsobj,
-    global_protos: @mut LinearMap<~str, jsobj>
+    global_protos: @mut HashMap<~str, jsobj>
 }
 
 pub impl Compartment {
