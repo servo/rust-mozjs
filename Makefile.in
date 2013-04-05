@@ -4,9 +4,11 @@ CXX ?= g++
 RUSTC ?= rustc
 AR ?= ar
 RUSTFLAGS ?=
-CFLAGS ?=
+CFLAGS ?= -fPIC
 
-CFLAGS += -fPIC -Wno-c++0x-extensions -Wno-return-type-c-linkage -Wno-invalid-offsetof
+ifeq ($(shell $(CXX) -v 2>&1 | grep -c 'clang version\|Apple.*clang'),1)
+CFLAGS += -Wno-c++0x-extensions -Wno-return-type-c-linkage -Wno-invalid-offsetof
+endif
 
 RUST_SRC = $(shell find $(VPATH)/. -type f -name '*.rs')
 
