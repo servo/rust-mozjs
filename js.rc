@@ -109,6 +109,12 @@ pub static JSCLASS_USERBIT1: u32 = 1 << 7;
 
 pub static JSSLOT_PROXY_PRIVATE: u32 = 1;
 
+pub enum JSGCTraceKind {
+    JSTRACE_OBJECT,
+    JSTRACE_STRING,
+    JSTRACE_SCRIPT
+}
+
 pub fn JSCLASS_HAS_RESERVED_SLOTS(n: c_uint) -> c_uint {
     (n & JSCLASS_RESERVED_SLOTS_MASK) << JSCLASS_RESERVED_SLOTS_SHIFT
 }
