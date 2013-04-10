@@ -1433,6 +1433,8 @@ pub fn JS_ClearRuntimeThread(++rt: *JSRuntime);
 
 pub fn JS_SetRuntimeThread(++rt: *JSRuntime);
 
+pub fn JS_SetNativeStackBounds(++rt: *JSRuntime, stackBase: uintptr_t, stackEnd: uintptr_t);
+
 pub fn JS_NewObjectForConstructor(++cx: *JSContext, ++clasp: *JSClass, ++vp: *JSVal) -> *JSObject;
 
 pub fn JS_IndexToId(++cx: *JSContext, ++index: uint32_t, ++id: *jsid) -> JSBool;

@@ -123,16 +123,16 @@ class ForwardingProxyHandler : public js::BaseProxyHandler
                      jsid id, JS::Value *vp)
     {
         return mTraps.get ?
-                mTraps.get(cx, proxy, receiver, id, vp) :
-                BaseProxyHandler::get(cx, proxy, receiver, id, vp);
+               mTraps.get(cx, proxy, receiver, id, vp) :
+               BaseProxyHandler::get(cx, proxy, receiver, id, vp);
     }
 
     virtual bool set(JSContext *cx, JSObject *proxy, JSObject *receiver,
                      jsid id, bool strict, JS::Value *vp)
     {
         return mTraps.set ?
-                mTraps.set(cx, proxy, receiver, id, strict, vp) :
-                BaseProxyHandler::set(cx, proxy, receiver, id, strict, vp);
+               mTraps.set(cx, proxy, receiver, id, strict, vp) :
+               BaseProxyHandler::set(cx, proxy, receiver, id, strict, vp);
     }
 
     virtual bool keys(JSContext *cx, JSObject *proxy, JS::AutoIdVector &props)

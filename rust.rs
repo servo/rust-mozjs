@@ -24,6 +24,7 @@ use core::ptr::null;
 use result;
 use result_obj;
 use core::str::raw::from_c_str;
+use core::gc::rustrt;
 
 // ___________________________________________________________________________
 // friendly Rustic API to runtimes
@@ -56,10 +57,20 @@ pub impl rt_rsrc {
     }
 }
 
+extern fn gc_callback(rt: *JSRuntime, _status: JSGCStatus) {
+    unsafe {
+        let c_stack = rustrt::rust_get_c_stack();
+        let first = c_stack as libc::uintptr_t;
+        let second = (*c_stack).end;
+        JS_SetNativeStackBounds(rt, uint::min(first, second), uint::max(first, second));
+    }
+}
 
 pub fn rt() -> rt {
     unsafe {
-        return new_runtime(JS_Init(default_heapsize))
+        let runtime = JS_Init(default_heapsize);
+        JS_SetGCCallback(runtime, gc_callback);
+        return new_runtime(runtime);
     }
 }
 
@@ -353,6 +364,7 @@ impl to_jsstr for ~str {
 pub mod test {
     use super::rt;
     use super::super::global;
+    use super::super::jsapi::bindgen::{JS_GC, JS_GetRuntime};
 
     #[test]
     pub fn dummy() {
@@ -361,6 +373,8 @@ pub mod test {
         cx.set_default_options_and_version();
         cx.set_logging_error_reporter();
         cx.new_compartment(global::global_class).chain(|comp| {
+            unsafe { JS_GC(JS_GetRuntime(comp.cx.ptr)); }
+
             comp.define_functions(global::debug_fns);
 
             let bytes = str::to_bytes(~"debug(22);");

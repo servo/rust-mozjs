@@ -29,7 +29,7 @@ use JS_SET_RVAL;
 pub fn basic_class(np: @mut NamePool, name: ~str) -> JSClass {
     JSClass {
         name: np.add(name),
-        flags: JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT),
+        flags: JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT + 1),
         addProperty: unsafe { GetJSClassHookStubPointer(PROPERTY_STUB) as *u8 },
         delProperty: unsafe { GetJSClassHookStubPointer(PROPERTY_STUB) as *u8 },
         getProperty: unsafe { GetJSClassHookStubPointer(PROPERTY_STUB) as *u8 },
