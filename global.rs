@@ -13,7 +13,7 @@ use glue::{PROPERTY_STUB, STRICT_PROPERTY_STUB, ENUMERATE_STUB,
               RESOLVE_STUB, CONVERT_STUB};
 use core::libc::c_uint;
 use core::str::raw::from_c_str;
-use core::cast::reinterpret_cast;
+use core::cast::transmute;
 use name_pool::*;
 use core::ptr::null;
 use jsapi;
@@ -64,7 +64,7 @@ pub unsafe fn jsval_to_rust_str(cx: *JSContext, vp: *jsapi::JSString) -> ~str {
     } else {
         let bytes = JS_EncodeString(cx, vp);
         let s = from_c_str(bytes);
-        JS_free(cx, reinterpret_cast(&bytes));
+        JS_free(cx, transmute(bytes));
         s
     }
 }
