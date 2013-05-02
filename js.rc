@@ -132,7 +132,7 @@ pub unsafe fn JS_ARGV(_cx: *JSContext, vp: *JSVal) -> *JSVal {
 }
 
 pub unsafe fn JS_SET_RVAL(_cx: *JSContext, vp: *JSVal, v: JSVal) {
-    let vp: *mut JSVal = cast::reinterpret_cast(&vp);
+    let vp: *mut JSVal = cast::transmute(vp);
     *vp = v;
 }
 
