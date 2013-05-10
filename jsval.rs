@@ -44,3 +44,4 @@ pub fn JSVAL_TO_PRIVATE(v: JSVal) -> *() {
   assert!(v & 0x8000000000000000 == 0);
   (v << 1) as *()
 }
+

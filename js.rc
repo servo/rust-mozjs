@@ -39,6 +39,7 @@ pub mod global;
 pub mod glue;
 pub mod crust;
 pub mod jsval;
+pub mod jsvalutils;
 pub mod jsfriendapi;
 
 // FIXME: Add the remaining options

@@ -92,6 +92,9 @@ pub fn RUST_JSVAL_TO_STRING(++v: JSVal) -> *JSString;
 pub fn RUST_STRING_TO_JSVAL(++v: *JSString) -> JSVal;
 
 #[rust_stack]
+pub fn RUST_JSVAL_IS_OBJECT(++v: JSVal) -> JSBool;
+
+#[rust_stack]
 pub fn RUST_JSVAL_TO_OBJECT(++v: JSVal) -> *JSObject;
 
 #[rust_stack]
