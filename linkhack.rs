@@ -13,3 +13,8 @@ extern mod m { }
 #[link_args = "-L. -ljs_static -lstdc++ -lz"]
 #[nolink]
 extern mod m { }
+
+#[cfg(target_os = "android")]
+#[link_args = "-L. -ljs_static -lmozjs -lstdc++ -lz"]
+#[nolink]
+extern mod m { }

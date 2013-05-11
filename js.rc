@@ -75,12 +75,31 @@ pub static JSVAL_ONE: u64 = ((JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_INT32) << JSVAL_
 pub static JSVAL_FALSE: u64 = (JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_BOOLEAN) << JSVAL_TAG_SHIFT;
 pub static JSVAL_TRUE: u64 = ((JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_BOOLEAN) << JSVAL_TAG_SHIFT) | 1;
 
+#[cfg(not(target_os = "android"))]
 pub static JSID_TYPE_STRING: i64 = 0;
+#[cfg(not(target_os = "android"))]
 pub static JSID_TYPE_INT: i64 = 1;
+#[cfg(not(target_os = "android"))]
 pub static JSID_TYPE_VOID: i64 = 2;
+#[cfg(not(target_os = "android"))]
 pub static JSID_TYPE_OBJECT: i64 = 4;
+#[cfg(not(target_os = "android"))]
 pub static JSID_TYPE_DEFAULT_XML_NAMESPACE: i64 = 6;
+#[cfg(not(target_os = "android"))]
 pub static JSID_TYPE_MASK: i64 = 7;
+
+#[cfg(target_os = "android")]
+pub static JSID_TYPE_STRING: i32 = 0;
+#[cfg(target_os = "android")]
+pub static JSID_TYPE_INT: i32 = 1;
+#[cfg(target_os = "android")]
+pub static JSID_TYPE_VOID: i32 = 2;
+#[cfg(target_os = "android")]
+pub static JSID_TYPE_OBJECT: i32 = 4;
+#[cfg(target_os = "android")]
+pub static JSID_TYPE_DEFAULT_XML_NAMESPACE: i32 = 6;
+#[cfg(target_os = "android")]
+pub static JSID_TYPE_MASK: i32 = 7;
 
 pub static JSID_VOID: jsid = JSID_TYPE_VOID;
 
