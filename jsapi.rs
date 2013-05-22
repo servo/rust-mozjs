@@ -250,9 +250,14 @@ pub type jsval_layout = union_jsval_layout;
 
 pub type moz_static_assert5 = c_int;
 
-pub type JSVal = u64; //XXXjdm hand modified
-
 pub type moz_static_assert6 = c_int;
+
+// JSVal was originally type of u64. 
+// now this become {u64} because of the union abi issue on ARM arch. See #398.
+#[deriving(Eq)]
+pub struct JSVal {
+    v: u64
+}
 
 pub struct JSHandleObject {
     unnamed: **JSObject,
