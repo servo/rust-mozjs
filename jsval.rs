@@ -24,23 +24,25 @@ static JSVAL_PAYLOAD_MASK: u64 = 0x00007FFFFFFFFFFF;
 
 #[inline(always)]
 pub fn INT_TO_JSVAL(i: i32) -> JSVal {
-  ((JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_INT32) << JSVAL_TAG_SHIFT) | (i as u64)
+    JSVal {
+        v: ((JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_INT32) << JSVAL_TAG_SHIFT) | (i as u64)
+    }
 }
 
 #[inline(always)]
 pub fn JSVAL_TO_OBJECT(v: JSVal) -> *JSObject {
-  let bits = (v & JSVAL_PAYLOAD_MASK);
-  assert!(bits & 0x7 == 0);
-  bits as *JSObject
+    let bits = (v.v & JSVAL_PAYLOAD_MASK);
+    assert!(bits & 0x7 == 0);
+    bits as *JSObject
 }
 
 #[inline(always)]
 pub fn JSVAL_IS_PRIMITIVE(v: JSVal) -> bool {
-  v < JSVAL_SHIFTED_TAG_OBJECT
+    v.v < JSVAL_SHIFTED_TAG_OBJECT
 }
 
 #[inline(always)]
 pub fn JSVAL_TO_PRIVATE(v: JSVal) -> *() {
-  assert!(v & 0x8000000000000000 == 0);
-  (v << 1) as *()
+    assert!(v.v & 0x8000000000000000 == 0);
+    (v.v << 1) as *()
 }
