@@ -250,9 +250,14 @@ pub type jsval_layout = union_jsval_layout;
 
 pub type moz_static_assert5 = c_int;
 
-pub type JSVal = u64; //XXXjdm hand modified
-
 pub type moz_static_assert6 = c_int;
+
+// JSVal was originally type of u64. 
+// now this become {u64} because of the union abi issue on ARM arch. See #398.
+#[deriving(Eq)]
+pub struct JSVal {
+    v: u64
+}
 
 pub struct JSHandleObject {
     unnamed: **JSObject,
@@ -809,7 +814,8 @@ pub fn JS_InitReflect(cx: *JSContext, global: *JSObject) -> *JSObject;
 
 pub fn JS_EnumerateDiagnosticMemoryRegions(callback: JSEnumerateDiagnosticMemoryCallback);
 
-#[rust_stack]
+// FIXME: Couldn't run on rust_stack until rust issue #6470 fixed.
+//#[rust_stack]
 pub fn JS_ComputeThis(cx: *JSContext, vp: *JSVal) -> JSVal;
 
 pub fn JS_MallocInCompartment(comp: *JSCompartment, nbytes: size_t);
@@ -1122,7 +1128,8 @@ pub fn JS_ArrayIterator(cx: *JSContext, argc: c_uint, vp: *JSVal) -> JSBool;
 
 pub fn JS_CheckAccess(cx: *JSContext, obj: *JSObject, id: jsid, mode: JSAccessMode, vp: *JSVal, attrsp: *c_uint) -> JSBool;
 
-#[rust_stack]
+// FIXME: couldn't run on rust_stack until rust issue #6470 fixed.
+//#[rust_stack]
 pub fn JS_GetReservedSlot(obj: JSRawObject, index: uint32_t) -> JSVal;
 
 pub fn JS_SetReservedSlot(obj: JSRawObject, index: uint32_t, v: JSVal);

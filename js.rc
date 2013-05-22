@@ -68,12 +68,24 @@ pub static JSVAL_TAG_SHIFT: int = 47;
 
 //The following constants are totally broken on non-64bit platforms.
 //See jsapi.h for the proper macro definitions.
-pub static JSVAL_VOID: u64 = (JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_UNKNOWN) << JSVAL_TAG_SHIFT;
-pub static JSVAL_NULL: u64 = (JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_NULL) << JSVAL_TAG_SHIFT;
-pub static JSVAL_ZERO: u64 = (JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_INT32) << JSVAL_TAG_SHIFT;
-pub static JSVAL_ONE: u64 = ((JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_INT32) << JSVAL_TAG_SHIFT) | 1;
-pub static JSVAL_FALSE: u64 = (JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_BOOLEAN) << JSVAL_TAG_SHIFT;
-pub static JSVAL_TRUE: u64 = ((JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_BOOLEAN) << JSVAL_TAG_SHIFT) | 1;
+pub static JSVAL_VOID: JSVal = JSVal {
+    v: (JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_UNKNOWN) << JSVAL_TAG_SHIFT
+};
+pub static JSVAL_NULL: JSVal = JSVal {
+    v: (JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_NULL) << JSVAL_TAG_SHIFT
+};
+pub static JSVAL_ZERO: JSVal = JSVal {
+    v: (JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_INT32) << JSVAL_TAG_SHIFT
+};
+pub static JSVAL_ONE: JSVal = JSVal {
+    v: ((JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_INT32) << JSVAL_TAG_SHIFT) | 1
+};
+pub static JSVAL_FALSE: JSVal = JSVal {
+    v: (JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_BOOLEAN) << JSVAL_TAG_SHIFT
+};
+pub static JSVAL_TRUE: JSVal = JSVal {
+    v: ((JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_BOOLEAN) << JSVAL_TAG_SHIFT) | 1
+};
 
 pub static JSID_TYPE_STRING: i64 = 0;
 pub static JSID_TYPE_INT: i64 = 1;

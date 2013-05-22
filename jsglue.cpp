@@ -267,27 +267,6 @@ class ForwardingProxyHandler : public js::BaseProxyHandler
     }
 };
 
-typedef union {
-    uint64_t u64v;
-    jsval jsv;
-} jsval_u64_t;
-
-static inline uint64_t 
-jsval_to_uint64(jsval v)
-{
-    jsval_u64_t conv;
-    conv.jsv = v;
-    return conv.u64v;
-}
-
-static inline jsval
-uint64_to_jsval(uint64_t v)
-{
-    jsval_u64_t conv;
-    conv.u64v = v;
-    return conv.jsv;
-}
-
 extern "C" {
 
 void*
@@ -309,154 +288,153 @@ GetJSClassHookStubPointer(enum StubType type)
 }
 
 JSBool
-RUST_JSVAL_IS_NULL(uint64_t v)
+RUST_JSVAL_IS_NULL(jsval v)
 {
-    return JSVAL_IS_NULL(uint64_to_jsval(v));
+    return JSVAL_IS_NULL(v);
 }
 
 JSBool
-RUST_JSVAL_IS_VOID(uint64_t v)
+RUST_JSVAL_IS_VOID(jsval v)
 {
-    return JSVAL_IS_VOID(uint64_to_jsval(v));
+    return JSVAL_IS_VOID(v);
 }
 
 JSBool
-RUST_JSVAL_IS_INT(uint64_t v)
+RUST_JSVAL_IS_INT(jsval v)
 {
-    return JSVAL_IS_INT(uint64_to_jsval(v));
+    return JSVAL_IS_INT(v);
 }
 
 int32_t
-RUST_JSVAL_TO_INT(uint64_t v)
+RUST_JSVAL_TO_INT(jsval v)
 {
-    return JSVAL_TO_INT(uint64_to_jsval(v));
+    return JSVAL_TO_INT(v);
 }
 
-uint64_t
+jsval
 RUST_INT_TO_JSVAL(int32_t v)
 {
-    return jsval_to_uint64(INT_TO_JSVAL(v));
+    return INT_TO_JSVAL(v);
 }
 
 JSBool
-RUST_JSVAL_IS_DOUBLE(uint64_t v)
+RUST_JSVAL_IS_DOUBLE(jsval v)
 {
-    return JSVAL_IS_DOUBLE(uint64_to_jsval(v));
+    return JSVAL_IS_DOUBLE(v);
 }
 
 double
-RUST_JSVAL_TO_DOUBLE(uint64_t v)
+RUST_JSVAL_TO_DOUBLE(jsval v)
 {
-    return JSVAL_TO_DOUBLE(uint64_to_jsval(v));
+    return JSVAL_TO_DOUBLE(v);
 }
 
-uint64_t
+jsval
 RUST_DOUBLE_TO_JSVAL(double v)
 {
-    return jsval_to_uint64(DOUBLE_TO_JSVAL(v));
+    return DOUBLE_TO_JSVAL(v);
 }
 
-uint64_t
+jsval
 RUST_UINT_TO_JSVAL(uint32_t v)
 {
-    return jsval_to_uint64(UINT_TO_JSVAL(v));
+    return UINT_TO_JSVAL(v);
 }
 
 JSBool
-RUST_JSVAL_IS_NUMBER(uint64_t v)
+RUST_JSVAL_IS_NUMBER(jsval v)
 {
-    return JSVAL_IS_NUMBER(uint64_to_jsval(v));
+    return JSVAL_IS_NUMBER(v);
 }
 
 JSBool
-RUST_JSVAL_IS_STRING(uint64_t v)
+RUST_JSVAL_IS_STRING(jsval v)
 {
-    return JSVAL_IS_STRING(uint64_to_jsval(v));
+    return JSVAL_IS_STRING(v);
 }
 
 JSString *
-RUST_JSVAL_TO_STRING(uint64_t v)
+RUST_JSVAL_TO_STRING(jsval v)
 {
-    return JSVAL_TO_STRING(uint64_to_jsval(v));
+    return JSVAL_TO_STRING(v);
 }
 
-uint64_t
+jsval
 RUST_STRING_TO_JSVAL(JSString *v)
 {
-    return jsval_to_uint64(STRING_TO_JSVAL(v));
+    return STRING_TO_JSVAL(v);
 }
 
 JSBool
-RUST_JSVAL_IS_OBJECT(uint64_t v)
+RUST_JSVAL_IS_OBJECT(jsval v)
 {
-    jsval jsv = uint64_to_jsval(v);
-    return !JSVAL_IS_PRIMITIVE(jsv) || JSVAL_IS_NULL(jsv);
+    return !JSVAL_IS_PRIMITIVE(v) || JSVAL_IS_NULL(v);
 }
 
 JSObject *
-RUST_JSVAL_TO_OBJECT(uint64_t v)
+RUST_JSVAL_TO_OBJECT(jsval v)
 {
-    return JSVAL_TO_OBJECT(uint64_to_jsval(v));
+    return JSVAL_TO_OBJECT(v);
 }
 
-uint64_t
+jsval
 RUST_OBJECT_TO_JSVAL(JSObject *v)
 {
-    return jsval_to_uint64(OBJECT_TO_JSVAL(v));
+    return OBJECT_TO_JSVAL(v);
 }
 
 JSBool
-RUST_JSVAL_IS_BOOLEAN(uint64_t v)
+RUST_JSVAL_IS_BOOLEAN(jsval v)
 {
-    return JSVAL_IS_BOOLEAN(uint64_to_jsval(v));
+    return JSVAL_IS_BOOLEAN(v);
 }
 
 JSBool
-RUST_JSVAL_TO_BOOLEAN(uint64_t v)
+RUST_JSVAL_TO_BOOLEAN(jsval v)
 {
-    return JSVAL_TO_BOOLEAN(uint64_to_jsval(v));
+    return JSVAL_TO_BOOLEAN(v);
 }
 
-uint64_t
+jsval
 RUST_BOOLEAN_TO_JSVAL(JSBool v)
 {
-    return jsval_to_uint64(BOOLEAN_TO_JSVAL(v));
+    return BOOLEAN_TO_JSVAL(v);
 }
 
 JSBool
-RUST_JSVAL_IS_PRIMITIVE(uint64_t v)
+RUST_JSVAL_IS_PRIMITIVE(jsval v)
 {
-    return JSVAL_IS_PRIMITIVE(uint64_to_jsval(v));
+    return JSVAL_IS_PRIMITIVE(v);
 }
 
 JSBool
-RUST_JSVAL_IS_GCTHING(uint64_t v)
+RUST_JSVAL_IS_GCTHING(jsval v)
 {
-    return JSVAL_IS_GCTHING(uint64_to_jsval(v));
+    return JSVAL_IS_GCTHING(v);
 }
 
 void *
-RUST_JSVAL_TO_GCTHING(uint64_t v)
+RUST_JSVAL_TO_GCTHING(jsval v)
 {
-    return JSVAL_TO_GCTHING(uint64_to_jsval(v));
+    return JSVAL_TO_GCTHING(v);
 }
 
-uint64_t
+jsval
 RUST_PRIVATE_TO_JSVAL(void *v)
 {
-    return jsval_to_uint64(PRIVATE_TO_JSVAL(v));
+    return PRIVATE_TO_JSVAL(v);
 }
 
 void *
-RUST_JSVAL_TO_PRIVATE(uint64_t v)
+RUST_JSVAL_TO_PRIVATE(jsval v)
 {
-    return JSVAL_TO_PRIVATE(uint64_to_jsval(v));
+    return JSVAL_TO_PRIVATE(v);
 }
 
-uint64_t
+jsval
 RUST_JS_NumberValue(double d)
 {
-    return jsval_to_uint64(JS_NumberValue(d));
+    return JS_NumberValue(d);
 }
 
 const JSJitInfo*
@@ -510,16 +488,16 @@ NewProxyObject(JSContext* aCx, void* aHandler, const js::Value* priv,
                               parent, call, construct);
 }
 
-uint64_t
+jsval
 GetProxyExtra(JSObject* obj, uint32_t slot)
 {
-    return jsval_to_uint64(js::GetProxyExtra(obj, slot));
+    return js::GetProxyExtra(obj, slot);
 }
 
-uint64_t
+jsval
 GetProxyPrivate(JSObject* obj)
 {
-    return jsval_to_uint64(js::GetProxyPrivate(obj));
+    return js::GetProxyPrivate(obj);
 }
 
 JSObject*
