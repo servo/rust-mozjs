@@ -8,17 +8,19 @@ Handy functions for creating class objects and so forth.
 
 "];
 
-use glue::bindgen::GetJSClassHookStubPointer;
+use glue::GetJSClassHookStubPointer;
 use glue::{PROPERTY_STUB, STRICT_PROPERTY_STUB, ENUMERATE_STUB,
               RESOLVE_STUB, CONVERT_STUB};
-use core::libc::c_uint;
-use core::str::raw::from_c_str;
-use core::cast::transmute;
+use std::libc::c_uint;
+use std::str::raw::from_c_str;
+use std::cast::transmute;
 use name_pool::*;
-use core::ptr::null;
+use std::ptr::null;
+use std::ptr;
+use std::uint;
 use jsapi;
 use jsapi::{JSClass, JSContext, JSVal, JSFunctionSpec, JSBool, JSNativeWrapper};
-use jsapi::bindgen::{JS_EncodeString, JS_free, JS_ValueToString};
+use jsapi::{JS_EncodeString, JS_free, JS_ValueToString};
 use JSCLASS_IS_GLOBAL;
 use JSCLASS_HAS_RESERVED_SLOTS;
 use JSCLASS_GLOBAL_SLOT_COUNT;

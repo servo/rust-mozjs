@@ -6,12 +6,11 @@
 
 #[allow(non_implicitly_copyable_typarams)];
 
-use bg = jsapi::bindgen;
-use core::libc::types::os::arch::c95::{size_t, c_uint};
-use core::libc::c_char;
-use core::hashmap::HashMap;
+use std::libc;
+use std::libc::types::os::arch::c95::{size_t, c_uint};
+use std::libc::c_char;
+use std::hashmap::HashMap;
 use jsapi::*;
-use jsapi::bindgen::*;
 use default_stacksize;
 use default_heapsize;
 use JSOPTION_VAROBJFIX;
@@ -20,11 +19,16 @@ use JSOPTION_TYPE_INFERENCE;
 use JSVAL_NULL;
 use ERR;
 use name_pool::*;
-use core::ptr::null;
+use std::ptr;
+use std::ptr::null;
 use result;
 use result_obj;
-use core::str::raw::from_c_str;
-use core::gc::rustrt;
+use std::uint;
+use std::str;
+use std::str::raw::from_c_str;
+use std::gc::rustrt;
+use std::vec;
+use std::cast;
 
 // ___________________________________________________________________________
 // friendly Rustic API to runtimes
@@ -49,8 +53,8 @@ pub fn new_runtime(p: *JSRuntime) -> rt {
     }
 }
 
-pub impl rt_rsrc {
-    fn cx(@self) -> @Cx {
+impl rt_rsrc {
+    pub fn cx(@self) -> @Cx {
         unsafe {
             new_context(JS_NewContext(self.ptr, default_stacksize as size_t), self)
         }
@@ -100,8 +104,8 @@ pub fn new_context(ptr: *JSContext, rt: rt) -> @Cx {
     }
 }
     
-pub impl Cx {
-    fn rooted_obj(@self, obj: *JSObject) -> jsobj {
+impl Cx {
+    pub fn rooted_obj(@self, obj: *JSObject) -> jsobj {
         let jsobj = @jsobj_rsrc {cx: self, cxptr: self.ptr, ptr: obj};
         unsafe {
             JS_AddObjectRoot(self.ptr, ptr::to_unsafe_ptr(&jsobj.ptr));
@@ -109,37 +113,37 @@ pub impl Cx {
         jsobj
     }
 
-    fn set_default_options_and_version(@self) {
+    pub fn set_default_options_and_version(@self) {
         self.set_options(JSOPTION_VAROBJFIX | JSOPTION_METHODJIT |
                          JSOPTION_TYPE_INFERENCE);
         self.set_version(JSVERSION_LATEST);
     }
 
-    fn set_options(@self, v: c_uint) {
+    pub fn set_options(@self, v: c_uint) {
         unsafe {
             JS_SetOptions(self.ptr, v);
         }
     }
 
-    fn set_version(@self, v: i32) {
+    pub fn set_version(@self, v: i32) {
         unsafe {
             JS_SetVersion(self.ptr, v);
         }
     }
 
-    fn set_logging_error_reporter(@self) {
+    pub fn set_logging_error_reporter(@self) {
         unsafe {
             JS_SetErrorReporter(self.ptr, reportError);
         }
     }
 
-    fn set_error_reporter(@self, reportfn: *u8) {
+    pub fn set_error_reporter(@self, reportfn: *u8) {
         unsafe {
             JS_SetErrorReporter(self.ptr, reportfn);
         }
     }
 
-    fn new_compartment(@self,
+    pub fn new_compartment(@self,
                        globclsfn: &fn(@mut NamePool) -> JSClass)
                     -> Result<@mut Compartment,()> {
         unsafe {
@@ -162,7 +166,7 @@ pub impl Cx {
         }
     }
 
-    fn evaluate_script(@self, glob: jsobj, bytes: ~[u8], filename: ~str, line_num: uint) 
+    pub fn evaluate_script(@self, glob: jsobj, bytes: ~[u8], filename: ~str, line_num: uint) 
                     -> Result<(),()> {
         vec::as_imm_buf(bytes, |bytes_ptr, bytes_len| {
             str::as_c_str(filename, |filename_cstr| {
@@ -187,25 +191,26 @@ pub impl Cx {
         })
     }
 
-    fn lookup_class_name(@self, s: ~str) ->  @JSClass {
+    pub fn lookup_class_name(@self, s: ~str) ->  @JSClass {
         // FIXME: expect should really take a lambda...
         let error_msg = fmt!("class %s not found in class table", s);
-        *(self.classes.find(&s).expect(error_msg))
+        let name = self.classes.find(&s);
+        *(name.expect(error_msg))
     }
 
-    unsafe fn get_cx_private(@self) -> *() {
+    pub unsafe fn get_cx_private(@self) -> *() {
         cast::transmute(JS_GetContextPrivate(self.ptr))
     }
 
-    unsafe fn set_cx_private(@self, data: *()) {
+    pub unsafe fn set_cx_private(@self, data: *()) {
         JS_SetContextPrivate(self.ptr, cast::transmute(data));
     }
 
-    unsafe fn get_obj_private(@self, obj: *JSObject) -> *() {
+    pub unsafe fn get_obj_private(@self, obj: *JSObject) -> *() {
         cast::transmute(JS_GetPrivate(obj))
     }
 
-    unsafe fn set_obj_private(@self, obj: *JSObject, data: *()) {
+    pub unsafe fn set_obj_private(@self, obj: *JSObject, data: *()) {
         JS_SetPrivate(obj, cast::transmute(data));
     }
 }
@@ -233,8 +238,8 @@ pub struct Compartment {
     global_protos: @mut HashMap<~str, jsobj>
 }
 
-pub impl Compartment {
-    fn define_functions(@mut self,
+impl Compartment {
+    pub fn define_functions(@mut self,
                         specfn: &fn(@mut NamePool) -> ~[JSFunctionSpec])
                      -> Result<(),()> {
         let specvec = @specfn(self.name_pool);
@@ -245,7 +250,7 @@ pub impl Compartment {
             }
         })
     }
-    fn define_properties(@mut self, specfn: &fn() -> ~[JSPropertySpec]) -> Result<(),()> {
+    pub fn define_properties(@mut self, specfn: &fn() -> ~[JSPropertySpec]) -> Result<(),()> {
         let specvec = @specfn();
         vec::push(&mut self.global_props, specvec);
         vec::as_imm_buf(*specvec, |specs, _len| {
@@ -254,7 +259,7 @@ pub impl Compartment {
             }
         })
     }
-    fn define_property(@mut self,
+    pub fn define_property(@mut self,
                        name: ~str,
                        value: JSVal,
                        getter: JSPropertyOp, setter: JSStrictPropertyOp,
@@ -270,7 +275,7 @@ pub impl Compartment {
                                      attrs))
         }
     }
-    fn new_object(@mut self, class_name: ~str, proto: *JSObject, parent: *JSObject)
+    pub fn new_object(@mut self, class_name: ~str, proto: *JSObject, parent: *JSObject)
                -> Result<jsobj, ()> {
         unsafe {
             let classptr = self.cx.lookup_class_name(class_name);
@@ -278,7 +283,7 @@ pub impl Compartment {
             result_obj(obj)
         }
     }
-    fn new_object_with_proto(@mut self, class_name: ~str, proto_name: ~str, parent: *JSObject)
+    pub fn new_object_with_proto(@mut self, class_name: ~str, proto_name: ~str, parent: *JSObject)
                           -> Result<jsobj, ()> {
         let classptr = self.cx.lookup_class_name(class_name);
         let proto = self.global_protos.find(&copy proto_name).expect(
@@ -290,16 +295,17 @@ pub impl Compartment {
             result_obj(obj)
         }
     }
-    fn get_global_proto(@mut self, name: ~str) -> jsobj {
-        *(self.global_protos.get(&name))
+    pub fn get_global_proto(@mut self, name: ~str) -> jsobj {
+        let proto = self.global_protos.get(&name);
+        *proto
     }
-    fn stash_global_proto(@mut self, name: ~str, proto: jsobj) {
+    pub fn stash_global_proto(@mut self, name: ~str, proto: jsobj) {
         let global_protos = self.global_protos;
         if !global_protos.insert(name, proto) {
             fail!(~"Duplicate global prototype registered; you're gonna have a bad time.")
         }
     }
-    fn register_class(@mut self, class_fn: &fn(x: @mut Compartment) -> JSClass) {
+    pub fn register_class(@mut self, class_fn: &fn(x: @mut Compartment) -> JSClass) {
         let classptr = @class_fn(self);
         if !self.cx.classes.insert(
             unsafe { from_c_str(classptr.name) },
@@ -307,7 +313,7 @@ pub impl Compartment {
             fail!(~"Duplicate JSClass registered; you're gonna have a bad time.")
         }
     }
-    fn add_name(@mut self, name: ~str) -> *c_char {
+    pub fn add_name(@mut self, name: ~str) -> *c_char {
         self.name_pool.add(copy name)
     }
 }
@@ -354,7 +360,7 @@ impl to_jsstr for ~str {
         str::as_buf(self, |buf, len| {
             unsafe {
                 let cbuf = cast::transmute(buf);
-                bg::JS_NewStringCopyN(cx.ptr, cbuf, len as size_t)
+                JS_NewStringCopyN(cx.ptr, cbuf, len as size_t)
             }
         })
     }
@@ -364,7 +370,7 @@ impl to_jsstr for ~str {
 pub mod test {
     use super::rt;
     use super::super::global;
-    use super::super::jsapi::bindgen::{JS_GC, JS_GetRuntime};
+    use super::super::jsapi::{JS_GC, JS_GetRuntime};
 
     #[test]
     pub fn dummy() {
@@ -377,7 +383,8 @@ pub mod test {
 
             comp.define_functions(global::debug_fns);
 
-            let bytes = str::to_bytes(~"debug(22);");
+            let s = ~"debug(22);";
+            let bytes = s.as_bytes().to_owned();
             cx.evaluate_script(comp.global_obj, bytes, ~"test", 1u)
         });
     }

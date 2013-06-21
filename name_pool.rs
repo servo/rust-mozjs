@@ -2,8 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use core::libc::c_char;
-use core::vec::push;
+use std::cast;
+use std::libc::c_char;
+use std::uint;
+use std::vec::push;
 
 pub struct NamePool {
     strbufs: ~[~[u8]]
@@ -15,8 +17,8 @@ pub fn NamePool() -> @mut NamePool {
     }
 }
 
-pub impl NamePool {
-    fn add(&mut self, s: ~str) -> *c_char {
+impl NamePool {
+    pub fn add(&mut self, s: ~str) -> *c_char {
         unsafe {
             let mut strbuf = ~[];
             for uint::range(0, s.len()) |i| {

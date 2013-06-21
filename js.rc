@@ -6,23 +6,26 @@
        vers = "0.1")];
 #[crate_type = "lib"];
 
-extern mod std;
+extern mod extra;
 
-use core::ptr::null;
-use core::result::{Result, Ok, Err};
-use core::libc::c_uint;
+use std::libc;
+use std::cast;
+use std::ptr;
+use std::ptr::null;
+use std::result::{Result, Ok, Err};
+use std::libc::c_uint;
 use jsapi::{JSBool, JSContext,
             JSObject, JSVal, jsid,
             JSProto_LIMIT};
-use jsapi::bindgen::JS_ComputeThis;
-use core::libc::types::common::c99::uint32_t;
+use jsapi::JS_ComputeThis;
+use std::libc::types::common::c99::uint32_t;
 use jsval::{JSVAL_TO_OBJECT, JSVAL_IS_PRIMITIVE};
 use rust::jsobj;
 pub use name_pool::NamePool;
 
 // These are just macros in jsapi.h
-pub use JS_NewRuntime = jsapi::bindgen::JS_Init;
-pub use JS_DestroyRuntime = jsapi::bindgen::JS_Finish;
+pub use JS_NewRuntime = jsapi::JS_Init;
+pub use JS_DestroyRuntime = jsapi::JS_Finish;
 /*
 FIXME: Not sure where JS_Lock is
 pub use JS_LockRuntime = jsapi::bindgen::JS_Lock;
@@ -167,6 +170,8 @@ pub unsafe fn JS_CALLEE(_cx: *JSContext, vp: *JSVal) -> *JSVal {
 // This is a duplication of the shadow stuff from jsfriendapi.h.  Here
 // there be dragons!
 mod shadow {
+    use std::libc;
+    use std::ptr;
     use jsapi::{JSObject, JSClass, jsid, JSVal};
 
     struct TypeObject {
@@ -192,20 +197,20 @@ mod shadow {
         _1: *JSVal,
     }
 
-    pub impl Object {
+    impl Object {
         #[inline(always)]
-        fn numFixedSlots(&self) -> libc::size_t {
+        pub fn numFixedSlots(&self) -> libc::size_t {
             unsafe { ((*self.shape).slotInfo >> FIXED_SLOTS_SHIFT) as libc::size_t }
         }
         
         #[inline(always)]
-        fn fixedSlots(&self) -> *JSVal {
+        pub fn fixedSlots(&self) -> *JSVal {
             (ptr::offset(ptr::to_unsafe_ptr(&self), 1)) as *JSVal
         }
 
         // Like slotRef, but just returns the value, not a reference
         #[inline(always)]
-        fn slotVal(&self, slot: libc::size_t) -> JSVal {
+        pub fn slotVal(&self, slot: libc::size_t) -> JSVal {
             unsafe {
                 let nfixed : libc::size_t = self.numFixedSlots();
                 if slot < nfixed {
