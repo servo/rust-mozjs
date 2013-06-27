@@ -42,6 +42,11 @@ pub fn JSVAL_IS_PRIMITIVE(v: JSVal) -> bool {
 }
 
 #[inline(always)]
+pub fn JSVAL_IS_OBJECT(v: JSVal) -> bool {
+    v.v >= JSVAL_SHIFTED_TAG_OBJECT
+}
+
+#[inline(always)]
 pub fn JSVAL_TO_PRIVATE(v: JSVal) -> *() {
     assert!(v.v & 0x8000000000000000 == 0);
     (v.v << 1) as *()
