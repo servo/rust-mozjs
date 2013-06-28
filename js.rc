@@ -19,7 +19,7 @@ use jsapi::{JSBool, JSContext,
             JSProto_LIMIT};
 use jsapi::JS_ComputeThis;
 use std::libc::types::common::c99::uint32_t;
-use jsval::{JSVAL_TO_OBJECT, JSVAL_IS_PRIMITIVE};
+pub use jsval::{JSVAL_TO_OBJECT, JSVAL_IS_PRIMITIVE, JSVAL_IS_OBJECT};
 use rust::jsobj;
 pub use name_pool::NamePool;
 
