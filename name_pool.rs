@@ -5,7 +5,6 @@
 use std::cast;
 use std::libc::c_char;
 use std::uint;
-use std::vec::push;
 
 pub struct NamePool {
     strbufs: ~[~[u8]]
@@ -26,7 +25,7 @@ impl NamePool {
             }
             strbuf.push(0);
 
-            push(&mut self.strbufs, strbuf);
+            self.strbufs.push(strbuf);
             return cast::transmute(&self.strbufs[self.strbufs.len() - 1][0]);
         }
     }

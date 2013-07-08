@@ -6,6 +6,8 @@
        vers = "0.1")];
 #[crate_type = "lib"];
 
+#[allow(non_uppercase_statics)];
+
 extern mod extra;
 
 use std::libc;
