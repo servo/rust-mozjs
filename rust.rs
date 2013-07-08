@@ -27,7 +27,6 @@ use std::uint;
 use std::str;
 use std::str::raw::from_c_str;
 use std::gc::rustrt;
-use std::vec;
 use std::cast;
 
 // ___________________________________________________________________________
@@ -40,7 +39,7 @@ pub struct rt_rsrc {
 }
 
 impl Drop for rt_rsrc {
-    fn finalize(&self) {
+    fn drop(&self) {
         unsafe {
             JS_Finish(self.ptr);
         }
@@ -89,7 +88,7 @@ pub struct Cx {
 
 #[unsafe_destructor]
 impl Drop for Cx {
-    fn finalize(&self) {
+    fn drop(&self) {
         unsafe {
             JS_DestroyContext(self.ptr);
         }
@@ -168,7 +167,7 @@ impl Cx {
 
     pub fn evaluate_script(@self, glob: jsobj, bytes: ~[u8], filename: ~str, line_num: uint) 
                     -> Result<(),()> {
-        vec::as_imm_buf(bytes, |bytes_ptr, bytes_len| {
+        do bytes.as_imm_buf |bytes_ptr, bytes_len| {
             str::as_c_str(filename, |filename_cstr| {
                 let bytes_ptr = bytes_ptr as *c_char;
                 let rval: JSVal = JSVAL_NULL;
@@ -188,7 +187,7 @@ impl Cx {
                     }
                 }
             })
-        })
+        }
     }
 
     pub fn lookup_class_name(@self, s: ~str) ->  @JSClass {
@@ -243,21 +242,21 @@ impl Compartment {
                         specfn: &fn(@mut NamePool) -> ~[JSFunctionSpec])
                      -> Result<(),()> {
         let specvec = @specfn(self.name_pool);
-        vec::push(&mut self.global_funcs, specvec);
-        vec::as_imm_buf(*specvec, |specs, _len| {
+        self.global_funcs.push(specvec);
+        do specvec.as_imm_buf |specs, _len| {
             unsafe {
                 result(JS_DefineFunctions(self.cx.ptr, self.global_obj.ptr, specs))
             }
-        })
+        }
     }
     pub fn define_properties(@mut self, specfn: &fn() -> ~[JSPropertySpec]) -> Result<(),()> {
         let specvec = @specfn();
-        vec::push(&mut self.global_props, specvec);
-        vec::as_imm_buf(*specvec, |specs, _len| {
+        self.global_props.push(specvec);
+        do specvec.as_imm_buf |specs, _len| {
             unsafe {
                 result(JS_DefineProperties(self.cx.ptr, self.global_obj.ptr, specs))
             }
-        })
+        }
     }
     pub fn define_property(@mut self,
                        name: ~str,
@@ -331,7 +330,7 @@ pub struct jsobj_rsrc {
 
 #[unsafe_destructor]
 impl Drop for jsobj_rsrc {
-    fn finalize(&self) {
+    fn drop(&self) {
         unsafe {
             JS_RemoveObjectRoot(self.cxptr, ptr::to_unsafe_ptr(&self.ptr));
         }
