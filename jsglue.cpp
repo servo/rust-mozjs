@@ -10,6 +10,8 @@
 #include "jsproxy.h"
 #include "jsclass.h"
 
+#include "assert.h"
+
 enum StubType {
     PROPERTY_STUB,
     STRICT_PROPERTY_STUB,
@@ -64,9 +66,14 @@ int HandlerFamily = js::JSSLOT_PROXY_EXTRA + 0 /*JSPROXYSLOT_EXPANDO*/;
 class ForwardingProxyHandler : public js::BaseProxyHandler
 {
     ProxyTraps mTraps;
+    void* mExtra;
   public:
-    ForwardingProxyHandler(const ProxyTraps& aTraps)
-    : js::BaseProxyHandler(&HandlerFamily), mTraps(aTraps) {}
+    ForwardingProxyHandler(const ProxyTraps& aTraps, void* aExtra)
+    : js::BaseProxyHandler(&HandlerFamily), mTraps(aTraps), mExtra(aExtra) {}
+
+    void* getExtra() {
+        return mExtra;
+    }
 
     virtual bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
                                        bool set, JSPropertyDescriptor *desc)
@@ -474,9 +481,9 @@ GetFunctionNativeReserved(JSObject* fun, size_t which)
 }
 
 const void*
-CreateProxyHandler(const ProxyTraps* aTraps)
+CreateProxyHandler(const ProxyTraps* aTraps, void* aExtra)
 {
-    return new ForwardingProxyHandler(*aTraps);
+    return new ForwardingProxyHandler(*aTraps, aExtra);
 }
 
 JSObject*
@@ -545,6 +552,32 @@ JSErrorFormatString*
 js_GetErrorMessage(void* userRef, char* locale, uint32_t errorNumber)
 {
     return js_GetErrorMessage(userRef, locale, errorNumber);
+}
+
+JSBool
+js_IsObjectProxyClass(JSObject* obj)
+{
+    return js::IsObjectProxyClass(js::GetObjectClass(obj));
+}
+
+JSBool
+js_IsFunctionProxyClass(JSObject* obj)
+{
+    return js::IsFunctionProxyClass(js::GetObjectClass(obj));
+}
+
+bool
+IsProxyHandlerFamily(JSObject* obj)
+{
+    return js::GetProxyHandler(obj)->family() == &HandlerFamily;
+}
+
+void*
+GetProxyHandlerExtra(JSObject* obj)
+{
+    js::BaseProxyHandler* handler = js::GetProxyHandler(obj);
+    assert(handler->family() == &HandlerFamily);
+    return static_cast<ForwardingProxyHandler*>(handler)->getExtra();
 }
 
 } // extern "C"
