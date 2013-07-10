@@ -138,7 +138,7 @@ pub fn RUST_FUNCTION_VALUE_TO_JITINFO(v: *JSVal) -> *JSJitInfo;
 pub fn SetFunctionNativeReserved(fun: *JSObject, which: libc::size_t, val: *JSVal);
 pub fn GetFunctionNativeReserved(fun: *JSObject, which: libc::size_t) -> *JSVal;
 
-pub fn CreateProxyHandler(traps: *ProxyTraps) -> *libc::c_void;
+pub fn CreateProxyHandler(traps: *ProxyTraps, extra: *libc::c_void) -> *libc::c_void;
 pub fn NewProxyObject(cx: *JSContext, handler: *libc::c_void, priv_: *JSVal,
                       proto: *JSObject, parent: *JSObject, call: *JSObject,
                       construct: *JSObject) -> *JSObject;
@@ -161,4 +161,8 @@ pub fn DefineFunctionWithReserved(cx: *JSContext, obj: *JSObject,
 pub fn GetObjectJSClass(obj: *JSObject) -> *JSClass;
 pub fn js_GetErrorMessage(userRef: *libc::c_void, locale: *libc::c_char,
                           errorNumber: libc::c_uint) -> *JSErrorFormatString;
+pub fn js_IsObjectProxyClass(obj: *JSObject) -> bool;
+pub fn js_IsFunctionProxyClass(obj: *JSObject) -> bool;
+pub fn IsProxyHandlerFamily(obj: *JSObject) -> bool;
+pub fn GetProxyHandlerExtra(obj: *JSObject) -> *libc::c_void;
 }
