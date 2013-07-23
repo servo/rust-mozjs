@@ -489,10 +489,10 @@ CreateProxyHandler(const ProxyTraps* aTraps, void* aExtra)
 JSObject*
 NewProxyObject(JSContext* aCx, void* aHandler, const js::Value* priv,
                JSObject* proto, JSObject* parent, JSObject* call,
-               JSObject* construct)
+               JSObject* construct, uint32_t extraSlots)
 {
     return js::NewProxyObject(aCx, (js::BaseProxyHandler*)aHandler, *priv, proto,
-                              parent, call, construct);
+                              parent, call, construct, extraSlots);
 }
 
 jsval
@@ -578,6 +578,18 @@ GetProxyHandlerExtra(JSObject* obj)
     js::BaseProxyHandler* handler = js::GetProxyHandler(obj);
     assert(handler->family() == &HandlerFamily);
     return static_cast<ForwardingProxyHandler*>(handler)->getExtra();
+}
+
+void*
+GetInlineStorage(JSObject* obj, uint32_t startingSlot)
+{
+    return js::GetInlineStorage(obj, startingSlot);
+}
+
+void
+SetReservedSlotWithBarrier(JSObject* obj, size_t slot, js::Value* value)
+{
+    js::SetReservedSlotWithBarrier(obj, slot, *value);
 }
 
 } // extern "C"

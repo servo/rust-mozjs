@@ -123,6 +123,7 @@ pub static JSCLASS_GLOBAL_SLOT_COUNT: c_uint = JSProto_LIMIT * 3 + 24;
 
 pub static JSCLASS_IS_DOMJSCLASS: u32 = 1 << 4;
 pub static JSCLASS_USERBIT1: u32 = 1 << 7;
+pub static JSCLASS_IS_INLINE_DOMJSCLASS: u32 = JSCLASS_USERBIT1;
 
 pub static JSSLOT_PROXY_PRIVATE: u32 = 1;
 

@@ -141,7 +141,7 @@ pub fn GetFunctionNativeReserved(fun: *JSObject, which: libc::size_t) -> *JSVal;
 pub fn CreateProxyHandler(traps: *ProxyTraps, extra: *libc::c_void) -> *libc::c_void;
 pub fn NewProxyObject(cx: *JSContext, handler: *libc::c_void, priv_: *JSVal,
                       proto: *JSObject, parent: *JSObject, call: *JSObject,
-                      construct: *JSObject) -> *JSObject;
+                      construct: *JSObject, extraSlots: u32) -> *JSObject;
 
 pub fn GetProxyExtra(obj: *JSObject, slot: c_uint) -> JSVal;
 pub fn GetProxyPrivate(obj: *JSObject) -> JSVal;
@@ -165,4 +165,6 @@ pub fn js_IsObjectProxyClass(obj: *JSObject) -> bool;
 pub fn js_IsFunctionProxyClass(obj: *JSObject) -> bool;
 pub fn IsProxyHandlerFamily(obj: *JSObject) -> bool;
 pub fn GetProxyHandlerExtra(obj: *JSObject) -> *libc::c_void;
+pub fn GetInlineStorage(obj: *JSObject, slot: u32) -> *mut libc::c_void;
+pub fn SetReservedSlotWithBarrier(obj: *JSObject, slot: libc::size_t, value: *JSVal);
 }
