@@ -74,7 +74,7 @@ pub static JSVAL_TAG_SHIFT: int = 47;
 //The following constants are totally broken on non-64bit platforms.
 //See jsapi.h for the proper macro definitions.
 pub static JSVAL_VOID: JSVal = JSVal {
-    v: (JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_UNKNOWN) << JSVAL_TAG_SHIFT
+    v: (JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_UNDEFINED) << JSVAL_TAG_SHIFT
 };
 pub static JSVAL_NULL: JSVal = JSVal {
     v: (JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_NULL) << JSVAL_TAG_SHIFT
