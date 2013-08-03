@@ -116,22 +116,14 @@ class ForwardingProxyHandler : public js::BaseProxyHandler
     {
         return mTraps.has ?
                mTraps.has(cx, proxy, id, bp) :
-#ifdef NDEBUG
                BaseProxyHandler::has(cx, proxy, id, bp);
-#else
-               true;
-#endif
     }
 
     virtual bool hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
     {
         return mTraps.hasOwn ?
                mTraps.hasOwn(cx, proxy, id, bp) :
-#ifdef NDEBUG
                BaseProxyHandler::hasOwn(cx, proxy, id, bp);
-#else
-               true;
-#endif
     }
 
     virtual bool get(JSContext *cx, JSObject *proxy, JSObject *receiver,
@@ -139,11 +131,7 @@ class ForwardingProxyHandler : public js::BaseProxyHandler
     {
         return mTraps.get ?
                mTraps.get(cx, proxy, receiver, id, vp) :
-#ifdef NDEBUG
                BaseProxyHandler::get(cx, proxy, receiver, id, vp);
-#else
-               true;
-#endif
     }
 
     virtual bool set(JSContext *cx, JSObject *proxy, JSObject *receiver,
@@ -151,11 +139,7 @@ class ForwardingProxyHandler : public js::BaseProxyHandler
     {
         return mTraps.set ?
                mTraps.set(cx, proxy, receiver, id, strict, vp) :
-#ifdef NDEBUG
                BaseProxyHandler::set(cx, proxy, receiver, id, strict, vp);
-#else
-               true;
-#endif
     }
 
     virtual bool keys(JSContext *cx, JSObject *proxy, JS::AutoIdVector &props)
@@ -275,6 +259,18 @@ class ForwardingProxyHandler : public js::BaseProxyHandler
 };
 
 extern "C" {
+
+JSBool
+InvokeGetOwnPropertyDescriptor(
+        void* handler,
+        JSContext *cx, JSObject *proxy,
+        jsid id, JSBool set,
+        JSPropertyDescriptor *desc)
+{
+    return static_cast<ForwardingProxyHandler*>(handler)->getOwnPropertyDescriptor(cx, proxy,
+                                                                                   id, set,
+                                                                                   desc);
+}
 
 void*
 GetJSClassHookStubPointer(enum StubType type)
@@ -507,10 +503,22 @@ GetProxyPrivate(JSObject* obj)
     return js::GetProxyPrivate(obj);
 }
 
+void
+SetProxyExtra(JSObject* obj, uint32_t slot, jsval val)
+{
+    return js::SetProxyExtra(obj, slot, val);
+}
+
 JSObject*
 GetObjectProto(JSObject* obj)
 {
     return js::GetObjectProto(obj);
+}
+
+JSObject*
+GetObjectParent(JSObject* obj)
+{
+    return js::GetObjectParent(obj);
 }
 
 JSBool
@@ -523,6 +531,18 @@ int
 RUST_JSID_TO_INT(jsid id)
 {
     return JSID_TO_INT(id);
+}
+
+JSBool
+RUST_JSID_IS_STRING(jsid id)
+{
+    return JSID_IS_STRING(id);
+}
+
+JSString*
+RUST_JSID_TO_STRING(jsid id)
+{
+    return JSID_TO_STRING(id);
 }
 
 void
@@ -578,6 +598,14 @@ GetProxyHandlerExtra(JSObject* obj)
     js::BaseProxyHandler* handler = js::GetProxyHandler(obj);
     assert(handler->family() == &HandlerFamily);
     return static_cast<ForwardingProxyHandler*>(handler)->getExtra();
+}
+
+void*
+GetProxyHandler(JSObject* obj)
+{
+    js::BaseProxyHandler* handler = js::GetProxyHandler(obj);
+    assert(handler->family() == &HandlerFamily);
+    return handler;
 }
 
 } // extern "C"
