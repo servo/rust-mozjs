@@ -145,11 +145,15 @@ pub fn NewProxyObject(cx: *JSContext, handler: *libc::c_void, priv_: *JSVal,
 
 pub fn GetProxyExtra(obj: *JSObject, slot: c_uint) -> JSVal;
 pub fn GetProxyPrivate(obj: *JSObject) -> JSVal;
+pub fn SetProxyExtra(obj: *JSObject, slot: c_uint, val: JSVal);
 
 pub fn GetObjectProto(obj: *JSObject) -> *JSObject;
+pub fn GetObjectParent(obj: *JSObject) -> *JSObject;
 
 pub fn RUST_JSID_IS_INT(id: jsid) -> JSBool;
 pub fn RUST_JSID_TO_INT(id: jsid) -> libc::c_int;
+pub fn RUST_JSID_IS_STRING(id: jsid) -> JSBool;
+pub fn RUST_JSID_TO_STRING(id: jsid) -> *JSString;
 
 pub fn RUST_SET_JITINFO(func: *JSFunction, info: *JSJitInfo);
 
@@ -165,4 +169,6 @@ pub fn js_IsObjectProxyClass(obj: *JSObject) -> bool;
 pub fn js_IsFunctionProxyClass(obj: *JSObject) -> bool;
 pub fn IsProxyHandlerFamily(obj: *JSObject) -> bool;
 pub fn GetProxyHandlerExtra(obj: *JSObject) -> *libc::c_void;
+pub fn GetProxyHandler(obj: *JSObject) -> *libc::c_void;
+pub fn InvokeGetOwnPropertyDescriptor(handler: *libc::c_void, cx: *JSContext, proxy: *JSObject, id: jsid, set: JSBool, desc: *mut JSPropertyDescriptor) -> JSBool;
 }
