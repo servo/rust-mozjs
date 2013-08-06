@@ -512,21 +512,27 @@ pub type struct_JSJitInfo = c_void;
 
 //pub type JSJitInfo = struct_JSJitInfo; //XXXjdm
 
+// FIXME: We need these Clone impls for certain operations in Servo,
+// but do they really make sense?
+#[deriving(Clone)]
 pub struct JSStrictPropertyOpWrapper {
     op: JSStrictPropertyOp,
     info: *JSJitInfo,
 }
 
+#[deriving(Clone)]
 pub struct JSPropertyOpWrapper {
     op: JSPropertyOp,
     info: *JSJitInfo,
 }
 
+#[deriving(Clone)]
 pub struct JSNativeWrapper {
     op: JSNative,
     info: *JSJitInfo,
 }
 
+#[deriving(Clone)]
 pub struct JSPropertySpec {
     name: *c_char,
     tinyid: int8_t,
@@ -535,6 +541,7 @@ pub struct JSPropertySpec {
     setter: JSStrictPropertyOpWrapper,
 }
 
+#[deriving(Clone)]
 pub struct JSFunctionSpec {
     name: *c_char,
     call: JSNativeWrapper,

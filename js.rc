@@ -149,7 +149,7 @@ pub fn result_obj(o: jsobj) -> Result<jsobj, ()> {
 
 #[inline(always)]
 pub unsafe fn JS_ARGV(_cx: *JSContext, vp: *JSVal) -> *JSVal {
-    ptr::offset(vp, 2u)
+    ptr::offset(vp, 2)
 }
 
 pub unsafe fn JS_SET_RVAL(_cx: *JSContext, vp: *JSVal, v: JSVal) {
@@ -220,9 +220,9 @@ mod shadow {
             unsafe {
                 let nfixed : libc::size_t = self.numFixedSlots();
                 if slot < nfixed {
-                    return *ptr::offset(self.fixedSlots(), slot as uint)
+                    return *ptr::offset(self.fixedSlots(), slot as int)
                 }
-                return *ptr::offset(self.slots, (slot - nfixed) as uint)
+                return *ptr::offset(self.slots, (slot - nfixed) as int)
             }
         }
     }
