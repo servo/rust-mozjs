@@ -4,7 +4,6 @@
 
 use std::cast;
 use std::libc::c_char;
-use std::uint;
 
 pub struct NamePool {
     strbufs: ~[~[u8]]
@@ -20,7 +19,7 @@ impl NamePool {
     pub fn add(&mut self, s: ~str) -> *c_char {
         unsafe {
             let mut strbuf = ~[];
-            for uint::range(0, s.len()) |i| {
+            for i in range(0, s.len()) {
                 strbuf.push(s[i]);
             }
             strbuf.push(0);

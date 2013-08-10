@@ -19,8 +19,8 @@ pub struct JSJitInfo {
 pub mod bindgen {
     use jsapi::{JSContext, JSObject, JSClass};
 
-    pub extern {
-        fn JS_NewObjectWithUniqueType(cx: *JSContext, clasp: *JSClass,
+    extern {
+        pub fn JS_NewObjectWithUniqueType(cx: *JSContext, clasp: *JSClass,
                                           proto: *JSObject, parent: *JSObject) -> *JSObject;
     }
 }
