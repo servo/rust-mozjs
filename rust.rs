@@ -176,7 +176,7 @@ impl Cx {
     pub fn evaluate_script(@self, glob: jsobj, bytes: ~[u8], filename: ~str, line_num: uint) 
                     -> Result<(),()> {
         do bytes.as_imm_buf |bytes_ptr, bytes_len| {
-            do filename.as_c_str |filename_cstr| {
+            do filename.to_c_str().with_ref |filename_cstr| {
                 let bytes_ptr = bytes_ptr as *c_char;
                 let rval: JSVal = JSVAL_NULL;
                 debug!("Evaluating script from %s with bytes %?", filename, bytes);
