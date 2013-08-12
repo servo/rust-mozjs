@@ -4,9 +4,8 @@
 
 #[doc = "Rust wrappers around the raw JS apis"];
 
-use std::libc;
 use std::libc::types::os::arch::c95::{size_t, c_uint};
-use std::libc::c_char;
+use std::libc::{c_char, uintptr_t};
 use std::hashmap::HashMap;
 use jsapi::*;
 use default_stacksize;
@@ -56,24 +55,23 @@ impl rt_rsrc {
     }
 }
 
-// FIXME: Copied from old std::gc; is this still valid?
-pub struct StackSegment {
-    prev: *StackSegment,
-    next: *StackSegment,
-    end: libc::uintptr_t,
-    // And other fields which we don't care about...
-}
-
-extern {
-    fn rust_get_c_stack() -> *StackSegment;
-}
-
+// FIXME: Is this safe once we have more than one stack segment?
 extern fn gc_callback(rt: *JSRuntime, _status: JSGCStatus) {
+    use std::rt::local::Local;
+    use std::rt::task::Task;
     unsafe {
-        let c_stack = rust_get_c_stack();
-        let first = c_stack as libc::uintptr_t;
-        let second = (*c_stack).end;
-        JS_SetNativeStackBounds(rt, uint::min(first, second), uint::max(first, second));
+        do Local::borrow |task: &mut Task| {
+            match task.coroutine {
+                Some(ref c) => {
+                    let start = c.current_stack_segment.start() as uintptr_t;
+                    let end = c.current_stack_segment.end() as uintptr_t;
+                    JS_SetNativeStackBounds(rt, uint::min(start, end), uint::max(start, end));
+                }
+                None => {
+                    fail!("gc_callback: cannot get stack for JS_SetNativeStackBounds");
+                }
+            }
+        }
     }
 }
 
