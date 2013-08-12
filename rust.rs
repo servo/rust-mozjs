@@ -4,8 +4,6 @@
 
 #[doc = "Rust wrappers around the raw JS apis"];
 
-#[allow(non_implicitly_copyable_typarams)];
-
 use std::libc;
 use std::libc::types::os::arch::c95::{size_t, c_uint};
 use std::libc::c_char;
@@ -24,9 +22,7 @@ use std::ptr::null;
 use result;
 use result_obj;
 use std::uint;
-use std::str;
 use std::str::raw::from_c_str;
-use std::gc::rustrt;
 use std::cast;
 
 // ___________________________________________________________________________
@@ -60,9 +56,21 @@ impl rt_rsrc {
     }
 }
 
+// FIXME: Copied from old std::gc; is this still valid?
+pub struct StackSegment {
+    prev: *StackSegment,
+    next: *StackSegment,
+    end: libc::uintptr_t,
+    // And other fields which we don't care about...
+}
+
+extern {
+    fn rust_get_c_stack() -> *StackSegment;
+}
+
 extern fn gc_callback(rt: *JSRuntime, _status: JSGCStatus) {
     unsafe {
-        let c_stack = rustrt::rust_get_c_stack();
+        let c_stack = rust_get_c_stack();
         let first = c_stack as libc::uintptr_t;
         let second = (*c_stack).end;
         JS_SetNativeStackBounds(rt, uint::min(first, second), uint::max(first, second));
@@ -168,7 +176,7 @@ impl Cx {
     pub fn evaluate_script(@self, glob: jsobj, bytes: ~[u8], filename: ~str, line_num: uint) 
                     -> Result<(),()> {
         do bytes.as_imm_buf |bytes_ptr, bytes_len| {
-            str::as_c_str(filename, |filename_cstr| {
+            do filename.as_c_str |filename_cstr| {
                 let bytes_ptr = bytes_ptr as *c_char;
                 let rval: JSVal = JSVAL_NULL;
                 debug!("Evaluating script from %s with bytes %?", filename, bytes);
@@ -186,7 +194,7 @@ impl Cx {
                         Ok(())
                     }
                 }
-            })
+            }
         }
     }
 
@@ -285,7 +293,7 @@ impl Compartment {
     pub fn new_object_with_proto(@mut self, class_name: ~str, proto_name: ~str, parent: *JSObject)
                           -> Result<jsobj, ()> {
         let classptr = self.cx.lookup_class_name(class_name);
-        let proto = self.global_protos.find(&copy proto_name).expect(
+        let proto = self.global_protos.find(&proto_name.clone()).expect(
             fmt!("new_object_with_proto: expected to find %s in the proto \
                   table", proto_name));
         unsafe {
@@ -313,7 +321,7 @@ impl Compartment {
         }
     }
     pub fn add_name(@mut self, name: ~str) -> *c_char {
-        self.name_pool.add(copy name)
+        self.name_pool.add(name.clone())
     }
 }
 
@@ -356,12 +364,12 @@ pub trait to_jsstr {
 
 impl to_jsstr for ~str {
     fn to_jsstr(self, cx: @Cx) -> *JSString {
-        str::as_buf(self, |buf, len| {
+        do self.as_imm_buf |buf, len| {
             unsafe {
                 let cbuf = cast::transmute(buf);
                 JS_NewStringCopyN(cx.ptr, cbuf, len as size_t)
             }
-        })
+        }
     }
 }
 

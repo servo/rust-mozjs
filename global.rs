@@ -17,7 +17,6 @@ use std::cast::transmute;
 use name_pool::*;
 use std::ptr::null;
 use std::ptr;
-use std::uint;
 use jsapi;
 use jsapi::{JSClass, JSContext, JSVal, JSFunctionSpec, JSBool, JSNativeWrapper};
 use jsapi::{JS_EncodeString, JS_free, JS_ValueToString};
@@ -74,7 +73,7 @@ pub unsafe fn jsval_to_rust_str(cx: *JSContext, vp: *jsapi::JSString) -> ~str {
 pub extern fn debug(cx: *JSContext, argc: c_uint, vp: *JSVal) -> JSBool {
     unsafe {
         let argv = JS_ARGV(cx, vp);
-        for uint::range(0u, argc as uint) |i| {
+        for i in range(0, argc as int) {
             let jsstr = JS_ValueToString(cx, *ptr::offset(argv, i));
             debug!("%s", jsval_to_rust_str(cx, jsstr));
         }
