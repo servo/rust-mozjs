@@ -20,7 +20,7 @@ libjs.dummy: js.rc $(RUST_SRC) libjsglue.a
 	touch $@
 
 js-test: js.rc $(RUST_SRC) libjsglue.a
-	$(RUSTC) $(RUSTFLAGS) $< --out-dir . --test
+	$(RUSTC) $(RUSTFLAGS) $< -o $@ --test
 
 libjsglue.a: jsglue.o
 	$(AR) rcs libjsglue.a jsglue.o
