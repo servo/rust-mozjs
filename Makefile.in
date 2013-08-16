@@ -16,11 +16,11 @@ RUST_SRC = $(shell find $(VPATH)/. -type f -name '*.rs')
 all: libjs.dummy
 
 libjs.dummy: js.rc $(RUST_SRC) libjsglue.a
-	$(RUSTC) $(RUSTFLAGS) $< -o $@
+	$(RUSTC) $(RUSTFLAGS) $< --out-dir .
 	touch $@
 
 js-test: js.rc $(RUST_SRC) libjsglue.a
-	$(RUSTC) $(RUSTFLAGS) $< -o $@ --test
+	$(RUSTC) $(RUSTFLAGS) $< --out-dir . --test
 
 libjsglue.a: jsglue.o
 	$(AR) rcs libjsglue.a jsglue.o
