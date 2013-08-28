@@ -16,17 +16,19 @@ pub static ENUMERATE_STUB: u32 = 2_u32;
 pub static CONVERT_STUB: u32 = 3_u32;
 pub static RESOLVE_STUB: u32 = 4_u32;
 
+type c_bool = libc::c_int;
+
 pub struct ProxyTraps {
-    getPropertyDescriptor: *u8,
-    getOwnPropertyDescriptor: *u8,
-    defineProperty: *u8,
+    getPropertyDescriptor: extern "C" fn(*JSContext, *JSObject, jsid, c_bool, *mut JSPropertyDescriptor) -> c_bool,
+    getOwnPropertyDescriptor: extern "C" fn(*JSContext, *JSObject, jsid, JSBool, *mut JSPropertyDescriptor) -> JSBool,
+    defineProperty: extern "C" fn(*JSContext, *JSObject, jsid, *JSPropertyDescriptor) -> JSBool,
     getOwnPropertyNames: *u8,
     delete_: *u8,
     enumerate: *u8,
 
     has: *u8,
-    hasOwn: *u8,
-    get: *u8,
+    hasOwn: extern "C" fn(*JSContext, *JSObject, jsid, *mut JSBool) -> JSBool,
+    get: extern "C" fn(*JSContext, *JSObject, *JSObject, jsid, *mut JSVal) -> JSBool,
     set: *u8,
     keys: *u8,
     iterate: *u8,
@@ -37,7 +39,7 @@ pub struct ProxyTraps {
     hasInstance: *u8,
     typeOf: *u8,
     objectClassIs: *u8,
-    obj_toString: *u8,
+    obj_toString: extern "C" fn(*JSContext, *JSObject) -> *JSString,
     fun_toString: *u8,
     //regexp_toShared: *u8,
     defaultValue: *u8,
