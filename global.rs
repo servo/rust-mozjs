@@ -12,6 +12,7 @@ use glue::GetJSClassHookStubPointer;
 use glue::{PROPERTY_STUB, STRICT_PROPERTY_STUB, ENUMERATE_STUB,
               RESOLVE_STUB, CONVERT_STUB};
 use std::libc::c_uint;
+use std::str::as_buf;
 use std::str::raw::from_c_str;
 use std::cast::transmute;
 use name_pool::*;
@@ -20,7 +21,8 @@ use std::ptr;
 use std::uint;
 use jsapi;
 use jsapi::{JSClass, JSContext, JSVal, JSFunctionSpec, JSBool, JSNativeWrapper};
-use jsapi::{JS_EncodeString, JS_free, JS_ValueToString};
+use jsapi::{JS_EncodeString, JS_free, JS_ValueToBoolean, JS_ValueToString};
+use jsapi::{JS_ReportError};
 use JSCLASS_IS_GLOBAL;
 use JSCLASS_HAS_RESERVED_SLOTS;
 use JSCLASS_GLOBAL_SLOT_COUNT;
@@ -83,6 +85,31 @@ pub extern fn debug(cx: *JSContext, argc: c_uint, vp: *JSVal) -> JSBool {
     }
 }
 
+pub extern fn assert(cx: *JSContext, argc: c_uint, vp: *JSVal) -> JSBool {
+    unsafe {
+        let argv = JS_ARGV(cx, vp);
+
+        let result = 0;
+        if (argc > 0) {
+            if JS_ValueToBoolean(cx, *ptr::offset(argv, 0), &result) == 0 {
+                return 0_i32;
+            }
+        }
+
+        if result == 0 {
+            debug!("Error: JavaScript assertion failed!");
+            as_buf("JavaScript assertion failed!", |buf, _| {
+                let cbuf = transmute(buf);
+                JS_ReportError(cx, cbuf);
+            });
+            return 0_i32;
+        }
+
+        JS_SET_RVAL(cx, vp, JSVAL_NULL);
+        return 1_i32;
+    }
+}
+
 pub fn debug_fns(np: @mut NamePool) -> ~[JSFunctionSpec] {
     ~[
         JSFunctionSpec {
@@ -92,6 +119,16 @@ pub fn debug_fns(np: @mut NamePool) -> ~[JSFunctionSpec] {
                 info: null()
             },
             nargs: 0,
+            flags: 0,
+            selfHostedName: null()
+        },
+        JSFunctionSpec {
+            name: np.add(~"assert"),
+            call: JSNativeWrapper {
+                op: assert,
+                info: null()
+            },
+            nargs: 1,
             flags: 0,
             selfHostedName: null()
         },
