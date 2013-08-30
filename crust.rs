@@ -36,9 +36,9 @@ pub extern fn JS_ConvertStub(cx: *JSContext, obj: JSHandleObject, _type: JSType,
     }
 }
 
-pub extern fn JS_ArrayIterator(cx: *JSContext, argc: libc::c_uint, vp: *JSVal) -> JSBool {
+pub extern fn JS_ArrayIterator(cx: *JSContext, argc: libc::c_uint, vp: *mut JSVal) -> JSBool {
     unsafe {
-        jsapi::JS_ArrayIterator(cx, argc, vp)
+        jsapi::JS_ArrayIterator(cx, argc, &*vp)
     }
 }
 

@@ -34,6 +34,7 @@ pub struct rt_rsrc {
 }
 
 impl Drop for rt_rsrc {
+    #[fixed_stack_segment]
     fn drop(&self) {
         unsafe {
             JS_Finish(self.ptr);
@@ -48,6 +49,7 @@ pub fn new_runtime(p: *JSRuntime) -> rt {
 }
 
 impl rt_rsrc {
+    #[fixed_stack_segment]
     pub fn cx(@self) -> @Cx {
         unsafe {
             new_context(JS_NewContext(self.ptr, default_stacksize as size_t), self)
@@ -75,6 +77,7 @@ extern fn gc_callback(rt: *JSRuntime, _status: JSGCStatus) {
     }
 }
 
+#[fixed_stack_segment]
 pub fn rt() -> rt {
     unsafe {
         let runtime = JS_Init(default_heapsize);
@@ -94,6 +97,7 @@ pub struct Cx {
 
 #[unsafe_destructor]
 impl Drop for Cx {
+    #[fixed_stack_segment]
     fn drop(&self) {
         unsafe {
             JS_DestroyContext(self.ptr);
@@ -110,6 +114,7 @@ pub fn new_context(ptr: *JSContext, rt: rt) -> @Cx {
 }
     
 impl Cx {
+    #[fixed_stack_segment]
     pub fn rooted_obj(@self, obj: *JSObject) -> jsobj {
         let jsobj = @jsobj_rsrc {cx: self, cxptr: self.ptr, ptr: obj};
         unsafe {
@@ -124,30 +129,35 @@ impl Cx {
         self.set_version(JSVERSION_LATEST);
     }
 
+    #[fixed_stack_segment]
     pub fn set_options(@self, v: c_uint) {
         unsafe {
             JS_SetOptions(self.ptr, v);
         }
     }
 
+    #[fixed_stack_segment]
     pub fn set_version(@self, v: i32) {
         unsafe {
             JS_SetVersion(self.ptr, v);
         }
     }
 
+    #[fixed_stack_segment]
     pub fn set_logging_error_reporter(@self) {
         unsafe {
             JS_SetErrorReporter(self.ptr, reportError);
         }
     }
 
-    pub fn set_error_reporter(@self, reportfn: *u8) {
+    #[fixed_stack_segment]
+    pub fn set_error_reporter(@self, reportfn: extern "C" fn(*JSContext, *c_char, *JSErrorReport)) {
         unsafe {
             JS_SetErrorReporter(self.ptr, reportfn);
         }
     }
 
+    #[fixed_stack_segment]
     pub fn new_compartment(@self,
                        globclsfn: &fn(@mut NamePool) -> JSClass)
                     -> Result<@mut Compartment,()> {
@@ -171,6 +181,7 @@ impl Cx {
         }
     }
 
+    #[fixed_stack_segment]
     pub fn evaluate_script(@self, glob: jsobj, bytes: ~[u8], filename: ~str, line_num: uint) 
                     -> Result<(),()> {
         do bytes.as_imm_buf |bytes_ptr, bytes_len| {
@@ -203,18 +214,22 @@ impl Cx {
         *(name.expect(error_msg))
     }
 
+    #[fixed_stack_segment]
     pub unsafe fn get_cx_private(@self) -> *() {
         cast::transmute(JS_GetContextPrivate(self.ptr))
     }
 
+    #[fixed_stack_segment]
     pub unsafe fn set_cx_private(@self, data: *()) {
         JS_SetContextPrivate(self.ptr, cast::transmute(data));
     }
 
+    #[fixed_stack_segment]
     pub unsafe fn get_obj_private(@self, obj: *JSObject) -> *() {
         cast::transmute(JS_GetPrivate(obj))
     }
 
+    #[fixed_stack_segment]
     pub unsafe fn set_obj_private(@self, obj: *JSObject, data: *()) {
         JS_SetPrivate(obj, cast::transmute(data));
     }
@@ -244,6 +259,7 @@ pub struct Compartment {
 }
 
 impl Compartment {
+    #[fixed_stack_segment]
     pub fn define_functions(@mut self,
                         specfn: &fn(@mut NamePool) -> ~[JSFunctionSpec])
                      -> Result<(),()> {
@@ -255,6 +271,7 @@ impl Compartment {
             }
         }
     }
+    #[fixed_stack_segment]
     pub fn define_properties(@mut self, specfn: &fn() -> ~[JSPropertySpec]) -> Result<(),()> {
         let specvec = @specfn();
         self.global_props.push(specvec);
@@ -264,6 +281,7 @@ impl Compartment {
             }
         }
     }
+    #[fixed_stack_segment]
     pub fn define_property(@mut self,
                        name: ~str,
                        value: JSVal,
@@ -275,11 +293,12 @@ impl Compartment {
                                      self.global_obj.ptr,
                                      self.add_name(name),
                                      value,
-                                     getter,
-                                     setter,
+                                     Some(getter),
+                                     Some(setter),
                                      attrs))
         }
     }
+    #[fixed_stack_segment]
     pub fn new_object(@mut self, class_name: ~str, proto: *JSObject, parent: *JSObject)
                -> Result<jsobj, ()> {
         unsafe {
@@ -288,6 +307,7 @@ impl Compartment {
             result_obj(obj)
         }
     }
+    #[fixed_stack_segment]
     pub fn new_object_with_proto(@mut self, class_name: ~str, proto_name: ~str, parent: *JSObject)
                           -> Result<jsobj, ()> {
         let classptr = self.cx.lookup_class_name(class_name);
@@ -336,6 +356,7 @@ pub struct jsobj_rsrc {
 
 #[unsafe_destructor]
 impl Drop for jsobj_rsrc {
+    #[fixed_stack_segment]
     fn drop(&self) {
         unsafe {
             JS_RemoveObjectRoot(self.cxptr, ptr::to_unsafe_ptr(&self.ptr));
@@ -361,6 +382,7 @@ pub trait to_jsstr {
 }
 
 impl to_jsstr for ~str {
+    #[fixed_stack_segment]
     fn to_jsstr(self, cx: @Cx) -> *JSString {
         do self.as_imm_buf |buf, len| {
             unsafe {
@@ -378,6 +400,7 @@ pub mod test {
     use super::super::jsapi::{JS_GC, JS_GetRuntime};
 
     #[test]
+    #[fixed_stack_segment]
     pub fn dummy() {
         let rt = rt();
         let cx = rt.cx();

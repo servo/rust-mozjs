@@ -157,13 +157,16 @@ pub unsafe fn JS_SET_RVAL(_cx: *JSContext, vp: *JSVal, v: JSVal) {
     *vp = v;
 }
 
-#[inline(always)]
-pub unsafe fn JS_THIS_OBJECT(cx: *JSContext, vp: *JSVal) -> *JSObject {
+// FIXME This should be inline but fixed_stack_segment and inline are
+// not currently compatible
+//#[inline(always)]
+#[fixed_stack_segment]
+pub unsafe fn JS_THIS_OBJECT(cx: *JSContext, vp: *mut JSVal) -> *JSObject {
     let r = JSVAL_TO_OBJECT(
-        if JSVAL_IS_PRIMITIVE(*ptr::offset(vp, 1)) {
-            JS_ComputeThis(cx, vp)
+        if JSVAL_IS_PRIMITIVE(*ptr::offset(&*vp, 1)) {
+            JS_ComputeThis(cx, &*vp)
         } else {
-            *ptr::offset(vp, 1)
+            *ptr::offset(&*vp, 1)
         });
     r
 }

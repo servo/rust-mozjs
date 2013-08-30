@@ -287,19 +287,19 @@ pub struct JSMutableHandleValue {
 
 pub type JSRawObject = *JSObject;
 
-pub type JSPropertyOp = *u8;
+pub type JSPropertyOp = extern "C" fn(*JSContext, JSHandleObject, JSHandleId, JSMutableHandleValue) -> JSBool;
 
-pub type JSStrictPropertyOp = *u8;
+pub type JSStrictPropertyOp = extern "C" fn(*JSContext, JSHandleObject, JSHandleId, JSBool, JSMutableHandleValue) -> JSBool;
 
 pub type JSNewEnumerateOp = *u8;
 
-pub type JSEnumerateOp = *u8;
+pub type JSEnumerateOp = extern "C" fn(*JSContext, JSHandleObject) -> JSBool;
 
-pub type JSResolveOp = *u8;
+pub type JSResolveOp = extern "C" fn(*JSContext, JSHandleObject, JSHandleId) -> JSBool;
 
 pub type JSNewResolveOp = *u8;
 
-pub type JSConvertOp = *u8;
+pub type JSConvertOp = extern "C" fn(*JSContext, JSHandleObject, JSType, JSMutableHandleValue) -> JSBool;
 
 pub type JSTypeOfOp = *u8;
 
@@ -309,7 +309,7 @@ pub struct struct_JSFreeOp {
     runtime: *JSRuntime,
 }
 
-pub type JSFinalizeOp = *u8;
+pub type JSFinalizeOp = extern "C" fn(*JSFreeOp, *JSObject);
 
 pub type JSStringFinalizer = struct_JSStringFinalizer;
 
@@ -319,15 +319,15 @@ pub struct struct_JSStringFinalizer {
 
 pub type JSCheckAccessOp = *u8;
 
-pub type JSHasInstanceOp = *u8;
+pub type JSHasInstanceOp = extern "C" fn(*JSContext, **JSObject, *JSVal, *mut JSBool) -> JSBool;
 
-pub type JSTraceOp = *u8;
+pub type JSTraceOp = extern "C" fn(*mut JSTracer, *JSObject);
 
 pub type JSTraceNamePrinter = *u8;
 
 pub type JSEqualityOp = *u8;
 
-pub type JSNative = *u8;
+pub type JSNative = extern "C" fn(*JSContext, c_uint, *mut JSVal) -> JSBool;
 
 pub type enum_JSContextOp = c_uint;
 pub static JSCONTEXT_NEW: u32 = 0_u32;
@@ -343,7 +343,7 @@ pub static JSGC_END: u32 = 1_u32;
 
 pub type JSGCStatus = enum_JSGCStatus;
 
-pub type JSGCCallback = *u8;
+pub type JSGCCallback = extern "C" fn(*JSRuntime, JSGCStatus);
 
 pub type enum_JSFinalizeStatus = c_uint;
 pub static JSFINALIZE_START: u32 = 0_u32;
@@ -357,7 +357,7 @@ pub type JSTraceDataOp = *u8;
 
 pub type JSOperationCallback = *u8;
 
-pub type JSErrorReporter = *u8;
+pub type JSErrorReporter = extern "C" fn(*JSContext, *c_char, *JSErrorReport);
 
 pub type enum_JSExnType = c_int;
 pub static JSEXN_NONE: i32 = -1_i32;
@@ -492,12 +492,12 @@ pub struct JSClass {
     enumerate: JSEnumerateOp,
     resolve: JSResolveOp,
     convert: JSConvertOp,
-    finalize: JSFinalizeOp,
-    checkAccess: JSCheckAccessOp,
-    call: JSNative,
-    hasInstance: JSHasInstanceOp,
-    construct: JSNative,
-    trace: JSTraceOp,
+    finalize: Option<JSFinalizeOp>,
+    checkAccess: Option<JSCheckAccessOp>,
+    call: Option<JSNative>,
+    hasInstance: Option<JSHasInstanceOp>,
+    construct: Option<JSNative>,
+    trace: Option<JSTraceOp>,
     reserved: (*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void),
 }
 
@@ -514,22 +514,46 @@ pub type struct_JSJitInfo = c_void;
 
 // FIXME: We need these Clone impls for certain operations in Servo,
 // but do they really make sense?
-#[deriving(Clone)]
 pub struct JSStrictPropertyOpWrapper {
-    op: JSStrictPropertyOp,
+    op: Option<JSNative>,
     info: *JSJitInfo,
 }
 
-#[deriving(Clone)]
+impl Clone for JSStrictPropertyOpWrapper {
+    fn clone(&self) -> JSStrictPropertyOpWrapper {
+        JSStrictPropertyOpWrapper {
+            op: self.op,
+            info: self.info
+        }
+    }
+}
+
 pub struct JSPropertyOpWrapper {
-    op: JSPropertyOp,
+    op: Option<JSNative>,
     info: *JSJitInfo,
 }
 
-#[deriving(Clone)]
+impl Clone for JSPropertyOpWrapper {
+    fn clone(&self) -> JSPropertyOpWrapper {
+        JSPropertyOpWrapper {
+            op: self.op,
+            info: self.info
+        }
+    }
+}
+
 pub struct JSNativeWrapper {
-    op: JSNative,
+    op: Option<JSNative>,
     info: *JSJitInfo,
+}
+
+impl Clone for JSNativeWrapper {
+    fn clone(&self) -> JSNativeWrapper {
+        JSNativeWrapper {
+            op: self.op,
+            info: self.info
+        }
+    }
 }
 
 #[deriving(Clone)]
@@ -554,8 +578,8 @@ pub struct struct_JSPropertyDescriptor {
     obj: *JSObject,
     attrs: c_uint,
     shortid: c_uint,
-    getter: JSPropertyOp,
-    setter: JSStrictPropertyOp,
+    getter: Option<JSPropertyOp>,
+    setter: Option<JSStrictPropertyOp>,
     value: JSVal,
 }
 
@@ -1013,9 +1037,9 @@ pub fn JS_DefineConstDoubles(cx: *JSContext, obj: *JSObject, cds: *JSConstDouble
 
 pub fn JS_DefineProperties(cx: *JSContext, obj: *JSObject, ps: *JSPropertySpec) -> JSBool;
 
-pub fn JS_DefineProperty(cx: *JSContext, obj: *JSObject, name: *c_char, value: JSVal, getter: JSPropertyOp, setter: JSStrictPropertyOp, attrs: c_uint) -> JSBool;
+pub fn JS_DefineProperty(cx: *JSContext, obj: *JSObject, name: *c_char, value: JSVal, getter: Option<JSPropertyOp>, setter: Option<JSStrictPropertyOp>, attrs: c_uint) -> JSBool;
 
-pub fn JS_DefinePropertyById(cx: *JSContext, obj: *JSObject, id: jsid, value: JSVal, getter: JSPropertyOp, setter: JSStrictPropertyOp, attrs: c_uint) -> JSBool;
+pub fn JS_DefinePropertyById(cx: *JSContext, obj: *JSObject, id: jsid, value: JSVal, getter: Option<JSPropertyOp>, setter: Option<JSStrictPropertyOp>, attrs: c_uint) -> JSBool;
 
 pub fn JS_DefineOwnProperty(cx: *JSContext, obj: *JSObject, id: jsid, descriptor: JSVal, bp: *JSBool) -> JSBool;
 
@@ -1155,7 +1179,7 @@ pub fn JS_SetTrustedPrincipals(rt: *JSRuntime, prin: *JSPrincipals);
 
 pub fn JS_InitDestroyPrincipalsCallback(rt: *JSRuntime, destroyPrincipals: JSDestroyPrincipalsOp);
 
-pub fn JS_NewFunction(cx: *JSContext, call: JSNative, nargs: c_uint, flags: c_uint, parent: *JSObject, name: *c_char) -> *JSFunction;
+pub fn JS_NewFunction(cx: *JSContext, call: Option<JSNative>, nargs: c_uint, flags: c_uint, parent: *JSObject, name: *c_char) -> *JSFunction;
 
 pub fn JS_NewFunctionById(cx: *JSContext, call: JSNative, nargs: c_uint, flags: c_uint, parent: *JSObject, id: jsid) -> *JSFunction;
 
