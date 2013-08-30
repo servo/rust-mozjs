@@ -213,7 +213,7 @@ mod shadow {
         }
         
         #[inline(always)]
-        pub fn fixedSlots(&self) -> *JSVal {
+        pub unsafe fn fixedSlots(&self) -> *JSVal {
             (ptr::offset(ptr::to_unsafe_ptr(&self), 1)) as *JSVal
         }
 
