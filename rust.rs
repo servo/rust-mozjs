@@ -16,6 +16,7 @@ use JSOPTION_TYPE_INFERENCE;
 use JSVAL_NULL;
 use ERR;
 use name_pool::*;
+use global::global_class;
 use std::ptr;
 use std::ptr::null;
 use result;
@@ -179,6 +180,24 @@ impl Cx {
                 Ok(compartment)
             })
         }
+    }
+
+    #[fixed_stack_segment]
+    pub fn new_compartment_with_global(@self, global: *JSObject) -> Result<@mut Compartment,()> {
+        let np = NamePool();
+        let compartment = @mut Compartment {
+            cx: self,
+            name_pool: np,
+            global_funcs: ~[],
+            global_props: ~[],
+            global_class: @global_class(np),
+            global_obj: self.rooted_obj(global),
+            global_protos: @mut HashMap::new()
+        };
+        unsafe {
+            self.set_cx_private(ptr::to_unsafe_ptr(&*compartment) as *());
+        }
+        Ok(compartment)
     }
 
     #[fixed_stack_segment]
