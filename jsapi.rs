@@ -317,7 +317,8 @@ pub struct struct_JSStringFinalizer {
     finalize: *u8,
 }
 
-pub type JSCheckAccessOp = *u8;
+//XXXjdm JSAccessMode is an enum; uint32_t may not be correct.
+pub type JSCheckAccessOp = extern "C" fn(*JSContext, **JSObject, *jsid, uint32_t, *mut JSVal) -> JSBool;
 
 pub type JSHasInstanceOp = extern "C" fn(*JSContext, **JSObject, *JSVal, *mut JSBool) -> JSBool;
 
@@ -485,13 +486,13 @@ pub type JSClassInternal = *u8;
 pub struct JSClass {
     name: *c_char,
     flags: uint32_t,
-    addProperty: JSPropertyOp,
-    delProperty: JSPropertyOp,
-    getProperty: JSPropertyOp,
-    setProperty: JSStrictPropertyOp,
-    enumerate: JSEnumerateOp,
-    resolve: JSResolveOp,
-    convert: JSConvertOp,
+    addProperty: Option<JSPropertyOp>,
+    delProperty: Option<JSPropertyOp>,
+    getProperty: Option<JSPropertyOp>,
+    setProperty: Option<JSStrictPropertyOp>,
+    enumerate: Option<JSEnumerateOp>,
+    resolve: Option<JSResolveOp>,
+    convert: Option<JSConvertOp>,
     finalize: Option<JSFinalizeOp>,
     checkAccess: Option<JSCheckAccessOp>,
     call: Option<JSNative>,
