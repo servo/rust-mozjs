@@ -20,7 +20,7 @@ use std::ptr;
 use jsapi;
 use jsapi::{JSClass, JSContext, JSVal, JSFunctionSpec, JSBool, JSNativeWrapper};
 use jsapi::{JS_EncodeString, JS_free, JS_ValueToBoolean, JS_ValueToString};
-use jsapi::{JS_ReportError, JS_ValueToSource};
+use jsapi::{JS_ReportError, JS_ValueToSource, JS_GC, JS_GetRuntime};
 use jsapi::{JSPropertyOp, JSStrictPropertyOp, JSEnumerateOp, JSResolveOp, JSConvertOp };
 use JSCLASS_IS_GLOBAL;
 use JSCLASS_HAS_RESERVED_SLOTS;
@@ -34,13 +34,13 @@ pub fn basic_class(np: @mut NamePool, name: ~str) -> JSClass {
     JSClass {
         name: np.add(name),
         flags: JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT + 1),
-        addProperty: unsafe { GetJSClassHookStubPointer(PROPERTY_STUB) as JSPropertyOp },
-        delProperty: unsafe { GetJSClassHookStubPointer(PROPERTY_STUB) as JSPropertyOp },
-        getProperty: unsafe { GetJSClassHookStubPointer(PROPERTY_STUB) as JSPropertyOp },
-        setProperty: unsafe { GetJSClassHookStubPointer(STRICT_PROPERTY_STUB) as JSStrictPropertyOp },
-        enumerate: unsafe { GetJSClassHookStubPointer(ENUMERATE_STUB) as JSEnumerateOp },
-        resolve: unsafe { GetJSClassHookStubPointer(RESOLVE_STUB) as JSResolveOp },
-        convert: unsafe { GetJSClassHookStubPointer(CONVERT_STUB) as JSConvertOp },
+        addProperty: unsafe { Some(GetJSClassHookStubPointer(PROPERTY_STUB) as JSPropertyOp) },
+        delProperty: unsafe { Some(GetJSClassHookStubPointer(PROPERTY_STUB) as JSPropertyOp) },
+        getProperty: unsafe { Some(GetJSClassHookStubPointer(PROPERTY_STUB) as JSPropertyOp) },
+        setProperty: unsafe { Some(GetJSClassHookStubPointer(STRICT_PROPERTY_STUB) as JSStrictPropertyOp) },
+        enumerate: unsafe { Some(GetJSClassHookStubPointer(ENUMERATE_STUB) as JSEnumerateOp) },
+        resolve: unsafe { Some(GetJSClassHookStubPointer(RESOLVE_STUB) as JSResolveOp) },
+        convert: unsafe { Some(GetJSClassHookStubPointer(CONVERT_STUB) as JSConvertOp) },
         finalize: None,
         checkAccess: None,
         call: None,
@@ -85,6 +85,15 @@ pub extern fn debug(cx: *JSContext, argc: c_uint, vp: *mut JSVal) -> JSBool {
         return 1_i32;
     }
 }
+
+pub extern fn gc(cx: *JSContext, argc: c_uint, vp: *mut JSVal) -> JSBool {
+    unsafe {
+        JS_GC(JS_GetRuntime(cx));
+        JS_SET_RVAL(cx, &*vp, JSVAL_VOID);
+        return 1;
+    }
+}
+
 
 pub extern fn assert(cx: *JSContext, argc: c_uint, vp: *mut JSVal) -> JSBool {
     unsafe {
@@ -134,6 +143,16 @@ pub fn debug_fns(np: @mut NamePool) -> ~[JSFunctionSpec] {
             name: np.add(~"assert"),
             call: JSNativeWrapper {
                 op: Some(assert),
+                info: null()
+            },
+            nargs: 1,
+            flags: 0,
+            selfHostedName: null()
+        },
+        JSFunctionSpec {
+            name: np.add(~"gc"),
+            call: JSNativeWrapper {
+                op: Some(gc),
                 info: null()
             },
             nargs: 1,
