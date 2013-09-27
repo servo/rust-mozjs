@@ -36,7 +36,7 @@ pub struct rt_rsrc {
 
 impl Drop for rt_rsrc {
     #[fixed_stack_segment]
-    fn drop(&self) {
+    fn drop(&mut self) {
         unsafe {
             JS_Finish(self.ptr);
         }
@@ -99,7 +99,7 @@ pub struct Cx {
 #[unsafe_destructor]
 impl Drop for Cx {
     #[fixed_stack_segment]
-    fn drop(&self) {
+    fn drop(&mut self) {
         unsafe {
             JS_DestroyContext(self.ptr);
         }
@@ -166,7 +166,7 @@ impl Cx {
             let np = NamePool();
             let globcls = @globclsfn(np);
             let globobj = JS_NewGlobalObject(self.ptr, ptr::to_unsafe_ptr(&*globcls), null());
-            result(JS_InitStandardClasses(self.ptr, globobj)).chain(|_ok| {
+            result(JS_InitStandardClasses(self.ptr, globobj)).and_then(|_ok| {
                 let compartment = @mut Compartment {
                     cx: self,
                     name_pool: np,
@@ -376,7 +376,7 @@ pub struct jsobj_rsrc {
 #[unsafe_destructor]
 impl Drop for jsobj_rsrc {
     #[fixed_stack_segment]
-    fn drop(&self) {
+    fn drop(&mut self) {
         unsafe {
             JS_RemoveObjectRoot(self.cxptr, ptr::to_unsafe_ptr(&self.ptr));
         }
@@ -425,7 +425,7 @@ pub mod test {
         let cx = rt.cx();
         cx.set_default_options_and_version();
         cx.set_logging_error_reporter();
-        cx.new_compartment(global::global_class).chain(|comp| {
+        cx.new_compartment(global::global_class).and_then(|comp| {
             unsafe { JS_GC(JS_GetRuntime(comp.cx.ptr)); }
 
             comp.define_functions(global::debug_fns);

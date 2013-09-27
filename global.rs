@@ -86,7 +86,7 @@ pub extern fn debug(cx: *JSContext, argc: c_uint, vp: *mut JSVal) -> JSBool {
     }
 }
 
-pub extern fn gc(cx: *JSContext, argc: c_uint, vp: *mut JSVal) -> JSBool {
+pub extern fn gc(cx: *JSContext, _argc: c_uint, vp: *mut JSVal) -> JSBool {
     unsafe {
         JS_GC(JS_GetRuntime(cx));
         JS_SET_RVAL(cx, &*vp, JSVAL_VOID);
