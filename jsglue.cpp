@@ -59,6 +59,7 @@ struct ProxyTraps {
     bool (*getElementIfPresent)(JSContext *cx, JSObject *obj, JSObject *receiver,
                                 uint32_t index, JS::Value *vp, bool *present);
     bool (*getPrototypeOf)(JSContext *cx, JSObject *proxy, JSObject **proto);
+    void (*trace)(JSTracer *trc, JSObject *proxy);
 };
 
 int HandlerFamily = js::JSSLOT_PROXY_EXTRA + 0 /*JSPROXYSLOT_EXPANDO*/;
@@ -255,6 +256,13 @@ class ForwardingProxyHandler : public js::BaseProxyHandler
         return mTraps.getPrototypeOf ?
                 mTraps.getPrototypeOf(cx, proxy, proto) :
                 BaseProxyHandler::getPrototypeOf(cx, proxy, proto);
+    }
+
+    virtual void trace(JSTracer *trc, JSObject *proxy)
+    {
+        return mTraps.trace ?
+                mTraps.trace(trc, proxy) :
+                BaseProxyHandler::trace(trc, proxy);
     }
 };
 
