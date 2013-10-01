@@ -44,9 +44,10 @@ pub struct ProxyTraps {
     //regexp_toShared: *u8,
     defaultValue: *u8,
     iteratorNext: *u8,
-    finalize: *u8,
+    finalize: extern "C" fn(*JSFreeOp, *JSObject),
     getElementIfPresent: *u8,
-    getPrototypeOf: *u8
+    getPrototypeOf: *u8,
+    trace: Option<extern "C" fn(*mut JSTracer, *JSObject)>
 }
 
 #[link_args="-ljsglue"]
