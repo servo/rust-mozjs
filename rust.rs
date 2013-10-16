@@ -201,18 +201,17 @@ impl Cx {
     }
 
     #[fixed_stack_segment]
-    pub fn evaluate_script(@self, glob: jsobj, bytes: ~[u8], filename: ~str, line_num: uint) 
+    pub fn evaluate_script(@self, glob: jsobj, script: ~str, filename: ~str, line_num: uint)
                     -> Result<(),()> {
-        do bytes.as_imm_buf |bytes_ptr, bytes_len| {
+        do script.to_utf16().as_imm_buf |script_ptr, script_len| {
             do filename.to_c_str().with_ref |filename_cstr| {
-                let bytes_ptr = bytes_ptr as *c_char;
                 let rval: JSVal = JSVAL_NULL;
-                debug!("Evaluating script from %s with bytes %?", filename, bytes);
+                debug!("Evaluating script from %s with content %?", filename, script);
                 unsafe {
-                    if JS_EvaluateScript(self.ptr, glob.ptr,
-                                         bytes_ptr, bytes_len as c_uint,
-                                         filename_cstr, line_num as c_uint,
-                                         ptr::to_unsafe_ptr(&rval)) == ERR {
+                    if ERR == JS_EvaluateUCScript(self.ptr, glob.ptr,
+                                                  script_ptr, script_len as c_uint,
+                                                  filename_cstr, line_num as c_uint,
+                                                  ptr::to_unsafe_ptr(&rval)) {
                         debug!("...err!");
                         Err(())
                     } else {
