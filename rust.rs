@@ -430,8 +430,7 @@ pub mod test {
             comp.define_functions(global::debug_fns);
 
             let s = ~"debug(22);";
-            let bytes = s.as_bytes().to_owned();
-            cx.evaluate_script(comp.global_obj, bytes, ~"test", 1u)
+            cx.evaluate_script(comp.global_obj, s, ~"test", 1u)
         });
     }
 
