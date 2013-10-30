@@ -6,7 +6,7 @@
        vers = "0.1")];
 #[crate_type = "lib"];
 
-#[feature(globs)];
+#[feature(globs, managed_boxes)];
 
 #[allow(non_uppercase_statics)];
 

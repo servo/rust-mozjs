@@ -79,7 +79,7 @@ pub extern fn debug(cx: *JSContext, argc: c_uint, vp: *mut JSVal) -> JSBool {
         let argv = JS_ARGV(cx, &*vp);
         for i in range(0, argc as int) {
             let jsstr = JS_ValueToString(cx, *ptr::offset(argv, i));
-            debug!("%s", jsval_to_rust_str(cx, jsstr));
+            debug!("{:s}", jsval_to_rust_str(cx, jsstr));
         }
         JS_SET_RVAL(cx, &*vp, JSVAL_VOID);
         return 1_i32;
@@ -112,10 +112,10 @@ pub extern fn assert(cx: *JSContext, argc: c_uint, vp: *mut JSVal) -> JSBool {
         if result == 0 {
             // This operation can fail, but that is not critical.
             let source = JS_ValueToSource(cx, argument);
-            let msg = fmt!("JavaScript assertion failed: %s is falsy!",
-                            jsval_to_rust_str(cx, source));
+            let msg = format!("JavaScript assertion failed: {:s} is falsy!",
+                              jsval_to_rust_str(cx, source));
 
-            debug!(msg);
+            debug!("{:s}", msg);
             do msg.to_c_str().with_ref |buf| {
               JS_ReportError(cx, buf);
             }

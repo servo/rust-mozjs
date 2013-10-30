@@ -206,7 +206,7 @@ impl Cx {
         do script.to_utf16().as_imm_buf |script_ptr, script_len| {
             do filename.to_c_str().with_ref |filename_cstr| {
                 let rval: JSVal = JSVAL_NULL;
-                debug!("Evaluating script from %s with content %?", filename, script);
+                debug!("Evaluating script from {:s} with content {}", filename, script);
                 unsafe {
                     if ERR == JS_EvaluateUCScript(self.ptr, glob.ptr,
                                                   script_ptr, script_len as c_uint,
@@ -227,7 +227,7 @@ impl Cx {
 
     pub fn lookup_class_name(@self, s: ~str) ->  @JSClass {
         // FIXME: expect should really take a lambda...
-        let error_msg = fmt!("class %s not found in class table", s);
+        let error_msg = format!("class {:s} not found in class table", s);
         let name = self.classes.find(&s);
         *(name.expect(error_msg))
     }
@@ -259,7 +259,7 @@ pub extern fn reportError(_cx: *JSContext, msg: *c_char, report: *JSErrorReport)
         let fname = if fnptr.is_not_null() {from_c_str(fnptr)} else {~"none"};
         let lineno = (*report).lineno;
         let msg = from_c_str(msg);
-        error!("Error at %s:%?: %s\n", fname, lineno, msg);
+        error!("Error at {:s}:{}: {:s}\n", fname, lineno, msg);
     }
 }
 
@@ -330,8 +330,8 @@ impl Compartment {
                           -> Result<jsobj, ()> {
         let classptr = self.cx.lookup_class_name(class_name);
         let proto = self.global_protos.find(&proto_name.clone()).expect(
-            fmt!("new_object_with_proto: expected to find %s in the proto \
-                  table", proto_name));
+            format!("new_object_with_proto: expected to find {:s} in the proto \
+                    table", proto_name));
         unsafe {
             let obj = self.cx.rooted_obj(JS_NewObject(self.cx.ptr, ptr::to_unsafe_ptr(&*classptr),
                                                       proto.ptr, parent));
