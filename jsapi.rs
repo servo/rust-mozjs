@@ -256,7 +256,7 @@ pub type moz_static_assert6 = c_int;
 
 // JSVal was originally type of u64. 
 // now this become {u64} because of the union abi issue on ARM arch. See #398.
-#[deriving(Eq)]
+#[deriving(Eq,Clone)]
 pub struct JSVal {
     v: u64
 }

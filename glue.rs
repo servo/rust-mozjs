@@ -174,4 +174,5 @@ pub fn IsProxyHandlerFamily(obj: *JSObject) -> bool;
 pub fn GetProxyHandlerExtra(obj: *JSObject) -> *libc::c_void;
 pub fn GetProxyHandler(obj: *JSObject) -> *libc::c_void;
 pub fn InvokeGetOwnPropertyDescriptor(handler: *libc::c_void, cx: *JSContext, proxy: *JSObject, id: jsid, set: JSBool, desc: *mut JSPropertyDescriptor) -> JSBool;
+pub fn GetGlobalForObjectCrossCompartment(obj: *JSObject) -> *JSObject;
 }

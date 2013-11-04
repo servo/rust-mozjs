@@ -616,4 +616,10 @@ GetProxyHandler(JSObject* obj)
     return handler;
 }
 
+JSObject*
+GetGlobalForObjectCrossCompartment(JSObject* obj)
+{
+    return js::GetGlobalForObjectCrossCompartment(obj);
+}
+
 } // extern "C"
