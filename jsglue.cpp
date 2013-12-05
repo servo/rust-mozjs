@@ -622,4 +622,15 @@ GetGlobalForObjectCrossCompartment(JSObject* obj)
     return js::GetGlobalForObjectCrossCompartment(obj);
 }
 
+void
+ReportError(JSContext* aCx, const char* aError)
+{
+#ifdef DEBUG
+    for (const char* p = aError; *p; ++p) {
+        assert(*p != '%');
+    }
+#endif
+    JS_ReportError(aCx, aError);
+}
+
 } // extern "C"
