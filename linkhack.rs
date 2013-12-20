@@ -5,19 +5,23 @@
 // Some crumminess to make sure we link correctly
 
 #[cfg(target_os = "linux")]
-#[link_args = "-lpthread -L. -ljs_static -lstdc++ -lz"]
-#[nolink]
+#[link(name = "pthread")]
+#[link(name = "js_static")]
+#[link(name = "stdc++")]
+#[link(name = "z")]
 extern { }
 
 #[cfg(target_os = "macos")]
-#[link_args = "-L. -ljs_static -lstdc++ -lz"]
-#[nolink]
+#[link(name = "js_static")]
+#[link(name = "stdc++")]
+#[link(name = "z")]
 extern { }
 
 //Avoid hard linking with stdc++ in android ndk cross toolchain
 //It is hard to find location of android system libs in this rust source file
 //and also we need to size down for mobile app packaging
 #[cfg(target_os = "android")]
-#[link_args = "-L. -lmozjs -lstdc++ -lz"]
-#[nolink]
+#[link(name = "js_static")]
+#[link(name = "stdc++")]
+#[link(name = "z")]
 extern { }

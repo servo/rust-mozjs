@@ -6,6 +6,7 @@
 
 use std::libc::types::os::arch::c95::{size_t, c_uint};
 use std::libc::{c_char, uintptr_t};
+use std::num;
 use std::hashmap::HashMap;
 use jsapi::*;
 use default_stacksize;
@@ -21,9 +22,9 @@ use std::ptr;
 use std::ptr::null;
 use result;
 use result_obj;
-use std::uint;
 use std::str::raw::from_c_str;
 use std::cast;
+use green::task::GreenTask;
 
 // ___________________________________________________________________________
 // friendly Rustic API to runtimes
@@ -35,7 +36,6 @@ pub struct rt_rsrc {
 }
 
 impl Drop for rt_rsrc {
-    #[fixed_stack_segment]
     fn drop(&mut self) {
         unsafe {
             JS_Finish(self.ptr);
@@ -50,7 +50,6 @@ pub fn new_runtime(p: *JSRuntime) -> rt {
 }
 
 impl rt_rsrc {
-    #[fixed_stack_segment]
     pub fn cx(@self) -> @Cx {
         unsafe {
             new_context(JS_NewContext(self.ptr, default_stacksize as size_t), self)
@@ -63,22 +62,16 @@ extern fn gc_callback(rt: *JSRuntime, _status: JSGCStatus) {
     use std::rt::local::Local;
     use std::rt::task::Task;
     unsafe {
-        do Local::borrow |task: &mut Task| {
-            match task.coroutine {
-                Some(ref c) => {
-                    let start = c.current_stack_segment.start() as uintptr_t;
-                    let end = c.current_stack_segment.end() as uintptr_t;
-                    JS_SetNativeStackBounds(rt, uint::min(start, end), uint::max(start, end));
-                }
-                None => {
-                    fail!("gc_callback: cannot get stack for JS_SetNativeStackBounds");
-                }
-            }
-        }
+        let mut task = Local::borrow(None::<Task>);
+        let green_task: ~GreenTask = task.get().maybe_take_runtime().unwrap();
+        let c = green_task.coroutine.get_ref();
+        let start = c.current_stack_segment.start() as uintptr_t;
+        let end = c.current_stack_segment.end() as uintptr_t;
+        JS_SetNativeStackBounds(rt, num::min(start, end), num::max(start, end));
+        task.get().put_runtime(green_task);
     }
 }
 
-#[fixed_stack_segment]
 pub fn rt() -> rt {
     unsafe {
         let runtime = JS_Init(default_heapsize);
@@ -98,7 +91,6 @@ pub struct Cx {
 
 #[unsafe_destructor]
 impl Drop for Cx {
-    #[fixed_stack_segment]
     fn drop(&mut self) {
         unsafe {
             JS_DestroyContext(self.ptr);
@@ -115,7 +107,6 @@ pub fn new_context(ptr: *JSContext, rt: rt) -> @Cx {
 }
     
 impl Cx {
-    #[fixed_stack_segment]
     pub fn rooted_obj(@self, obj: *JSObject) -> jsobj {
         let jsobj = @jsobj_rsrc {cx: self, cxptr: self.ptr, ptr: obj};
         unsafe {
@@ -130,37 +121,32 @@ impl Cx {
         self.set_version(JSVERSION_LATEST);
     }
 
-    #[fixed_stack_segment]
     pub fn set_options(@self, v: c_uint) {
         unsafe {
             JS_SetOptions(self.ptr, v);
         }
     }
 
-    #[fixed_stack_segment]
     pub fn set_version(@self, v: i32) {
         unsafe {
             JS_SetVersion(self.ptr, v);
         }
     }
 
-    #[fixed_stack_segment]
     pub fn set_logging_error_reporter(@self) {
         unsafe {
             JS_SetErrorReporter(self.ptr, reportError);
         }
     }
 
-    #[fixed_stack_segment]
     pub fn set_error_reporter(@self, reportfn: extern "C" fn(*JSContext, *c_char, *JSErrorReport)) {
         unsafe {
             JS_SetErrorReporter(self.ptr, reportfn);
         }
     }
 
-    #[fixed_stack_segment]
     pub fn new_compartment(@self,
-                       globclsfn: &fn(@mut NamePool) -> JSClass)
+                       globclsfn: |@mut NamePool| -> JSClass)
                     -> Result<@mut Compartment,()> {
         unsafe {
             let np = NamePool();
@@ -182,7 +168,6 @@ impl Cx {
         }
     }
 
-    #[fixed_stack_segment]
     pub fn new_compartment_with_global(@self, global: *JSObject) -> Result<@mut Compartment,()> {
         let np = NamePool();
         let compartment = @mut Compartment {
@@ -200,29 +185,27 @@ impl Cx {
         Ok(compartment)
     }
 
-    #[fixed_stack_segment]
     pub fn evaluate_script(@self, glob: jsobj, script: ~str, filename: ~str, line_num: uint)
                     -> Result<(),()> {
-        do script.to_utf16().as_imm_buf |script_ptr, script_len| {
-            do filename.to_c_str().with_ref |filename_cstr| {
-                let rval: JSVal = JSVAL_NULL;
-                debug!("Evaluating script from {:s} with content {}", filename, script);
-                unsafe {
-                    if ERR == JS_EvaluateUCScript(self.ptr, glob.ptr,
-                                                  script_ptr, script_len as c_uint,
-                                                  filename_cstr, line_num as c_uint,
-                                                  ptr::to_unsafe_ptr(&rval)) {
-                        debug!("...err!");
-                        Err(())
-                    } else {
-                        // we could return the script result but then we'd have
-                        // to root it and so forth and, really, who cares?
-                        debug!("...ok!");
-                        Ok(())
-                    }
+        let script_utf16 = script.to_utf16();
+        filename.to_c_str().with_ref(|filename_cstr| {
+            let rval: JSVal = JSVAL_NULL;
+            debug!("Evaluating script from {:s} with content {}", filename, script);
+            unsafe {
+                if ERR == JS_EvaluateUCScript(self.ptr, glob.ptr,
+                                              script_utf16.as_ptr(), script_utf16.len() as c_uint,
+                                              filename_cstr, line_num as c_uint,
+                                              ptr::to_unsafe_ptr(&rval)) {
+                    debug!("...err!");
+                    Err(())
+                } else {
+                    // we could return the script result but then we'd have
+                    // to root it and so forth and, really, who cares?
+                    debug!("...ok!");
+                    Ok(())
                 }
             }
-        }
+        })
     }
 
     pub fn lookup_class_name(@self, s: ~str) ->  @JSClass {
@@ -232,22 +215,18 @@ impl Cx {
         *(name.expect(error_msg))
     }
 
-    #[fixed_stack_segment]
     pub unsafe fn get_cx_private(@self) -> *() {
         cast::transmute(JS_GetContextPrivate(self.ptr))
     }
 
-    #[fixed_stack_segment]
     pub unsafe fn set_cx_private(@self, data: *()) {
         JS_SetContextPrivate(self.ptr, cast::transmute(data));
     }
 
-    #[fixed_stack_segment]
     pub unsafe fn get_obj_private(@self, obj: *JSObject) -> *() {
         cast::transmute(JS_GetPrivate(obj))
     }
 
-    #[fixed_stack_segment]
     pub unsafe fn set_obj_private(@self, obj: *JSObject, data: *()) {
         JS_SetPrivate(obj, cast::transmute(data));
     }
@@ -277,29 +256,22 @@ pub struct Compartment {
 }
 
 impl Compartment {
-    #[fixed_stack_segment]
     pub fn define_functions(@mut self,
-                        specfn: &fn(@mut NamePool) -> ~[JSFunctionSpec])
+                        specfn: |@mut NamePool| -> ~[JSFunctionSpec])
                      -> Result<(),()> {
         let specvec = @specfn(self.name_pool);
         self.global_funcs.push(specvec);
-        do specvec.as_imm_buf |specs, _len| {
-            unsafe {
-                result(JS_DefineFunctions(self.cx.ptr, self.global_obj.ptr, specs))
-            }
+        unsafe {
+            result(JS_DefineFunctions(self.cx.ptr, self.global_obj.ptr, specvec.as_ptr()))
         }
     }
-    #[fixed_stack_segment]
-    pub fn define_properties(@mut self, specfn: &fn() -> ~[JSPropertySpec]) -> Result<(),()> {
+    pub fn define_properties(@mut self, specfn: || -> ~[JSPropertySpec]) -> Result<(),()> {
         let specvec = @specfn();
         self.global_props.push(specvec);
-        do specvec.as_imm_buf |specs, _len| {
-            unsafe {
-                result(JS_DefineProperties(self.cx.ptr, self.global_obj.ptr, specs))
-            }
+        unsafe {
+            result(JS_DefineProperties(self.cx.ptr, self.global_obj.ptr, specvec.as_ptr()))
         }
     }
-    #[fixed_stack_segment]
     pub fn define_property(@mut self,
                        name: ~str,
                        value: JSVal,
@@ -316,7 +288,6 @@ impl Compartment {
                                      attrs))
         }
     }
-    #[fixed_stack_segment]
     pub fn new_object(@mut self, class_name: ~str, proto: *JSObject, parent: *JSObject)
                -> Result<jsobj, ()> {
         unsafe {
@@ -325,7 +296,6 @@ impl Compartment {
             result_obj(obj)
         }
     }
-    #[fixed_stack_segment]
     pub fn new_object_with_proto(@mut self, class_name: ~str, proto_name: ~str, parent: *JSObject)
                           -> Result<jsobj, ()> {
         let classptr = self.cx.lookup_class_name(class_name);
@@ -348,7 +318,7 @@ impl Compartment {
             fail!(~"Duplicate global prototype registered; you're gonna have a bad time.")
         }
     }
-    pub fn register_class(@mut self, class_fn: &fn(x: @mut Compartment) -> JSClass) {
+    pub fn register_class(@mut self, class_fn: |x: @mut Compartment| -> JSClass) {
         let classptr = @class_fn(self);
         if !self.cx.classes.insert(
             unsafe { from_c_str(classptr.name) },
@@ -374,7 +344,6 @@ pub struct jsobj_rsrc {
 
 #[unsafe_destructor]
 impl Drop for jsobj_rsrc {
-    #[fixed_stack_segment]
     fn drop(&mut self) {
         unsafe {
             JS_RemoveObjectRoot(self.cxptr, ptr::to_unsafe_ptr(&self.ptr));
@@ -383,7 +352,7 @@ impl Drop for jsobj_rsrc {
 }
 
 impl jsobj_rsrc {
-    fn new_object(&self, cx: @Cx, cxptr: *JSContext, ptr: *JSObject) -> jsobj {
+    pub fn new_object(&self, cx: @Cx, cxptr: *JSContext, ptr: *JSObject) -> jsobj {
         return @jsobj_rsrc {
             cx: cx,
             cxptr: cxptr,
@@ -400,13 +369,10 @@ pub trait to_jsstr {
 }
 
 impl to_jsstr for ~str {
-    #[fixed_stack_segment]
     fn to_jsstr(self, cx: @Cx) -> *JSString {
-        do self.as_imm_buf |buf, len| {
-            unsafe {
-                let cbuf = cast::transmute(buf);
-                JS_NewStringCopyN(cx.ptr, cbuf, len as size_t)
-            }
+        unsafe {
+            let cbuf = cast::transmute(self.as_ptr());
+            JS_NewStringCopyN(cx.ptr, cbuf, self.len() as size_t)
         }
     }
 }
@@ -418,7 +384,6 @@ pub mod test {
     use super::super::jsapi::{JS_GC, JS_GetRuntime};
 
     #[test]
-    #[fixed_stack_segment]
     pub fn dummy() {
         let rt = rt();
         let cx = rt.cx();
