@@ -2,8 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#[link(name = "js",
-       vers = "0.1")];
+#[crate_id = "github.com/mozilla-servo/rust-mozjs#js:0.1"];
 #[crate_type = "lib"];
 
 #[feature(globs, managed_boxes)];
@@ -11,6 +10,7 @@
 #[allow(non_uppercase_statics)];
 
 extern mod extra;
+extern mod green;
 
 use std::libc;
 use std::cast;
@@ -159,10 +159,7 @@ pub unsafe fn JS_SET_RVAL(_cx: *JSContext, vp: *JSVal, v: JSVal) {
     *vp = v;
 }
 
-// FIXME This should be inline but fixed_stack_segment and inline are
-// not currently compatible
-//#[inline(always)]
-#[fixed_stack_segment]
+#[inline(alwyas)]
 pub unsafe fn JS_THIS_OBJECT(cx: *JSContext, vp: *mut JSVal) -> *JSObject {
     let r = JSVAL_TO_OBJECT(
         if JSVAL_IS_PRIMITIVE(*ptr::offset(&*vp, 1)) {

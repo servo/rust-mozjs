@@ -50,7 +50,7 @@ pub struct ProxyTraps {
     trace: Option<extern "C" fn(*mut JSTracer, *JSObject)>
 }
 
-#[link_args="-ljsglue"]
+#[link(name = "jsglue")]
 extern {
 
 // FIXME: Couldn't run on rust_stack until rust issue #6470 fixed.

@@ -21,7 +21,6 @@ use jsapi;
 use jsapi::{JSClass, JSContext, JSVal, JSFunctionSpec, JSBool, JSNativeWrapper};
 use jsapi::{JS_EncodeString, JS_free, JS_ValueToBoolean, JS_ValueToString};
 use jsapi::{JS_ReportError, JS_ValueToSource, JS_GC, JS_GetRuntime};
-use jsapi::{JSPropertyOp, JSStrictPropertyOp, JSEnumerateOp, JSResolveOp, JSConvertOp };
 use JSCLASS_IS_GLOBAL;
 use JSCLASS_HAS_RESERVED_SLOTS;
 use JSCLASS_GLOBAL_SLOT_COUNT;
@@ -29,18 +28,17 @@ use JS_ARGV;
 use JSVAL_VOID;
 use JS_SET_RVAL;
 
-#[fixed_stack_segment]
 pub fn basic_class(np: @mut NamePool, name: ~str) -> JSClass {
     JSClass {
         name: np.add(name),
         flags: JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT + 1),
-        addProperty: unsafe { Some(GetJSClassHookStubPointer(PROPERTY_STUB) as JSPropertyOp) },
-        delProperty: unsafe { Some(GetJSClassHookStubPointer(PROPERTY_STUB) as JSPropertyOp) },
-        getProperty: unsafe { Some(GetJSClassHookStubPointer(PROPERTY_STUB) as JSPropertyOp) },
-        setProperty: unsafe { Some(GetJSClassHookStubPointer(STRICT_PROPERTY_STUB) as JSStrictPropertyOp) },
-        enumerate: unsafe { Some(GetJSClassHookStubPointer(ENUMERATE_STUB) as JSEnumerateOp) },
-        resolve: unsafe { Some(GetJSClassHookStubPointer(RESOLVE_STUB) as JSResolveOp) },
-        convert: unsafe { Some(GetJSClassHookStubPointer(CONVERT_STUB) as JSConvertOp) },
+        addProperty: unsafe { Some(transmute(GetJSClassHookStubPointer(PROPERTY_STUB))) },
+        delProperty: unsafe { Some(transmute(GetJSClassHookStubPointer(PROPERTY_STUB))) },
+        getProperty: unsafe { Some(transmute(GetJSClassHookStubPointer(PROPERTY_STUB))) },
+        setProperty: unsafe { Some(transmute(GetJSClassHookStubPointer(STRICT_PROPERTY_STUB))) },
+        enumerate: unsafe { Some(transmute(GetJSClassHookStubPointer(ENUMERATE_STUB))) },
+        resolve: unsafe { Some(transmute(GetJSClassHookStubPointer(RESOLVE_STUB))) },
+        convert: unsafe { Some(transmute(GetJSClassHookStubPointer(CONVERT_STUB))) },
         finalize: None,
         checkAccess: None,
         call: None,
@@ -62,7 +60,6 @@ pub fn global_class(np: @mut NamePool) -> JSClass {
     basic_class(np, ~"global")
 }
 
-#[fixed_stack_segment]
 pub unsafe fn jsval_to_rust_str(cx: *JSContext, vp: *jsapi::JSString) -> ~str {
     if vp.is_null() {
         ~""
@@ -116,9 +113,9 @@ pub extern fn assert(cx: *JSContext, argc: c_uint, vp: *mut JSVal) -> JSBool {
                               jsval_to_rust_str(cx, source));
 
             debug!("{:s}", msg);
-            do msg.to_c_str().with_ref |buf| {
+            msg.to_c_str().with_ref(|buf| {
               JS_ReportError(cx, buf);
-            }
+            });
             return 0_i32;
         }
 
