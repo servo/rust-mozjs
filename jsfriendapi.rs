@@ -16,10 +16,12 @@ pub struct JSJitInfo {
 
 #[nolink]
 pub mod bindgen {
-    use jsapi::{JSContext, JSObject, JSClass};
+    use jsapi::{JSContext, JSObject, JSClass, JSRuntime};
+    use std::libc::uintptr_t;
 
     extern {
         pub fn JS_NewObjectWithUniqueType(cx: *JSContext, clasp: *JSClass,
                                           proto: *JSObject, parent: *JSObject) -> *JSObject;
+        pub fn JS_GetAddressableObject(rt: *JSRuntime, candidateObj: uintptr_t) -> *JSObject;
     }
 }
