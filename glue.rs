@@ -7,7 +7,7 @@
 use std::libc;
 use std::libc::*;
 use jsapi::*;
-use jsfriendapi::JSJitInfo;
+use jsfriendapi::*;
 
 pub type enum_StubType = c_uint;
 pub static PROPERTY_STUB: u32 = 0_u32;
@@ -22,7 +22,7 @@ pub struct ProxyTraps {
     getPropertyDescriptor: extern "C" fn(*JSContext, *JSObject, jsid, c_bool, *mut JSPropertyDescriptor) -> c_bool,
     getOwnPropertyDescriptor: extern "C" fn(*JSContext, *JSObject, jsid, JSBool, *mut JSPropertyDescriptor) -> JSBool,
     defineProperty: extern "C" fn(*JSContext, *JSObject, jsid, *JSPropertyDescriptor) -> JSBool,
-    getOwnPropertyNames: *u8,
+    getOwnPropertyNames: extern "C" fn(*JSContext, *JSObject, *c_void) -> JSBool,
     delete_: *u8,
     enumerate: *u8,
 
