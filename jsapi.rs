@@ -940,6 +940,10 @@ pub fn JS_GC(rt: *JSRuntime);
 
 pub fn JS_MaybeGC(cx: *JSContext);
 
+pub fn JS_InhibitGC(cx: *JSContext);
+
+pub fn JS_AllowGC(cx: *JSContext);
+
 pub fn JS_SetGCCallback(rt: *JSRuntime, cb: JSGCCallback);
 
 pub fn JS_SetFinalizeCallback(rt: *JSRuntime, cb: JSFinalizeCallback);
