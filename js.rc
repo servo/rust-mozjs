@@ -23,10 +23,11 @@ extern crate serialize;
 use std::cast;
 use std::ptr::null;
 use std::result::{Result, Ok, Err};
+use std::libc;
 use std::libc::c_uint;
-use jsapi::{JSBool, JSContext,
-            JSObject, jsid,
-            JSProto_LIMIT};
+use jsapi::{JSBool, JSContext, JSPropertyOp, JSStrictPropertyOp, JSEnumerateOp,
+            JSObject, jsid, JSResolveOp, JSConvertOp, JSFinalizeOp, JSTraceOp,
+            JSProto_LIMIT, JSHandleObject, JSCheckAccessOp, JSNative, JSHasInstanceOp};
 use jsapi::JS_ComputeThis;
 use std::libc::types::common::c99::uint32_t;
 use jsval::JSVal;
@@ -153,4 +154,72 @@ pub unsafe fn JS_CALLEE(_cx: *JSContext, vp: *JSVal) -> JSVal {
 #[start]
 fn start(argc: int, argv: **u8) -> int {
     green::start(argc, argv, __test::main)
+}
+
+pub type JSObjectOp = extern "C" fn(*JSContext, JSHandleObject) -> *JSObject;
+
+pub struct Class {
+    name: *libc::c_char,
+    flags: uint32_t,
+    addProperty: Option<JSPropertyOp>,
+    delProperty: Option<JSPropertyOp>,
+    getProperty: Option<JSPropertyOp>,
+    setProperty: Option<JSStrictPropertyOp>,
+    enumerate: Option<JSEnumerateOp>,
+    resolve: Option<JSResolveOp>,
+    convert: Option<JSConvertOp>,
+    finalize: Option<JSFinalizeOp>,
+    checkAccess: Option<JSCheckAccessOp>,
+    call: Option<JSNative>,
+    hasInstance: Option<JSHasInstanceOp>,
+    construct: Option<JSNative>,
+    trace: Option<JSTraceOp>,
+
+    ext: ClassExtension,
+    ops: ObjectOps,
+}
+
+pub struct ClassExtension {
+    equality: *u8,
+    outerObject: Option<JSObjectOp>,
+    innerObject: Option<JSObjectOp>,
+    iteratorObject: *u8,
+    unused: *u8,
+    isWrappedNative: *u8,
+}
+
+pub struct ObjectOps {
+    lookupGeneric: *u8,
+    lookupProperty: *u8,
+    lookupElement: *u8,
+    lookupSpecial: *u8,
+    defineGeneric: *u8,
+    defineProperty: *u8,
+    defineElement: *u8,
+    defineSpecial: *u8,
+    getGeneric: *u8,
+    getProperty: *u8,
+    getElement: *u8,
+    getElementIfPresent: *u8,
+    getSpecial: *u8,
+    setGeneric: *u8,
+    setProperty: *u8,
+    setElement: *u8,
+    setSpecial: *u8,
+    getGenericAttributes: *u8,
+    getPropertyAttributes: *u8,
+    getElementAttributes: *u8,
+    getSpecialAttributes: *u8,
+    setGenericAttributes: *u8,
+    setPropertyAttributes: *u8,
+    setElementAttributes: *u8,
+    setSpecialAttributes: *u8,
+    deleteProperty: *u8,
+    deleteElement: *u8,
+    deleteSpecial: *u8,
+
+    enumerate: *u8,
+    typeOf: *u8,
+    thisObject: Option<JSObjectOp>,
+    clear: *u8,
 }
