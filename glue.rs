@@ -13,35 +13,35 @@ use jsval::JSVal;
 type c_bool = libc::c_int;
 
 pub struct ProxyTraps {
-    pub getPropertyDescriptor: extern "C" fn(*JSContext, *JSObject, jsid, c_bool, *mut JSPropertyDescriptor) -> c_bool,
-    pub getOwnPropertyDescriptor: extern "C" fn(*JSContext, *JSObject, jsid, JSBool, *mut JSPropertyDescriptor) -> JSBool,
-    pub defineProperty: extern "C" fn(*JSContext, *JSObject, jsid, *JSPropertyDescriptor) -> JSBool,
-    pub getOwnPropertyNames: *u8,
-    pub delete_: *u8,
-    pub enumerate: *u8,
+    pub getPropertyDescriptor: Option<extern "C" fn(*JSContext, *JSObject, jsid, c_bool, *mut JSPropertyDescriptor) -> c_bool>,
+    pub getOwnPropertyDescriptor: Option<extern "C" fn(*JSContext, *JSObject, jsid, JSBool, *mut JSPropertyDescriptor) -> JSBool>,
+    pub defineProperty: Option<extern "C" fn(*JSContext, *JSObject, jsid, *JSPropertyDescriptor) -> JSBool>,
+    pub getOwnPropertyNames: *u8, //XXX need a representation for AutoIdVector&
+    pub delete_: Option<extern "C" fn(*JSContext, *JSObject, jsid, *bool) -> JSBool>,
+    pub enumerate: *u8, //XXX need a representation for AutoIdVector&
 
-    pub has: *u8,
-    pub hasOwn: extern "C" fn(*JSContext, *JSObject, jsid, *mut JSBool) -> JSBool,
-    pub get: extern "C" fn(*JSContext, *JSObject, *JSObject, jsid, *mut JSVal) -> JSBool,
-    pub set: *u8,
-    pub keys: *u8,
-    pub iterate: *u8,
+    pub has: Option<extern "C" fn(*JSContext, *JSObject, jsid, *mut JSBool) -> JSBool>,
+    pub hasOwn: Option<extern "C" fn(*JSContext, *JSObject, jsid, *mut JSBool) -> JSBool>,
+    pub get: Option<extern "C" fn(*JSContext, *JSObject, *JSObject, jsid, *mut JSVal) -> JSBool>,
+    pub set: Option<extern "C" fn(*JSContext, *JSObject, *JSObject, jsid, JSBool, *JSVal) -> JSBool>,
+    pub keys: *u8, //XXX need a representation for AutoIdVector&
+    pub iterate: Option<extern "C" fn(*JSContext, *JSObject, uint, *JSVal) -> JSBool>,
 
-    pub call: *u8,
-    pub construct: *u8,
-    pub nativeCall: *u8,
-    pub hasInstance: *u8,
-    pub typeOf: *u8,
-    pub objectClassIs: *u8,
-    pub obj_toString: extern "C" fn(*JSContext, *JSObject) -> *JSString,
-    pub fun_toString: *u8,
+    pub call: Option<extern "C" fn(*JSContext, *JSObject, uint, *JSVal) -> JSBool>,
+    pub construct: Option<extern "C" fn(*JSContext, *JSObject, uint, *JSVal, *JSVal) -> JSBool>,
+    pub nativeCall: *u8, //XXX need a representation for IsAcceptableThis, NativeImpl, and CallArgs
+    pub hasInstance: Option<extern "C" fn(*JSContext, *JSObject, *JSVal, *JSBool) -> JSBool>,
+    pub typeOf: Option<extern "C" fn(*JSContext, *JSObject) -> uint>, //XXX JSType enum
+    pub objectClassIs: Option<extern "C" fn(*JSObject, uint, *JSContext) -> JSBool>, //XXX ESClassValue enum
+    pub obj_toString: Option<extern "C" fn(*JSContext, *JSObject) -> *JSString>,
+    pub fun_toString: Option<extern "C" fn(*JSContext, *JSObject, uint) -> *JSString>,
     //regexp_toShared: *u8,
-    pub defaultValue: *u8,
-    pub iteratorNext: *u8,
-    pub finalize: extern "C" fn(*JSFreeOp, *JSObject),
-    pub getElementIfPresent: *u8,
-    pub getPrototypeOf: *u8,
-    pub trace: Option<extern "C" fn(*mut JSTracer, *JSObject)>
+    pub defaultValue: Option<extern "C" fn(*JSContext, *JSObject, uint, *JSVal) -> JSBool>, //XXX JSType enum
+    pub iteratorNext: Option<extern "C" fn(*JSContext, *JSObject, *JSVal) -> JSBool>,
+    pub finalize: Option<extern "C" fn(*JSFreeOp, *JSObject)>,
+    pub getElementIfPresent: Option<extern "C" fn(*JSContext, *JSObject, *JSObject, u32, *JSVal, *JSBool) -> JSBool>,
+    pub getPrototypeOf: Option<extern "C" fn(*JSContext, *JSObject, **JSObject) -> JSBool>,
+    pub trace: Option<extern "C" fn(*mut JSTracer, *JSObject)>,
 }
 
 #[cfg(not(target_os = "android"))]
@@ -71,9 +71,11 @@ pub fn SetFunctionNativeReserved(fun: *JSObject, which: libc::size_t, val: *JSVa
 pub fn GetFunctionNativeReserved(fun: *JSObject, which: libc::size_t) -> *JSVal;
 
 pub fn CreateProxyHandler(traps: *ProxyTraps, extra: *libc::c_void) -> *libc::c_void;
+pub fn CreateWrapperProxyHandler(traps: *ProxyTraps) -> *libc::c_void;
 pub fn NewProxyObject(cx: *JSContext, handler: *libc::c_void, priv_: *JSVal,
                       proto: *JSObject, parent: *JSObject, call: *JSObject,
                       construct: *JSObject) -> *JSObject;
+pub fn WrapperNew(cx: *JSContext, parent: *JSObject, handler: *libc::c_void) -> *JSObject;
 
 pub fn GetProxyExtra(obj: *JSObject, slot: c_uint) -> JSVal;
 pub fn GetProxyPrivate(obj: *JSObject) -> JSVal;
@@ -105,4 +107,6 @@ pub fn GetProxyHandler(obj: *JSObject) -> *libc::c_void;
 pub fn InvokeGetOwnPropertyDescriptor(handler: *libc::c_void, cx: *JSContext, proxy: *JSObject, id: jsid, set: JSBool, desc: *mut JSPropertyDescriptor) -> JSBool;
 pub fn GetGlobalForObjectCrossCompartment(obj: *JSObject) -> *JSObject;
 pub fn ReportError(cx: *JSContext, error: *c_char);
+pub fn IsWrapper(obj: *JSObject) -> JSBool;
+pub fn UnwrapObject(obj: *JSObject, stopAtOuter: JSBool, flags: *libc::c_uint) -> *JSObject;
 }

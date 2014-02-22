@@ -398,7 +398,7 @@ pub type JSWrapObjectCallback = *u8;
 
 pub type JSPreWrapCallback = *u8;
 
-pub type JSSameCompartmentWrapObjectCallback = *u8;
+pub type JSSameCompartmentWrapObjectCallback = extern "C" fn(*JSContext, *JSObject) -> *JSObject;
 
 pub type JSDestroyCompartmentCallback = *u8;
 
