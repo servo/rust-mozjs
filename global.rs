@@ -14,13 +14,13 @@ use glue::{PROPERTY_STUB, STRICT_PROPERTY_STUB, ENUMERATE_STUB,
 use std::libc::c_uint;
 use std::str::raw::from_c_str;
 use std::cast::transmute;
-use name_pool::*;
 use std::ptr::null;
 use std::ptr;
 use jsapi;
 use jsapi::{JSClass, JSContext, JSVal, JSFunctionSpec, JSBool, JSNativeWrapper};
 use jsapi::{JS_EncodeString, JS_free, JS_ValueToBoolean, JS_ValueToString};
 use jsapi::{JS_ReportError, JS_ValueToSource, JS_GC, JS_GetRuntime};
+use jsfriendapi::JSJitInfo;
 use JSCLASS_IS_GLOBAL;
 use JSCLASS_HAS_RESERVED_SLOTS;
 use JSCLASS_GLOBAL_SLOT_COUNT;
@@ -28,9 +28,9 @@ use JS_ARGV;
 use JSVAL_VOID;
 use JS_SET_RVAL;
 
-pub fn basic_class(np: @mut NamePool, name: ~str) -> JSClass {
+pub fn basic_class(name: &'static str) -> JSClass {
     JSClass {
-        name: np.add(name),
+        name: name.as_ptr() as *i8,
         flags: JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT + 1),
         addProperty: unsafe { Some(transmute(GetJSClassHookStubPointer(PROPERTY_STUB))) },
         delProperty: unsafe { Some(transmute(GetJSClassHookStubPointer(PROPERTY_STUB))) },
@@ -56,8 +56,8 @@ pub fn basic_class(np: @mut NamePool, name: ~str) -> JSClass {
     }
 }
 
-pub fn global_class(np: @mut NamePool) -> JSClass {
-    basic_class(np, ~"global")
+pub fn global_class() -> JSClass {
+    basic_class("global")
 }
 
 pub unsafe fn jsval_to_rust_str(cx: *JSContext, vp: *jsapi::JSString) -> ~str {
@@ -124,48 +124,49 @@ pub extern fn assert(cx: *JSContext, argc: c_uint, vp: *mut JSVal) -> JSBool {
     }
 }
 
-pub fn debug_fns(np: @mut NamePool) -> ~[JSFunctionSpec] {
-    ~[
-        JSFunctionSpec {
-            name: np.add(~"debug"),
-            call: JSNativeWrapper {
-                op: Some(debug),
-                info: null()
-            },
-            nargs: 0,
-            flags: 0,
-            selfHostedName: null()
-        },
-        JSFunctionSpec {
-            name: np.add(~"assert"),
-            call: JSNativeWrapper {
-                op: Some(assert),
-                info: null()
-            },
-            nargs: 1,
-            flags: 0,
-            selfHostedName: null()
-        },
-        JSFunctionSpec {
-            name: np.add(~"gc"),
-            call: JSNativeWrapper {
-                op: Some(gc),
-                info: null()
-            },
-            nargs: 1,
-            flags: 0,
-            selfHostedName: null()
-        },
-        JSFunctionSpec {
-            name: null(),
-            call: JSNativeWrapper {
-                op: None,
-                info: null(),
-            },
-            nargs: 0,
-            flags: 0,
-            selfHostedName: null()
-        }
-    ]
-}
+static debug_name: [i8, ..6] = ['d' as i8, 'e' as i8, 'b' as i8, 'u' as i8, 'g' as i8, 0 as i8];
+static assert_name: [i8, ..7] = ['a' as i8, 's' as i8, 's' as i8, 'e' as i8, 'r' as i8, 't' as i8, 0 as i8];
+static gc_name: [i8, ..3] = ['g' as i8, 'c' as i8, 0 as i8];
 
+pub static DEBUG_FNS: &'static [JSFunctionSpec] = &[
+    JSFunctionSpec {
+        name: &debug_name as *i8,
+        call: JSNativeWrapper {
+            op: Some(debug),
+            info: 0 as *JSJitInfo
+        },
+        nargs: 0,
+        flags: 0,
+        selfHostedName: 0 as *i8
+    },
+    JSFunctionSpec {
+        name: &assert_name as *i8,
+        call: JSNativeWrapper {
+            op: Some(assert),
+            info: 0 as *JSJitInfo
+        },
+        nargs: 0,
+        flags: 0,
+        selfHostedName: 0 as *i8
+    },
+    JSFunctionSpec {
+        name: &gc_name as *i8,
+        call: JSNativeWrapper {
+            op: Some(gc),
+            info: 0 as *JSJitInfo
+        },
+        nargs: 0,
+        flags: 0,
+        selfHostedName: 0 as *i8
+    },
+    JSFunctionSpec {
+        name: 0 as *i8,
+        call: JSNativeWrapper {
+            op: None,
+            info: 0 as *JSJitInfo,
+        },
+        nargs: 0,
+        flags: 0,
+        selfHostedName: 0 as *i8
+    }
+];

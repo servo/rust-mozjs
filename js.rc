@@ -25,7 +25,6 @@ use jsapi::JS_ComputeThis;
 use std::libc::types::common::c99::uint32_t;
 pub use jsval::{JSVAL_TO_OBJECT, JSVAL_IS_PRIMITIVE, JSVAL_IS_OBJECT};
 use rust::jsobj;
-pub use name_pool::NamePool;
 
 // These are just macros in jsapi.h
 pub use JS_NewRuntime = jsapi::JS_Init;
@@ -40,7 +39,6 @@ pub use jsfriendapi::JSJitInfo;
 
 pub mod jsapi;
 pub mod linkhack;
-pub mod name_pool;
 pub mod rust;
 pub mod global;
 pub mod glue;
@@ -147,7 +145,7 @@ pub fn result(n: JSBool) -> Result<(),()> {
     if n != ERR {Ok(())} else {Err(())}
 }
 pub fn result_obj(o: jsobj) -> Result<jsobj, ()> {
-    if o.ptr != null() {Ok(o)} else {Err(())}
+    if o.borrow().ptr != null() {Ok(o)} else {Err(())}
 }
 
 #[inline(always)]
