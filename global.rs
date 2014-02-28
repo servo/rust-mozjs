@@ -8,10 +8,11 @@ Handy functions for creating class objects and so forth.
 
 "];
 
+use crust;
 use glue::GetJSClassHookStubPointer;
 use glue::{PROPERTY_STUB, STRICT_PROPERTY_STUB, ENUMERATE_STUB,
               RESOLVE_STUB, CONVERT_STUB};
-use std::libc::c_uint;
+use std::libc::{c_uint, c_void};
 use std::str::raw::from_c_str;
 use std::cast::transmute;
 use std::ptr::null;
@@ -23,10 +24,39 @@ use jsapi::{JS_ReportError, JS_ValueToSource, JS_GC, JS_GetRuntime};
 use jsfriendapi::JSJitInfo;
 use JSCLASS_IS_GLOBAL;
 use JSCLASS_HAS_RESERVED_SLOTS;
+use JSCLASS_RESERVED_SLOTS_MASK;
+use JSCLASS_RESERVED_SLOTS_SHIFT;
 use JSCLASS_GLOBAL_SLOT_COUNT;
 use JS_ARGV;
 use JSVAL_VOID;
 use JS_SET_RVAL;
+
+static global_name: [i8, ..7] = ['g' as i8, 'l' as i8, 'o' as i8, 'b' as i8, 'a' as i8, 'l' as i8, 0 as i8];
+pub static BASIC_GLOBAL: JSClass = JSClass {
+    name: &global_name as *i8,
+        flags: JSCLASS_IS_GLOBAL | (((JSCLASS_GLOBAL_SLOT_COUNT + 1) & JSCLASS_RESERVED_SLOTS_MASK) << JSCLASS_RESERVED_SLOTS_SHIFT),
+        addProperty: Some(crust::JS_PropertyStub),
+        delProperty: Some(crust::JS_PropertyStub),
+        getProperty: Some(crust::JS_PropertyStub),
+        setProperty: Some(crust::JS_StrictPropertyStub),
+        enumerate: Some(crust::JS_EnumerateStub),
+        resolve: Some(crust::JS_ResolveStub),
+        convert: Some(crust::JS_ConvertStub),
+        finalize: None,
+        checkAccess: None,
+        call: None,
+        hasInstance: None,
+        construct: None,
+        trace: None,
+        reserved: (0 as *c_void, 0 as *c_void, 0 as *c_void, 0 as *c_void, 0 as *c_void,  // 05
+                   0 as *c_void, 0 as *c_void, 0 as *c_void, 0 as *c_void, 0 as *c_void,  // 10
+                   0 as *c_void, 0 as *c_void, 0 as *c_void, 0 as *c_void, 0 as *c_void,  // 15
+                   0 as *c_void, 0 as *c_void, 0 as *c_void, 0 as *c_void, 0 as *c_void,  // 20
+                   0 as *c_void, 0 as *c_void, 0 as *c_void, 0 as *c_void, 0 as *c_void,  // 25
+                   0 as *c_void, 0 as *c_void, 0 as *c_void, 0 as *c_void, 0 as *c_void,  // 30
+                   0 as *c_void, 0 as *c_void, 0 as *c_void, 0 as *c_void, 0 as *c_void,  // 35
+                   0 as *c_void, 0 as *c_void, 0 as *c_void, 0 as *c_void, 0 as *c_void)  // 40
+};
 
 pub fn basic_class(name: &'static str) -> JSClass {
     JSClass {
