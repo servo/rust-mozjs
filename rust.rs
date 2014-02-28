@@ -337,15 +337,15 @@ pub mod test {
     pub fn dummy() {
         let rt = rt();
         let cx = rt.cx();
-        cx.set_default_options_and_version();
-        cx.set_logging_error_reporter();
-        cx.new_compartment(global::global_class).and_then(|comp| {
-            unsafe { JS_GC(JS_GetRuntime(comp.cx.ptr)); }
+        cx.borrow().set_default_options_and_version();
+        cx.borrow().set_logging_error_reporter();
+        cx.new_compartment(&global::BASIC_GLOBAL).and_then(|comp| {
+            unsafe { JS_GC(JS_GetRuntime(cx.borrow().ptr)); }
 
-            comp.define_functions(global::debug_fns);
+            comp.borrow().define_functions(global::DEBUG_FNS);
 
             let s = ~"debug(22);";
-            cx.evaluate_script(comp.global_obj, s, ~"test", 1u)
+            cx.borrow().evaluate_script(comp.borrow().global_obj.clone(), s, ~"test", 1u)
         });
     }
 
