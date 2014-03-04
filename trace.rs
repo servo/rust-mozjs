@@ -4,7 +4,7 @@
 
 use jsapi::JSTracer;
 
-use extra::serialize::Encoder;
+use serialize::Encoder;
 
 impl Encoder for JSTracer {
     fn emit_nil(&mut self) {}

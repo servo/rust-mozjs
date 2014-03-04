@@ -6,7 +6,7 @@
 
 use std::libc::types::os::arch::c95::{size_t, c_uint};
 use std::libc::{c_char, uintptr_t};
-use std::num;
+use std::cmp;
 use std::rc;
 use jsapi::*;
 use jsval::{JSVal, NullValue};
@@ -67,10 +67,12 @@ extern fn gc_callback(rt: *JSRuntime, _status: JSGCStatus) {
     unsafe {
         let mut task = Local::borrow(None::<Task>);
         let green_task: ~GreenTask = task.get().maybe_take_runtime().unwrap();
-        let c = green_task.coroutine.get_ref();
-        let start = c.current_stack_segment.start() as uintptr_t;
-        let end = c.current_stack_segment.end() as uintptr_t;
-        JS_SetNativeStackBounds(rt, num::min(start, end), num::max(start, end));
+        {
+            let c = green_task.coroutine.get_ref();
+            let start = c.current_stack_segment.start() as uintptr_t;
+            let end = c.current_stack_segment.end() as uintptr_t;
+            JS_SetNativeStackBounds(rt, cmp::min(start, end), cmp::max(start, end));
+        }
         task.get().put_runtime(green_task);
     }
 }
@@ -185,7 +187,7 @@ impl Cx {
                 if ERR == JS_EvaluateUCScript(self.ptr, glob.borrow().ptr,
                                               script_utf16.as_ptr(), script_utf16.len() as c_uint,
                                               filename_cstr, line_num as c_uint,
-                                              ptr::to_unsafe_ptr(&rval)) {
+                                              &rval) {
                     debug!("...err!");
                     Err(())
                 } else {
@@ -290,7 +292,7 @@ pub struct jsobj_rsrc {
 impl Drop for jsobj_rsrc {
     fn drop(&mut self) {
         unsafe {
-            JS_RemoveObjectRoot(self.cxptr, ptr::to_unsafe_ptr(&self.ptr));
+            JS_RemoveObjectRoot(self.cxptr, &self.ptr);
         }
     }
 }
@@ -324,6 +326,7 @@ impl to_jsstr for ~str {
 #[cfg(test)]
 pub mod test {
     use super::rt;
+    use super::{CxUtils, RtUtils};
     use super::super::global;
     use super::super::jsapi::{JS_GC, JS_GetRuntime};
 
