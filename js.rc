@@ -170,8 +170,8 @@ pub unsafe fn JS_THIS_OBJECT(cx: *JSContext, vp: *mut JSVal) -> *JSObject {
 }
 
 #[inline(always)]
-pub unsafe fn JS_CALLEE(_cx: *JSContext, vp: *JSVal) -> *JSVal {
-    vp
+pub unsafe fn JS_CALLEE(_cx: *JSContext, vp: *JSVal) -> JSVal {
+    *vp
 }
 
 // This is a duplication of the shadow stuff from jsfriendapi.h.  Here
