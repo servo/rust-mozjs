@@ -449,9 +449,9 @@ RUST_JS_NumberValue(double d)
 }
 
 const JSJitInfo*
-RUST_FUNCTION_VALUE_TO_JITINFO(jsval* v)
+RUST_FUNCTION_VALUE_TO_JITINFO(jsval v)
 {
-    return FUNCTION_VALUE_TO_JITINFO(*v);
+    return FUNCTION_VALUE_TO_JITINFO(v);
 }
 
 JSBool
