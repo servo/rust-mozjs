@@ -128,25 +128,19 @@ impl CxUtils for rc::Rc<Cx> {
             let ptr = self.borrow().ptr;
             let globobj = JS_NewGlobalObject(ptr, globcls, null());
             result(JS_InitStandardClasses(ptr, globobj)).and_then(|_ok| {
-                let compartment = rc::Rc::new(Compartment {
+                Ok(rc::Rc::new(Compartment {
                     cx: self.clone(),
                     global_obj: self.rooted_obj(globobj),
-                });
-                self.borrow().set_cx_private(ptr::to_unsafe_ptr(compartment.borrow()) as *());
-                Ok(compartment)
+                }))
             })
         }
     }
 
     fn new_compartment_with_global(&self, global: *JSObject) -> Result<rc::Rc<Compartment>,()> {
-        let compartment = rc::Rc::new(Compartment {
+        Ok(rc::Rc::new(Compartment {
             cx: self.clone(),
             global_obj: self.rooted_obj(global),
-        });
-        unsafe {
-            self.borrow().set_cx_private(ptr::to_unsafe_ptr(compartment.borrow()) as *());
-        }
-        Ok(compartment)
+        }))
     }
 }
 
