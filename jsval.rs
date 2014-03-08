@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use jsapi::{JSVal, JSObject};
+use jsapi::JSObject;
 
 static JSVAL_TAG_MAX_DOUBLE: u64 = 0x1FFF0;
 
@@ -21,6 +21,13 @@ static JSVAL_SHIFTED_TAG_OBJECT: u64 = JSVAL_TAG_OBJECT as u64 << JSVAL_TAG_SHIF
 static JSVAL_TAG_SHIFT: int = 47;
 
 static JSVAL_PAYLOAD_MASK: u64 = 0x00007FFFFFFFFFFF;
+
+// JSVal was originally type of u64.
+// now this become {u64} because of the union abi issue on ARM arch. See #398.
+#[deriving(Eq,Clone)]
+pub struct JSVal {
+    v: u64
+}
 
 #[inline(always)]
 pub fn INT_TO_JSVAL(i: i32) -> JSVal {

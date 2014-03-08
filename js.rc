@@ -19,10 +19,11 @@ use std::ptr::null;
 use std::result::{Result, Ok, Err};
 use std::libc::c_uint;
 use jsapi::{JSBool, JSContext,
-            JSObject, JSVal, jsid,
+            JSObject, jsid,
             JSProto_LIMIT};
 use jsapi::JS_ComputeThis;
 use std::libc::types::common::c99::uint32_t;
+use jsval::JSVal;
 pub use jsval::{JSVAL_TO_OBJECT, JSVAL_IS_PRIMITIVE, JSVAL_IS_OBJECT};
 use rust::jsobj;
 
@@ -179,7 +180,8 @@ pub unsafe fn JS_CALLEE(_cx: *JSContext, vp: *JSVal) -> JSVal {
 mod shadow {
     use std::libc;
     use std::ptr;
-    use jsapi::{JSObject, JSClass, jsid, JSVal};
+    use jsapi::{JSObject, JSClass, jsid};
+    use jsval::JSVal;
 
     struct TypeObject {
         proto: *JSObject

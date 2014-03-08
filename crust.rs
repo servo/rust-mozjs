@@ -5,6 +5,7 @@
 use std::libc;
 use jsapi;
 use jsapi::*;
+use jsval::JSVal;
 
 pub extern fn JS_PropertyStub(cx: *JSContext, obj: JSHandleObject, id: JSHandleId, vp: JSMutableHandleValue) -> JSBool {
     unsafe {

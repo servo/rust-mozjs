@@ -8,6 +8,7 @@ use std::libc;
 use std::libc::*;
 use jsapi::*;
 use jsfriendapi::JSJitInfo;
+use jsval::JSVal;
 
 pub type enum_StubType = c_uint;
 pub static PROPERTY_STUB: u32 = 0_u32;

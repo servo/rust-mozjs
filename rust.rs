@@ -9,6 +9,7 @@ use std::libc::{c_char, uintptr_t};
 use std::num;
 use std::rc;
 use jsapi::*;
+use jsval::JSVal;
 use default_stacksize;
 use default_heapsize;
 use JSOPTION_VAROBJFIX;
