@@ -87,7 +87,10 @@ pub fn Int32Value(i: i32) -> JSVal {
 #[inline(always)]
 pub fn DoubleValue(f: f64) -> JSVal {
     let bits: u64 = unsafe { cast::transmute(f) };
-    BuildJSVal(JSVAL_TAG_DOUBLE, bits)
+    assert!(bits <= JSVAL_SHIFTED_TAG_MAX_DOUBLE as u64)
+    JSVal {
+        v: bits
+    }
 }
 
 #[inline(always)]
