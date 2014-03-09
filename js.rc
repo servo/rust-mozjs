@@ -19,11 +19,11 @@ use std::ptr::null;
 use std::result::{Result, Ok, Err};
 use std::libc::c_uint;
 use jsapi::{JSBool, JSContext,
-            JSObject, JSVal, jsid,
+            JSObject, jsid,
             JSProto_LIMIT};
 use jsapi::JS_ComputeThis;
 use std::libc::types::common::c99::uint32_t;
-pub use jsval::{JSVAL_TO_OBJECT, JSVAL_IS_PRIMITIVE, JSVAL_IS_OBJECT};
+use jsval::JSVal;
 use rust::jsobj;
 
 // These are just macros in jsapi.h
@@ -57,41 +57,6 @@ pub static JSOPTION_TYPE_INFERENCE: uint32_t = (1 << 18) as u32;
 pub static default_heapsize: u32 = 8_u32 * 1024_u32 * 1024_u32;
 pub static default_stacksize: uint = 8192u;
 pub static ERR: JSBool = 0_i32;
-
-pub static JSVAL_TAG_MAX_DOUBLE: u64 = 0x1FFF0;
-
-pub static JSVAL_TYPE_DOUBLE: u64 = 0x00;
-pub static JSVAL_TYPE_INT32: u64 = 0x01;
-pub static JSVAL_TYPE_UNDEFINED: u64 = 0x02;
-pub static JSVAL_TYPE_BOOLEAN: u64 = 0x03;
-pub static JSVAL_TYPE_MAGIC: u64 = 0x04;
-pub static JSVAL_TYPE_STRING: u64 = 0x05;
-pub static JSVAL_TYPE_NULL: u64 = 0x06;
-pub static JSVAL_TYPE_OBJECT: u64 = 0x07;
-pub static JSVAL_TYPE_UNKNOWN: u64 = 0x20;
-
-pub static JSVAL_TAG_SHIFT: int = 47;
-
-//The following constants are totally broken on non-64bit platforms.
-//See jsapi.h for the proper macro definitions.
-pub static JSVAL_VOID: JSVal = JSVal {
-    v: (JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_UNDEFINED) << JSVAL_TAG_SHIFT
-};
-pub static JSVAL_NULL: JSVal = JSVal {
-    v: (JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_NULL) << JSVAL_TAG_SHIFT
-};
-pub static JSVAL_ZERO: JSVal = JSVal {
-    v: (JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_INT32) << JSVAL_TAG_SHIFT
-};
-pub static JSVAL_ONE: JSVal = JSVal {
-    v: ((JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_INT32) << JSVAL_TAG_SHIFT) | 1
-};
-pub static JSVAL_FALSE: JSVal = JSVal {
-    v: (JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_BOOLEAN) << JSVAL_TAG_SHIFT
-};
-pub static JSVAL_TRUE: JSVal = JSVal {
-    v: ((JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_BOOLEAN) << JSVAL_TAG_SHIFT) | 1
-};
 
 pub static JSID_TYPE_STRING: i64 = 0;
 pub static JSID_TYPE_INT: i64 = 1;
@@ -160,13 +125,13 @@ pub unsafe fn JS_SET_RVAL(_cx: *JSContext, vp: *JSVal, v: JSVal) {
 
 #[inline(alwyas)]
 pub unsafe fn JS_THIS_OBJECT(cx: *JSContext, vp: *mut JSVal) -> *JSObject {
-    let r = JSVAL_TO_OBJECT(
-        if JSVAL_IS_PRIMITIVE(*ptr::offset(&*vp, 1)) {
+    let r =
+        if (*ptr::offset(&*vp, 1)).is_primitive() {
             JS_ComputeThis(cx, &*vp)
         } else {
             *ptr::offset(&*vp, 1)
-        });
-    r
+        };
+    r.to_object_or_null()
 }
 
 #[inline(always)]
@@ -179,7 +144,8 @@ pub unsafe fn JS_CALLEE(_cx: *JSContext, vp: *JSVal) -> JSVal {
 mod shadow {
     use std::libc;
     use std::ptr;
-    use jsapi::{JSObject, JSClass, jsid, JSVal};
+    use jsapi::{JSObject, JSClass, jsid};
+    use jsval::JSVal;
 
     struct TypeObject {
         proto: *JSObject

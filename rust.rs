@@ -9,12 +9,12 @@ use std::libc::{c_char, uintptr_t};
 use std::num;
 use std::rc;
 use jsapi::*;
+use jsval::{JSVal, NullValue};
 use default_stacksize;
 use default_heapsize;
 use JSOPTION_VAROBJFIX;
 use JSOPTION_METHODJIT;
 use JSOPTION_TYPE_INFERENCE;
-use JSVAL_NULL;
 use ERR;
 use std::ptr;
 use std::ptr::null;
@@ -179,7 +179,7 @@ impl Cx {
                     -> Result<(),()> {
         let script_utf16 = script.to_utf16();
         filename.to_c_str().with_ref(|filename_cstr| {
-            let rval: JSVal = JSVAL_NULL;
+            let rval: JSVal = NullValue();
             debug!("Evaluating script from {:s} with content {}", filename, script);
             unsafe {
                 if ERR == JS_EvaluateUCScript(self.ptr, glob.borrow().ptr,
