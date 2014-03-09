@@ -136,25 +136,54 @@ pub fn PrivateValue(o: *c_void) -> JSVal {
     }
 }
 
-#[inline(always)]
-pub fn JSVAL_TO_OBJECT(v: JSVal) -> *JSObject {
-    let bits = (v.v & JSVAL_PAYLOAD_MASK);
-    assert!(bits & 0x7 == 0);
-    bits as *JSObject
-}
+impl JSVal {
+    pub fn is_undefined(&self) -> bool {
+        self.v == JSVAL_SHIFTED_TAG_UNDEFINED as u64
+    }
 
-#[inline(always)]
-pub fn JSVAL_IS_PRIMITIVE(v: JSVal) -> bool {
-    v.v < (JSVAL_SHIFTED_TAG_OBJECT as u64)
-}
+    pub fn is_null(&self) -> bool {
+        self.v == JSVAL_SHIFTED_TAG_NULL as u64
+    }
 
-#[inline(always)]
-pub fn JSVAL_IS_OBJECT(v: JSVal) -> bool {
-    v.v >= (JSVAL_SHIFTED_TAG_OBJECT as u64)
-}
+    pub fn is_null_or_undefined(&self) -> bool {
+        self.is_null() || self.is_undefined()
+    }
 
-#[inline(always)]
-pub fn JSVAL_TO_PRIVATE(v: JSVal) -> *() {
-    assert!(v.v & 0x8000000000000000 == 0);
-    (v.v << 1) as *()
+    pub fn is_double(&self) -> bool {
+        self.v <= JSVAL_SHIFTED_TAG_MAX_DOUBLE as u64
+    }
+
+    pub fn is_primitive(&self) -> bool {
+        static JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_PRIMITIVE_SET: u64 = JSVAL_SHIFTED_TAG_OBJECT as u64;
+        self.v < JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_PRIMITIVE_SET
+    }
+
+    pub fn is_object(&self) -> bool {
+        assert!((self.v >> JSVAL_TAG_SHIFT) <= JSVAL_TAG_OBJECT as u64);
+        self.v >= JSVAL_SHIFTED_TAG_OBJECT as u64
+    }
+
+    pub fn to_object(&self) -> *JSObject {
+        assert!(self.is_object());
+        self.to_object_or_null()
+    }
+
+    pub fn is_object_or_null(&self) -> bool {
+        static JSVAL_LOWER_INCL_SHIFTED_TAG_OF_OBJ_OR_NULL_SET: u64 = JSVAL_SHIFTED_TAG_NULL as u64;
+        assert!((self.v >> JSVAL_TAG_SHIFT) <= JSVAL_TAG_OBJECT as u64);
+        self.v >= JSVAL_LOWER_INCL_SHIFTED_TAG_OF_OBJ_OR_NULL_SET
+    }
+
+    pub fn to_object_or_null(&self) -> *JSObject {
+        assert!(self.is_object_or_null());
+        let ptrBits = self.v & JSVAL_PAYLOAD_MASK;
+        assert!((ptrBits & 0x7) == 0);
+        ptrBits as uint as *JSObject
+    }
+
+    pub fn to_private(&self) -> *c_void {
+        assert!(self.is_double());
+        assert!((self.v & 0x8000000000000000u64) == 0);
+        (self.v << 1) as uint as *c_void
+    }
 }
