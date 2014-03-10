@@ -81,7 +81,7 @@ pub fn UndefinedValue() -> JSVal {
 
 #[inline(always)]
 pub fn Int32Value(i: i32) -> JSVal {
-    BuildJSVal(JSVAL_TAG_INT32, i as u64)
+    BuildJSVal(JSVAL_TAG_INT32, i as u32 as u64)
 }
 
 #[inline(always)]
