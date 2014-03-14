@@ -16,7 +16,6 @@ use std::libc::{c_uint, c_void};
 use std::str::raw::from_c_str;
 use std::cast::transmute;
 use std::ptr::null;
-use std::ptr;
 use jsapi;
 use jsapi::{JSClass, JSContext, JSFunctionSpec, JSBool, JSNativeWrapper};
 use jsapi::{JS_EncodeString, JS_free, JS_ValueToBoolean, JS_ValueToString};

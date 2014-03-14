@@ -7,7 +7,7 @@
 
 #[feature(globs, managed_boxes)];
 
-#[allow(non_uppercase_statics)];
+#[allow(non_uppercase_statics, non_camel_case_types)];
 
 extern crate extra;
 extern crate green;
@@ -144,7 +144,6 @@ pub unsafe fn JS_CALLEE(_cx: *JSContext, vp: *JSVal) -> JSVal {
 mod shadow {
     use std::cast;
     use std::libc;
-    use std::ptr;
     use jsapi::{JSObject, JSClass, jsid};
     use jsval::JSVal;
 

@@ -5,7 +5,7 @@
 #[doc = "Rust wrappers around the raw JS apis"];
 
 use std::libc::types::os::arch::c95::{size_t, c_uint};
-use std::libc::{c_char, uintptr_t};
+use std::libc::c_char;
 use std::cmp;
 use std::rc;
 use std::rt::Runtime;
@@ -17,7 +17,6 @@ use JSOPTION_VAROBJFIX;
 use JSOPTION_METHODJIT;
 use JSOPTION_TYPE_INFERENCE;
 use ERR;
-use std::ptr;
 use std::ptr::null;
 use result;
 use result_obj;
