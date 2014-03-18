@@ -16,7 +16,6 @@ use std::libc::{c_uint, c_void};
 use std::str::raw::from_c_str;
 use std::cast::transmute;
 use std::ptr::null;
-use std::ptr;
 use jsapi;
 use jsapi::{JSClass, JSContext, JSFunctionSpec, JSBool, JSNativeWrapper};
 use jsapi::{JS_EncodeString, JS_free, JS_ValueToBoolean, JS_ValueToString};
@@ -105,7 +104,7 @@ pub extern fn debug(cx: *JSContext, argc: c_uint, vp: *mut JSVal) -> JSBool {
     unsafe {
         let argv = JS_ARGV(cx, &*vp);
         for i in range(0, argc as int) {
-            let jsstr = JS_ValueToString(cx, *ptr::offset(argv, i));
+            let jsstr = JS_ValueToString(cx, *argv.offset(i));
             debug!("{:s}", jsval_to_rust_str(cx, jsstr));
         }
         JS_SET_RVAL(cx, &*vp, UndefinedValue());
@@ -128,7 +127,7 @@ pub extern fn assert(cx: *JSContext, argc: c_uint, vp: *mut JSVal) -> JSBool {
 
         let argument = match argc {
             0 => UndefinedValue(),
-            _ => *ptr::offset(argv, 0)
+            _ => *argv.offset(0)
         };
 
         let result = 0;

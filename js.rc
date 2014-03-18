@@ -7,14 +7,14 @@
 
 #[feature(globs, managed_boxes)];
 
-#[allow(non_uppercase_statics)];
+#[allow(non_uppercase_statics, non_camel_case_types)];
 
-extern mod extra;
-extern mod green;
+extern crate extra;
+extern crate green;
+extern crate serialize;
 
 use std::libc;
 use std::cast;
-use std::ptr;
 use std::ptr::null;
 use std::result::{Result, Ok, Err};
 use std::libc::c_uint;
@@ -115,7 +115,7 @@ pub fn result_obj(o: jsobj) -> Result<jsobj, ()> {
 
 #[inline(always)]
 pub unsafe fn JS_ARGV(_cx: *JSContext, vp: *JSVal) -> *JSVal {
-    ptr::offset(vp, 2)
+    vp.offset(2)
 }
 
 pub unsafe fn JS_SET_RVAL(_cx: *JSContext, vp: *JSVal, v: JSVal) {
@@ -126,10 +126,10 @@ pub unsafe fn JS_SET_RVAL(_cx: *JSContext, vp: *JSVal, v: JSVal) {
 #[inline(alwyas)]
 pub unsafe fn JS_THIS_OBJECT(cx: *JSContext, vp: *mut JSVal) -> *JSObject {
     let r =
-        if (*ptr::offset(&*vp, 1)).is_primitive() {
+        if (*(vp.offset(1))).is_primitive() {
             JS_ComputeThis(cx, &*vp)
         } else {
-            *ptr::offset(&*vp, 1)
+            *(vp.offset(1))
         };
     r.to_object_or_null()
 }
@@ -142,8 +142,8 @@ pub unsafe fn JS_CALLEE(_cx: *JSContext, vp: *JSVal) -> JSVal {
 // This is a duplication of the shadow stuff from jsfriendapi.h.  Here
 // there be dragons!
 mod shadow {
+    use std::cast;
     use std::libc;
-    use std::ptr;
     use jsapi::{JSObject, JSClass, jsid};
     use jsval::JSVal;
 
@@ -178,7 +178,8 @@ mod shadow {
         
         #[inline(always)]
         pub unsafe fn fixedSlots(&self) -> *JSVal {
-            (ptr::offset(ptr::to_unsafe_ptr(&self), 1)) as *JSVal
+            let x: *JSVal = cast::transmute(&self);
+            (x.offset(1)) as *JSVal
         }
 
         // Like slotRef, but just returns the value, not a reference
@@ -187,9 +188,9 @@ mod shadow {
             unsafe {
                 let nfixed : libc::size_t = self.numFixedSlots();
                 if slot < nfixed {
-                    return *ptr::offset(self.fixedSlots(), slot as int)
+                    return *self.fixedSlots().offset(slot as int)
                 }
-                return *ptr::offset(self.slots, (slot - nfixed) as int)
+                return *self.slots.offset((slot - nfixed) as int)
             }
         }
     }

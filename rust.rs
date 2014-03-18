@@ -5,9 +5,10 @@
 #[doc = "Rust wrappers around the raw JS apis"];
 
 use std::libc::types::os::arch::c95::{size_t, c_uint};
-use std::libc::{c_char, uintptr_t};
-use std::num;
+use std::libc::c_char;
+use std::cmp;
 use std::rc;
+use std::rt::Runtime;
 use jsapi::*;
 use jsval::{JSVal, NullValue};
 use default_stacksize;
@@ -16,7 +17,6 @@ use JSOPTION_VAROBJFIX;
 use JSOPTION_METHODJIT;
 use JSOPTION_TYPE_INFERENCE;
 use ERR;
-use std::ptr;
 use std::ptr::null;
 use result;
 use result_obj;
@@ -67,10 +67,11 @@ extern fn gc_callback(rt: *JSRuntime, _status: JSGCStatus) {
     unsafe {
         let mut task = Local::borrow(None::<Task>);
         let green_task: ~GreenTask = task.get().maybe_take_runtime().unwrap();
-        let c = green_task.coroutine.get_ref();
-        let start = c.current_stack_segment.start() as uintptr_t;
-        let end = c.current_stack_segment.end() as uintptr_t;
-        JS_SetNativeStackBounds(rt, num::min(start, end), num::max(start, end));
+        let (start, end) = green_task.stack_bounds();
+        // libgreen adds a guard page to the stack which causes SpiderMonkey to
+        // to choke, so we need to skip over that.
+        let start = start + ::std::os::page_size();
+        JS_SetNativeStackBounds(rt, cmp::min(start, end), cmp::max(start, end));
         task.get().put_runtime(green_task);
     }
 }
@@ -130,7 +131,7 @@ impl CxUtils for rc::Rc<Cx> {
             result(JS_InitStandardClasses(ptr, globobj)).and_then(|_ok| {
                 Ok(rc::Rc::new(Compartment {
                     cx: self.clone(),
-                    global_obj: self.rooted_obj(globobj),
+                    global_obj: globobj,
                 }))
             })
         }
@@ -139,7 +140,7 @@ impl CxUtils for rc::Rc<Cx> {
     fn new_compartment_with_global(&self, global: *JSObject) -> Result<rc::Rc<Compartment>,()> {
         Ok(rc::Rc::new(Compartment {
             cx: self.clone(),
-            global_obj: self.rooted_obj(global),
+            global_obj: global,
         }))
     }
 }
@@ -175,17 +176,17 @@ impl Cx {
         }
     }
 
-    pub fn evaluate_script(&self, glob: jsobj, script: ~str, filename: ~str, line_num: uint)
+    pub fn evaluate_script(&self, glob: *JSObject, script: ~str, filename: ~str, line_num: uint)
                     -> Result<(),()> {
         let script_utf16 = script.to_utf16();
         filename.to_c_str().with_ref(|filename_cstr| {
             let rval: JSVal = NullValue();
             debug!("Evaluating script from {:s} with content {}", filename, script);
             unsafe {
-                if ERR == JS_EvaluateUCScript(self.ptr, glob.borrow().ptr,
+                if ERR == JS_EvaluateUCScript(self.ptr, glob,
                                               script_utf16.as_ptr(), script_utf16.len() as c_uint,
                                               filename_cstr, line_num as c_uint,
-                                              ptr::to_unsafe_ptr(&rval)) {
+                                              &rval) {
                     debug!("...err!");
                     Err(())
                 } else {
@@ -230,21 +231,21 @@ pub extern fn reportError(_cx: *JSContext, msg: *c_char, report: *JSErrorReport)
 
 pub struct Compartment {
     cx: rc::Rc<Cx>,
-    global_obj: jsobj,
+    global_obj: *JSObject,
 }
 
 impl Compartment {
     pub fn define_functions(&self, specvec: &'static [JSFunctionSpec]) -> Result<(),()> {
         unsafe {
             result(JS_DefineFunctions(self.cx.borrow().ptr,
-                                      self.global_obj.borrow().ptr,
+                                      self.global_obj,
                                       specvec.as_ptr()))
         }
     }
     pub fn define_properties(&self, specvec: &'static [JSPropertySpec]) -> Result<(),()> {
         unsafe {
             result(JS_DefineProperties(self.cx.borrow().ptr,
-                                       self.global_obj.borrow().ptr,
+                                       self.global_obj,
                                        specvec.as_ptr()))
         }
     }
@@ -257,7 +258,7 @@ impl Compartment {
         unsafe {
             name.to_c_str().with_ref(|name| {
                 result(JS_DefineProperty(self.cx.borrow().ptr,
-                                         self.global_obj.borrow().ptr,
+                                         self.global_obj,
                                          name,
                                          value,
                                          Some(getter),
@@ -290,7 +291,7 @@ pub struct jsobj_rsrc {
 impl Drop for jsobj_rsrc {
     fn drop(&mut self) {
         unsafe {
-            JS_RemoveObjectRoot(self.cxptr, ptr::to_unsafe_ptr(&self.ptr));
+            JS_RemoveObjectRoot(self.cxptr, &self.ptr);
         }
     }
 }
@@ -324,6 +325,7 @@ impl to_jsstr for ~str {
 #[cfg(test)]
 pub mod test {
     use super::rt;
+    use super::{CxUtils, RtUtils};
     use super::super::global;
     use super::super::jsapi::{JS_GC, JS_GetRuntime};
 
@@ -339,7 +341,7 @@ pub mod test {
             comp.borrow().define_functions(global::DEBUG_FNS);
 
             let s = ~"debug(22);";
-            cx.borrow().evaluate_script(comp.borrow().global_obj.clone(), s, ~"test", 1u)
+            cx.borrow().evaluate_script(comp.borrow().global_obj, s, ~"test", 1u)
         });
     }
 
