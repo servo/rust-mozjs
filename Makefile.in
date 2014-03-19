@@ -33,4 +33,4 @@ check: js-test
 
 .PHONY: clean
 clean:
-	rm -f js-test *.o *.a *.so *.dylib *.dll *.dummy
+	rm -f js-test *.o *.a *.so *.dylib *.rlib *.dll *.dummy
