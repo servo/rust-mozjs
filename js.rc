@@ -110,7 +110,7 @@ pub fn result(n: JSBool) -> Result<(),()> {
     if n != ERR {Ok(())} else {Err(())}
 }
 pub fn result_obj(o: jsobj) -> Result<jsobj, ()> {
-    if o.borrow().ptr != null() {Ok(o)} else {Err(())}
+    if o.deref().ptr != null() {Ok(o)} else {Err(())}
 }
 
 #[inline(always)]
