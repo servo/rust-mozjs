@@ -9,6 +9,9 @@
 
 #[allow(non_uppercase_statics, non_camel_case_types)];
 
+#[feature(phase)];
+#[phase(syntax, link)] extern crate log;
+
 extern crate green;
 extern crate serialize;
 
