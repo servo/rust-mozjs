@@ -9,7 +9,6 @@
 
 #[allow(non_uppercase_statics, non_camel_case_types)];
 
-extern crate extra;
 extern crate green;
 extern crate serialize;
 
