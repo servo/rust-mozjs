@@ -9,7 +9,9 @@
 
 #[allow(non_uppercase_statics, non_camel_case_types)];
 
-extern crate extra;
+#[feature(phase)];
+#[phase(syntax, link)] extern crate log;
+
 extern crate green;
 extern crate serialize;
 
@@ -110,7 +112,7 @@ pub fn result(n: JSBool) -> Result<(),()> {
     if n != ERR {Ok(())} else {Err(())}
 }
 pub fn result_obj(o: jsobj) -> Result<jsobj, ()> {
-    if o.borrow().ptr != null() {Ok(o)} else {Err(())}
+    if o.deref().ptr != null() {Ok(o)} else {Err(())}
 }
 
 #[inline(always)]

@@ -54,7 +54,7 @@ pub trait RtUtils {
 impl RtUtils for rc::Rc<rt_rsrc> {
     fn cx(&self) -> rc::Rc<Cx> {
         unsafe {
-            new_context(JS_NewContext(self.borrow().ptr,
+            new_context(JS_NewContext(self.deref().ptr,
                                       default_stacksize as size_t), self.clone())
         }
     }
@@ -116,17 +116,17 @@ pub trait CxUtils {
 
 impl CxUtils for rc::Rc<Cx> {
     fn rooted_obj(&self, obj: *JSObject) -> jsobj {
-        let cxptr = self.borrow().ptr;
+        let cxptr = self.deref().ptr;
         let jsobj = rc::Rc::new(jsobj_rsrc {cx: self.clone(), cxptr: cxptr, ptr: obj});
         unsafe {
-            JS_AddObjectRoot(cxptr, &jsobj.borrow().ptr);
+            JS_AddObjectRoot(cxptr, &jsobj.deref().ptr);
         }
         jsobj
     }
 
     fn new_compartment(&self, globcls: *JSClass) -> Result<rc::Rc<Compartment>,()> {
         unsafe {
-            let ptr = self.borrow().ptr;
+            let ptr = self.deref().ptr;
             let globobj = JS_NewGlobalObject(ptr, globcls, null());
             result(JS_InitStandardClasses(ptr, globobj)).and_then(|_ok| {
                 Ok(rc::Rc::new(Compartment {
@@ -237,14 +237,14 @@ pub struct Compartment {
 impl Compartment {
     pub fn define_functions(&self, specvec: &'static [JSFunctionSpec]) -> Result<(),()> {
         unsafe {
-            result(JS_DefineFunctions(self.cx.borrow().ptr,
+            result(JS_DefineFunctions(self.cx.deref().ptr,
                                       self.global_obj,
                                       specvec.as_ptr()))
         }
     }
     pub fn define_properties(&self, specvec: &'static [JSPropertySpec]) -> Result<(),()> {
         unsafe {
-            result(JS_DefineProperties(self.cx.borrow().ptr,
+            result(JS_DefineProperties(self.cx.deref().ptr,
                                        self.global_obj,
                                        specvec.as_ptr()))
         }
@@ -257,7 +257,7 @@ impl Compartment {
         -> Result<(),()> {
         unsafe {
             name.to_c_str().with_ref(|name| {
-                result(JS_DefineProperty(self.cx.borrow().ptr,
+                result(JS_DefineProperty(self.cx.deref().ptr,
                                          self.global_obj,
                                          name,
                                          value,
@@ -270,7 +270,7 @@ impl Compartment {
     pub fn new_object(&self, classptr: *JSClass, proto: *JSObject, parent: *JSObject)
                -> Result<jsobj, ()> {
         unsafe {
-            let obj = self.cx.rooted_obj(JS_NewObject(self.cx.borrow().ptr, classptr, proto, parent));
+            let obj = self.cx.rooted_obj(JS_NewObject(self.cx.deref().ptr, classptr, proto, parent));
             result_obj(obj)
         }
     }
@@ -317,7 +317,7 @@ impl to_jsstr for ~str {
     fn to_jsstr(self, cx: rc::Rc<Cx>) -> *JSString {
         unsafe {
             let cbuf = cast::transmute(self.as_ptr());
-            JS_NewStringCopyN(cx.borrow().ptr, cbuf, self.len() as size_t)
+            JS_NewStringCopyN(cx.deref().ptr, cbuf, self.len() as size_t)
         }
     }
 }
@@ -333,15 +333,15 @@ pub mod test {
     pub fn dummy() {
         let rt = rt();
         let cx = rt.cx();
-        cx.borrow().set_default_options_and_version();
-        cx.borrow().set_logging_error_reporter();
+        cx.deref().set_default_options_and_version();
+        cx.deref().set_logging_error_reporter();
         cx.new_compartment(&global::BASIC_GLOBAL).and_then(|comp| {
-            unsafe { JS_GC(JS_GetRuntime(cx.borrow().ptr)); }
+            unsafe { JS_GC(JS_GetRuntime(cx.deref().ptr)); }
 
-            comp.borrow().define_functions(global::DEBUG_FNS);
+            comp.deref().define_functions(global::DEBUG_FNS);
 
             let s = ~"debug(22);";
-            cx.borrow().evaluate_script(comp.borrow().global_obj, s, ~"test", 1u)
+            cx.deref().evaluate_script(comp.deref().global_obj, s, ~"test", 1u)
         });
     }
 
