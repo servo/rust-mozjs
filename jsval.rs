@@ -161,6 +161,10 @@ impl JSVal {
         self.v < JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_PRIMITIVE_SET
     }
 
+    pub fn is_string(&self) -> bool {
+        (self.v >> JSVAL_TAG_SHIFT) == JSVAL_TAG_STRING as u64
+    }
+
     pub fn is_object(&self) -> bool {
         assert!((self.v >> JSVAL_TAG_SHIFT) <= JSVAL_TAG_OBJECT as u64);
         self.v >= JSVAL_SHIFTED_TAG_OBJECT as u64
@@ -188,5 +192,26 @@ impl JSVal {
         assert!(self.is_double());
         assert!((self.v & 0x8000000000000000u64) == 0);
         (self.v << 1) as uint as *c_void
+    }
+
+    pub fn is_gcthing(&self) -> bool {
+        static JSVAL_LOWER_INCL_SHIFTED_TAG_OF_GCTHING_SET: u64 = JSVAL_SHIFTED_TAG_STRING as u64;
+        self.v >= JSVAL_LOWER_INCL_SHIFTED_TAG_OF_GCTHING_SET
+    }
+
+    pub fn to_gcthing(&self) -> *c_void {
+        assert!(self.is_gcthing());
+        let ptrBits = self.v & JSVAL_PAYLOAD_MASK;
+        assert!((ptrBits & 0x7) == 0);
+        ptrBits as *c_void
+    }
+
+    pub fn is_markable(&self) -> bool {
+        self.is_gcthing() && !self.is_null()
+    }
+
+    pub fn trace_kind(&self) -> u32 {
+        assert!(self.is_markable());
+        (!self.is_object()) as u32
     }
 }

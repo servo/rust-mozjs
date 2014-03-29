@@ -593,6 +593,8 @@ pub type enum_JSExecPart = c_uint;
 pub static JSEXEC_PROLOG: u32 = 0_u32;
 pub static JSEXEC_MAIN: u32 = 1_u32;
 
+pub static JS_DEFAULT_ZEAL_FREQ: u32 = 100;
+
 pub type JSExecPart = enum_JSExecPart;
 
 pub type JSONWriteCallback = *u8;
@@ -933,6 +935,8 @@ pub fn JS_GetTraceEdgeName(trc: *JSTracer, buffer: *c_char, bufferSize: c_int) -
 pub fn JS_GC(rt: *JSRuntime);
 
 pub fn JS_MaybeGC(cx: *JSContext);
+
+pub fn JS_SetGCZeal(cx: *JSContext, zeal: u8, frequency: u32);
 
 pub fn JS_InhibitGC(cx: *JSContext);
 
