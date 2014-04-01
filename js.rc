@@ -7,7 +7,7 @@
 #[crate_type = "dylib"];
 #[crate_type = "rlib"];
 
-#[feature(globs, managed_boxes)];
+#[feature(globs, link_args, managed_boxes)];
 
 #[allow(non_uppercase_statics, non_camel_case_types)];
 
