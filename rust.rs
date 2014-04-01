@@ -68,9 +68,6 @@ extern fn gc_callback(rt: *JSRuntime, _status: JSGCStatus) {
         let mut task = Local::borrow(None::<Task>);
         let green_task: ~GreenTask = task.get().maybe_take_runtime().unwrap();
         let (start, end) = green_task.stack_bounds();
-        // libgreen adds a guard page to the stack which causes SpiderMonkey to
-        // to choke, so we need to skip over that.
-        let start = start + ::std::os::page_size();
         JS_SetNativeStackBounds(rt, cmp::min(start, end), cmp::max(start, end));
         task.get().put_runtime(green_task);
     }
