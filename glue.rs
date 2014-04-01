@@ -51,7 +51,15 @@ pub struct ProxyTraps {
     trace: Option<extern "C" fn(*mut JSTracer, *JSObject)>
 }
 
+#[cfg(not(target_os = "android"))]
 #[link(name = "jsglue")]
+extern { }
+
+
+#[cfg(target_os = "android")]
+#[link_args = "-ljsglue -lstdc++ -lgcc"]
+extern { }
+
 extern {
 
 // FIXME: Couldn't run on rust_stack until rust issue #6470 fixed.

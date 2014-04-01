@@ -17,11 +17,13 @@ extern { }
 #[link(name = "z")]
 extern { }
 
-//Avoid hard linking with stdc++ in android ndk cross toolchain
+// Avoid hard linking with stdc++ in android ndk cross toolchain so that
+// the ELF header will have an entry for libstdc++ and we will know to
+// open it explicitly.
 //It is hard to find location of android system libs in this rust source file
 //and also we need to size down for mobile app packaging
 #[cfg(target_os = "android")]
-#[link(name = "js_static")]
-#[link(name = "stdc++")]
+#[link(name = "mozjs")]
+#[link_args="-lstdc++"]
 #[link(name = "z")]
 extern { }
