@@ -17,7 +17,6 @@
 extern crate green;
 extern crate serialize;
 
-use std::libc;
 use std::cast;
 use std::ptr::null;
 use std::result::{Result, Ok, Err};
