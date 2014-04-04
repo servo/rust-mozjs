@@ -14,6 +14,9 @@
 #[feature(phase)];
 #[phase(syntax, link)] extern crate log;
 
+#[cfg(test)]
+extern crate rustuv;
+
 extern crate green;
 extern crate serialize;
 
@@ -140,4 +143,15 @@ pub unsafe fn JS_THIS_OBJECT(cx: *JSContext, vp: *mut JSVal) -> *JSObject {
 #[inline(always)]
 pub unsafe fn JS_CALLEE(_cx: *JSContext, vp: *JSVal) -> JSVal {
     *vp
+}
+
+// Run tests with libgreen instead of libnative.
+//
+// FIXME: This egregiously hacks around starting the test runner in a different
+// threading mode than the default by reaching into the auto-generated
+// '__test' module.
+#[cfg(test)]
+#[start]
+fn start(argc: int, argv: **u8) -> int {
+    green::start(argc, argv, __test::main)
 }
