@@ -153,5 +153,5 @@ pub unsafe fn JS_CALLEE(_cx: *JSContext, vp: *JSVal) -> JSVal {
 #[cfg(test)]
 #[start]
 fn start(argc: int, argv: **u8) -> int {
-    green::start(argc, argv, __test::main)
+    green::start(argc, argv, rustuv::event_loop, __test::main)
 }

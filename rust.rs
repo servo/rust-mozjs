@@ -281,7 +281,7 @@ pub type jsobj = rc::Rc<jsobj_rsrc>;
 pub struct jsobj_rsrc {
     cx: rc::Rc<Cx>,
     cxptr: *JSContext,
-    ptr: *JSObject,
+    pub ptr: *JSObject,
 }
 
 #[unsafe_destructor]
