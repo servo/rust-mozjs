@@ -478,22 +478,22 @@ pub type JSGCMode = enum_JSGCMode;
 pub type JSClassInternal = *u8;
 
 pub struct JSClass {
-    name: *c_char,
-    flags: uint32_t,
-    addProperty: Option<JSPropertyOp>,
-    delProperty: Option<JSPropertyOp>,
-    getProperty: Option<JSPropertyOp>,
-    setProperty: Option<JSStrictPropertyOp>,
-    enumerate: Option<JSEnumerateOp>,
-    resolve: Option<JSResolveOp>,
-    convert: Option<JSConvertOp>,
-    finalize: Option<JSFinalizeOp>,
-    checkAccess: Option<JSCheckAccessOp>,
-    call: Option<JSNative>,
-    hasInstance: Option<JSHasInstanceOp>,
-    construct: Option<JSNative>,
-    trace: Option<JSTraceOp>,
-    reserved: (*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void),
+    pub name: *c_char,
+    pub flags: uint32_t,
+    pub addProperty: Option<JSPropertyOp>,
+    pub delProperty: Option<JSPropertyOp>,
+    pub getProperty: Option<JSPropertyOp>,
+    pub setProperty: Option<JSStrictPropertyOp>,
+    pub enumerate: Option<JSEnumerateOp>,
+    pub resolve: Option<JSResolveOp>,
+    pub convert: Option<JSConvertOp>,
+    pub finalize: Option<JSFinalizeOp>,
+    pub checkAccess: Option<JSCheckAccessOp>,
+    pub call: Option<JSNative>,
+    pub hasInstance: Option<JSHasInstanceOp>,
+    pub construct: Option<JSNative>,
+    pub trace: Option<JSTraceOp>,
+    pub reserved: (*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void,*c_void),
 }
 
 pub struct struct_JSConstDoubleSpec {
@@ -538,8 +538,8 @@ impl Clone for JSPropertyOpWrapper {
 }
 
 pub struct JSNativeWrapper {
-    op: Option<JSNative>,
-    info: *JSJitInfo,
+    pub op: Option<JSNative>,
+    pub info: *JSJitInfo,
 }
 
 impl Clone for JSNativeWrapper {
@@ -562,11 +562,11 @@ pub struct JSPropertySpec {
 
 #[deriving(Clone)]
 pub struct JSFunctionSpec {
-    name: *c_char,
-    call: JSNativeWrapper,
-    nargs: uint16_t,
-    flags: uint16_t,
-    selfHostedName: *c_char,
+    pub name: *c_char,
+    pub call: JSNativeWrapper,
+    pub nargs: uint16_t,
+    pub flags: uint16_t,
+    pub selfHostedName: *c_char,
 }
 
 pub struct struct_JSPropertyDescriptor {
@@ -612,19 +612,19 @@ pub struct struct_JSLocaleCallbacks {
 }
 
 pub struct struct_JSErrorReport {
-    filename: *c_char,
-    originPrincipals: *JSPrincipals,
-    lineno: c_uint,
-    linebuf: *c_char,
-    tokenptr: *c_char,
-    uclinebuf: *jschar,
-    uctokenptr: *jschar,
-    flags: c_uint,
-    errorNumber: c_uint,
-    ucmessage: *jschar,
-    messageArgs: **jschar,
-    exnType: int16_t,
-    column: c_uint,
+    pub filename: *c_char,
+    pub originPrincipals: *JSPrincipals,
+    pub lineno: c_uint,
+    pub linebuf: *c_char,
+    pub tokenptr: *c_char,
+    pub uclinebuf: *jschar,
+    pub uctokenptr: *jschar,
+    pub flags: c_uint,
+    pub errorNumber: c_uint,
+    pub ucmessage: *jschar,
+    pub messageArgs: **jschar,
+    pub exnType: int16_t,
+    pub column: c_uint,
 }
 
 pub struct struct_unnamed1 {
