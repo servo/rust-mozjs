@@ -8,18 +8,15 @@ Handy functions for creating class objects and so forth.
 
 "];
 
-use crust;
-use glue::GetJSClassHookStubPointer;
-use glue::{PROPERTY_STUB, STRICT_PROPERTY_STUB, ENUMERATE_STUB,
-              RESOLVE_STUB, CONVERT_STUB};
 use std::libc::{c_uint, c_void};
 use std::str::raw::from_c_str;
 use std::cast::transmute;
 use std::ptr::null;
 use jsapi;
-use jsapi::{JSClass, JSContext, JSFunctionSpec, JSBool, JSNativeWrapper};
-use jsapi::{JS_EncodeString, JS_free, JS_ValueToBoolean, JS_ValueToString};
-use jsapi::{JS_ReportError, JS_ValueToSource, JS_GC, JS_GetRuntime};
+use jsapi::{JSClass, JSContext, JSFunctionSpec, JSBool, JSNativeWrapper, JS_EnumerateStub};
+use jsapi::{JS_EncodeString, JS_free, JS_ValueToBoolean, JS_ValueToString, JS_ConvertStub};
+use jsapi::{JS_ReportError, JS_ValueToSource, JS_GC, JS_GetRuntime, JS_PropertyStub};
+use jsapi::{JS_StrictPropertyStub, JS_ResolveStub};
 use jsfriendapi::JSJitInfo;
 use jsval::{JSVal, UndefinedValue};
 use JSCLASS_IS_GLOBAL;
@@ -34,13 +31,13 @@ static global_name: [i8, ..7] = ['g' as i8, 'l' as i8, 'o' as i8, 'b' as i8, 'a'
 pub static BASIC_GLOBAL: JSClass = JSClass {
     name: &global_name as *i8,
         flags: JSCLASS_IS_GLOBAL | (((JSCLASS_GLOBAL_SLOT_COUNT + 1) & JSCLASS_RESERVED_SLOTS_MASK) << JSCLASS_RESERVED_SLOTS_SHIFT),
-        addProperty: Some(crust::JS_PropertyStub),
-        delProperty: Some(crust::JS_PropertyStub),
-        getProperty: Some(crust::JS_PropertyStub),
-        setProperty: Some(crust::JS_StrictPropertyStub),
-        enumerate: Some(crust::JS_EnumerateStub),
-        resolve: Some(crust::JS_ResolveStub),
-        convert: Some(crust::JS_ConvertStub),
+        addProperty: Some(JS_PropertyStub),
+        delProperty: Some(JS_PropertyStub),
+        getProperty: Some(JS_PropertyStub),
+        setProperty: Some(JS_StrictPropertyStub),
+        enumerate: Some(JS_EnumerateStub),
+        resolve: Some(JS_ResolveStub),
+        convert: Some(JS_ConvertStub),
         finalize: None,
         checkAccess: None,
         call: None,
@@ -61,13 +58,13 @@ pub fn basic_class(name: &'static str) -> JSClass {
     JSClass {
         name: name.as_ptr() as *i8,
         flags: JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT + 1),
-        addProperty: unsafe { Some(transmute(GetJSClassHookStubPointer(PROPERTY_STUB))) },
-        delProperty: unsafe { Some(transmute(GetJSClassHookStubPointer(PROPERTY_STUB))) },
-        getProperty: unsafe { Some(transmute(GetJSClassHookStubPointer(PROPERTY_STUB))) },
-        setProperty: unsafe { Some(transmute(GetJSClassHookStubPointer(STRICT_PROPERTY_STUB))) },
-        enumerate: unsafe { Some(transmute(GetJSClassHookStubPointer(ENUMERATE_STUB))) },
-        resolve: unsafe { Some(transmute(GetJSClassHookStubPointer(RESOLVE_STUB))) },
-        convert: unsafe { Some(transmute(GetJSClassHookStubPointer(CONVERT_STUB))) },
+        addProperty: Some(JS_PropertyStub),
+        delProperty: Some(JS_PropertyStub),
+        getProperty: Some(JS_PropertyStub),
+        setProperty: Some(JS_StrictPropertyStub),
+        enumerate: Some(JS_EnumerateStub),
+        resolve: Some(JS_ResolveStub),
+        convert: Some(JS_ConvertStub),
         finalize: None,
         checkAccess: None,
         call: None,

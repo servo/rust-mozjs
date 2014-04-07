@@ -281,19 +281,19 @@ pub struct JSMutableHandleValue {
 
 pub type JSRawObject = *JSObject;
 
-pub type JSPropertyOp = extern "C" fn(*JSContext, JSHandleObject, JSHandleId, JSMutableHandleValue) -> JSBool;
+pub type JSPropertyOp = extern "C" unsafe fn(*JSContext, JSHandleObject, JSHandleId, JSMutableHandleValue) -> JSBool;
 
-pub type JSStrictPropertyOp = extern "C" fn(*JSContext, JSHandleObject, JSHandleId, JSBool, JSMutableHandleValue) -> JSBool;
+pub type JSStrictPropertyOp = extern "C" unsafe fn(*JSContext, JSHandleObject, JSHandleId, JSBool, JSMutableHandleValue) -> JSBool;
 
 pub type JSNewEnumerateOp = *u8;
 
-pub type JSEnumerateOp = extern "C" fn(*JSContext, JSHandleObject) -> JSBool;
+pub type JSEnumerateOp = extern "C" unsafe fn(*JSContext, JSHandleObject) -> JSBool;
 
-pub type JSResolveOp = extern "C" fn(*JSContext, JSHandleObject, JSHandleId) -> JSBool;
+pub type JSResolveOp = extern "C" unsafe fn(*JSContext, JSHandleObject, JSHandleId) -> JSBool;
 
 pub type JSNewResolveOp = *u8;
 
-pub type JSConvertOp = extern "C" fn(*JSContext, JSHandleObject, JSType, JSMutableHandleValue) -> JSBool;
+pub type JSConvertOp = extern "C" unsafe fn(*JSContext, JSHandleObject, JSType, JSMutableHandleValue) -> JSBool;
 
 pub type JSTypeOfOp = *u8;
 
@@ -322,7 +322,7 @@ pub type JSTraceNamePrinter = *u8;
 
 pub type JSEqualityOp = *u8;
 
-pub type JSNative = extern "C" fn(*JSContext, c_uint, *mut JSVal) -> JSBool;
+pub type JSNative = extern "C" unsafe fn(*JSContext, c_uint, *mut JSVal) -> JSBool;
 
 pub type enum_JSContextOp = c_uint;
 pub static JSCONTEXT_NEW: u32 = 0_u32;
@@ -1156,7 +1156,7 @@ pub fn JS_NewPropertyIterator(cx: *JSContext, obj: *JSObject) -> *JSObject;
 
 pub fn JS_NextProperty(cx: *JSContext, iterobj: *JSObject, idp: *jsid) -> JSBool;
 
-pub fn JS_ArrayIterator(cx: *JSContext, argc: c_uint, vp: *JSVal) -> JSBool;
+pub fn JS_ArrayIterator(cx: *JSContext, argc: c_uint, vp: *mut JSVal) -> JSBool;
 
 pub fn JS_CheckAccess(cx: *JSContext, obj: *JSObject, id: jsid, mode: JSAccessMode, vp: *JSVal, attrsp: *c_uint) -> JSBool;
 
