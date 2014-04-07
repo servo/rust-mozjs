@@ -12,14 +12,6 @@
 
 #include "assert.h"
 
-enum StubType {
-    PROPERTY_STUB,
-    STRICT_PROPERTY_STUB,
-    ENUMERATE_STUB,
-    CONVERT_STUB,
-    RESOLVE_STUB,
-};
-
 struct ProxyTraps {
     bool (*getPropertyDescriptor)(JSContext *cx, JSObject *proxy, jsid id,
                                   bool set, JSPropertyDescriptor *desc);
@@ -278,24 +270,6 @@ InvokeGetOwnPropertyDescriptor(
     return static_cast<ForwardingProxyHandler*>(handler)->getOwnPropertyDescriptor(cx, proxy,
                                                                                    id, set,
                                                                                    desc);
-}
-
-void*
-GetJSClassHookStubPointer(enum StubType type)
-{
-    switch (type) {
-    case PROPERTY_STUB:
-        return (void*)JS_PropertyStub;
-    case STRICT_PROPERTY_STUB:
-        return (void*)JS_StrictPropertyStub;
-    case ENUMERATE_STUB:
-        return (void*)JS_EnumerateStub;
-    case CONVERT_STUB:
-        return (void*)JS_ConvertStub;
-    case RESOLVE_STUB:
-        return (void*)JS_ResolveStub;
-    }
-    return NULL;
 }
 
 jsval

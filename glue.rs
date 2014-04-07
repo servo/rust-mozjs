@@ -10,13 +10,6 @@ use jsapi::*;
 use jsfriendapi::JSJitInfo;
 use jsval::JSVal;
 
-pub type enum_StubType = c_uint;
-pub static PROPERTY_STUB: u32 = 0_u32;
-pub static STRICT_PROPERTY_STUB: u32 = 1_u32;
-pub static ENUMERATE_STUB: u32 = 2_u32;
-pub static CONVERT_STUB: u32 = 3_u32;
-pub static RESOLVE_STUB: u32 = 4_u32;
-
 type c_bool = libc::c_int;
 
 pub struct ProxyTraps {
@@ -61,10 +54,6 @@ extern { }
 extern { }
 
 extern {
-
-// FIXME: Couldn't run on rust_stack until rust issue #6470 fixed.
-//#[rust_stack]
-pub fn GetJSClassHookStubPointer(_type: enum_StubType) -> *c_void;
 
 //#[rust_stack]
 pub fn RUST_JS_NumberValue(d: f64) -> JSVal;
