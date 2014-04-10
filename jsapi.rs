@@ -6,7 +6,7 @@
 
 #![allow(non_uppercase_statics, non_camel_case_types)]
 
-use std::libc::*;
+use libc::*;
 use jsfriendapi::JSJitInfo;
 use jsval::JSVal;
 

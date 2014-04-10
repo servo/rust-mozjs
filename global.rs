@@ -8,7 +8,7 @@ Handy functions for creating class objects and so forth.
 
 "]
 
-use std::libc::{c_uint, c_void};
+use libc::{c_uint, c_void};
 use std::str::raw::from_c_str;
 use std::cast::transmute;
 use std::ptr::null;

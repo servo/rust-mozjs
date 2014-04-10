@@ -12,21 +12,22 @@
 #![allow(non_uppercase_statics, non_camel_case_types)]
 
 extern crate green;
+extern crate libc;
 #[phase(syntax, link)]
 extern crate log;
 #[cfg(test)]
 extern crate rustuv;
 extern crate serialize;
 
+use libc::c_uint;
+use libc::types::common::c99::uint32_t;
 use std::cast;
 use std::ptr::null;
 use std::result::{Result, Ok, Err};
-use std::libc::c_uint;
 use jsapi::{JSBool, JSContext,
             JSObject, jsid,
             JSProto_LIMIT};
 use jsapi::JS_ComputeThis;
-use std::libc::types::common::c99::uint32_t;
 use jsval::JSVal;
 use rust::jsobj;
 
