@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#[doc = "Rust wrappers around the raw JS apis"];
+#![doc = "Rust wrappers around the raw JS apis"]
 
-use std::libc::types::os::arch::c95::{size_t, c_uint};
-use std::libc::c_char;
+use libc::types::os::arch::c95::{size_t, c_uint};
+use libc::c_char;
 use std::cmp;
 use std::rc;
 use std::rt::Runtime;

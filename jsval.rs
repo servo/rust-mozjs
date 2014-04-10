@@ -4,8 +4,8 @@
 
 use jsapi::{JSObject, JSString};
 
+use libc::c_void;
 use std::cast;
-use std::libc::c_void;
 
 static JSVAL_TAG_SHIFT: int = 47;
 

@@ -17,7 +17,7 @@ pub struct JSJitInfo {
 #[nolink]
 pub mod bindgen {
     use jsapi::{JSContext, JSObject, JSClass, JSRuntime};
-    use std::libc::uintptr_t;
+    use libc::uintptr_t;
 
     extern {
         pub fn JS_NewObjectWithUniqueType(cx: *JSContext, clasp: *JSClass,

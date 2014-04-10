@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#[doc = "
+#![doc = "
 
 Handy functions for creating class objects and so forth.
 
-"];
+"]
 
-use std::libc::{c_uint, c_void};
+use libc::{c_uint, c_void};
 use std::str::raw::from_c_str;
 use std::cast::transmute;
 use std::ptr::null;

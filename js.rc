@@ -2,33 +2,32 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#[crate_id = "github.com/mozilla-servo/rust-mozjs#js:0.1"];
-#[crate_type = "lib"];
-#[crate_type = "dylib"];
-#[crate_type = "rlib"];
+#![crate_id = "github.com/mozilla-servo/rust-mozjs#js:0.1"]
+#![crate_type = "lib"]
+#![crate_type = "dylib"]
+#![crate_type = "rlib"]
 
-#[feature(globs, link_args, managed_boxes)];
+#![feature(globs, link_args, managed_boxes, phase)]
 
-#[allow(non_uppercase_statics, non_camel_case_types)];
-
-#[feature(phase)];
-#[phase(syntax, link)] extern crate log;
-
-#[cfg(test)]
-extern crate rustuv;
+#![allow(non_uppercase_statics, non_camel_case_types)]
 
 extern crate green;
+extern crate libc;
+#[phase(syntax, link)]
+extern crate log;
+#[cfg(test)]
+extern crate rustuv;
 extern crate serialize;
 
+use libc::c_uint;
+use libc::types::common::c99::uint32_t;
 use std::cast;
 use std::ptr::null;
 use std::result::{Result, Ok, Err};
-use std::libc::c_uint;
 use jsapi::{JSBool, JSContext,
             JSObject, jsid,
             JSProto_LIMIT};
 use jsapi::JS_ComputeThis;
-use std::libc::types::common::c99::uint32_t;
 use jsval::JSVal;
 use rust::jsobj;
 
