@@ -95,8 +95,8 @@ pub fn DefineFunctionWithReserved(cx: *JSContext, obj: *JSObject,
                                   name: *libc::c_char, call: JSNative, nargs: libc::c_uint,
                                   attrs: libc::c_uint) -> *JSObject;
 pub fn GetObjectJSClass(obj: *JSObject) -> *JSClass;
-pub fn js_GetErrorMessage(userRef: *libc::c_void, locale: *libc::c_char,
-                          errorNumber: libc::c_uint) -> *JSErrorFormatString;
+pub fn RUST_js_GetErrorMessage(userRef: *libc::c_void, locale: *libc::c_char,
+                               errorNumber: libc::c_uint) -> *JSErrorFormatString;
 pub fn js_IsObjectProxyClass(obj: *JSObject) -> bool;
 pub fn js_IsFunctionProxyClass(obj: *JSObject) -> bool;
 pub fn IsProxyHandlerFamily(obj: *JSObject) -> bool;

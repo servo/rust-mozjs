@@ -406,8 +406,8 @@ GetObjectJSClass(JSObject* obj)
     return js::GetObjectJSClass(obj);
 }
 
-JSErrorFormatString*
-js_GetErrorMessage(void* userRef, char* locale, uint32_t errorNumber)
+const JSErrorFormatString*
+RUST_js_GetErrorMessage(void* userRef, char* locale, uint32_t errorNumber)
 {
     return js_GetErrorMessage(userRef, locale, errorNumber);
 }
