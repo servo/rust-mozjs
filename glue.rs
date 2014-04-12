@@ -44,13 +44,12 @@ pub struct ProxyTraps {
     trace: Option<extern "C" fn(*mut JSTracer, *JSObject)>
 }
 
-#[cfg(not(target_os = "android"))]
 #[link(name = "jsglue")]
 extern { }
 
 
 #[cfg(target_os = "android")]
-#[link_args = "-ljsglue -lstdc++ -lgcc"]
+#[link_args = "-ljsglue -lstdc++ -lgcc -rdynamic"]
 extern { }
 
 extern {
