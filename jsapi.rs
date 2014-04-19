@@ -376,7 +376,7 @@ pub struct struct_JSErrorFormatString {
 
 pub type JSErrorFormatString = struct_JSErrorFormatString;
 
-pub type JSErrorCallback = *u8;
+pub type JSErrorCallback = extern "C" fn(*mut c_void, *c_char, c_uint) -> *JSErrorFormatString;
 
 pub type JSLocaleToUpperCase = *u8;
 
@@ -1394,7 +1394,7 @@ pub fn JS_GetLocaleCallbacks(cx: *JSContext) -> *JSLocaleCallbacks;
 
 pub fn JS_ReportError(cx: *JSContext, format: *c_char/* FIXME: variadic function */);
 
-pub fn JS_ReportErrorNumber(cx: *JSContext, errorCallback: JSErrorCallback, userRef: *c_void, errorNumber: c_uint/* FIXME: variadic function */);
+pub fn JS_ReportErrorNumber(cx: *JSContext, errorCallback: JSErrorCallback, userRef: *c_void, errorNumber: c_uint, ...);
 
 pub fn JS_ReportErrorNumberUC(cx: *JSContext, errorCallback: JSErrorCallback, userRef: *c_void, errorNumber: c_uint/* FIXME: variadic function */);
 
