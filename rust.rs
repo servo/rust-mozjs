@@ -11,6 +11,7 @@ use std::rc;
 use std::rt::Runtime;
 use jsapi::*;
 use jsval::{JSVal, NullValue};
+use glue;
 use default_stacksize;
 use default_heapsize;
 use JSOPTION_VAROBJFIX;
@@ -317,6 +318,12 @@ impl to_jsstr for ~str {
             JS_NewStringCopyN(cx.deref().ptr, cbuf, self.len() as size_t)
         }
     }
+}
+
+pub fn ThrowTypeError(cx: *JSContext, error: &str) -> JSBool {
+    let error = error.to_c_str();
+    error.with_ref(|error| unsafe { glue::ThrowTypeError(cx, error) });
+    0
 }
 
 #[cfg(test)]

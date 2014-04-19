@@ -105,4 +105,5 @@ pub fn GetProxyHandler(obj: *JSObject) -> *libc::c_void;
 pub fn InvokeGetOwnPropertyDescriptor(handler: *libc::c_void, cx: *JSContext, proxy: *JSObject, id: jsid, set: JSBool, desc: *mut JSPropertyDescriptor) -> JSBool;
 pub fn GetGlobalForObjectCrossCompartment(obj: *JSObject) -> *JSObject;
 pub fn ReportError(cx: *JSContext, error: *c_char);
+pub fn ThrowTypeError(cx: *JSContext, error: *c_char);
 }
