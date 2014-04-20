@@ -463,4 +463,20 @@ ReportError(JSContext* aCx, const char* aError)
     JS_ReportError(aCx, aError);
 }
 
+static JSErrorFormatString ErrorFormatString = { "{0}", 1, JSEXN_TYPEERR };
+
+static const JSErrorFormatString*
+GetErrorMessage(void* aUserRef, const char* aLocale,
+                const unsigned aErrorNumber)
+{
+  assert(aErrorNumber == 0);
+  return &ErrorFormatString;
+}
+
+void
+ThrowTypeError(JSContext* aCx, const char* aError)
+{
+  JS_ReportErrorNumber(aCx, GetErrorMessage, NULL, 0, aError);
+}
+
 } // extern "C"
