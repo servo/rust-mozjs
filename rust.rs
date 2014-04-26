@@ -30,7 +30,7 @@ use green::task::GreenTask;
 pub type rt = rc::Rc<rt_rsrc>;
 
 pub struct rt_rsrc {
-    ptr : *JSRuntime,
+    pub ptr : *JSRuntime,
 }
 
 impl Drop for rt_rsrc {
@@ -85,8 +85,8 @@ pub fn rt() -> rt {
 // contexts
 
 pub struct Cx {
-    ptr: *JSContext,
-    rt: rt,
+    pub ptr: *JSContext,
+    pub rt: rt,
 }
 
 #[unsafe_destructor]
@@ -227,8 +227,8 @@ pub extern fn reportError(_cx: *JSContext, msg: *c_char, report: *JSErrorReport)
 // compartment
 
 pub struct Compartment {
-    cx: rc::Rc<Cx>,
-    global_obj: *JSObject,
+    pub cx: rc::Rc<Cx>,
+    pub global_obj: *JSObject,
 }
 
 impl Compartment {

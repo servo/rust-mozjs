@@ -256,27 +256,27 @@ pub type moz_static_assert5 = c_int;
 pub type moz_static_assert6 = c_int;
 
 pub struct JSHandleObject {
-    unnamed: **JSObject,
+    pub unnamed: **JSObject,
 }
 
 pub struct JSHandleValue {
-    unnamed: JSVal,
+    pub unnamed: JSVal,
 }
 
 pub struct JSHandleString {
-    unnamed: **JSString,
+    pub unnamed: **JSString,
 }
 
 pub struct JSMutableHandleObject {
-    unnamed: **JSObject,
+    pub unnamed: **JSObject,
 }
 
 pub struct JSHandleId {
-    unnamed: *jsid,
+    pub unnamed: *jsid,
 }
 
 pub struct JSMutableHandleValue {
-    unnamed: *JSVal,
+    pub unnamed: *JSVal,
 }
 
 pub type JSRawObject = *JSObject;
@@ -300,7 +300,7 @@ pub type JSTypeOfOp = *u8;
 pub type JSFreeOp = struct_JSFreeOp;
 
 pub struct struct_JSFreeOp {
-    runtime: *JSRuntime,
+    pub runtime: *JSRuntime,
 }
 
 pub type JSFinalizeOp = extern "C" fn(*JSFreeOp, *JSObject);
@@ -308,7 +308,7 @@ pub type JSFinalizeOp = extern "C" fn(*JSFreeOp, *JSObject);
 pub type JSStringFinalizer = struct_JSStringFinalizer;
 
 pub struct struct_JSStringFinalizer {
-    finalize: *u8,
+    pub finalize: *u8,
 }
 
 //XXXjdm JSAccessMode is an enum; uint32_t may not be correct.
@@ -369,9 +369,9 @@ pub static JSEXN_LIMIT: i32 = 8_i32;
 pub type JSExnType = enum_JSExnType;
 
 pub struct struct_JSErrorFormatString {
-    format: *c_char,
-    argCount: uint16_t,
-    exnType: int16_t,
+    pub format: *c_char,
+    pub argCount: uint16_t,
+    pub exnType: int16_t,
 }
 
 pub type JSErrorFormatString = struct_JSErrorFormatString;
@@ -398,7 +398,7 @@ pub type JSWrapObjectCallback = *u8;
 
 pub type JSPreWrapCallback = *u8;
 
-pub type JSSameCompartmentWrapObjectCallback = *u8;
+pub type JSSameCompartmentWrapObjectCallback = extern "C" fn(*JSContext, *JSObject) -> *JSObject;
 
 pub type JSDestroyCompartmentCallback = *u8;
 
@@ -437,12 +437,12 @@ pub type JSGCRootMapFun = *u8;
 pub type JSTraceCallback = *u8;
 
 pub struct struct_JSTracer {
-    runtime: *JSRuntime,
-    callback: JSTraceCallback,
-    debugPrinter: JSTraceNamePrinter,
-    debugPrintArg: *c_void,
-    debugPrintIndex: size_t,
-    eagerlyTraceWeakMaps: JSBool,
+    pub runtime: *JSRuntime,
+    pub callback: JSTraceCallback,
+    pub debugPrinter: JSTraceNamePrinter,
+    pub debugPrintArg: *c_void,
+    pub debugPrintIndex: size_t,
+    pub eagerlyTraceWeakMaps: JSBool,
 }
 
 pub type enum_JSGCParamKey = c_uint;
@@ -497,10 +497,10 @@ pub struct JSClass {
 }
 
 pub struct struct_JSConstDoubleSpec {
-    dval: c_double,
-    name: *c_char,
-    flags: uint8_t,
-    spare: (uint8_t,uint8_t,uint8_t),
+    pub dval: c_double,
+    pub name: *c_char,
+    pub flags: uint8_t,
+    pub spare: (uint8_t,uint8_t,uint8_t),
 }
 
 pub type struct_JSJitInfo = c_void;
@@ -510,8 +510,8 @@ pub type struct_JSJitInfo = c_void;
 // FIXME: We need these Clone impls for certain operations in Servo,
 // but do they really make sense?
 pub struct JSStrictPropertyOpWrapper {
-    op: Option<JSNative>,
-    info: *JSJitInfo,
+    pub op: Option<JSNative>,
+    pub info: *JSJitInfo,
 }
 
 impl Clone for JSStrictPropertyOpWrapper {
@@ -524,8 +524,8 @@ impl Clone for JSStrictPropertyOpWrapper {
 }
 
 pub struct JSPropertyOpWrapper {
-    op: Option<JSNative>,
-    info: *JSJitInfo,
+    pub op: Option<JSNative>,
+    pub info: *JSJitInfo,
 }
 
 impl Clone for JSPropertyOpWrapper {
@@ -553,11 +553,11 @@ impl Clone for JSNativeWrapper {
 
 #[deriving(Clone)]
 pub struct JSPropertySpec {
-    name: *c_char,
-    tinyid: int8_t,
-    flags: uint8_t,
-    getter: JSPropertyOpWrapper,
-    setter: JSStrictPropertyOpWrapper,
+    pub name: *c_char,
+    pub tinyid: int8_t,
+    pub flags: uint8_t,
+    pub getter: JSPropertyOpWrapper,
+    pub setter: JSStrictPropertyOpWrapper,
 }
 
 #[deriving(Clone)]
@@ -570,23 +570,23 @@ pub struct JSFunctionSpec {
 }
 
 pub struct struct_JSPropertyDescriptor {
-    obj: *JSObject,
-    attrs: c_uint,
-    shortid: c_uint,
-    getter: Option<JSPropertyOp>,
-    setter: Option<JSStrictPropertyOp>,
-    value: JSVal,
+    pub obj: *JSObject,
+    pub attrs: c_uint,
+    pub shortid: c_uint,
+    pub getter: Option<JSPropertyOp>,
+    pub setter: Option<JSStrictPropertyOp>,
+    pub value: JSVal,
 }
 
 pub struct struct_JSPrincipals {
-    refcount: c_int,
+    pub refcount: c_int,
 }
 
 pub struct struct_JSSecurityCallbacks {
-    checkObjectAccess: JSCheckAccessOp,
-    subsumePrincipals: JSSubsumePrincipalsOp,
-    findObjectPrincipals: JSObjectPrincipalsFinder,
-    contentSecurityPolicyAllows: JSCSPEvalChecker,
+    pub checkObjectAccess: JSCheckAccessOp,
+    pub subsumePrincipals: JSSubsumePrincipalsOp,
+    pub findObjectPrincipals: JSObjectPrincipalsFinder,
+    pub contentSecurityPolicyAllows: JSCSPEvalChecker,
 }
 
 pub type enum_JSExecPart = c_uint;
@@ -600,17 +600,17 @@ pub type JSExecPart = enum_JSExecPart;
 pub type JSONWriteCallback = *u8;
 
 pub struct struct_JSStructuredCloneCallbacks {
-    read: ReadStructuredCloneOp,
-    write: WriteStructuredCloneOp,
-    reportError: StructuredCloneErrorOp,
+    pub read: ReadStructuredCloneOp,
+    pub write: WriteStructuredCloneOp,
+    pub reportError: StructuredCloneErrorOp,
 }
 
 pub struct struct_JSLocaleCallbacks {
-    localeToUpperCase: JSLocaleToUpperCase,
-    localeToLowerCase: JSLocaleToLowerCase,
-    localeCompare: JSLocaleCompare,
-    localeToUnicode: JSLocaleToUnicode,
-    localeGetErrorMessage: JSErrorCallback,
+    pub localeToUpperCase: JSLocaleToUpperCase,
+    pub localeToLowerCase: JSLocaleToLowerCase,
+    pub localeCompare: JSLocaleCompare,
+    pub localeToUnicode: JSLocaleToUnicode,
+    pub localeGetErrorMessage: JSErrorCallback,
 }
 
 pub struct struct_JSErrorReport {
@@ -630,7 +630,7 @@ pub struct struct_JSErrorReport {
 }
 
 pub struct struct_unnamed1 {
-    payload: union_unnamed2,
+    pub payload: union_unnamed2,
 }
 
 pub type union_unnamed2 = c_void /* FIXME: union type */;

@@ -5,11 +5,11 @@
 pub type JSJitPropertyOp = *u8;
 
 pub struct JSJitInfo {
-    op: JSJitPropertyOp,
-    protoID: u32,
-    depth: u32,
-    isInfallible: bool,
-    isConstant: bool
+    pub op: JSJitPropertyOp,
+    pub protoID: u32,
+    pub depth: u32,
+    pub isInfallible: bool,
+    pub isConstant: bool
 }
 
 //pub type JSJitInfo = JSJitInfo_struct;
