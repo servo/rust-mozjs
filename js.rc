@@ -58,7 +58,7 @@ pub static JSOPTION_VAROBJFIX: uint32_t = 0b00000000000100u32;
 pub static JSOPTION_METHODJIT: uint32_t = (1 << 14) as u32;
 pub static JSOPTION_TYPE_INFERENCE: uint32_t = (1 << 18) as u32;
 
-pub static default_heapsize: u32 = 8_u32 * 1024_u32 * 1024_u32;
+pub static default_heapsize: u32 = 32_u32 * 1024_u32 * 1024_u32;
 pub static default_stacksize: uint = 8192u;
 pub static ERR: JSBool = 0_i32;
 
