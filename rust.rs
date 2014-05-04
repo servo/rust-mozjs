@@ -223,6 +223,15 @@ pub extern fn reportError(_cx: *JSContext, msg: *c_char, report: *JSErrorReport)
     }
 }
 
+pub fn with_compartment<R>(cx: *JSContext, object: *JSObject, cb: || -> R) -> R {
+    unsafe {
+        let call = JS_EnterCrossCompartmentCall(cx, object);
+        let result = cb();
+        JS_LeaveCrossCompartmentCall(call);
+        result
+    }
+}
+
 // ___________________________________________________________________________
 // compartment
 
