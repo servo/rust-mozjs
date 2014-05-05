@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use jsapi::{JSObject, JSString, JSGCTraceKind, JSTRACE_OBJECT, JSTRACE_STRING};
+use jsapi::{JSObject, JSString, Struct_Unnamed1, JSGCTraceKind, JSTRACE_OBJECT, JSTRACE_STRING};
 
-use libc::c_void;
+use libc::c_void, uint64_t, c_double, size_t, uintptr_t;
 use std::mem;
 
 #[cfg(target_word_size = "64")]
@@ -75,17 +75,15 @@ enum ValueShiftedTag {
 #[cfg(target_word_size = "64")]
 static JSVAL_PAYLOAD_MASK: u64 = 0x00007FFFFFFFFFFF;
 
-// JSVal was originally type of u64.
-// now this become {u64} because of the union abi issue on ARM arch. See #398.
 #[deriving(PartialEq,Clone)]
 pub struct JSVal {
-    pub v: u64
+    v: u64
 }
 
 #[cfg(target_word_size = "64")]
 #[inline(always)]
 fn BuildJSVal(tag: ValueTag, payload: u64) -> JSVal {
-    JSVal {
+    Union_jsval_layout {
         v: ((tag as u32 as u64) << JSVAL_TAG_SHIFT) | payload
     }
 }
@@ -118,7 +116,7 @@ pub fn Int32Value(i: i32) -> JSVal {
 pub fn DoubleValue(f: f64) -> JSVal {
     let bits: u64 = unsafe { mem::transmute(f) };
     assert!(bits <= JSVAL_SHIFTED_TAG_MAX_DOUBLE as u64)
-    JSVal {
+    Union_jsval_layout {
         v: bits
     }
 }
@@ -192,7 +190,7 @@ pub fn ObjectOrNullValue(o: *mut JSObject) -> JSVal {
 pub fn PrivateValue(o: *const c_void) -> JSVal {
     let ptrBits = o as uint as u64;
     assert!((ptrBits & 1) == 0);
-    JSVal {
+    Union_jsval_layout {
         v: ptrBits >> 1
     }
 }
@@ -379,6 +377,5 @@ impl JSVal {
         } else {
             JSTRACE_STRING
         }
-
     }
 }

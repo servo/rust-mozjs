@@ -17,17 +17,17 @@ extern crate log;
 extern crate rustuv;
 extern crate serialize;
 
-use libc::c_uint;
+use libc::{c_int, c_uint};
 use libc::types::common::c99::uint32_t;
-use jsapi::{JSBool, JSContext, JSPropertyOp, JSStrictPropertyOp, JSEnumerateOp,
-            JSObject, jsid, JSResolveOp, JSConvertOp, JSFinalizeOp, JSTraceOp,
-            JSProto_LIMIT, JSHandleObject, JSCheckAccessOp, JSNative, JSHasInstanceOp};
+use jsapi::{JSContext, JSPropertyOp, JSStrictPropertyOp, JSEnumerateOp, Enum_JSProtoKey,
+            JSObject, JSResolveOp, JSConvertOp, JSFinalizeOp, JSTraceOp, JSProto_LIMIT,
+            JSHandleObject, JSNative, JSHasInstanceOp, JSFunctionSpec, JSDeletePropertyOp};
+use jsapi::JSWeakmapKeyDelegateOp;
 use jsapi::JS_ComputeThis;
 use jsval::JSVal;
 
 // These are just macros in jsapi.h
 pub use jsapi::JS_Init as JS_NewRuntime;
-pub use jsapi::JS_Finish as JS_DestroyRuntime;
 /*
 FIXME: Not sure where JS_Lock is
 pub use jsapi::bindgen::JS_Lock as JS_LockRuntime;
@@ -53,7 +53,7 @@ pub static JSOPTION_TYPE_INFERENCE: uint32_t = (1u32 << 18) as u32;
 
 pub static default_heapsize: u32 = 32_u32 * 1024_u32 * 1024_u32;
 pub static default_stacksize: uint = 8192u;
-pub static ERR: JSBool = 0_i32;
+pub static ERR: c_int = 0;
 
 pub static JSID_TYPE_STRING: i64 = 0;
 pub static JSID_TYPE_INT: i64 = 1;
@@ -62,7 +62,7 @@ pub static JSID_TYPE_OBJECT: i64 = 4;
 pub static JSID_TYPE_DEFAULT_XML_NAMESPACE: i64 = 6;
 pub static JSID_TYPE_MASK: i64 = 7;
 
-pub static JSID_VOID: jsid = JSID_TYPE_VOID as jsid;
+//pub static JSID_VOID: jsid = JSID_TYPE_VOID as jsid;
 
 pub static JSFUN_CONSTRUCTOR: u32 = 0x200; /* native that can be called as a ctor */
 
@@ -87,11 +87,13 @@ pub static JSCLASS_GLOBAL_SLOT_COUNT: c_uint = JSProto_LIMIT * 3 + 24;
 pub static JSCLASS_IS_DOMJSCLASS: u32 = 1 << 4;
 pub static JSCLASS_USERBIT1: u32 = 1 << 7;
 
-pub static JSSLOT_PROXY_PRIVATE: u32 = 1;
+pub static JSSLOT_PROXY_PRIVATE: u32 = /*1*/0; //XXXjdm wrong fo sho
 
 pub static JSRESOLVE_QUALIFIED: u32 = 0x01;
 pub static JSRESOLVE_ASSIGNING: u32 = 0x02;
 pub static JSRESOLVE_DETECTING: u32 = 0x04;
+
+pub static JS_DEFAULT_ZEAL_FREQ: u32 = 100;
 
 pub enum JSGCTraceKind {
     JSTRACE_OBJECT,
@@ -139,70 +141,77 @@ fn start(argc: int, argv: *const *const u8) -> int {
     green::start(argc, argv, rustuv::event_loop, __test::main)
 }
 
-pub type JSObjectOp = extern "C" fn(*mut JSContext, JSHandleObject) -> *mut JSObject;
+// Up-to-date mozjs 075904f5f7ee1176f28630d1dff47820020e5928
+pub type JSObjectOp = Option<extern "C" fn(*mut JSContext, JSHandleObject) -> *mut JSObject>;
+pub type ClassObjectCreationOp = Option<extern "C" fn(*mut JSContext, Enum_JSProtoKey) -> *mut JSObject>;
+pub type FinishClassInitOp = Option<extern "C" fn(*mut JSContext, JSHandleObject, JSHandleObject) -> bool>;
 
+// Up-to-date mozjs 075904f5f7ee1176f28630d1dff47820020e5928
 pub struct Class {
     pub name: *const libc::c_char,
     pub flags: uint32_t,
+
+    /* Mandatory function pointer members. */
     pub addProperty: JSPropertyOp,
-    pub delProperty: JSPropertyOp,
+    pub delProperty: JSDeletePropertyOp,
     pub getProperty: JSPropertyOp,
     pub setProperty: JSStrictPropertyOp,
     pub enumerate: JSEnumerateOp,
     pub resolve: JSResolveOp,
     pub convert: JSConvertOp,
+
+    /* Optional members (may be null). */
     pub finalize: JSFinalizeOp,
-    pub checkAccess: JSCheckAccessOp,
     pub call: JSNative,
     pub hasInstance: JSHasInstanceOp,
     pub construct: JSNative,
     pub trace: JSTraceOp,
 
+    pub spec: ClassSpec,
     pub ext: ClassExtension,
     pub ops: ObjectOps,
 }
 
-pub struct ClassExtension {
-    pub equality: *const u8,
-    pub outerObject: Option<JSObjectOp>,
-    pub innerObject: Option<JSObjectOp>,
-    pub iteratorObject: *const u8,
-    pub unused: *const u8,
-    pub isWrappedNative: *const u8,
+// Up-to-date mozjs 075904f5f7ee1176f28630d1dff47820020e5928
+pub struct ClassSpec {
+    pub createConstructor: ClassObjectCreationOp,
+    pub createPrototype: ClassObjectCreationOp,
+    pub constructorFunctions: *const JSFunctionSpec,
+    pub prototypeFunctions: *const JSFunctionSpec,
+    pub finishInit: FinishClassInitOp,
 }
 
+// Up-to-date mozjs 075904f5f7ee1176f28630d1dff47820020e5928
+pub struct ClassExtension {
+    pub outerObject: JSObjectOp,
+    pub innerObject: JSObjectOp,
+    pub iteratorObject: *const u8,
+    pub isWrappedNative: bool,
+    pub weakmapKeyDelegateOp: JSWeakmapKeyDelegateOp,
+}
+
+// Up-to-date mozjs 075904f5f7ee1176f28630d1dff47820020e5928
 pub struct ObjectOps {
     pub lookupGeneric: *const u8,
     pub lookupProperty: *const u8,
     pub lookupElement: *const u8,
-    pub lookupSpecial: *const u8,
     pub defineGeneric: *const u8,
     pub defineProperty: *const u8,
     pub defineElement: *const u8,
-    pub defineSpecial: *const u8,
     pub getGeneric: *const u8,
     pub getProperty: *const u8,
     pub getElement: *const u8,
-    pub getElementIfPresent: *const u8,
-    pub getSpecial: *const u8,
     pub setGeneric: *const u8,
     pub setProperty: *const u8,
     pub setElement: *const u8,
-    pub setSpecial: *const u8,
     pub getGenericAttributes: *const u8,
-    pub getPropertyAttributes: *const u8,
-    pub getElementAttributes: *const u8,
-    pub getSpecialAttributes: *const u8,
     pub setGenericAttributes: *const u8,
-    pub setPropertyAttributes: *const u8,
-    pub setElementAttributes: *const u8,
-    pub setSpecialAttributes: *const u8,
     pub deleteProperty: *const u8,
     pub deleteElement: *const u8,
-    pub deleteSpecial: *const u8,
+    pub watch: *const u8,
+    pub unwatch: *const u8,
+    pub slice: *const u8,
 
     pub enumerate: *const u8,
-    pub typeOf: *const u8,
-    pub thisObject: Option<JSObjectOp>,
-    pub clear: *const u8,
+    pub thisObject: JSObjectOp,
 }
