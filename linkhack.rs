@@ -6,6 +6,7 @@
 
 #[cfg(target_os = "linux")]
 #[link(name = "pthread")]
+#[link(name = "jsglue")]
 #[link(name = "js_static")]
 #[link(name = "stdc++")]
 #[link(name = "z")]

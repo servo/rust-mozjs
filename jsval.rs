@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use jsapi::{JSObject, JSString};
+use jsapi::{JSObject, JSString, Struct_Unnamed1};
 
-use libc::c_void;
 use std::cast;
+use libc::{c_void, uint64_t, c_double, size_t, uintptr_t};
 
 static JSVAL_TAG_SHIFT: int = 47;
 
@@ -54,17 +54,37 @@ enum ValueShiftedTag {
 
 static JSVAL_PAYLOAD_MASK: u64 = 0x00007FFFFFFFFFFF;
 
-// JSVal was originally type of u64.
-// now this become {u64} because of the union abi issue on ARM arch. See #398.
 #[deriving(Eq,Clone)]
-pub struct JSVal {
-    pub v: u64
+pub struct Union_jsval_layout {
+    pub data: u64,
 }
+impl Union_jsval_layout {
+    pub fn asBits(&mut self) -> *mut uint64_t {
+        unsafe { ::std::cast::transmute(self) }
+    }
+    pub fn s(&mut self) -> *mut Struct_Unnamed1 {
+        unsafe { ::std::cast::transmute(self) }
+    }
+    pub fn asDouble(&mut self) -> *mut c_double {
+        unsafe { ::std::cast::transmute(self) }
+    }
+    pub fn asPtr(&mut self) -> *mut *mut c_void {
+        unsafe { ::std::cast::transmute(self) }
+    }
+    pub fn asWord(&mut self) -> *mut size_t {
+        unsafe { ::std::cast::transmute(self) }
+    }
+    pub fn asUIntPtr(&mut self) -> *mut uintptr_t {
+        unsafe { ::std::cast::transmute(self) }
+    }
+}
+
+pub type JSVal = Union_jsval_layout;
 
 #[inline(always)]
 fn BuildJSVal(tag: ValueTag, payload: u64) -> JSVal {
-    JSVal {
-        v: ((tag as u32 as u64) << JSVAL_TAG_SHIFT) | payload
+    Union_jsval_layout {
+        data: ((tag as u32 as u64) << JSVAL_TAG_SHIFT) | payload
     }
 }
 
@@ -88,8 +108,8 @@ pub fn Int32Value(i: i32) -> JSVal {
 pub fn DoubleValue(f: f64) -> JSVal {
     let bits: u64 = unsafe { cast::transmute(f) };
     assert!(bits <= JSVAL_SHIFTED_TAG_MAX_DOUBLE as u64)
-    JSVal {
-        v: bits
+    Union_jsval_layout {
+        data: bits
     }
 }
 
@@ -122,7 +142,7 @@ pub fn ObjectValue(o: &JSObject) -> JSVal {
 }
 
 #[inline(always)]
-pub fn ObjectOrNullValue(o: *JSObject) -> JSVal {
+pub fn ObjectOrNullValue(o: *mut JSObject) -> JSVal {
     if o.is_null() {
         NullValue()
     } else {
@@ -134,18 +154,18 @@ pub fn ObjectOrNullValue(o: *JSObject) -> JSVal {
 pub fn PrivateValue(o: *c_void) -> JSVal {
     let ptrBits = o as uint as u64;
     assert!((ptrBits & 1) == 0);
-    JSVal {
-        v: ptrBits >> 1
+    Union_jsval_layout {
+        data: ptrBits >> 1
     }
 }
 
-impl JSVal {
+impl Union_jsval_layout {
     pub fn is_undefined(&self) -> bool {
-        self.v == JSVAL_SHIFTED_TAG_UNDEFINED as u64
+        self.data == JSVAL_SHIFTED_TAG_UNDEFINED as u64
     }
 
     pub fn is_null(&self) -> bool {
-        self.v == JSVAL_SHIFTED_TAG_NULL as u64
+        self.data == JSVAL_SHIFTED_TAG_NULL as u64
     }
 
     pub fn is_null_or_undefined(&self) -> bool {
@@ -153,57 +173,57 @@ impl JSVal {
     }
 
     pub fn is_double(&self) -> bool {
-        self.v <= JSVAL_SHIFTED_TAG_MAX_DOUBLE as u64
+        self.data <= JSVAL_SHIFTED_TAG_MAX_DOUBLE as u64
     }
 
     pub fn is_primitive(&self) -> bool {
         static JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_PRIMITIVE_SET: u64 = JSVAL_SHIFTED_TAG_OBJECT as u64;
-        self.v < JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_PRIMITIVE_SET
+        self.data < JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_PRIMITIVE_SET
     }
 
     pub fn is_string(&self) -> bool {
-        (self.v >> JSVAL_TAG_SHIFT) == JSVAL_TAG_STRING as u64
+        (self.data >> JSVAL_TAG_SHIFT) == JSVAL_TAG_STRING as u64
     }
 
     pub fn is_object(&self) -> bool {
-        assert!((self.v >> JSVAL_TAG_SHIFT) <= JSVAL_TAG_OBJECT as u64);
-        self.v >= JSVAL_SHIFTED_TAG_OBJECT as u64
+        assert!((self.data >> JSVAL_TAG_SHIFT) <= JSVAL_TAG_OBJECT as u64);
+        self.data >= JSVAL_SHIFTED_TAG_OBJECT as u64
     }
 
-    pub fn to_object(&self) -> *JSObject {
+    pub fn to_object(&self) -> *mut JSObject {
         assert!(self.is_object());
         self.to_object_or_null()
     }
 
     pub fn is_object_or_null(&self) -> bool {
         static JSVAL_LOWER_INCL_SHIFTED_TAG_OF_OBJ_OR_NULL_SET: u64 = JSVAL_SHIFTED_TAG_NULL as u64;
-        assert!((self.v >> JSVAL_TAG_SHIFT) <= JSVAL_TAG_OBJECT as u64);
-        self.v >= JSVAL_LOWER_INCL_SHIFTED_TAG_OF_OBJ_OR_NULL_SET
+        assert!((self.data >> JSVAL_TAG_SHIFT) <= JSVAL_TAG_OBJECT as u64);
+        self.data >= JSVAL_LOWER_INCL_SHIFTED_TAG_OF_OBJ_OR_NULL_SET
     }
 
-    pub fn to_object_or_null(&self) -> *JSObject {
+    pub fn to_object_or_null(&self) -> *mut JSObject {
         assert!(self.is_object_or_null());
-        let ptrBits = self.v & JSVAL_PAYLOAD_MASK;
+        let ptrBits = self.data & JSVAL_PAYLOAD_MASK;
         assert!((ptrBits & 0x7) == 0);
-        ptrBits as uint as *JSObject
+        ptrBits as uint as *mut JSObject
     }
 
     pub fn to_private(&self) -> *c_void {
         assert!(self.is_double());
-        assert!((self.v & 0x8000000000000000u64) == 0);
-        (self.v << 1) as uint as *c_void
+        assert!((self.data & 0x8000000000000000u64) == 0);
+        (self.data << 1) as uint as *c_void
     }
 
     pub fn is_gcthing(&self) -> bool {
         static JSVAL_LOWER_INCL_SHIFTED_TAG_OF_GCTHING_SET: u64 = JSVAL_SHIFTED_TAG_STRING as u64;
-        self.v >= JSVAL_LOWER_INCL_SHIFTED_TAG_OF_GCTHING_SET
+        self.data >= JSVAL_LOWER_INCL_SHIFTED_TAG_OF_GCTHING_SET
     }
 
-    pub fn to_gcthing(&self) -> *c_void {
+    pub fn to_gcthing(&self) -> *mut c_void {
         assert!(self.is_gcthing());
-        let ptrBits = self.v & JSVAL_PAYLOAD_MASK;
+        let ptrBits = self.data & JSVAL_PAYLOAD_MASK;
         assert!((ptrBits & 0x7) == 0);
-        ptrBits as *c_void
+        ptrBits as *mut c_void
     }
 
     pub fn is_markable(&self) -> bool {

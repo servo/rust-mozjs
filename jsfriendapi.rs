@@ -14,14 +14,13 @@ pub struct JSJitInfo {
 
 //pub type JSJitInfo = JSJitInfo_struct;
 
-#[nolink]
 pub mod bindgen {
-    use jsapi::{JSContext, JSObject, JSClass, JSRuntime};
+    use jsapi::{JSContext, JSObject, JSClass, JSRuntime, JSHandleObject};
     use libc::uintptr_t;
 
     extern {
-        pub fn JS_NewObjectWithUniqueType(cx: *JSContext, clasp: *JSClass,
-                                          proto: *JSObject, parent: *JSObject) -> *JSObject;
-        pub fn JS_GetAddressableObject(rt: *JSRuntime, candidateObj: uintptr_t) -> *JSObject;
+        pub fn JS_NewObjectWithUniqueType(cx: *mut JSContext, clasp: *JSClass,
+                                          proto: JSHandleObject, parent: JSHandleObject) -> *mut JSObject;
+        pub fn JS_GetAddressableObject(rt: *mut JSRuntime, candidateObj: uintptr_t) -> *mut JSObject;
     }
 }
