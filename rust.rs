@@ -17,11 +17,7 @@ use JSOPTION_VAROBJFIX;
 use JSOPTION_METHODJIT;
 use JSOPTION_TYPE_INFERENCE;
 use ERR;
-use std::ptr::null;
-use result;
-use result_obj;
 use std::str::raw::from_c_str;
-use std::cast;
 use green::task::GreenTask;
 
 // ___________________________________________________________________________
@@ -60,7 +56,6 @@ impl RtUtils for rc::Rc<rt_rsrc> {
     }
 }
 
-// FIXME: Is this safe once we have more than one stack segment?
 extern fn gc_callback(rt: *JSRuntime, _status: JSGCStatus) {
     use std::rt::local::Local;
     use std::rt::task::Task;
@@ -103,43 +98,6 @@ pub fn new_context(ptr: *JSContext, rt: rt) -> rc::Rc<Cx> {
         ptr: ptr,
         rt: rt,
     })
-}
-
-pub trait CxUtils {
-    fn rooted_obj(&self, obj: *JSObject) -> jsobj;
-    fn new_compartment(&self, globcls: *JSClass) -> Result<rc::Rc<Compartment>,()>;
-    fn new_compartment_with_global(&self, global: *JSObject) -> Result<rc::Rc<Compartment>,()>;
-}
-
-impl CxUtils for rc::Rc<Cx> {
-    fn rooted_obj(&self, obj: *JSObject) -> jsobj {
-        let cxptr = self.deref().ptr;
-        let jsobj = rc::Rc::new(jsobj_rsrc {cx: self.clone(), cxptr: cxptr, ptr: obj});
-        unsafe {
-            JS_AddObjectRoot(cxptr, &jsobj.deref().ptr);
-        }
-        jsobj
-    }
-
-    fn new_compartment(&self, globcls: *JSClass) -> Result<rc::Rc<Compartment>,()> {
-        unsafe {
-            let ptr = self.deref().ptr;
-            let globobj = JS_NewGlobalObject(ptr, globcls, null());
-            result(JS_InitStandardClasses(ptr, globobj)).and_then(|_ok| {
-                Ok(rc::Rc::new(Compartment {
-                    cx: self.clone(),
-                    global_obj: globobj,
-                }))
-            })
-        }
-    }
-
-    fn new_compartment_with_global(&self, global: *JSObject) -> Result<rc::Rc<Compartment>,()> {
-        Ok(rc::Rc::new(Compartment {
-            cx: self.clone(),
-            global_obj: global,
-        }))
-    }
 }
 
 impl Cx {
@@ -195,28 +153,12 @@ impl Cx {
             }
         })
     }
-
-    pub unsafe fn get_cx_private(&self) -> *() {
-        cast::transmute(JS_GetContextPrivate(self.ptr))
-    }
-
-    pub unsafe fn set_cx_private(&self, data: *()) {
-        JS_SetContextPrivate(self.ptr, cast::transmute(data));
-    }
-
-    pub unsafe fn get_obj_private(&self, obj: *JSObject) -> *() {
-        cast::transmute(JS_GetPrivate(obj))
-    }
-
-    pub unsafe fn set_obj_private(&self, obj: *JSObject, data: *()) {
-        JS_SetPrivate(obj, cast::transmute(data));
-    }
 }
 
 pub extern fn reportError(_cx: *JSContext, msg: *c_char, report: *JSErrorReport) {
     unsafe {
         let fnptr = (*report).filename;
-        let fname = if fnptr.is_not_null() {from_c_str(fnptr)} else {~"none"};
+        let fname = if fnptr.is_not_null() {from_c_str(fnptr)} else {"none".to_owned()};
         let lineno = (*report).lineno;
         let msg = from_c_str(msg);
         error!("Error at {:s}:{}: {:s}\n", fname, lineno, msg);
@@ -232,108 +174,10 @@ pub fn with_compartment<R>(cx: *JSContext, object: *JSObject, cb: || -> R) -> R 
     }
 }
 
-// ___________________________________________________________________________
-// compartment
-
-pub struct Compartment {
-    pub cx: rc::Rc<Cx>,
-    pub global_obj: *JSObject,
-}
-
-impl Compartment {
-    pub fn define_functions(&self, specvec: &'static [JSFunctionSpec]) -> Result<(),()> {
-        unsafe {
-            result(JS_DefineFunctions(self.cx.deref().ptr,
-                                      self.global_obj,
-                                      specvec.as_ptr()))
-        }
-    }
-    pub fn define_properties(&self, specvec: &'static [JSPropertySpec]) -> Result<(),()> {
-        unsafe {
-            result(JS_DefineProperties(self.cx.deref().ptr,
-                                       self.global_obj,
-                                       specvec.as_ptr()))
-        }
-    }
-    pub fn define_property(&self,
-                           name: &'static str,
-                           value: JSVal,
-                           getter: JSPropertyOp, setter: JSStrictPropertyOp,
-                           attrs: c_uint)
-        -> Result<(),()> {
-        unsafe {
-            name.to_c_str().with_ref(|name| {
-                result(JS_DefineProperty(self.cx.deref().ptr,
-                                         self.global_obj,
-                                         name,
-                                         value,
-                                         Some(getter),
-                                         Some(setter),
-                                         attrs))
-            })
-        }
-    }
-    pub fn new_object(&self, classptr: *JSClass, proto: *JSObject, parent: *JSObject)
-               -> Result<jsobj, ()> {
-        unsafe {
-            let obj = self.cx.rooted_obj(JS_NewObject(self.cx.deref().ptr, classptr, proto, parent));
-            result_obj(obj)
-        }
-    }
-}
-
-// ___________________________________________________________________________
-// objects
-
-pub type jsobj = rc::Rc<jsobj_rsrc>;
-
-pub struct jsobj_rsrc {
-    cx: rc::Rc<Cx>,
-    cxptr: *JSContext,
-    pub ptr: *JSObject,
-}
-
-#[unsafe_destructor]
-impl Drop for jsobj_rsrc {
-    fn drop(&mut self) {
-        unsafe {
-            JS_RemoveObjectRoot(self.cxptr, &self.ptr);
-        }
-    }
-}
-
-impl jsobj_rsrc {
-    pub fn new_object(&self, cx: rc::Rc<Cx>, cxptr: *JSContext, ptr: *JSObject) -> jsobj {
-        return rc::Rc::new(jsobj_rsrc {
-            cx: cx,
-            cxptr: cxptr,
-            ptr: ptr
-        })
-    }
-}
-
-// ___________________________________________________________________________
-// random utilities
-
-pub trait to_jsstr {
-    fn to_jsstr(self, cx: rc::Rc<Cx>) -> *JSString;
-}
-
-impl to_jsstr for ~str {
-    fn to_jsstr(self, cx: rc::Rc<Cx>) -> *JSString {
-        unsafe {
-            let cbuf = cast::transmute(self.as_ptr());
-            JS_NewStringCopyN(cx.deref().ptr, cbuf, self.len() as size_t)
-        }
-    }
-}
-
 #[cfg(test)]
 pub mod test {
     use super::rt;
-    use super::{CxUtils, RtUtils};
-    use super::super::global;
-    use super::super::jsapi::{JS_GC, JS_GetRuntime};
+    use super::RtUtils;
 
     #[test]
     pub fn dummy() {
@@ -341,14 +185,6 @@ pub mod test {
         let cx = rt.cx();
         cx.deref().set_default_options_and_version();
         cx.deref().set_logging_error_reporter();
-        cx.new_compartment(&global::BASIC_GLOBAL).and_then(|comp| {
-            unsafe { JS_GC(JS_GetRuntime(cx.deref().ptr)); }
-
-            comp.deref().define_functions(global::DEBUG_FNS);
-
-            let s = ~"debug(22);";
-            cx.deref().evaluate_script(comp.deref().global_obj, s, ~"test", 1u)
-        });
     }
 
 }
