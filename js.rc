@@ -21,15 +21,11 @@ extern crate serialize;
 
 use libc::c_uint;
 use libc::types::common::c99::uint32_t;
-use std::cast;
-use std::ptr::null;
-use std::result::{Result, Ok, Err};
 use jsapi::{JSBool, JSContext, JSPropertyOp, JSStrictPropertyOp, JSEnumerateOp,
             JSObject, jsid, JSResolveOp, JSConvertOp, JSFinalizeOp, JSTraceOp,
             JSProto_LIMIT, JSHandleObject, JSCheckAccessOp, JSNative, JSHasInstanceOp};
 use jsapi::JS_ComputeThis;
 use jsval::JSVal;
-use rust::jsobj;
 
 // These are just macros in jsapi.h
 pub use JS_NewRuntime = jsapi::JS_Init;
@@ -45,7 +41,6 @@ pub use jsfriendapi::JSJitInfo;
 pub mod jsapi;
 pub mod linkhack;
 pub mod rust;
-pub mod global;
 pub mod glue;
 pub mod trace;
 pub mod jsval;
@@ -110,20 +105,13 @@ pub fn JSCLASS_HAS_RESERVED_SLOTS(n: c_uint) -> c_uint {
     (n & JSCLASS_RESERVED_SLOTS_MASK) << JSCLASS_RESERVED_SLOTS_SHIFT
 }
 
-pub fn result(n: JSBool) -> Result<(),()> {
-    if n != ERR {Ok(())} else {Err(())}
-}
-pub fn result_obj(o: jsobj) -> Result<jsobj, ()> {
-    if o.deref().ptr != null() {Ok(o)} else {Err(())}
-}
-
 #[inline(always)]
 pub unsafe fn JS_ARGV(_cx: *JSContext, vp: *JSVal) -> *JSVal {
     vp.offset(2)
 }
 
 pub unsafe fn JS_SET_RVAL(_cx: *JSContext, vp: *JSVal, v: JSVal) {
-    let vp: *mut JSVal = cast::transmute(vp);
+    let vp = vp as *mut JSVal;
     *vp = v;
 }
 
