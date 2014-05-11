@@ -61,10 +61,10 @@ extern fn gc_callback(rt: *JSRuntime, _status: JSGCStatus) {
     use std::rt::task::Task;
     unsafe {
         let mut task = Local::borrow(None::<Task>);
-        let green_task: ~GreenTask = task.get().maybe_take_runtime().unwrap();
+        let green_task: Box<GreenTask> = task.maybe_take_runtime().unwrap();
         let (start, end) = green_task.stack_bounds();
         JS_SetNativeStackBounds(rt, cmp::min(start, end), cmp::max(start, end));
-        task.get().put_runtime(green_task);
+        task.put_runtime(green_task);
     }
 }
 
