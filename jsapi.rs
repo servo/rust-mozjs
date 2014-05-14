@@ -396,7 +396,9 @@ pub type JSCSPEvalChecker = *u8;
 
 pub type JSWrapObjectCallback = *u8;
 
-pub type JSPreWrapCallback = *u8;
+pub type JSPreWrapCallback =
+    Option<extern "C" fn(cx: *mut JSContext, scope: *mut JSObject,
+                         object: *mut JSObject, flags: c_uint) -> *mut JSObject>;
 
 pub type JSSameCompartmentWrapObjectCallback = extern "C" fn(*JSContext, *JSObject) -> *JSObject;
 
