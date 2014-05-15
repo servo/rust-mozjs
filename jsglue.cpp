@@ -536,12 +536,12 @@ CreateWrapperProxyHandler(const ProxyTraps* aTraps)
 }
 
 JSObject*
-NewProxyObject(JSContext* aCx, void* aHandler, JS::HandleValue priv,
-               JSObject* proto, JSObject* parent, JSObject* call,
-               JSObject* construct)
+NewProxyObject(JSContext* aCx, void* aHandler, js::Class* clasp, JS::HandleValue priv,
+               JSObject* proto, JSObject* parent)
 {
+    clasp->trace = js::proxy_Trace;
     js::ProxyOptions options;
-    //XXXjdm options.setClass(clasp);
+    options.setClass(clasp);
     return js::NewProxyObject(aCx, (js::BaseProxyHandler*)aHandler, priv, proto,
                               parent, options);
 }
@@ -781,9 +781,10 @@ NewGlobalObject(JSContext* cx, const JSClass *clasp, JSPrincipals* principals,
 
 bool
 CallFunctionValue(JSContext* cx, JS::HandleObject obj, JS::HandleValue fval,
-                  JS::MutableHandleValue rval)
+                  size_t argc, JS::Value* argv, JS::MutableHandleValue rval)
 {
-    return JS_CallFunctionValue(cx, obj, fval, JS::HandleValueArray::empty(), rval);
+    return JS_CallFunctionValue(cx, obj, fval,
+                                JS::HandleValueArray::fromMarkedLocation(argc, argv), rval);
 }
 
 bool

@@ -180,6 +180,29 @@ pub fn with_compartment<R>(cx: *mut JSContext, object: *mut JSObject, cb: || -> 
     }
 }
 
+pub struct JSAutoCompartment {
+    cx: *mut JSContext,
+    old: *mut libc::c_void,
+}
+
+impl JSAutoCompartment {
+    pub fn new(cx: *mut JSContext, object: *mut JSObject) -> JSAutoCompartment {
+        let old_compartment = unsafe { JS_EnterCompartment(cx, object) };
+        JSAutoCompartment {
+            cx: cx,
+            old: old_compartment,
+        }
+    }    
+}
+
+impl Drop for JSAutoCompartment {
+    fn drop(&mut self) {
+        unsafe {
+            JS_LeaveCompartment(self.cx, self.old);
+        }
+    }
+}
+
 pub struct JSAutoRequest {
     cx: *mut JSContext,
 }
