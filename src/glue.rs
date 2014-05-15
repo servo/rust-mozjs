@@ -17,7 +17,7 @@ pub static JS_STRUCTURED_CLONE_VERSION: u32 = 1;
 pub type JSBool = libc::c_int;
 
 pub struct JSMutableHandle<T> {
-    pub unnamed_field1: *mut *mut T,
+    pub unnamed_field1: *mut T,
 }
 
 pub struct JSHandle<T> {
@@ -77,37 +77,36 @@ pub fn CallJitMethodOp(info: *const JSJitInfo, cx: *mut JSContext, thisObj: JSHa
 
 pub fn RUST_FUNCTION_VALUE_TO_JITINFO(v: JSVal) -> *const JSJitInfo;
 
-pub fn SetFunctionNativeReserved(fun: JSHandleObject, which: libc::size_t, val: *JSVal);
-pub fn GetFunctionNativeReserved(fun: JSHandleObject, which: libc::size_t) -> *JSVal;
+pub fn SetFunctionNativeReserved(fun: *mut JSObject, which: libc::size_t, val: *JSVal);
+pub fn GetFunctionNativeReserved(fun: *mut JSObject, which: libc::size_t) -> *JSVal;
 
 pub fn CreateProxyHandler(traps: *const ProxyTraps, extra: *const libc::c_void) -> *const libc::c_void;
 pub fn CreateWrapperProxyHandler(traps: *const ProxyTraps) -> *const libc::c_void;
-pub fn NewProxyObject(cx: *mut JSContext, handler: *const libc::c_void, priv_: *const JSVal,
-                      proto: JSHandleObject, parent: JSHandleObject, call: JSHandleObject,
-                      construct: JSHandleObject) -> *mut JSObject;
+pub fn NewProxyObject(cx: *mut JSContext, handler: *const libc::c_void, clasp: *const super::Class,
+                      priv_: JSHandleValue, proto: *mut JSObject, parent: *mut JSObject) -> *mut JSObject;
 pub fn WrapperNew(cx: *mut JSContext, obj: JSHandleObject, parent: JSHandleObject,
                   handler: *const libc::c_void, clasp: *const super::Class, singleton: bool) -> *mut JSObject;
 
-pub fn GetProxyExtra(obj: JSHandleObject, slot: libc::c_uint) -> JSVal;
-pub fn GetProxyPrivate(obj: JSHandleObject) -> JSVal;
-pub fn SetProxyExtra(obj: JSHandleObject, slot: libc::c_uint, val: JSVal);
+pub fn GetProxyExtra(obj: *mut JSObject, slot: libc::c_uint) -> JSVal;
+pub fn GetProxyPrivate(obj: *mut JSObject) -> JSVal;
+pub fn SetProxyExtra(obj: *mut JSObject, slot: libc::c_uint, val: JSVal);
 
 pub fn GetObjectProto(cx: *mut JSContext, obj: JSHandleObject, proto: JSMutableHandleObject) -> c_bool;
 pub fn GetObjectParent(obj: *mut JSObject) -> *mut JSObject;
 
-pub fn RUST_JSID_IS_INT(id: JSHandleId) -> c_bool;
-pub fn RUST_JSID_TO_INT(id: JSHandleId) -> libc::c_int;
-pub fn RUST_JSID_IS_STRING(id: JSHandleId) -> c_bool;
-pub fn RUST_JSID_TO_STRING(id: JSHandleId) -> *mut JSString;
+pub fn RUST_JSID_IS_INT(id: jsid) -> c_bool;
+pub fn RUST_JSID_TO_INT(id: jsid) -> libc::c_int;
+pub fn RUST_JSID_IS_STRING(id: jsid) -> c_bool;
+pub fn RUST_JSID_TO_STRING(id: jsid) -> *mut JSString;
 
 pub fn RUST_SET_JITINFO(func: *mut JSFunction, info: *const JSJitInfo);
 
 pub fn RUST_INTERNED_STRING_TO_JSID(cx: *mut JSContext, str: *mut JSString) -> jsid;
 
-pub fn DefineFunctionWithReserved(cx: *mut JSContext, obj: JSHandleObject,
+pub fn DefineFunctionWithReserved(cx: *mut JSContext, obj: *mut JSObject,
                                   name: *const libc::c_char, call: JSNative, nargs: libc::c_uint,
                                   attrs: libc::c_uint) -> *mut JSObject;
-pub fn GetObjectJSClass(obj: JSHandleObject) -> *const JSClass;
+pub fn GetObjectJSClass(obj: *mut JSObject) -> *const JSClass;
 pub fn RUST_js_GetErrorMessage(userRef: *mut libc::c_void, locale: *const libc::c_char,
                                errorNumber: libc::c_uint) -> *const JSErrorFormatString;
 pub fn IsProxyHandlerFamily(obj: JSHandleObject) -> bool;
@@ -140,7 +139,7 @@ pub fn NewGlobalObject(cx: *mut JSContext, clasp: *const JSClass,
                        hookOption: Enum_OnNewGlobalHookOption) -> *mut JSObject;
 
 pub fn CallFunctionValue(cx: *mut JSContext, obj: JSHandleObject, fval: JSHandleValue,
-                         rval: JSMutableHandleValue) -> bool;
+                         argc: libc::size_t, argv: *JSVal, rval: JSMutableHandleValue) -> bool;
 
 pub fn proxy_LookupGeneric(cx: *mut JSContext, obj: JSHandleObject, id: JSHandleId,
                            objp: JSMutableHandleObject, propp: JSMutableHandle<*mut c_void>) -> bool;
