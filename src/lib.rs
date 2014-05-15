@@ -65,7 +65,7 @@ pub static JSID_TYPE_MASK: i64 = 7;
 
 //pub static JSID_VOID: jsid = JSID_TYPE_VOID as jsid;
 
-pub static JSFUN_CONSTRUCTOR: u32 = 0x200; /* native that can be called as a ctor */
+pub static JSFUN_CONSTRUCTOR: u32 = 0x400; /* native that can be called as a ctor */
 
 pub static JSPROP_ENUMERATE: c_uint = 0x01;
 pub static JSPROP_READONLY: c_uint  = 0x02;
