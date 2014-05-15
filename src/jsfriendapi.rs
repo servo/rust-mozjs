@@ -6,12 +6,19 @@ use jsapi::{JSContext, JSObject, JSPropertyDescriptor, JSBool};
 
 pub type JSJitPropertyOp = *const u8;
 
+pub enum OpType {
+    Getter = 0,
+    Setter = 1,
+    Method = 2,
+}
+
 pub struct JSJitInfo {
     pub op: JSJitPropertyOp,
-    pub protoID: u32,
-    pub depth: u32,
-    pub isInfallible: bool,
-    pub isConstant: bool
+    pub protoID: u16,
+    pub depth: u16,
+    pub type_and_aliasSet: u8,
+    pub returnType: u8,
+    pub infallible_and_isMovable_and_isInSlot_and_isTypedMethod_and_slotIndex: u16,
 }
 
 extern {

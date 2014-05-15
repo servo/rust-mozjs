@@ -5,7 +5,7 @@ RUSTC ?= rustc
 AR ?= ar
 RUSTFLAGS ?=
 EXT_DEPS ?=
-CFLAGS += -fPIC -std=c++11
+CFLAGS += -fPIC -std=c++11 -g -O0
 RUSTDOC ?= rustdoc
 RUSTDOC_FLAGS ?=
 RUSTDOC_TARGET ?= doc

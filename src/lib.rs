@@ -17,14 +17,15 @@ extern crate log;
 extern crate rustuv;
 extern crate serialize;
 
-use libc::{c_int, c_uint};
+use libc::{c_int, c_uint, c_void};
 use libc::types::common::c99::uint32_t;
 use jsapi::{JSContext, JSPropertyOp, JSStrictPropertyOp, JSEnumerateOp, Enum_JSProtoKey,
             JSObject, JSResolveOp, JSConvertOp, JSFinalizeOp, JSTraceOp, JSProto_LIMIT,
             JSHandleObject, JSNative, JSHasInstanceOp, JSFunctionSpec, JSDeletePropertyOp};
-use jsapi::JSWeakmapKeyDelegateOp;
-use jsapi::JS_ComputeThis;
+use jsapi::{JSWeakmapKeyDelegateOp, JSHandleId, JSMutableHandleObject, JSHandleValue};
+use jsapi::{JS_ComputeThis, JSMutableHandleValue};
 use jsval::JSVal;
+use glue::{JSMutableHandle, JSHandle};
 
 // These are just macros in jsapi.h
 pub use jsapi::JS_Init as JS_NewRuntime;
@@ -74,6 +75,12 @@ pub static JSPROP_SETTER: c_uint = 0x20;
 pub static JSPROP_SHARED: c_uint =    0x40;
 pub static JSPROP_NATIVE_ACCESSORS: c_uint = 0x08;
 
+pub static NON_NATIVE: c_uint = 0x01;
+pub static JSCLASS_IS_PROXY: c_uint =  1<<(JSCLASS_HIGH_FLAGS_SHIFT+4);
+pub static PROXY_MINIMUM_SLOTS: c_uint = 4;
+
+pub static JSCLASS_IMPLEMENTS_BARRIERS: c_uint = 1 << 5;
+
 pub static JSCLASS_RESERVED_SLOTS_SHIFT: c_uint = 8;
 pub static JSCLASS_RESERVED_SLOTS_WIDTH: c_uint = 8;
 pub static JSCLASS_RESERVED_SLOTS_MASK: c_uint = ((1u << JSCLASS_RESERVED_SLOTS_WIDTH as uint) - 1) as c_uint;
@@ -82,7 +89,7 @@ pub static JSCLASS_HIGH_FLAGS_SHIFT: c_uint =
     JSCLASS_RESERVED_SLOTS_SHIFT + JSCLASS_RESERVED_SLOTS_WIDTH;
 pub static JSCLASS_IS_GLOBAL: c_uint = (1<<((JSCLASS_HIGH_FLAGS_SHIFT as uint)+1));
 
-pub static JSCLASS_GLOBAL_SLOT_COUNT: c_uint = JSProto_LIMIT * 3 + 24;
+pub static JSCLASS_GLOBAL_SLOT_COUNT: c_uint = 3 + JSProto_LIMIT * 3 + 31;
 
 pub static JSCLASS_IS_DOMJSCLASS: u32 = 1 << 4;
 pub static JSCLASS_USERBIT1: u32 = 1 << 7;
@@ -142,7 +149,7 @@ fn start(argc: int, argv: *const *const u8) -> int {
 }
 
 // Up-to-date mozjs 075904f5f7ee1176f28630d1dff47820020e5928
-pub type JSObjectOp = Option<extern "C" fn(*mut JSContext, JSHandleObject) -> *mut JSObject>;
+pub type JSObjectOp = Option<extern "C" unsafe fn(*mut JSContext, JSHandleObject) -> *mut JSObject>;
 pub type ClassObjectCreationOp = Option<extern "C" fn(*mut JSContext, Enum_JSProtoKey) -> *mut JSObject>;
 pub type FinishClassInitOp = Option<extern "C" fn(*mut JSContext, JSHandleObject, JSHandleObject) -> bool>;
 
