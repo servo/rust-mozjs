@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use jsapi::{JSContext, JSObject};
+
 pub type JSJitPropertyOp = *u8;
 
 pub struct JSJitInfo {
@@ -10,6 +12,11 @@ pub struct JSJitInfo {
     pub depth: u32,
     pub isInfallible: bool,
     pub isConstant: bool
+}
+
+extern {
+pub fn JS_ObjectToOuterObject(cx: *mut JSContext,
+                              obj: *mut JSObject) -> *mut JSObject;
 }
 
 //pub type JSJitInfo = JSJitInfo_struct;
