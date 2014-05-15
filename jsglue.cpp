@@ -58,7 +58,7 @@ class WrapperProxyHandler : public js::DirectProxyHandler
     ProxyTraps mTraps;
   public:
     WrapperProxyHandler(const ProxyTraps& aTraps)
-    : js::DirectProxyHandler(0), mTraps(aTraps) {}
+    : js::DirectProxyHandler(&js::sWrapperFamily), mTraps(aTraps) {}
 
     virtual bool isOuterWindow() {
         return true;
@@ -471,31 +471,44 @@ RUST_FUNCTION_VALUE_TO_JITINFO(jsval v)
     return FUNCTION_VALUE_TO_JITINFO(v);
 }
 
+typedef bool
+(* JSJitGetterOp2)(JSContext *cx, JS::HandleObject thisObj,
+                   void *specializedThis, JS::Value *vp);
+typedef bool
+(* JSJitSetterOp2)(JSContext *cx, JS::HandleObject thisObj,
+                   void *specializedThis, JS::Value *vp);
+typedef bool
+(* JSJitMethodOp2)(JSContext *cx, JS::HandleObject thisObj,
+                   void *specializedThis, unsigned argc, JS::Value *vp);
+
 bool
-CallJitGetterOp(JSJitInfo *info, JSContext* cx, JSObject* thisObj, void *specializedThis, const JS::CallArgs& args)
+CallJitGetterOp(JSJitInfo *info, JSContext* cx, JSObject* thisObj, void *specializedThis, unsigned argc, JS::Value* vp)
 {
     struct {
         JSObject** obj;
     } tmp = { &thisObj };
-    return ((JSJitGetterOp)info->getter)(cx, *reinterpret_cast<JS::HandleObject*>(&tmp), specializedThis, JSJitGetterCallArgs(args));
+    //JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+    return ((JSJitGetterOp2)info->getter)(cx, *reinterpret_cast<JS::HandleObject*>(&tmp), specializedThis, vp);
 }
 
 bool
-CallJitSetterOp(JSJitInfo *info, JSContext* cx, JSObject* thisObj, void *specializedThis, const JS::CallArgs& args)
+CallJitSetterOp(JSJitInfo *info, JSContext* cx, JSObject* thisObj, void *specializedThis, unsigned argc, JS::Value* vp)
 {
     struct {
         JSObject** obj;
     } tmp = { &thisObj };
-    return ((JSJitSetterOp)info->setter)(cx, *reinterpret_cast<JS::HandleObject*>(&tmp), specializedThis, JSJitSetterCallArgs(args));
+    //JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+    return ((JSJitSetterOp2)info->setter)(cx, *reinterpret_cast<JS::HandleObject*>(&tmp), specializedThis, vp);
 }
 
 bool
-CallJitMethodOp(JSJitInfo *info, JSContext* cx, JSObject* thisObj, void *specializedThis, uint32_t argc, const JS::CallArgs& args)
+CallJitMethodOp(JSJitInfo *info, JSContext* cx, JSObject* thisObj, void *specializedThis, uint32_t argc, JS::Value* vp)
 {
     struct {
         JSObject** obj;
     } tmp = { &thisObj };
-    return ((JSJitMethodOp)info->method)(cx, *reinterpret_cast<JS::HandleObject*>(&tmp), specializedThis, JSJitMethodCallArgs(args));
+    //JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+    return ((JSJitMethodOp2)info->method)(cx, *reinterpret_cast<JS::HandleObject*>(&tmp), specializedThis, argc, vp);
 }
 
 void
@@ -534,12 +547,15 @@ NewProxyObject(JSContext* aCx, void* aHandler, JS::HandleValue priv,
 }
 
 JSObject*
-WrapperNew(JSContext* aCx, JS::HandleObject aObj, JS::HandleObject aParent, void* aHandler)
+WrapperNew(JSContext* aCx, JS::HandleObject aObj, JS::HandleObject aParent, void* aHandler, js::Class* clasp, bool singleton)
 {
+    clasp->trace = js::proxy_Trace;
     js::WrapperOptions options;
     JS::RootedObject proto(aCx);
     assert(js::GetObjectProto(aCx, aParent, &proto));
     options.setProto(proto.get());
+    options.setClass(clasp);
+    options.setSingleton(singleton);
     return js::Wrapper::New(aCx, aObj, aParent, (js::Wrapper*)aHandler, &options);
 }
 
@@ -746,13 +762,14 @@ ToUint64(JSContext* cx, JS::HandleValue v, uint64_t* out)
 bool
 AddObjectRoot(JSContext* cx, JSObject** obj)
 {
-    return JS::AddObjectRoot(cx, reinterpret_cast<JS::Heap<JSObject*>*>(obj));
+    //return JS::AddObjectRoot(cx, reinterpret_cast<JS::Heap<JSObject*>*>(obj));
+    return true;
 }
 
 void
 RemoveObjectRoot(JSContext* cx, JSObject** obj)
 {
-    JS::RemoveObjectRoot(cx, reinterpret_cast<JS::Heap<JSObject*>*>(obj));
+    //JS::RemoveObjectRoot(cx, reinterpret_cast<JS::Heap<JSObject*>*>(obj));
 }
 
 JSObject*
@@ -767,6 +784,183 @@ CallFunctionValue(JSContext* cx, JS::HandleObject obj, JS::HandleValue fval,
                   JS::MutableHandleValue rval)
 {
     return JS_CallFunctionValue(cx, obj, fval, JS::HandleValueArray::empty(), rval);
+}
+
+bool
+proxy_LookupGeneric(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleObject objp,
+                    JS::MutableHandle<js::Shape*> propp)
+{
+    return js::proxy_LookupGeneric(cx, obj, id, objp, propp);
+}
+
+bool
+proxy_LookupProperty(JSContext *cx, JS::HandleObject obj, JS::Handle<js::PropertyName*> name,
+                     JS::MutableHandleObject objp, JS::MutableHandle<js::Shape*> propp)
+{
+    return js::proxy_LookupProperty(cx, obj, name, objp, propp);
+}
+
+bool
+proxy_LookupElement(JSContext *cx, JS::HandleObject obj, uint32_t index, JS::MutableHandleObject objp,
+                    JS::MutableHandle<js::Shape*> propp)
+{
+    return js::proxy_LookupElement(cx, obj, index, objp, propp);
+}
+
+bool
+proxy_DefineGeneric(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue value,
+                    JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs)
+{
+    return js::proxy_DefineGeneric(cx, obj, id, value, getter, setter, attrs);
+}
+
+bool
+proxy_DefineProperty(JSContext *cx, JS::HandleObject obj, JS::Handle<js::PropertyName*> name,
+                     JS::HandleValue value, JSPropertyOp getter, JSStrictPropertyOp setter,
+                     unsigned attrs)
+{
+    return js::proxy_DefineProperty(cx, obj, name, value, getter, setter, attrs);
+}
+
+bool
+proxy_DefineElement(JSContext *cx, JS::HandleObject obj, uint32_t index, JS::HandleValue value,
+                    JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs)
+{
+    return js::proxy_DefineElement(cx, obj, index, value, getter, setter, attrs);
+}
+
+bool
+proxy_GetGeneric(JSContext *cx, JS::HandleObject obj, JS::HandleObject receiver, JS::HandleId id,
+                 JS::MutableHandleValue vp)
+{
+    return js::proxy_GetGeneric(cx, obj, receiver, id, vp);
+}
+
+bool
+proxy_GetProperty(JSContext *cx, JS::HandleObject obj, JS::HandleObject receiver,
+                  JS::Handle<js::PropertyName*> name, JS::MutableHandleValue vp)
+{
+    return js::proxy_GetProperty(cx, obj, receiver, name, vp);
+}
+
+bool
+proxy_GetElement(JSContext *cx, JS::HandleObject obj, JS::HandleObject receiver, uint32_t index,
+                 JS::MutableHandleValue vp)
+{
+    return js::proxy_GetElement(cx, obj, receiver, index, vp);
+}
+
+bool
+proxy_SetGeneric(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
+                 JS::MutableHandleValue bp, bool strict)
+{
+    return js::proxy_SetGeneric(cx, obj, id, bp, strict);
+}
+
+bool
+proxy_SetProperty(JSContext *cx, JS::HandleObject obj, JS::Handle<js::PropertyName*> name,
+                  JS::MutableHandleValue bp, bool strict)
+{
+    return js::proxy_SetProperty(cx, obj, name, bp, strict);
+}
+
+bool
+proxy_SetElement(JSContext *cx, JS::HandleObject obj, uint32_t index, JS::MutableHandleValue vp,
+                 bool strict)
+{
+    return js::proxy_SetElement(cx, obj, index, vp, strict);
+}
+
+bool
+proxy_GetGenericAttributes(JSContext *cx, JS::HandleObject obj, JS::HandleId id, unsigned *attrsp)
+{
+    return js::proxy_GetGenericAttributes(cx, obj, id, attrsp);
+}
+
+bool
+proxy_SetGenericAttributes(JSContext *cx, JS::HandleObject obj, JS::HandleId id, unsigned *attrsp)
+{
+    return js::proxy_SetGenericAttributes(cx, obj, id, attrsp);
+}
+
+bool
+proxy_DeleteProperty(JSContext *cx, JS::HandleObject obj, JS::Handle<js::PropertyName*> name,
+                     bool *succeeded)
+{
+    return js::proxy_DeleteProperty(cx, obj, name, succeeded);
+}
+
+bool
+proxy_DeleteElement(JSContext *cx, JS::HandleObject obj, uint32_t index, bool *succeeded)
+{
+    return js::proxy_DeleteElement(cx, obj, index, succeeded);
+}
+
+void
+proxy_Trace(JSTracer *trc, JSObject *obj)
+{
+    return js::proxy_Trace(trc, obj);
+}
+
+JSObject*
+proxy_WeakmapKeyDelegate(JSObject *obj)
+{
+    return js::proxy_WeakmapKeyDelegate(obj);
+}
+
+bool
+proxy_Convert(JSContext *cx, JS::HandleObject proxy, JSType hint, JS::MutableHandleValue vp)
+{
+    return js::proxy_Convert(cx, proxy, hint, vp);
+}
+
+void
+proxy_Finalize(js::FreeOp *fop, JSObject *obj)
+{
+    return js::proxy_Finalize(fop, obj);
+}
+
+bool
+proxy_HasInstance(JSContext *cx, JS::HandleObject proxy, JS::MutableHandleValue v, bool *bp)
+{
+    return js::proxy_HasInstance(cx, proxy, v, bp);
+}
+
+bool
+proxy_Call(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    return js::proxy_Call(cx, argc, vp);
+}
+
+bool
+proxy_Construct(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+    return js::proxy_Construct(cx, argc, vp);
+}
+
+JSObject*
+proxy_innerObject(JSContext *cx, JS::HandleObject obj)
+{
+    return js::proxy_innerObject(cx, obj);
+}
+
+bool
+proxy_Watch(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject callable)
+{
+    return js::proxy_Watch(cx, obj, id, callable);
+}
+
+bool
+proxy_Unwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id)
+{
+    return js::proxy_Unwatch(cx, obj, id);
+}
+
+bool
+proxy_Slice(JSContext *cx, JS::HandleObject proxy, uint32_t begin, uint32_t end,
+            JS::HandleObject result)
+{
+    return js::proxy_Slice(cx, proxy, begin, end, result);
 }
 
 } // extern "C"

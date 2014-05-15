@@ -289,7 +289,7 @@ pub type JSIteratorOp =
                                arg2: HandleObject, arg3: c_int)
                               -> *mut c_void>;
 pub type JSWeakmapKeyDelegateOp =
-    ::std::option::Option<extern "C" fn (arg1: *mut c_void) -> *mut c_void>;
+    ::std::option::Option<extern "C" unsafe fn (arg1: *mut c_void) -> *mut c_void>; //jdm +unsafe
 pub type JSClassInternal = ::std::option::Option<extern "C" fn()>;
 pub struct Struct_JSClass {
     pub name: *c_schar,
@@ -902,7 +902,7 @@ extern "C" {
                               principals: *mut Struct_JSPrincipals,
                               hookOption: Enum_OnNewGlobalHookOption,
                               options: c_void) -> *mut c_void;
-    pub fn JS_GlobalObjectTraceHook(trc: *mut c_void, global: *mut c_void);
+    pub fn JS_GlobalObjectTraceHook(trc: *mut JSTracer, global: *mut c_void); //jdm c_void->JSTracer
     pub fn JS_FireOnNewGlobalObject(cx: *mut Struct_JSContext,
                                     global: HandleObject);
     pub fn JS_NewObject(cx: *mut Struct_JSContext, clasp: *Struct_JSClass,
@@ -1431,7 +1431,7 @@ pub struct JSHandleObject {
     pub unnamed_field1: **mut JSObject,
 }
 pub struct JSHandleValue {
-    pub unnamed_field1: jsval,
+    pub unnamed_field1: *jsval,
 }
 pub struct JSHandleString {
     pub unnamed_field1: **mut JSString,
