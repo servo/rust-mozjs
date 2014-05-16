@@ -77,7 +77,7 @@ pub static JSPROP_SETTER: c_uint = 0x20;
 pub static JSPROP_SHARED: c_uint =    0x40;
 pub static JSPROP_NATIVE_ACCESSORS: c_uint = 0x08;
 
-pub static NON_NATIVE: c_uint = 0x01;
+pub static NON_NATIVE: c_uint = 1<<(JSCLASS_HIGH_FLAGS_SHIFT+2);
 pub static JSCLASS_IS_PROXY: c_uint =  1<<(JSCLASS_HIGH_FLAGS_SHIFT+4);
 pub static PROXY_MINIMUM_SLOTS: c_uint = 4;
 
