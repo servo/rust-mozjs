@@ -4,6 +4,7 @@ CXX ?= g++
 RUSTC ?= rustc
 AR ?= ar
 RUSTFLAGS ?=
+EXT_DEPS ?=
 CFLAGS += -fPIC
 
 ifeq ($(shell $(CXX) -v 2>&1 | grep -c 'clang version\|Apple.*clang'),1)
@@ -15,7 +16,7 @@ RUST_SRC = $(shell find $(VPATH)/. -type f -name '*.rs')
 .PHONY: all
 all: libjs.dummy
 
-libjs.dummy: js.rc $(RUST_SRC) libjsglue.a
+libjs.dummy: js.rc $(RUST_SRC) libjsglue.a $(EXT_DEPS)
 	$(RUSTC) $(RUSTFLAGS) $< --out-dir .
 	touch $@
 
