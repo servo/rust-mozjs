@@ -70,7 +70,7 @@ pub fn GetFunctionNativeReserved(fun: *mut JSObject, which: libc::size_t) -> *mu
 
 pub fn CreateProxyHandler(traps: *ProxyTraps, extra: *libc::c_void) -> *libc::c_void;
 pub fn CreateWrapperProxyHandler(traps: *ProxyTraps) -> *libc::c_void;
-pub fn NewProxyObject(cx: *mut JSContext, handler: *libc::c_void, priv_: *mut JSVal,
+pub fn NewProxyObject(cx: *mut JSContext, handler: *libc::c_void, priv_: *JSVal,
                       proto: *mut JSObject, parent: *mut JSObject, call: *mut JSObject,
                       construct: *mut JSObject) -> *mut JSObject;
 pub fn WrapperNew(cx: *mut JSContext, parent: *mut JSObject, handler: *libc::c_void) -> *mut JSObject;
