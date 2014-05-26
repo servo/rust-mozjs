@@ -26,7 +26,7 @@ use green::task::GreenTask;
 pub type rt = rc::Rc<rt_rsrc>;
 
 pub struct rt_rsrc {
-    pub ptr : *JSRuntime,
+    pub ptr : *mut JSRuntime,
 }
 
 impl Drop for rt_rsrc {
@@ -37,7 +37,7 @@ impl Drop for rt_rsrc {
     }
 }
 
-pub fn new_runtime(p: *JSRuntime) -> rt {
+pub fn new_runtime(p: *mut JSRuntime) -> rt {
     return rc::Rc::new(rt_rsrc {
         ptr: p
     })
@@ -56,7 +56,7 @@ impl RtUtils for rc::Rc<rt_rsrc> {
     }
 }
 
-extern fn gc_callback(rt: *JSRuntime, _status: JSGCStatus) {
+extern fn gc_callback(rt: *mut JSRuntime, _status: JSGCStatus) {
     use std::rt::local::Local;
     use std::rt::task::Task;
     unsafe {
@@ -71,7 +71,7 @@ extern fn gc_callback(rt: *JSRuntime, _status: JSGCStatus) {
 pub fn rt() -> rt {
     unsafe {
         let runtime = JS_Init(default_heapsize);
-        JS_SetGCCallback(runtime, gc_callback);
+        JS_SetGCCallback(runtime, Some(gc_callback));
         return new_runtime(runtime);
     }
 }
@@ -80,7 +80,7 @@ pub fn rt() -> rt {
 // contexts
 
 pub struct Cx {
-    pub ptr: *JSContext,
+    pub ptr: *mut JSContext,
     pub rt: rt,
 }
 
@@ -93,7 +93,7 @@ impl Drop for Cx {
     }
 }
 
-pub fn new_context(ptr: *JSContext, rt: rt) -> rc::Rc<Cx> {
+pub fn new_context(ptr: *mut JSContext, rt: rt) -> rc::Rc<Cx> {
     return rc::Rc::new(Cx {
         ptr: ptr,
         rt: rt,
@@ -113,7 +113,7 @@ impl Cx {
         }
     }
 
-    pub fn set_version(&self, v: i32) {
+    pub fn set_version(&self, v: JSVersion) {
         unsafe {
             JS_SetVersion(self.ptr, v);
         }
@@ -121,27 +121,27 @@ impl Cx {
 
     pub fn set_logging_error_reporter(&self) {
         unsafe {
-            JS_SetErrorReporter(self.ptr, reportError);
+            JS_SetErrorReporter(self.ptr, Some(reportError));
         }
     }
 
-    pub fn set_error_reporter(&self, reportfn: extern "C" fn(*JSContext, *c_char, *JSErrorReport)) {
+    pub fn set_error_reporter(&self, reportfn: extern "C" unsafe fn(*mut JSContext, *c_char, *mut JSErrorReport)) {
         unsafe {
-            JS_SetErrorReporter(self.ptr, reportfn);
+            JS_SetErrorReporter(self.ptr, Some(reportfn));
         }
     }
 
-    pub fn evaluate_script(&self, glob: *JSObject, script: ~str, filename: ~str, line_num: uint)
+    pub fn evaluate_script(&self, glob: *mut JSObject, script: ~str, filename: ~str, line_num: uint)
                     -> Result<(),()> {
         let script_utf16 = script.to_utf16();
         filename.to_c_str().with_ref(|filename_cstr| {
-            let rval: JSVal = NullValue();
+            let mut rval: JSVal = NullValue();
             debug!("Evaluating script from {:s} with content {}", filename, script);
             unsafe {
                 if ERR == JS_EvaluateUCScript(self.ptr, glob,
                                               script_utf16.as_ptr(), script_utf16.len() as c_uint,
                                               filename_cstr, line_num as c_uint,
-                                              &rval) {
+                                              &mut rval) {
                     debug!("...err!");
                     Err(())
                 } else {
@@ -155,7 +155,7 @@ impl Cx {
     }
 }
 
-pub extern fn reportError(_cx: *JSContext, msg: *c_char, report: *JSErrorReport) {
+pub extern fn reportError(_cx: *mut JSContext, msg: *c_char, report: *mut JSErrorReport) {
     unsafe {
         let fnptr = (*report).filename;
         let fname = if fnptr.is_not_null() {from_c_str(fnptr)} else {"none".to_owned()};
@@ -165,7 +165,7 @@ pub extern fn reportError(_cx: *JSContext, msg: *c_char, report: *JSErrorReport)
     }
 }
 
-pub fn with_compartment<R>(cx: *JSContext, object: *JSObject, cb: || -> R) -> R {
+pub fn with_compartment<R>(cx: *mut JSContext, object: *mut JSObject, cb: || -> R) -> R {
     unsafe {
         let call = JS_EnterCrossCompartmentCall(cx, object);
         let result = cb();
