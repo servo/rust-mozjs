@@ -106,20 +106,19 @@ pub fn JSCLASS_HAS_RESERVED_SLOTS(n: c_uint) -> c_uint {
 }
 
 #[inline(always)]
-pub unsafe fn JS_ARGV(_cx: *JSContext, vp: *JSVal) -> *JSVal {
+pub unsafe fn JS_ARGV(_cx: *mut JSContext, vp: *mut JSVal) -> *mut JSVal {
     vp.offset(2)
 }
 
-pub unsafe fn JS_SET_RVAL(_cx: *JSContext, vp: *JSVal, v: JSVal) {
-    let vp = vp as *mut JSVal;
+pub unsafe fn JS_SET_RVAL(_cx: *mut JSContext, vp: *mut JSVal, v: JSVal) {
     *vp = v;
 }
 
 #[inline(alwyas)]
-pub unsafe fn JS_THIS_OBJECT(cx: *JSContext, vp: *mut JSVal) -> *JSObject {
+pub unsafe fn JS_THIS_OBJECT(cx: *mut JSContext, vp: *mut JSVal) -> *mut JSObject {
     let r =
         if (*(vp.offset(1))).is_primitive() {
-            JS_ComputeThis(cx, &*vp)
+            JS_ComputeThis(cx, vp)
         } else {
             *(vp.offset(1))
         };
@@ -127,7 +126,7 @@ pub unsafe fn JS_THIS_OBJECT(cx: *JSContext, vp: *mut JSVal) -> *JSObject {
 }
 
 #[inline(always)]
-pub unsafe fn JS_CALLEE(_cx: *JSContext, vp: *JSVal) -> JSVal {
+pub unsafe fn JS_CALLEE(_cx: *mut JSContext, vp: *mut JSVal) -> JSVal {
     *vp
 }
 
@@ -142,24 +141,24 @@ fn start(argc: int, argv: **u8) -> int {
     green::start(argc, argv, rustuv::event_loop, __test::main)
 }
 
-pub type JSObjectOp = extern "C" fn(*JSContext, JSHandleObject) -> *JSObject;
+pub type JSObjectOp = extern "C" fn(*mut JSContext, JSHandleObject) -> *mut JSObject;
 
 pub struct Class {
     pub name: *libc::c_char,
     pub flags: uint32_t,
-    pub addProperty: Option<JSPropertyOp>,
-    pub delProperty: Option<JSPropertyOp>,
-    pub getProperty: Option<JSPropertyOp>,
-    pub setProperty: Option<JSStrictPropertyOp>,
-    pub enumerate: Option<JSEnumerateOp>,
-    pub resolve: Option<JSResolveOp>,
-    pub convert: Option<JSConvertOp>,
-    pub finalize: Option<JSFinalizeOp>,
-    pub checkAccess: Option<JSCheckAccessOp>,
-    pub call: Option<JSNative>,
-    pub hasInstance: Option<JSHasInstanceOp>,
-    pub construct: Option<JSNative>,
-    pub trace: Option<JSTraceOp>,
+    pub addProperty: JSPropertyOp,
+    pub delProperty: JSPropertyOp,
+    pub getProperty: JSPropertyOp,
+    pub setProperty: JSStrictPropertyOp,
+    pub enumerate: JSEnumerateOp,
+    pub resolve: JSResolveOp,
+    pub convert: JSConvertOp,
+    pub finalize: JSFinalizeOp,
+    pub checkAccess: JSCheckAccessOp,
+    pub call: JSNative,
+    pub hasInstance: JSHasInstanceOp,
+    pub construct: JSNative,
+    pub trace: JSTraceOp,
 
     pub ext: ClassExtension,
     pub ops: ObjectOps,

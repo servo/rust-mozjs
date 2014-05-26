@@ -27,8 +27,8 @@ pub mod bindgen {
     use libc::uintptr_t;
 
     extern {
-        pub fn JS_NewObjectWithUniqueType(cx: *JSContext, clasp: *JSClass,
-                                          proto: *JSObject, parent: *JSObject) -> *JSObject;
-        pub fn JS_GetAddressableObject(rt: *JSRuntime, candidateObj: uintptr_t) -> *JSObject;
+        pub fn JS_NewObjectWithUniqueType(cx: *mut JSContext, clasp: *JSClass,
+                                          proto: *mut JSObject, parent: *mut JSObject) -> *mut JSObject;
+        pub fn JS_GetAddressableObject(rt: *mut JSRuntime, candidateObj: uintptr_t) -> *mut JSObject;
     }
 }

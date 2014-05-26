@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use jsapi::{JSObject, JSString};
+use jsapi::{JSObject, JSString, JSGCTraceKind, JSTRACE_OBJECT, JSTRACE_STRING};
 
 use libc::c_void;
 use std::cast;
@@ -122,7 +122,7 @@ pub fn ObjectValue(o: &JSObject) -> JSVal {
 }
 
 #[inline(always)]
-pub fn ObjectOrNullValue(o: *JSObject) -> JSVal {
+pub fn ObjectOrNullValue(o: *mut JSObject) -> JSVal {
     if o.is_null() {
         NullValue()
     } else {
@@ -170,7 +170,7 @@ impl JSVal {
         self.v >= JSVAL_SHIFTED_TAG_OBJECT as u64
     }
 
-    pub fn to_object(&self) -> *JSObject {
+    pub fn to_object(&self) -> *mut JSObject {
         assert!(self.is_object());
         self.to_object_or_null()
     }
@@ -181,11 +181,11 @@ impl JSVal {
         self.v >= JSVAL_LOWER_INCL_SHIFTED_TAG_OF_OBJ_OR_NULL_SET
     }
 
-    pub fn to_object_or_null(&self) -> *JSObject {
+    pub fn to_object_or_null(&self) -> *mut JSObject {
         assert!(self.is_object_or_null());
         let ptrBits = self.v & JSVAL_PAYLOAD_MASK;
         assert!((ptrBits & 0x7) == 0);
-        ptrBits as uint as *JSObject
+        ptrBits as uint as *mut JSObject
     }
 
     pub fn to_private(&self) -> *c_void {
@@ -199,19 +199,24 @@ impl JSVal {
         self.v >= JSVAL_LOWER_INCL_SHIFTED_TAG_OF_GCTHING_SET
     }
 
-    pub fn to_gcthing(&self) -> *c_void {
+    pub fn to_gcthing(&self) -> *mut c_void {
         assert!(self.is_gcthing());
         let ptrBits = self.v & JSVAL_PAYLOAD_MASK;
         assert!((ptrBits & 0x7) == 0);
-        ptrBits as *c_void
+        ptrBits as *mut c_void
     }
 
     pub fn is_markable(&self) -> bool {
         self.is_gcthing() && !self.is_null()
     }
 
-    pub fn trace_kind(&self) -> u32 {
+    pub fn trace_kind(&self) -> JSGCTraceKind {
         assert!(self.is_markable());
-        (!self.is_object()) as u32
+        if self.is_object() {
+            JSTRACE_OBJECT
+        } else {
+            JSTRACE_STRING
+        }
+
     }
 }
