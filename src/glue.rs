@@ -2,11 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use jsapi::{JSContext, JSHandleObject, JSHandleId, JSPropertyDescriptor, JSMutableHandleValue};
-use jsapi::{JSTracer, JSFunction, JSNative, JSErrorFormatString, JSFreeOp, JSMutableHandleObject};
-use jsapi::{JSClass, JSString, JSObject, jsid, JSVersion, JSHandleValue, JSTraceOp};
+use jsapi::{JSContext, JSPropertyDescriptor, jschar};
+use jsapi::{JSTracer, JSFunction, JSNative, JSErrorFormatString, JSFreeOp};
+use jsapi::{JSClass, JSString, JSObject, jsid, JSVersion, JSTraceOp};
 use jsapi::{Enum_OnNewGlobalHookOption, JSPrincipals, Enum_JSType, Struct_JSFreeOp};
 use jsapi::{JSStrictPropertyOp, JSPropertyOp};
+use jsapi::{Handle, MutableHandle};
+use jsapi::{JSHandleObject, JSHandleId, JSMutableHandleValue};
+use jsapi::{JSMutableHandleObject, JSHandleValue};
+
 use jsfriendapi::JSJitInfo;
 use jsval::JSVal;
 use libc;
@@ -16,19 +20,11 @@ pub static JS_STRUCTURED_CLONE_VERSION: u32 = 1;
 
 pub type JSBool = libc::c_int;
 
-pub struct JSMutableHandle<T> {
-    pub unnamed_field1: *mut T,
-}
-
-pub struct JSHandle<T> {
-    pub unnamed_field1: *T,
-}
-
 pub struct ProxyTraps {
     pub preventExtensions: Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject) -> bool>,
-    pub getPropertyDescriptor: Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, JSHandleId, JSMutableHandle<JSPropertyDescriptor>, u32) -> bool>,
-    pub getOwnPropertyDescriptor: Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, JSHandleId, JSMutableHandle<JSPropertyDescriptor>, u32) -> bool>,
-    pub defineProperty: Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, JSHandleId, JSMutableHandle<JSPropertyDescriptor>) -> bool>,
+    pub getPropertyDescriptor: Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, JSHandleId, MutableHandle<JSPropertyDescriptor>, u32) -> bool>,
+    pub getOwnPropertyDescriptor: Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, JSHandleId, MutableHandle<JSPropertyDescriptor>, u32) -> bool>,
+    pub defineProperty: Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, JSHandleId, MutableHandle<JSPropertyDescriptor>) -> bool>,
     pub getOwnPropertyNames: *const u8, //XXX need a representation for AutoIdVector&
     pub delete_: Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, JSHandleId, *mut bool) -> JSBool>,
     pub enumerate: *const u8, //XXX need a representation for AutoIdVector&
@@ -112,7 +108,7 @@ pub fn RUST_js_GetErrorMessage(userRef: *mut libc::c_void, locale: *const libc::
 pub fn IsProxyHandlerFamily(obj: JSHandleObject) -> bool;
 pub fn GetProxyHandlerExtra(obj: JSHandleObject) -> *const libc::c_void;
 pub fn GetProxyHandler(obj: JSHandleObject) -> *mut libc::c_void;
-pub fn InvokeGetOwnPropertyDescriptor(handler: *mut libc::c_void, cx: *mut JSContext, proxy: JSHandleObject, id: JSHandleId, desc: JSMutableHandle<JSPropertyDescriptor>, flags: libc::c_uint) -> booll;
+pub fn InvokeGetOwnPropertyDescriptor(handler: *mut libc::c_void, cx: *mut JSContext, proxy: JSHandleObject, id: JSHandleId, desc: MutableHandle<JSPropertyDescriptor>, flags: libc::c_uint) -> bool;
 pub fn GetGlobalForObjectCrossCompartment(obj: *mut JSObject) -> *mut JSObject;
 pub fn ReportError(cx: *mut JSContext, error: *const libc::c_char);
 pub fn IsWrapper(obj: *mut JSObject) -> JSBool;
@@ -140,17 +136,26 @@ pub fn NewGlobalObject(cx: *mut JSContext, clasp: *const JSClass,
 
 pub fn CallFunctionValue(cx: *mut JSContext, obj: JSHandleObject, fval: JSHandleValue,
                          argc: libc::size_t, argv: *JSVal, rval: JSMutableHandleValue) -> bool;
+pub fn CompileUCFunction(cx: *mut JSContext, obj: JSHandleObject,
+                         name: *libc::c_schar, nargs: libc::c_uint,
+                         argnames: **libc::c_schar, chars: *jschar,
+                         length: libc::size_t, url: *libc::c_schar,
+                         lineno: libc::c_uint) -> *mut c_void;
+pub fn CompileEventHandler(cx: *mut JSContext, name: *libc::c_char,
+                           nargs: libc::c_uint, argnames: **libc::c_char,
+                           chars: *u16, length: libc::size_t,
+                           url: *libc::c_char, lineNo: libc::c_uint) -> *mut JSObject;
 
 pub fn proxy_LookupGeneric(cx: *mut JSContext, obj: JSHandleObject, id: JSHandleId,
-                           objp: JSMutableHandleObject, propp: JSMutableHandle<*mut c_void>) -> bool;
-pub fn proxy_LookupProperty(cx: *mut JSContext, obj: JSHandleObject, name: JSHandle<*mut c_void>,
-                            objp: JSMutableHandleObject, propp: JSMutableHandle<*mut c_void>) -> bool;
+                           objp: JSMutableHandleObject, propp: MutableHandle<*mut c_void>) -> bool;
+pub fn proxy_LookupProperty(cx: *mut JSContext, obj: JSHandleObject, name: Handle<*mut c_void>,
+                            objp: JSMutableHandleObject, propp: MutableHandle<*mut c_void>) -> bool;
 pub fn proxy_LookupElement(cx: *mut JSContext, obj: JSHandleObject, index: u32,
-                           objp: JSMutableHandleObject, propp: JSMutableHandle<*mut c_void>) -> bool;
+                           objp: JSMutableHandleObject, propp: MutableHandle<*mut c_void>) -> bool;
 pub fn proxy_DefineGeneric(cx: *mut JSContext, obj: JSHandleObject, id: JSHandleId,
                            value: JSHandleValue, getter: JSPropertyOp,
                            setter: JSStrictPropertyOp, attrs: uint) -> bool;
-pub fn proxy_DefineProperty(cx: *mut JSContext, obj: JSHandleObject, name: JSHandle<*mut c_void>,
+pub fn proxy_DefineProperty(cx: *mut JSContext, obj: JSHandleObject, name: Handle<*mut c_void>,
                            value: JSHandleValue, getter: JSPropertyOp,
                            setter: JSStrictPropertyOp, attrs: uint) -> bool;
 pub fn proxy_DefineElement(cx: *mut JSContext, obj: JSHandleObject, index: u32,
@@ -159,12 +164,12 @@ pub fn proxy_DefineElement(cx: *mut JSContext, obj: JSHandleObject, index: u32,
 pub fn proxy_GetGeneric(cx: *mut JSContext, obj: JSHandleObject, receiver: JSHandleObject,
                         id: JSHandleId, vp: JSMutableHandleValue) -> bool;
 pub fn proxy_GetProperty(cx: *mut JSContext, obj: JSHandleObject, receiver: JSHandleObject,
-                        name: JSHandle<*mut c_void>, vp: JSMutableHandleValue) -> bool;
+                        name: Handle<*mut c_void>, vp: JSMutableHandleValue) -> bool;
 pub fn proxy_GetElement(cx: *mut JSContext, obj: JSHandleObject, receiver: JSHandleObject,
                         index: u32, vp: JSMutableHandleValue) -> bool;
 pub fn proxy_SetGeneric(cx: *mut JSContext, obj: JSHandleObject, id: JSHandleId,
                         bp: JSMutableHandleValue, strict: bool) -> bool;
-pub fn proxy_SetProperty(cx: *mut JSContext, obj: JSHandleObject, name: JSHandle<*mut c_void>,
+pub fn proxy_SetProperty(cx: *mut JSContext, obj: JSHandleObject, name: Handle<*mut c_void>,
                          bp: JSMutableHandleValue, strict: bool) -> bool;
 pub fn proxy_SetElement(cx: *mut JSContext, obj: JSHandleObject, index: u32,
                         vp: JSMutableHandleValue, strict: bool) -> bool;
@@ -172,7 +177,7 @@ pub fn proxy_GetGenericAttributes(cx: *mut JSContext, obj: JSHandleObject, id: J
                                   attrsp: *mut uint) -> bool;
 pub fn proxy_SetGenericAttributes(cx: *mut JSContext, obj: JSHandleObject, id: JSHandleId,
                                   attrsp: *mut uint) -> bool;
-pub fn proxy_DeleteProperty(cx: *mut JSContext, obj: JSHandleObject, name: JSHandle<*mut c_void>,
+pub fn proxy_DeleteProperty(cx: *mut JSContext, obj: JSHandleObject, name: Handle<*mut c_void>,
                             succeeded: *mut bool) -> bool;
 pub fn proxy_DeleteElement(cx: *mut JSContext, obj: JSHandleObject, index: u32,
                            succeeded: *mut bool) -> bool;

@@ -24,8 +24,8 @@ use jsapi::{JSContext, JSPropertyOp, JSStrictPropertyOp, JSEnumerateOp, Enum_JSP
             JSHandleObject, JSNative, JSHasInstanceOp, JSFunctionSpec, JSDeletePropertyOp};
 use jsapi::{JSWeakmapKeyDelegateOp, JSHandleId, JSMutableHandleObject, JSHandleValue};
 use jsapi::{JS_ComputeThis, JSMutableHandleValue};
+use jsapi::{MutableHandle, Handle};
 use jsval::JSVal;
-use glue::{JSMutableHandle, JSHandle};
 
 // These are just macros in jsapi.h
 pub use jsapi::JS_Init as JS_NewRuntime;
@@ -149,7 +149,7 @@ fn start(argc: int, argv: *const *const u8) -> int {
 }
 
 // Up-to-date mozjs 075904f5f7ee1176f28630d1dff47820020e5928
-pub type JSObjectOp = Option<extern "C" unsafe fn(*mut JSContext, JSHandleObject) -> *mut JSObject>;
+pub type JSObjectOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject) -> *mut JSObject>;
 pub type ClassObjectCreationOp = Option<extern "C" fn(*mut JSContext, Enum_JSProtoKey) -> *mut JSObject>;
 pub type FinishClassInitOp = Option<extern "C" fn(*mut JSContext, JSHandleObject, JSHandleObject) -> bool>;
 
@@ -197,27 +197,64 @@ pub struct ClassExtension {
     pub weakmapKeyDelegateOp: JSWeakmapKeyDelegateOp,
 }
 
-// Up-to-date mozjs 075904f5f7ee1176f28630d1dff47820020e5928
+pub type LookupGenericOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, JSHandleId,
+                                                       JSMutableHandleObject, MutableHandle<*mut c_void>) -> bool>;
+pub type LookupPropOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, Handle<*mut c_void>,
+                                                    JSMutableHandleObject, MutableHandle<*mut c_void>) -> bool>;
+pub type LookupElementOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, u32,
+                                                       JSMutableHandleObject, MutableHandle<*mut c_void>) -> bool>;
+pub type DefineGenericOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, JSHandleId,
+                                                       JSHandleValue, JSPropertyOp, JSStrictPropertyOp,
+                                                       uint) -> bool>;
+pub type DefinePropOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, Handle<*mut c_void>,
+                                                    JSHandleValue, JSPropertyOp, JSStrictPropertyOp,
+                                                    uint) -> bool>;
+pub type DefineElementOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, u32, JSHandleValue,
+                                                       JSPropertyOp, JSStrictPropertyOp, uint) -> bool>;
+pub type GenericIdOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, JSHandleObject,
+                                                   JSHandleId, JSMutableHandleValue) -> bool>;
+pub type PropertyIdOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, JSHandleObject,
+                                                    Handle<*mut c_void>, JSMutableHandleValue) -> bool>;
+pub type ElementIdOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, JSHandleObject,
+                                                   u32, JSMutableHandleValue) -> bool>;
+pub type StrictGenericIdOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, JSHandleId,
+                                                         JSMutableHandleValue, bool) -> bool>;
+pub type StrictPropertyIdOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject,
+                                                          Handle<*mut c_void>, JSMutableHandleValue,
+                                                          bool) -> bool>;
+pub type StrictElementIdOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, u32,
+                                                         JSMutableHandleValue, bool) -> bool>;
+pub type GenericAttributesOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, JSHandleId,
+                                                           *mut uint) -> bool>;
+pub type PropertyAttributesOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject,
+                                                            Handle<*mut c_void>, *mut uint) -> bool>;
+pub type DeletePropertyOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject,
+                                                        Handle<*mut c_void>, *mut bool) -> bool>;
+pub type DeleteElementOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, u32, *mut bool) -> bool>;
+pub type WatchOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, JSHandleId, JSHandleObject) -> bool>;
+pub type UnwatchOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, JSHandleId) -> bool>;
+pub type SliceOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, u32, u32, JSHandleObject) -> bool>;
+
 pub struct ObjectOps {
-    pub lookupGeneric: *const u8,
-    pub lookupProperty: *const u8,
-    pub lookupElement: *const u8,
-    pub defineGeneric: *const u8,
-    pub defineProperty: *const u8,
-    pub defineElement: *const u8,
-    pub getGeneric: *const u8,
-    pub getProperty: *const u8,
-    pub getElement: *const u8,
-    pub setGeneric: *const u8,
-    pub setProperty: *const u8,
-    pub setElement: *const u8,
-    pub getGenericAttributes: *const u8,
-    pub setGenericAttributes: *const u8,
-    pub deleteProperty: *const u8,
-    pub deleteElement: *const u8,
-    pub watch: *const u8,
-    pub unwatch: *const u8,
-    pub slice: *const u8,
+    pub lookupGeneric: LookupGenericOp,
+    pub lookupProperty: LookupPropOp,
+    pub lookupElement: LookupElementOp,
+    pub defineGeneric: DefineGenericOp,
+    pub defineProperty: DefinePropOp,
+    pub defineElement: DefineElementOp,
+    pub getGeneric: GenericIdOp,
+    pub getProperty: PropertyIdOp,
+    pub getElement: ElementIdOp,
+    pub setGeneric: StrictGenericIdOp,
+    pub setProperty: StrictPropertyIdOp,
+    pub setElement: StrictElementIdOp,
+    pub getGenericAttributes: GenericAttributesOp,
+    pub setGenericAttributes: GenericAttributesOp,
+    pub deleteProperty: DeletePropertyOp,
+    pub deleteElement: DeleteElementOp,
+    pub watch: WatchOp,
+    pub unwatch: UnwatchOp,
+    pub slice: SliceOp,
 
     pub enumerate: *const u8,
     pub thisObject: JSObjectOp,

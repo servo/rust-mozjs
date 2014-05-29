@@ -19,9 +19,9 @@ use jsapi::{JS_EnterCompartment, JS_LeaveCompartment};
 use jsapi::{JS_SetErrorReporter, JS_NO_HELPER_THREADS};
 use jsapi::{JS_EvaluateUCScript, JS_BeginRequest, JS_EndRequest};
 use jsapi::{JS_NewContext, JSErrorReport, JSJITCOMPILER_ION_ENABLE};
-use jsapi::{JSMutableHandleValue, JS_DestroyRuntime};
+use jsapi::{Handle, MutableHandle, JS_DestroyRuntime};
 use jsapi::{JS_SetGlobalJitCompilerOption, JSJITCOMPILER_BASELINE_ENABLE};
-use jsapi::{JSJITCOMPILER_PARALLEL_COMPILATION_ENABLE, JSHandleObject};
+use jsapi::{JSJITCOMPILER_PARALLEL_COMPILATION_ENABLE};
 use jsval::{JSVal, NullValue};
 //use glue::{CompartmentOptions_SetVersion};
 use glue::{/*CompartmentOptions_SetTraceGlobal,*/ ContextOptions_SetVarObjFix};
@@ -69,7 +69,7 @@ unsafe extern fn gc_callback(rt: *mut JSRuntime, _status: JSGCStatus, _data: *mu
     use std::rt::local::Local;
     use std::rt::task::Task;
     let mut task = Local::borrow(None::<Task>);
-    let (start, end) = task.get().stack_bounds();
+    let (start, end) = task.stack_bounds();
     JS_SetNativeStackBounds(rt, cmp::min(start, end) as uintptr_t, cmp::max(start, end) as uintptr_t);
 }
 
@@ -142,10 +142,10 @@ impl Cx {
             (script_utf16.as_ptr(), script_utf16.len() as c_uint)
         };
         assert!(ptr.is_not_null());
-        let globhandle = JSHandleObject {
+        let globhandle = Handle {
             unnamed_field1: &glob,
         };
-        let rvalhandle = JSMutableHandleValue {
+        let rvalhandle = MutableHandle {
             unnamed_field1: &mut rval,
         };
         unsafe {
