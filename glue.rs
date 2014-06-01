@@ -9,7 +9,7 @@ use jsapi::*;
 use jsfriendapi::JSJitInfo;
 use jsval::JSVal;
 
-type c_bool = libc::c_int;
+pub type c_bool = libc::c_int;
 
 pub struct ProxyTraps {
     pub getPropertyDescriptor: Option<extern "C" fn(*mut JSContext, *mut JSObject, jsid, c_bool, *mut JSPropertyDescriptor) -> c_bool>,
