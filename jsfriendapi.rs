@@ -21,7 +21,6 @@ pub fn JS_ObjectToOuterObject(cx: *mut JSContext,
 
 //pub type JSJitInfo = JSJitInfo_struct;
 
-#[nolink]
 pub mod bindgen {
     use jsapi::{JSContext, JSObject, JSClass, JSRuntime};
     use libc::uintptr_t;
