@@ -125,13 +125,13 @@ impl Cx {
         }
     }
 
-    pub fn set_error_reporter(&self, reportfn: extern "C" unsafe fn(*mut JSContext, *c_char, *mut JSErrorReport)) {
+    pub fn set_error_reporter(&self, reportfn: unsafe extern "C" fn(*mut JSContext, *c_char, *mut JSErrorReport)) {
         unsafe {
             JS_SetErrorReporter(self.ptr, Some(reportfn));
         }
     }
 
-    pub fn evaluate_script(&self, glob: *mut JSObject, script: ~str, filename: ~str, line_num: uint)
+    pub fn evaluate_script(&self, glob: *mut JSObject, script: String, filename: String, line_num: uint)
                     -> Result<(),()> {
         let script_utf16 = script.to_utf16();
         filename.to_c_str().with_ref(|filename_cstr| {
@@ -158,7 +158,7 @@ impl Cx {
 pub extern fn reportError(_cx: *mut JSContext, msg: *c_char, report: *mut JSErrorReport) {
     unsafe {
         let fnptr = (*report).filename;
-        let fname = if fnptr.is_not_null() {from_c_str(fnptr)} else {"none".to_owned()};
+        let fname = if fnptr.is_not_null() {from_c_str(fnptr)} else {"none".to_string()};
         let lineno = (*report).lineno;
         let msg = from_c_str(msg);
         error!("Error at {:s}:{}: {:s}\n", fname, lineno, msg);

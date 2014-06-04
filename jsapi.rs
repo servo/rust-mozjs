@@ -92,67 +92,67 @@ pub struct JSMutableHandleValue {
 }
 pub type JSRawObject = *mut JSObject;
 pub type JSPropertyOp =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: JSHandleObject, arg3: JSHandleId, arg4: JSMutableHandleValue)
                               -> JSBool>;
 pub type JSStrictPropertyOp =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: JSHandleObject, arg3: JSHandleId, arg4: JSBool, arg5: JSMutableHandleValue) -> JSBool>;
 pub type JSNewEnumerateOp =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: JSHandleObject, arg3: JSIterateOp, arg4: *mut JSVal, arg5: *mut jsid) -> JSBool>;
 pub type JSEnumerateOp =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: JSHandleObject)
                               -> JSBool>;
 pub type JSResolveOp =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: JSHandleObject, arg3: JSHandleId) -> JSBool>;
 pub type JSNewResolveOp =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: JSHandleObject, arg3: JSHandleId, arg4: c_uint, arg5: JSMutableHandleObject) -> JSBool>;
 pub type JSConvertOp =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: JSHandleObject, arg3: JSType, arg4: JSMutableHandleValue)
                               -> JSBool>;
 pub type JSTypeOfOp =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: JSHandleObject)
                               -> JSType>;
 pub struct JSFreeOp {
     pub runtime: *mut JSRuntime,
 }
 pub type JSFinalizeOp =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSFreeOp, arg2: *mut JSObject)>;
 pub struct JSStringFinalizer {
-    pub finalize:   Option<extern "C" unsafe fn
+    pub finalize:   Option<unsafe extern "C" fn
                                             (arg1: *JSStringFinalizer, arg2: *mut jschar)>,
 }
 pub type JSCheckAccessOp =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: JSHandleObject, arg3: JSHandleId, arg4: JSAccessMode, arg5: *mut JSVal) -> JSBool>;
 pub type JSHasInstanceOp =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: JSHandleObject, arg3: *JSVal, arg4: *mut JSBool) -> JSBool>;
 pub type JSTraceOp =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSTracer, arg2: *mut JSObject)>;
 pub type JSTraceNamePrinter =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSTracer, arg2: *mut c_char, arg3: size_t)>;
 pub type JSEqualityOp =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: JSHandleObject, arg3: *JSVal, arg4: *mut JSBool) -> JSBool>;
 pub type JSNative =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: c_uint, arg3: *mut JSVal) -> JSBool>;
 pub type Enum_JSContextOp = c_uint;
 pub static JSCONTEXT_NEW: c_uint = 0;
 pub static JSCONTEXT_DESTROY: c_uint = 1;
 pub type JSContextOp = Enum_JSContextOp;
 pub type JSContextCallback =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: c_uint)
                               -> JSBool>;
 pub type Enum_JSGCStatus = c_uint;
@@ -160,22 +160,22 @@ pub static JSGC_BEGIN: c_uint = 0;
 pub static JSGC_END: c_uint = 1;
 pub type JSGCStatus = Enum_JSGCStatus;
 pub type JSGCCallback =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSRuntime, arg2: JSGCStatus)>;
 pub type Enum_JSFinalizeStatus = c_uint;
 pub static JSFINALIZE_START: c_uint = 0;
 pub static JSFINALIZE_END: c_uint = 1;
 pub type JSFinalizeStatus = Enum_JSFinalizeStatus;
 pub type JSFinalizeCallback =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSFreeOp, arg2: JSFinalizeStatus, arg3: JSBool)>;
 pub type JSTraceDataOp =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSTracer, arg2: *mut c_void)>;
 pub type JSOperationCallback =
-                   Option<extern "C" unsafe fn(arg1: *mut JSContext) -> JSBool>;
+                   Option<unsafe extern "C" fn(arg1: *mut JSContext) -> JSBool>;
 pub type JSErrorReporter =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: *c_char, arg3: *mut JSErrorReport)>;
 pub type Enum_JSExnType = c_int;
 pub static JSEXN_NONE: c_int = -1;
@@ -195,64 +195,64 @@ pub struct JSErrorFormatString {
     pub exnType: int16_t,
 }
 pub type JSErrorCallback =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut c_void, arg2: *c_char, arg3: c_uint)
                               -> *JSErrorFormatString>;
 pub type JSLocaleToUpperCase =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: *mut JSString, arg3: *mut JSVal) -> JSBool>;
 pub type JSLocaleToLowerCase =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: *mut JSString, arg3: *mut JSVal) -> JSBool>;
 pub type JSLocaleCompare =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: *mut JSString, arg3: *mut JSString, arg4: *mut JSVal)
                               -> JSBool>;
 pub type JSLocaleToUnicode =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: *c_char, arg3: *mut JSVal) -> JSBool>;
 pub type JSDestroyPrincipalsOp =
-                   Option<extern "C" unsafe fn(arg1: *mut JSPrincipals)>;
+                   Option<unsafe extern "C" fn(arg1: *mut JSPrincipals)>;
 pub type JSSubsumePrincipalsOp =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSPrincipals, arg2: *mut JSPrincipals) -> JSBool>;
 pub type JSObjectPrincipalsFinder =
-                   Option<extern "C" unsafe fn(arg1: *mut JSObject)
+                   Option<unsafe extern "C" fn(arg1: *mut JSObject)
                               -> *mut JSPrincipals>;
 pub type JSCSPEvalChecker =
-                   Option<extern "C" unsafe fn(arg1: *mut JSContext) -> JSBool>;
+                   Option<unsafe extern "C" fn(arg1: *mut JSContext) -> JSBool>;
 pub type JSWrapObjectCallback =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: *mut JSObject, arg3: *mut JSObject, arg4: *mut JSObject, arg5: c_uint) -> *mut JSObject>;
 pub type JSPreWrapCallback =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: *mut JSObject, arg3: *mut JSObject, arg4: c_uint)
                               -> *mut JSObject>;
 pub type JSSameCompartmentWrapObjectCallback =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: *mut JSObject)
                               -> *mut JSObject>;
 pub type JSDestroyCompartmentCallback =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSFreeOp, arg2: *mut JSCompartment)>;
 pub type JSCompartmentNameCallback =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSRuntime, arg2: *mut JSCompartment, arg3: *mut c_char, arg4: size_t)>;
 pub type ReadStructuredCloneOp =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: *mut JSStructuredCloneReader, arg3: uint32_t, arg4: uint32_t, arg5: *mut c_void) -> *mut JSObject>;
 pub type WriteStructuredCloneOp =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: *mut JSStructuredCloneWriter, arg3: *mut JSObject, arg4: *mut c_void)
                               -> JSBool>;
 pub type StructuredCloneErrorOp =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: uint32_t)>;
 pub type JSIterateCompartmentCallback =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSRuntime, arg2: *mut c_void, arg3: *mut JSCompartment)>;
 pub type JSEnumerateDiagnosticMemoryCallback =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut c_void, arg2: size_t)
                               -> JSBool>;
 pub type Enum_JSGCRootType = c_uint;
@@ -260,10 +260,10 @@ pub static JS_GC_ROOT_VALUE_PTR: c_uint = 0;
 pub static JS_GC_ROOT_GCTHING_PTR: c_uint = 1;
 pub type JSGCRootType = Enum_JSGCRootType;
 pub type JSGCRootMapFun =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut c_void, arg2: JSGCRootType, arg3: *c_char, arg4: *mut c_void) -> c_int>;
 pub type JSTraceCallback =
-                   Option<extern "C" unsafe fn
+                   Option<unsafe extern "C" fn
                               (arg1: *mut JSTracer, arg2: *mut *mut c_void, arg3: JSGCTraceKind)>;
 pub struct JSTracer {
     pub runtime: *mut JSRuntime,

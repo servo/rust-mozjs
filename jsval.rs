@@ -5,7 +5,7 @@
 use jsapi::{JSObject, JSString, JSGCTraceKind, JSTRACE_OBJECT, JSTRACE_STRING};
 
 use libc::c_void;
-use std::cast;
+use std::mem;
 
 static JSVAL_TAG_SHIFT: int = 47;
 
@@ -86,7 +86,7 @@ pub fn Int32Value(i: i32) -> JSVal {
 
 #[inline(always)]
 pub fn DoubleValue(f: f64) -> JSVal {
-    let bits: u64 = unsafe { cast::transmute(f) };
+    let bits: u64 = unsafe { mem::transmute(f) };
     assert!(bits <= JSVAL_SHIFTED_TAG_MAX_DOUBLE as u64)
     JSVal {
         v: bits
