@@ -56,7 +56,7 @@ static JSVAL_PAYLOAD_MASK: u64 = 0x00007FFFFFFFFFFF;
 
 // JSVal was originally type of u64.
 // now this become {u64} because of the union abi issue on ARM arch. See #398.
-#[deriving(Eq,Clone)]
+#[deriving(PartialEq,Clone)]
 pub struct JSVal {
     pub v: u64
 }
