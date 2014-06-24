@@ -634,7 +634,7 @@ GetObjectJSClass(JSObject* obj)
 }
 
 const JSErrorFormatString*
-RUST_js_GetErrorMessage(void* userRef, char* locale, uint32_t errorNumber)
+RUST_js_GetErrorMessage(void* userRef, const char* locale, uint32_t errorNumber)
 {
     return js_GetErrorMessage(userRef, locale, errorNumber);
 }
