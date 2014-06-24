@@ -402,6 +402,13 @@ pub struct JSErrorReport {
     pub exnType: int16_t,
     pub column: c_uint,
 }
+
+pub static JSREPORT_ERROR: c_uint = 0x0;
+pub static JSREPORT_WARNING: c_uint = 0x1;
+pub static JSREPORT_EXCEPTION: c_uint = 0x2;
+pub static JSREPORT_STRICT: c_uint = 0x4;
+pub static JSREPORT_STRICT_MODE_ERROR: c_uint = 0x8;
+
 extern "C" {
 pub fn JS_CreateHandleObject(cx: *mut JSContext, obj: *mut JSObject, phandle: *mut JSHandleObject) -> JSBool;
 
