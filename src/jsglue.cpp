@@ -414,7 +414,7 @@ JSObject*
 WrapperNew(JSContext* aCx, JS::HandleObject aObj, JS::HandleObject aParent, void* aHandler, js::Class* clasp, bool singleton)
 {
     clasp->trace = js::proxy_Trace;
-    js::WrapperOptions options;
+    js::WrapperOptions options(aCx);
     JS::RootedObject proto(aCx);
     assert(js::GetObjectProto(aCx, aParent, &proto));
     options.setProto(proto.get());
