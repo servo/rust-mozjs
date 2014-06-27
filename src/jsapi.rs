@@ -1003,7 +1003,7 @@ extern "C" {
                                        flags: c_uint, desc: c_void) -> c_int;
     pub fn JS_GetPropertyDescriptorById(cx: *mut Struct_JSContext,
                                         obj: HandleObject, id: HandleId,
-                                        flags: c_uint, desc: MutableHandle<*mut JSPropertyDescriptor>) -> c_int; //jdm c_void->JSMutableHandle
+                                        flags: c_uint, desc: MutableHandle<JSPropertyDescriptor>) -> c_int; //jdm c_void->JSMutableHandle
     pub fn JS_GetPropertyDescriptor(cx: *mut Struct_JSContext,
                                     obj: HandleObject, name: *c_schar,
                                     flags: c_uint, desc: c_void) -> c_int;
