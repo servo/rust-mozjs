@@ -46,9 +46,12 @@ pub struct ProxyTraps {
 #[link(name = "jsglue")]
 extern { }
 
+#[cfg(target_os = "android")]
+#[link(name = "stdc++")]
+extern { }
 
 #[cfg(target_os = "android")]
-#[link_args = "-ljsglue -lstdc++ -lgcc -rdynamic"]
+#[link(name = "gcc")]
 extern { }
 
 extern {
