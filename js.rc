@@ -13,7 +13,7 @@
 
 extern crate green;
 extern crate libc;
-#[phase(syntax, link)]
+#[phase(plugin, link)]
 extern crate log;
 #[cfg(test)]
 extern crate rustuv;
