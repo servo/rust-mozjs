@@ -23,7 +23,7 @@ use jsapi::{JSContext, JSPropertyOp, JSStrictPropertyOp, JSEnumerateOp, Enum_JSP
             JSObject, JSResolveOp, JSConvertOp, JSFinalizeOp, JSTraceOp, JSProto_LIMIT,
             JSHandleObject, JSNative, JSHasInstanceOp, JSFunctionSpec, JSDeletePropertyOp};
 use jsapi::{JSWeakmapKeyDelegateOp, JSHandleId, JSMutableHandleObject, JSHandleValue};
-use jsapi::{JS_ComputeThis, JSMutableHandleValue};
+use jsapi::{JS_ComputeThis, JSMutableHandleValue, JSRuntime};
 use jsapi::{MutableHandle, Handle};
 use jsval::JSVal;
 
@@ -258,4 +258,30 @@ pub struct ObjectOps {
 
     pub enumerate: *const u8,
     pub thisObject: JSObjectOp,
+}
+
+pub enum ThingRootKind {
+    THING_ROOT_OBJECT,
+    THING_ROOT_SHAPE,
+    THING_ROOT_BASE_SHAPE,
+    THING_ROOT_TYPE_OBJECT,
+    THING_ROOT_STRING,
+    THING_ROOT_JIT_CODE,
+    THING_ROOT_SCRIPT,
+    THING_ROOT_LAZY_SCRIPT,
+    THING_ROOT_ID,
+    THING_ROOT_VALUE,
+    THING_ROOT_TYPE,
+    THING_ROOT_BINDINGS,
+    THING_ROOT_PROPERTY_DESCRIPTOR,
+    THING_ROOT_CUSTOM,
+    THING_ROOT_LIMIT, //14
+}
+
+pub struct ContextFriendFields {
+    pub runtime_: *JSRuntime,
+    pub compartment_: *libc::c_void,
+    pub zone_: *libc::c_void,
+    pub thingGCRooters: [**libc::c_void, ..14], //THING_ROOT_LIMIT
+    pub autoGCRooters: *libc::c_void,
 }
