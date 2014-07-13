@@ -137,9 +137,16 @@ impl Cx {
         filename.to_c_str().with_ref(|filename_cstr| {
             let mut rval: JSVal = NullValue();
             debug!("Evaluating script from {:s} with content {}", filename, script);
+            // SpiderMonkey does not approve of null pointers.
+            let (ptr, len) = if script_utf16.len() == 0 {
+                static empty: &'static [u16] = &[];
+                (empty.as_ptr(), 0)
+            } else {
+                (script_utf16.as_ptr(), script_utf16.len() as c_uint)
+            };
+            assert!(ptr.is_not_null());
             unsafe {
-                if ERR == JS_EvaluateUCScript(self.ptr, glob,
-                                              script_utf16.as_ptr(), script_utf16.len() as c_uint,
+                if ERR == JS_EvaluateUCScript(self.ptr, glob, ptr, len,
                                               filename_cstr, line_num as c_uint,
                                               &mut rval) {
                     debug!("...err!");
