@@ -174,10 +174,35 @@ pub extern fn reportError(_cx: *mut JSContext, msg: *c_char, report: *mut JSErro
 
 pub fn with_compartment<R>(cx: *mut JSContext, object: *mut JSObject, cb: || -> R) -> R {
     unsafe {
+        let _ar = JSAutoRequest::new(cx);
         let call = JS_EnterCrossCompartmentCall(cx, object);
         let result = cb();
         JS_LeaveCrossCompartmentCall(call);
         result
+    }
+}
+
+
+pub struct JSAutoRequest {
+    cx: *mut JSContext,
+}
+
+impl JSAutoRequest {
+    pub fn new(cx: *mut JSContext) -> JSAutoRequest {
+        unsafe {
+            JS_BeginRequest(cx);
+        }
+        JSAutoRequest {
+            cx: cx,
+        }
+    }
+}
+
+impl Drop for JSAutoRequest {
+    fn drop(&mut self) {
+        unsafe {
+            JS_EndRequest(self.cx);
+        }
     }
 }
 
