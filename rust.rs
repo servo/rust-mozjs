@@ -6,9 +6,7 @@
 
 use libc::types::os::arch::c95::{size_t, c_uint};
 use libc::c_char;
-use std::cmp;
 use std::rc;
-use std::rt::Runtime;
 use jsapi::*;
 use jsval::{JSVal, NullValue};
 use default_stacksize;
@@ -18,7 +16,6 @@ use JSOPTION_METHODJIT;
 use JSOPTION_TYPE_INFERENCE;
 use ERR;
 use std::str::raw::from_c_str;
-use green::task::GreenTask;
 
 // ___________________________________________________________________________
 // friendly Rustic API to runtimes
@@ -56,22 +53,9 @@ impl RtUtils for rc::Rc<rt_rsrc> {
     }
 }
 
-extern fn gc_callback(rt: *mut JSRuntime, _status: JSGCStatus) {
-    use std::rt::local::Local;
-    use std::rt::task::Task;
-    unsafe {
-        let mut task = Local::borrow(None::<Task>);
-        let green_task: Box<GreenTask> = task.maybe_take_runtime().unwrap();
-        let (start, end) = green_task.stack_bounds();
-        JS_SetNativeStackBounds(rt, cmp::min(start, end), cmp::max(start, end));
-        task.put_runtime(green_task);
-    }
-}
-
 pub fn rt() -> rt {
     unsafe {
         let runtime = JS_Init(default_heapsize);
-        JS_SetGCCallback(runtime, Some(gc_callback));
         return new_runtime(runtime);
     }
 }
