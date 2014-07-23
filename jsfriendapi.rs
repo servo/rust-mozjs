@@ -4,7 +4,7 @@
 
 use jsapi::{JSContext, JSObject};
 
-pub type JSJitPropertyOp = *u8;
+pub type JSJitPropertyOp = *const u8;
 
 pub struct JSJitInfo {
     pub op: JSJitPropertyOp,
@@ -26,8 +26,8 @@ pub mod bindgen {
     use libc::uintptr_t;
 
     extern {
-        pub fn JS_NewObjectWithUniqueType(cx: *mut JSContext, clasp: *JSClass,
-                                          proto: *mut JSObject, parent: *mut JSObject) -> *mut JSObject;
+        pub fn JS_NewObjectWithUniqueType(cx: *mut JSContext, clasp: *const JSClass,
+                                          proto: *const JSObject, parent: *const JSObject) -> *mut JSObject;
         pub fn JS_GetAddressableObject(rt: *mut JSRuntime, candidateObj: uintptr_t) -> *mut JSObject;
     }
 }

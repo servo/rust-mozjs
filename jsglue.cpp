@@ -273,12 +273,12 @@ class WrapperProxyHandler : public js::DirectWrapper
 class ForwardingProxyHandler : public js::BaseProxyHandler
 {
     ProxyTraps mTraps;
-    void* mExtra;
+    const void* mExtra;
   public:
-    ForwardingProxyHandler(const ProxyTraps& aTraps, void* aExtra)
+    ForwardingProxyHandler(const ProxyTraps& aTraps, const void* aExtra)
     : js::BaseProxyHandler(&HandlerFamily), mTraps(aTraps), mExtra(aExtra) {}
 
-    void* getExtra() {
+    const void* getExtra() {
         return mExtra;
     }
 
@@ -499,7 +499,7 @@ RUST_FUNCTION_VALUE_TO_JITINFO(jsval v)
 }
 
 JSBool
-CallJitPropertyOp(JSJitInfo *info, JSContext* cx, JSObject* thisObj, void *specializedThis, jsval *vp)
+CallJitPropertyOp(const JSJitInfo *info, JSContext* cx, JSObject* thisObj, void *specializedThis, jsval *vp)
 {
     struct {
         JSObject** obj;
@@ -621,7 +621,7 @@ RUST_INTERNED_STRING_TO_JSID(JSContext* cx, JSString* str) {
 }
 
 JSFunction*
-DefineFunctionWithReserved(JSContext* cx, JSObject* obj, char* name, JSNative call,
+DefineFunctionWithReserved(JSContext* cx, JSObject* obj, const char* name, JSNative call,
                            uint32_t nargs, uint32_t attrs)
 {
     return js::DefineFunctionWithReserved(cx, obj, name, call, nargs, attrs);
@@ -657,7 +657,7 @@ IsProxyHandlerFamily(JSObject* obj)
     return js::GetProxyHandler(obj)->family() == &HandlerFamily;
 }
 
-void*
+const void*
 GetProxyHandlerExtra(JSObject* obj)
 {
     js::BaseProxyHandler* handler = js::GetProxyHandler(obj);

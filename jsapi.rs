@@ -21,7 +21,7 @@ pub type JSBool = c_int;
 pub type jschar = uint16_t;
 pub type jsid = ptrdiff_t;
 pub type JSCallOnceType = JSBool;
-pub type JSInitCallback = *u8;
+pub type JSInitCallback = *mut u8;
 
 pub type JSProtoKey = c_uint;
 pub static JSProto_LIMIT: JSProtoKey = 41;
@@ -127,14 +127,14 @@ pub type JSFinalizeOp =
                               (arg1: *mut JSFreeOp, arg2: *mut JSObject)>;
 pub struct JSStringFinalizer {
     pub finalize:   Option<unsafe extern "C" fn
-                                            (arg1: *JSStringFinalizer, arg2: *mut jschar)>,
+                                            (arg1: *mut JSStringFinalizer, arg2: *mut jschar)>,
 }
 pub type JSCheckAccessOp =
                    Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: JSHandleObject, arg3: JSHandleId, arg4: JSAccessMode, arg5: *mut JSVal) -> JSBool>;
 pub type JSHasInstanceOp =
                    Option<unsafe extern "C" fn
-                              (arg1: *mut JSContext, arg2: JSHandleObject, arg3: *JSVal, arg4: *mut JSBool) -> JSBool>;
+                              (arg1: *mut JSContext, arg2: JSHandleObject, arg3: *const JSVal, arg4: *mut JSBool) -> JSBool>;
 pub type JSTraceOp =
                    Option<unsafe extern "C" fn
                               (arg1: *mut JSTracer, arg2: *mut JSObject)>;
@@ -143,7 +143,7 @@ pub type JSTraceNamePrinter =
                               (arg1: *mut JSTracer, arg2: *mut c_char, arg3: size_t)>;
 pub type JSEqualityOp =
                    Option<unsafe extern "C" fn
-                              (arg1: *mut JSContext, arg2: JSHandleObject, arg3: *JSVal, arg4: *mut JSBool) -> JSBool>;
+                              (arg1: *mut JSContext, arg2: JSHandleObject, arg3: *const JSVal, arg4: *mut JSBool) -> JSBool>;
 pub type JSNative =
                    Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: c_uint, arg3: *mut JSVal) -> JSBool>;
@@ -176,7 +176,7 @@ pub type JSOperationCallback =
                    Option<unsafe extern "C" fn(arg1: *mut JSContext) -> JSBool>;
 pub type JSErrorReporter =
                    Option<unsafe extern "C" fn
-                              (arg1: *mut JSContext, arg2: *c_char, arg3: *mut JSErrorReport)>;
+                              (arg1: *mut JSContext, arg2: *const c_char, arg3: *mut JSErrorReport)>;
 pub type Enum_JSExnType = c_int;
 pub static JSEXN_NONE: c_int = -1;
 pub static JSEXN_ERR: c_int = 0;
@@ -190,14 +190,14 @@ pub static JSEXN_URIERR: c_int = 7;
 pub static JSEXN_LIMIT: c_int = 8;
 pub type JSExnType = Enum_JSExnType;
 pub struct JSErrorFormatString {
-    pub format: *c_char,
+    pub format: *const c_char,
     pub argCount: uint16_t,
     pub exnType: int16_t,
 }
 pub type JSErrorCallback =
                    Option<unsafe extern "C" fn
-                              (arg1: *mut c_void, arg2: *c_char, arg3: c_uint)
-                              -> *JSErrorFormatString>;
+                              (arg1: *mut c_void, arg2: *const c_char, arg3: c_uint)
+                              -> *const JSErrorFormatString>;
 pub type JSLocaleToUpperCase =
                    Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: *mut JSString, arg3: *mut JSVal) -> JSBool>;
@@ -210,7 +210,7 @@ pub type JSLocaleCompare =
                               -> JSBool>;
 pub type JSLocaleToUnicode =
                    Option<unsafe extern "C" fn
-                              (arg1: *mut JSContext, arg2: *c_char, arg3: *mut JSVal) -> JSBool>;
+                              (arg1: *mut JSContext, arg2: *const c_char, arg3: *mut JSVal) -> JSBool>;
 pub type JSDestroyPrincipalsOp =
                    Option<unsafe extern "C" fn(arg1: *mut JSPrincipals)>;
 pub type JSSubsumePrincipalsOp =
@@ -261,7 +261,7 @@ pub static JS_GC_ROOT_GCTHING_PTR: c_uint = 1;
 pub type JSGCRootType = Enum_JSGCRootType;
 pub type JSGCRootMapFun =
                    Option<unsafe extern "C" fn
-                              (arg1: *mut c_void, arg2: JSGCRootType, arg3: *c_char, arg4: *mut c_void) -> c_int>;
+                              (arg1: *mut c_void, arg2: JSGCRootType, arg3: *const c_char, arg4: *mut c_void) -> c_int>;
 pub type JSTraceCallback =
                    Option<unsafe extern "C" fn
                               (arg1: *mut JSTracer, arg2: *mut *mut c_void, arg3: JSGCTraceKind)>;
@@ -269,7 +269,7 @@ pub struct JSTracer {
     pub runtime: *mut JSRuntime,
     pub callback: JSTraceCallback,
     pub debugPrinter: JSTraceNamePrinter,
-    pub debugPrintArg: *c_void,
+    pub debugPrintArg: *const c_void,
     pub debugPrintIndex: size_t,
     pub eagerlyTraceWeakMaps: JSBool,
     pub realLocation: *mut c_void,
@@ -302,7 +302,7 @@ pub static JSGC_MODE_INCREMENTAL: c_uint = 2;
 pub type JSGCMode = Enum_JSGCMode;
 pub type JSClassInternal =                Option<extern "C" fn()>;
 pub struct JSClass {
-    pub name: *c_char,
+    pub name: *const c_char,
     pub flags: uint32_t,
     pub addProperty: JSPropertyOp,
     pub delProperty: JSPropertyOp,
@@ -321,35 +321,35 @@ pub struct JSClass {
 }
 pub struct JSConstDoubleSpec {
     pub dval: c_double,
-    pub name: *c_char,
+    pub name: *const c_char,
     pub flags: uint8_t,
     pub spare: [uint8_t, ..3u],
 }
 pub struct JSStrictPropertyOpWrapper {
     pub op: JSNative,
-    pub info: *JSJitInfo,
+    pub info: *const JSJitInfo,
 }
 pub struct JSPropertyOpWrapper {
     pub op: JSNative,
-    pub info: *JSJitInfo,
+    pub info: *const JSJitInfo,
 }
 pub struct JSNativeWrapper {
     pub op: JSNative,
-    pub info: *JSJitInfo,
+    pub info: *const JSJitInfo,
 }
 pub struct JSPropertySpec {
-    pub name: *c_char,
+    pub name: *const c_char,
     pub tinyid: int8_t,
     pub flags: uint8_t,
     pub getter: JSPropertyOpWrapper,
     pub setter: JSStrictPropertyOpWrapper,
 }
 pub struct JSFunctionSpec {
-    pub name: *c_char,
+    pub name: *const c_char,
     pub call: JSNativeWrapper,
     pub nargs: uint16_t,
     pub flags: uint16_t,
-    pub selfHostedName: *c_char,
+    pub selfHostedName: *const c_char,
 }
 pub struct JSPropertyDescriptor {
     pub obj: *mut JSObject,
@@ -374,7 +374,7 @@ pub static JSEXEC_MAIN: c_uint = 1;
 pub type JSExecPart = Enum_JSExecPart;
 pub type JSONWriteCallback =
                    Option<extern "C" fn
-                              (arg1: *jschar, arg2: uint32_t, arg3: *mut c_void) -> JSBool>;
+                              (arg1: *const jschar, arg2: uint32_t, arg3: *mut c_void) -> JSBool>;
 pub struct JSStructuredCloneCallbacks {
     pub read: ReadStructuredCloneOp,
     pub write: WriteStructuredCloneOp,
@@ -388,17 +388,17 @@ pub struct JSLocaleCallbacks {
     pub localeGetErrorMessage: JSErrorCallback,
 }
 pub struct JSErrorReport {
-    pub filename: *c_char,
+    pub filename: *const c_char,
     pub originPrincipals: *mut JSPrincipals,
     pub lineno: c_uint,
-    pub linebuf: *c_char,
-    pub tokenptr: *c_char,
-    pub uclinebuf: *jschar,
-    pub uctokenptr: *jschar,
+    pub linebuf: *const c_char,
+    pub tokenptr: *const c_char,
+    pub uclinebuf: *const jschar,
+    pub uctokenptr: *const jschar,
     pub flags: c_uint,
     pub errorNumber: c_uint,
-    pub ucmessage: *jschar,
-    pub messageArgs: *mut *jschar,
+    pub ucmessage: *const jschar,
+    pub messageArgs: *mut *const jschar,
     pub exnType: int16_t,
     pub column: c_uint,
 }
@@ -440,7 +440,7 @@ pub fn JS_GetEmptyStringValue(cx: *mut JSContext) -> JSVal;
 
 pub fn JS_GetEmptyString(rt: *mut JSRuntime) -> *mut JSString;
 
-pub fn JS_ConvertArguments(cx: *mut JSContext, argc: c_uint, argv: *mut JSVal, format: *c_char, ...) -> JSBool;
+pub fn JS_ConvertArguments(cx: *mut JSContext, argc: c_uint, argv: *mut JSVal, format: *const c_char, ...) -> JSBool;
 
 pub fn JS_ConvertValue(cx: *mut JSContext, v: JSVal, _type: JSType, vp: *mut JSVal) -> JSBool;
 
@@ -478,7 +478,7 @@ pub fn JS_ValueToBoolean(cx: *mut JSContext, v: JSVal, bp: *mut JSBool) -> JSBoo
 
 pub fn JS_TypeOfValue(cx: *mut JSContext, v: JSVal) -> JSType;
 
-pub fn JS_GetTypeName(cx: *mut JSContext, _type: JSType) -> *c_char;
+pub fn JS_GetTypeName(cx: *mut JSContext, _type: JSType) -> *const c_char;
 
 pub fn JS_StrictlyEqual(cx: *mut JSContext, v1: JSVal, v2: JSVal, equal: *mut JSBool) -> JSBool;
 
@@ -538,9 +538,9 @@ pub fn JS_GetVersion(cx: *mut JSContext) -> JSVersion;
 
 pub fn JS_SetVersion(cx: *mut JSContext, version: JSVersion) -> JSVersion;
 
-pub fn JS_VersionToString(version: JSVersion) -> *c_char;
+pub fn JS_VersionToString(version: JSVersion) -> *const c_char;
 
-pub fn JS_StringToVersion(string: *c_char) -> JSVersion;
+pub fn JS_StringToVersion(string: *const c_char) -> JSVersion;
 
 pub fn JS_GetOptions(cx: *mut JSContext) -> uint32_t;
 
@@ -550,7 +550,7 @@ pub fn JS_ToggleOptions(cx: *mut JSContext, options: uint32_t) -> uint32_t;
 
 pub fn JS_SetJitHardening(rt: *mut JSRuntime, enabled: JSBool);
 
-pub fn JS_GetImplementationVersion() -> *c_char;
+pub fn JS_GetImplementationVersion() -> *const c_char;
 
 pub fn JS_SetDestroyCompartmentCallback(rt: *mut JSRuntime, callback: JSDestroyCompartmentCallback);
 
@@ -630,7 +630,7 @@ pub fn JS_GetDefaultFreeOp(rt: *mut JSRuntime) -> *mut JSFreeOp;
 
 pub fn JS_updateMallocCounter(cx: *mut JSContext, nbytes: size_t);
 
-pub fn JS_strdup(cx: *mut JSContext, s: *c_char) -> *mut c_char;
+pub fn JS_strdup(cx: *mut JSContext, s: *const c_char) -> *mut c_char;
 
 pub fn JS_AddValueRoot(cx: *mut JSContext, vp: *mut JSVal) -> JSBool;
 
@@ -640,15 +640,15 @@ pub fn JS_AddObjectRoot(cx: *mut JSContext, rp: *mut *mut JSObject) -> JSBool;
 
 pub fn JS_AddGCThingRoot(cx: *mut JSContext, rp: *mut *mut c_void) -> JSBool;
 
-pub fn JS_AddNamedValueRoot(cx: *mut JSContext, vp: *mut JSVal, name: *c_char) -> JSBool;
+pub fn JS_AddNamedValueRoot(cx: *mut JSContext, vp: *mut JSVal, name: *const c_char) -> JSBool;
 
-pub fn JS_AddNamedStringRoot(cx: *mut JSContext, rp: *mut *mut JSString, name: *c_char) -> JSBool;
+pub fn JS_AddNamedStringRoot(cx: *mut JSContext, rp: *mut *mut JSString, name: *const c_char) -> JSBool;
 
-pub fn JS_AddNamedObjectRoot(cx: *mut JSContext, rp: *mut *mut JSObject, name: *c_char) -> JSBool;
+pub fn JS_AddNamedObjectRoot(cx: *mut JSContext, rp: *mut *mut JSObject, name: *const c_char) -> JSBool;
 
-pub fn JS_AddNamedScriptRoot(cx: *mut JSContext, rp: *mut *mut JSScript, name: *c_char) -> JSBool;
+pub fn JS_AddNamedScriptRoot(cx: *mut JSContext, rp: *mut *mut JSScript, name: *const c_char) -> JSBool;
 
-pub fn JS_AddNamedGCThingRoot(cx: *mut JSContext, rp: *mut *mut c_void, name: *c_char) -> JSBool;
+pub fn JS_AddNamedGCThingRoot(cx: *mut JSContext, rp: *mut *mut c_void, name: *const c_char) -> JSBool;
 
 pub fn JS_RemoveValueRoot(cx: *mut JSContext, vp: *mut JSVal);
 
@@ -666,9 +666,9 @@ pub fn JS_RemoveStringRootRT(rt: *mut JSRuntime, rp: *mut *mut JSString);
 
 pub fn JS_RemoveObjectRootRT(rt: *mut JSRuntime, rp: *mut *mut JSObject);
 
-pub fn js_AddRootRT(rt: *mut JSRuntime, vp: *mut JSVal, name: *c_char) -> JSBool;
+pub fn js_AddRootRT(rt: *mut JSRuntime, vp: *mut JSVal, name: *const c_char) -> JSBool;
 
-pub fn js_AddGCThingRootRT(rt: *mut JSRuntime, rp: *mut *mut c_void, name: *c_char) -> JSBool;
+pub fn js_AddGCThingRootRT(rt: *mut JSRuntime, rp: *mut *mut c_void, name: *const c_char) -> JSBool;
 
 pub fn js_RemoveRoot(rt: *mut JSRuntime, rp: *mut c_void);
 
@@ -696,7 +696,7 @@ pub fn JS_TraceRuntime(trc: *mut JSTracer);
 
 pub fn JS_GetTraceThingInfo(buf: *mut c_char, bufsize: size_t, trc: *mut JSTracer, thing: *mut c_void, kind: JSGCTraceKind, includeDetails: JSBool);
 
-pub fn JS_GetTraceEdgeName(trc: *mut JSTracer, buffer: *mut c_char, bufferSize: c_int) -> *c_char;
+pub fn JS_GetTraceEdgeName(trc: *mut JSTracer, buffer: *mut c_char, bufferSize: c_int) -> *const c_char;
 
 pub fn JS_GC(rt: *mut JSRuntime);
 
@@ -724,11 +724,11 @@ pub fn JS_SetGCParameterForThread(cx: *mut JSContext, key: JSGCParamKey, value: 
 
 pub fn JS_GetGCParameterForThread(cx: *mut JSContext, key: JSGCParamKey) -> uint32_t;
 
-pub fn JS_NewExternalString(cx: *mut JSContext, chars: *jschar, length: size_t, fin: *JSStringFinalizer) -> *mut JSString;
+pub fn JS_NewExternalString(cx: *mut JSContext, chars: *const jschar, length: size_t, fin: *const JSStringFinalizer) -> *mut JSString;
 
 pub fn JS_IsExternalString(str: *mut JSString) -> JSBool;
 
-pub fn JS_GetExternalStringFinalizer(str: *mut JSString) -> *JSStringFinalizer;
+pub fn JS_GetExternalStringFinalizer(str: *mut JSString) -> *const JSStringFinalizer;
 
 pub fn JS_SetNativeStackQuota(cx: *mut JSRuntime, stackSize: size_t);
 
@@ -754,13 +754,13 @@ pub fn JS_ResolveStub(cx: *mut JSContext, obj: JSHandleObject, id: JSHandleId) -
 
 pub fn JS_ConvertStub(cx: *mut JSContext, obj: JSHandleObject, _type: JSType, vp: JSMutableHandleValue) -> JSBool;
 
-pub fn JS_InitClass(cx: *mut JSContext, obj: *mut JSObject, parent_proto: *mut JSObject, clasp: *JSClass, constructor: JSNative, nargs: c_uint, ps: *JSPropertySpec, fs: *JSFunctionSpec, static_ps: *JSPropertySpec, static_fs: *JSFunctionSpec) -> *mut JSObject;
+pub fn JS_InitClass(cx: *mut JSContext, obj: *mut JSObject, parent_proto: *mut JSObject, clasp: *mut JSClass, constructor: JSNative, nargs: c_uint, ps: *mut JSPropertySpec, fs: *mut JSFunctionSpec, static_ps: *mut JSPropertySpec, static_fs: *mut JSFunctionSpec) -> *mut JSObject;
 
 pub fn JS_LinkConstructorAndPrototype(cx: *mut JSContext, ctor: *mut JSObject, proto: *mut JSObject) -> JSBool;
 
-pub fn JS_GetClass(obj: JSRawObject) -> *JSClass;
+pub fn JS_GetClass(obj: JSRawObject) -> *mut JSClass;
 
-pub fn JS_InstanceOf(cx: *mut JSContext, obj: *mut JSObject, clasp: *JSClass, argv: *mut JSVal) -> JSBool;
+pub fn JS_InstanceOf(cx: *mut JSContext, obj: *mut JSObject, clasp: *mut JSClass, argv: *mut JSVal) -> JSBool;
 
 pub fn JS_HasInstance(cx: *mut JSContext, obj: *mut JSObject, v: JSVal, bp: *mut JSBool) -> JSBool;
 
@@ -768,7 +768,7 @@ pub fn JS_GetPrivate(obj: JSRawObject) -> *mut c_void;
 
 pub fn JS_SetPrivate(obj: JSRawObject, data: *mut c_void);
 
-pub fn JS_GetInstancePrivate(cx: *mut JSContext, obj: *mut JSObject, clasp: *JSClass, argv: *mut JSVal) -> *mut c_void;
+pub fn JS_GetInstancePrivate(cx: *mut JSContext, obj: *mut JSObject, clasp: *mut JSClass, argv: *mut JSVal) -> *mut c_void;
 
 pub fn JS_GetPrototype(obj: JSRawObject) -> *mut JSObject;
 
@@ -782,9 +782,9 @@ pub fn JS_GetConstructor(cx: *mut JSContext, proto: *mut JSObject) -> *mut JSObj
 
 pub fn JS_GetObjectId(cx: *mut JSContext, obj: JSRawObject, idp: *mut jsid) -> JSBool;
 
-pub fn JS_NewGlobalObject(cx: *mut JSContext, clasp: *JSClass, principals: *mut JSPrincipals) -> *mut JSObject;
+pub fn JS_NewGlobalObject(cx: *mut JSContext, clasp: *const JSClass, principals: *mut JSPrincipals) -> *mut JSObject;
 
-pub fn JS_NewObject(cx: *mut JSContext, clasp: *JSClass, proto: *mut JSObject, parent: *mut JSObject) -> *mut JSObject;
+pub fn JS_NewObject(cx: *mut JSContext, clasp: *const JSClass, proto: *const JSObject, parent: *const JSObject) -> *mut JSObject;
 
 pub fn JS_IsExtensible(obj: JSRawObject) -> JSBool;
 
@@ -792,7 +792,7 @@ pub fn JS_IsNative(obj: JSRawObject) -> JSBool;
 
 pub fn JS_GetObjectRuntime(obj: JSRawObject) -> *mut JSRuntime;
 
-pub fn JS_NewObjectWithGivenProto(cx: *mut JSContext, clasp: *JSClass, proto: *mut JSObject, parent: *mut JSObject) -> *mut JSObject;
+pub fn JS_NewObjectWithGivenProto(cx: *mut JSContext, clasp: *mut JSClass, proto: *mut JSObject, parent: *mut JSObject) -> *mut JSObject;
 
 pub fn JS_DeepFreezeObject(cx: *mut JSContext, obj: *mut JSObject) -> JSBool;
 
@@ -800,41 +800,41 @@ pub fn JS_FreezeObject(cx: *mut JSContext, obj: *mut JSObject) -> JSBool;
 
 pub fn JS_New(cx: *mut JSContext, ctor: *mut JSObject, argc: c_uint, argv: *mut JSVal) -> *mut JSObject;
 
-pub fn JS_DefineObject(cx: *mut JSContext, obj: *mut JSObject, name: *c_char, clasp: *JSClass, proto: *mut JSObject, attrs: c_uint) -> *mut JSObject;
+pub fn JS_DefineObject(cx: *mut JSContext, obj: *mut JSObject, name: *const c_char, clasp: *mut JSClass, proto: *mut JSObject, attrs: c_uint) -> *mut JSObject;
 
 pub fn JS_DefineConstDoubles(cx: *mut JSContext, obj: *mut JSObject, cds: *mut JSConstDoubleSpec) -> JSBool;
 
-pub fn JS_DefineProperties(cx: *mut JSContext, obj: *mut JSObject, ps: *JSPropertySpec) -> JSBool;
+pub fn JS_DefineProperties(cx: *mut JSContext, obj: *mut JSObject, ps: *const JSPropertySpec) -> JSBool;
 
-pub fn JS_DefineProperty(cx: *mut JSContext, obj: *mut JSObject, name: *c_char, value: JSVal, getter: JSPropertyOp, setter: JSStrictPropertyOp, attrs: c_uint) -> JSBool;
+pub fn JS_DefineProperty(cx: *mut JSContext, obj: *mut JSObject, name: *const c_char, value: JSVal, getter: JSPropertyOp, setter: JSStrictPropertyOp, attrs: c_uint) -> JSBool;
 
 pub fn JS_DefinePropertyById(cx: *mut JSContext, obj: *mut JSObject, id: jsid, value: JSVal, getter: JSPropertyOp, setter: JSStrictPropertyOp, attrs: c_uint) -> JSBool;
 
 pub fn JS_DefineOwnProperty(cx: *mut JSContext, obj: *mut JSObject, id: jsid, descriptor: JSVal, bp: *mut JSBool) -> JSBool;
 
-pub fn JS_GetPropertyAttributes(cx: *mut JSContext, obj: *mut JSObject, name: *c_char, attrsp: *mut c_uint, foundp: *mut JSBool) -> JSBool;
+pub fn JS_GetPropertyAttributes(cx: *mut JSContext, obj: *mut JSObject, name: *const c_char, attrsp: *mut c_uint, foundp: *mut JSBool) -> JSBool;
 
-pub fn JS_GetPropertyAttrsGetterAndSetter(cx: *mut JSContext, obj: *mut JSObject, name: *c_char, attrsp: *mut c_uint, foundp: *mut JSBool, getterp: *mut JSPropertyOp, setterp: *mut JSStrictPropertyOp) -> JSBool;
+pub fn JS_GetPropertyAttrsGetterAndSetter(cx: *mut JSContext, obj: *mut JSObject, name: *const c_char, attrsp: *mut c_uint, foundp: *mut JSBool, getterp: *mut JSPropertyOp, setterp: *mut JSStrictPropertyOp) -> JSBool;
 
 pub fn JS_GetPropertyAttrsGetterAndSetterById(cx: *mut JSContext, obj: *mut JSObject, id: jsid, attrsp: *mut c_uint, foundp: *mut JSBool, getterp: *mut JSPropertyOp, setterp: *mut JSStrictPropertyOp) -> JSBool;
 
-pub fn JS_SetPropertyAttributes(cx: *mut JSContext, obj: *mut JSObject, name: *c_char, attrs: c_uint, foundp: *mut JSBool) -> JSBool;
+pub fn JS_SetPropertyAttributes(cx: *mut JSContext, obj: *mut JSObject, name: *const c_char, attrs: c_uint, foundp: *mut JSBool) -> JSBool;
 
-pub fn JS_DefinePropertyWithTinyId(cx: *mut JSContext, obj: *mut JSObject, name: *c_char, tinyid: int8_t, value: JSVal, getter: JSPropertyOp, setter: JSStrictPropertyOp, attrs: c_uint) -> JSBool;
+pub fn JS_DefinePropertyWithTinyId(cx: *mut JSContext, obj: *mut JSObject, name: *const c_char, tinyid: int8_t, value: JSVal, getter: JSPropertyOp, setter: JSStrictPropertyOp, attrs: c_uint) -> JSBool;
 
-pub fn JS_AlreadyHasOwnProperty(cx: *mut JSContext, obj: *mut JSObject, name: *c_char, foundp: *mut JSBool) -> JSBool;
+pub fn JS_AlreadyHasOwnProperty(cx: *mut JSContext, obj: *mut JSObject, name: *const c_char, foundp: *mut JSBool) -> JSBool;
 
 pub fn JS_AlreadyHasOwnPropertyById(cx: *mut JSContext, obj: *mut JSObject, id: jsid, foundp: *mut JSBool) -> JSBool;
 
-pub fn JS_HasProperty(cx: *mut JSContext, obj: *mut JSObject, name: *c_char, foundp: *mut JSBool) -> JSBool;
+pub fn JS_HasProperty(cx: *mut JSContext, obj: *mut JSObject, name: *const c_char, foundp: *mut JSBool) -> JSBool;
 
 pub fn JS_HasPropertyById(cx: *mut JSContext, obj: *mut JSObject, id: jsid, foundp: *mut JSBool) -> JSBool;
 
-pub fn JS_LookupProperty(cx: *mut JSContext, obj: *mut JSObject, name: *c_char, vp: *mut JSVal) -> JSBool;
+pub fn JS_LookupProperty(cx: *mut JSContext, obj: *mut JSObject, name: *const c_char, vp: *mut JSVal) -> JSBool;
 
 pub fn JS_LookupPropertyById(cx: *mut JSContext, obj: *mut JSObject, id: jsid, vp: *mut JSVal) -> JSBool;
 
-pub fn JS_LookupPropertyWithFlags(cx: *mut JSContext, obj: *mut JSObject, name: *c_char, flags: c_uint, vp: *mut JSVal) -> JSBool;
+pub fn JS_LookupPropertyWithFlags(cx: *mut JSContext, obj: *mut JSObject, name: *const c_char, flags: c_uint, vp: *mut JSVal) -> JSBool;
 
 pub fn JS_LookupPropertyWithFlagsById(cx: *mut JSContext, obj: *mut JSObject, id: jsid, flags: c_uint, objp: *mut *mut JSObject, vp: *mut JSVal) -> JSBool;
 
@@ -842,9 +842,9 @@ pub fn JS_GetPropertyDescriptorById(cx: *mut JSContext, obj: *mut JSObject, id: 
 
 pub fn JS_GetOwnPropertyDescriptor(cx: *mut JSContext, obj: *mut JSObject, id: jsid, vp: *mut JSVal) -> JSBool;
 
-pub fn JS_GetProperty(cx: *mut JSContext, obj: *mut JSObject, name: *c_char, vp: *mut JSVal) -> JSBool;
+pub fn JS_GetProperty(cx: *mut JSContext, obj: *mut JSObject, name: *const c_char, vp: *mut JSVal) -> JSBool;
 
-pub fn JS_GetPropertyDefault(cx: *mut JSContext, obj: *mut JSObject, name: *c_char, def: JSVal, vp: *mut JSVal) -> JSBool;
+pub fn JS_GetPropertyDefault(cx: *mut JSContext, obj: *mut JSObject, name: *const c_char, def: JSVal, vp: *mut JSVal) -> JSBool;
 
 pub fn JS_GetPropertyById(cx: *mut JSContext, obj: *mut JSObject, id: jsid, vp: *mut JSVal) -> JSBool;
 
@@ -854,41 +854,41 @@ pub fn JS_ForwardGetPropertyTo(cx: *mut JSContext, obj: *mut JSObject, id: jsid,
 
 pub fn JS_GetMethodById(cx: *mut JSContext, obj: *mut JSObject, id: jsid, objp: *mut *mut JSObject, vp: *mut JSVal) -> JSBool;
 
-pub fn JS_GetMethod(cx: *mut JSContext, obj: *mut JSObject, name: *c_char, objp: *mut *mut JSObject, vp: *mut JSVal) -> JSBool;
+pub fn JS_GetMethod(cx: *mut JSContext, obj: *mut JSObject, name: *const c_char, objp: *mut *mut JSObject, vp: *mut JSVal) -> JSBool;
 
-pub fn JS_SetProperty(cx: *mut JSContext, obj: *mut JSObject, name: *c_char, vp: *mut JSVal) -> JSBool;
+pub fn JS_SetProperty(cx: *mut JSContext, obj: *mut JSObject, name: *const c_char, vp: *mut JSVal) -> JSBool;
 
 pub fn JS_SetPropertyById(cx: *mut JSContext, obj: *mut JSObject, id: jsid, vp: *mut JSVal) -> JSBool;
 
-pub fn JS_DeleteProperty(cx: *mut JSContext, obj: *mut JSObject, name: *c_char) -> JSBool;
+pub fn JS_DeleteProperty(cx: *mut JSContext, obj: *mut JSObject, name: *const c_char) -> JSBool;
 
-pub fn JS_DeleteProperty2(cx: *mut JSContext, obj: *mut JSObject, name: *c_char, rval: *mut JSVal) -> JSBool;
+pub fn JS_DeleteProperty2(cx: *mut JSContext, obj: *mut JSObject, name: *const c_char, rval: *mut JSVal) -> JSBool;
 
 pub fn JS_DeletePropertyById(cx: *mut JSContext, obj: *mut JSObject, id: jsid) -> JSBool;
 
 pub fn JS_DeletePropertyById2(cx: *mut JSContext, obj: *mut JSObject, id: jsid, rval: *mut JSVal) -> JSBool;
 
-pub fn JS_DefineUCProperty(cx: *mut JSContext, obj: *mut JSObject, name: *jschar, namelen: size_t, value: JSVal, getter: JSPropertyOp, setter: JSStrictPropertyOp, attrs: c_uint) -> JSBool;
+pub fn JS_DefineUCProperty(cx: *mut JSContext, obj: *mut JSObject, name: *const jschar, namelen: size_t, value: JSVal, getter: JSPropertyOp, setter: JSStrictPropertyOp, attrs: c_uint) -> JSBool;
 
-pub fn JS_GetUCPropertyAttributes(cx: *mut JSContext, obj: *mut JSObject, name: *jschar, namelen: size_t, attrsp: *mut c_uint, foundp: *mut JSBool) -> JSBool;
+pub fn JS_GetUCPropertyAttributes(cx: *mut JSContext, obj: *mut JSObject, name: *const jschar, namelen: size_t, attrsp: *mut c_uint, foundp: *mut JSBool) -> JSBool;
 
-pub fn JS_GetUCPropertyAttrsGetterAndSetter(cx: *mut JSContext, obj: *mut JSObject, name: *jschar, namelen: size_t, attrsp: *mut c_uint, foundp: *mut JSBool, getterp: *mut JSPropertyOp, setterp: *mut JSStrictPropertyOp) -> JSBool;
+pub fn JS_GetUCPropertyAttrsGetterAndSetter(cx: *mut JSContext, obj: *mut JSObject, name: *const jschar, namelen: size_t, attrsp: *mut c_uint, foundp: *mut JSBool, getterp: *mut JSPropertyOp, setterp: *mut JSStrictPropertyOp) -> JSBool;
 
-pub fn JS_SetUCPropertyAttributes(cx: *mut JSContext, obj: *mut JSObject, name: *jschar, namelen: size_t, attrs: c_uint, foundp: *mut JSBool) -> JSBool;
+pub fn JS_SetUCPropertyAttributes(cx: *mut JSContext, obj: *mut JSObject, name: *const jschar, namelen: size_t, attrs: c_uint, foundp: *mut JSBool) -> JSBool;
 
-pub fn JS_DefineUCPropertyWithTinyId(cx: *mut JSContext, obj: *mut JSObject, name: *jschar, namelen: size_t, tinyid: int8_t, value: JSVal, getter: JSPropertyOp, setter: JSStrictPropertyOp, attrs: c_uint) -> JSBool;
+pub fn JS_DefineUCPropertyWithTinyId(cx: *mut JSContext, obj: *mut JSObject, name: *const jschar, namelen: size_t, tinyid: int8_t, value: JSVal, getter: JSPropertyOp, setter: JSStrictPropertyOp, attrs: c_uint) -> JSBool;
 
-pub fn JS_AlreadyHasOwnUCProperty(cx: *mut JSContext, obj: *mut JSObject, name: *jschar, namelen: size_t, foundp: *mut JSBool) -> JSBool;
+pub fn JS_AlreadyHasOwnUCProperty(cx: *mut JSContext, obj: *mut JSObject, name: *const jschar, namelen: size_t, foundp: *mut JSBool) -> JSBool;
 
-pub fn JS_HasUCProperty(cx: *mut JSContext, obj: *mut JSObject, name: *jschar, namelen: size_t, vp: *mut JSBool) -> JSBool;
+pub fn JS_HasUCProperty(cx: *mut JSContext, obj: *mut JSObject, name: *const jschar, namelen: size_t, vp: *mut JSBool) -> JSBool;
 
-pub fn JS_LookupUCProperty(cx: *mut JSContext, obj: *mut JSObject, name: *jschar, namelen: size_t, vp: *mut JSVal) -> JSBool;
+pub fn JS_LookupUCProperty(cx: *mut JSContext, obj: *mut JSObject, name: *const jschar, namelen: size_t, vp: *mut JSVal) -> JSBool;
 
-pub fn JS_GetUCProperty(cx: *mut JSContext, obj: *mut JSObject, name: *jschar, namelen: size_t, vp: *mut JSVal) -> JSBool;
+pub fn JS_GetUCProperty(cx: *mut JSContext, obj: *mut JSObject, name: *const jschar, namelen: size_t, vp: *mut JSVal) -> JSBool;
 
-pub fn JS_SetUCProperty(cx: *mut JSContext, obj: *mut JSObject, name: *jschar, namelen: size_t, vp: *mut JSVal) -> JSBool;
+pub fn JS_SetUCProperty(cx: *mut JSContext, obj: *mut JSObject, name: *const jschar, namelen: size_t, vp: *mut JSVal) -> JSBool;
 
-pub fn JS_DeleteUCProperty2(cx: *mut JSContext, obj: *mut JSObject, name: *jschar, namelen: size_t, rval: *mut JSVal) -> JSBool;
+pub fn JS_DeleteUCProperty2(cx: *mut JSContext, obj: *mut JSObject, name: *const jschar, namelen: size_t, rval: *mut JSVal) -> JSBool;
 
 pub fn JS_NewArrayObject(cx: *mut JSContext, length: c_int, vector: *mut JSVal) -> *mut JSObject;
 
@@ -938,15 +938,15 @@ pub fn JS_HoldPrincipals(principals: *mut JSPrincipals);
 
 pub fn JS_DropPrincipals(rt: *mut JSRuntime, principals: *mut JSPrincipals);
 
-pub fn JS_SetSecurityCallbacks(rt: *mut JSRuntime, callbacks: *JSSecurityCallbacks);
+pub fn JS_SetSecurityCallbacks(rt: *mut JSRuntime, callbacks: *const JSSecurityCallbacks);
 
-pub fn JS_GetSecurityCallbacks(rt: *mut JSRuntime) -> *JSSecurityCallbacks;
+pub fn JS_GetSecurityCallbacks(rt: *mut JSRuntime) -> *const JSSecurityCallbacks;
 
 pub fn JS_SetTrustedPrincipals(rt: *mut JSRuntime, prin: *mut JSPrincipals);
 
 pub fn JS_InitDestroyPrincipalsCallback(rt: *mut JSRuntime, destroyPrincipals: JSDestroyPrincipalsOp);
 
-pub fn JS_NewFunction(cx: *mut JSContext, call: JSNative, nargs: c_uint, flags: c_uint, parent: *mut JSObject, name: *c_char) -> *mut JSFunction;
+pub fn JS_NewFunction(cx: *mut JSContext, call: JSNative, nargs: c_uint, flags: c_uint, parent: *mut JSObject, name: *const c_char) -> *mut JSFunction;
 
 pub fn JS_NewFunctionById(cx: *mut JSContext, call: JSNative, nargs: c_uint, flags: c_uint, parent: *mut JSObject, id: jsid) -> *mut JSFunction;
 
@@ -968,53 +968,53 @@ pub fn JS_IsNativeFunction(funobj: JSRawObject, call: JSNative) -> JSBool;
 
 pub fn JS_BindCallable(cx: *mut JSContext, callable: *mut JSObject, newThis: JSRawObject) -> *mut JSObject;
 
-pub fn JS_DefineFunctions(cx: *mut JSContext, obj: *mut JSObject, fs: *JSFunctionSpec) -> JSBool;
+pub fn JS_DefineFunctions(cx: *mut JSContext, obj: *mut JSObject, fs: *const JSFunctionSpec) -> JSBool;
 
-pub fn JS_DefineFunction(cx: *mut JSContext, obj: *mut JSObject, name: *c_char, call: JSNative, nargs: c_uint, attrs: c_uint) -> *mut JSFunction;
+pub fn JS_DefineFunction(cx: *mut JSContext, obj: *mut JSObject, name: *const c_char, call: JSNative, nargs: c_uint, attrs: c_uint) -> *mut JSFunction;
 
-pub fn JS_DefineUCFunction(cx: *mut JSContext, obj: *mut JSObject, name: *jschar, namelen: size_t, call: JSNative, nargs: c_uint, attrs: c_uint) -> *mut JSFunction;
+pub fn JS_DefineUCFunction(cx: *mut JSContext, obj: *mut JSObject, name: *const jschar, namelen: size_t, call: JSNative, nargs: c_uint, attrs: c_uint) -> *mut JSFunction;
 
 pub fn JS_DefineFunctionById(cx: *mut JSContext, obj: *mut JSObject, id: jsid, call: JSNative, nargs: c_uint, attrs: c_uint) -> *mut JSFunction;
 
 pub fn JS_CloneFunctionObject(cx: *mut JSContext, funobj: *mut JSObject, parent: JSRawObject) -> *mut JSObject;
 
-pub fn JS_BufferIsCompilableUnit(cx: *mut JSContext, bytes_are_utf8: JSBool, obj: *mut JSObject, bytes: *c_char, length: size_t) -> JSBool;
+pub fn JS_BufferIsCompilableUnit(cx: *mut JSContext, bytes_are_utf8: JSBool, obj: *mut JSObject, bytes: *const c_char, length: size_t) -> JSBool;
 
-pub fn JS_CompileScript(cx: *mut JSContext, obj: *mut JSObject, bytes: *c_char, length: size_t, filename: *c_char, lineno: c_uint) -> *mut JSScript;
+pub fn JS_CompileScript(cx: *mut JSContext, obj: *mut JSObject, bytes: *const c_char, length: size_t, filename: *const c_char, lineno: c_uint) -> *mut JSScript;
 
-pub fn JS_CompileScriptForPrincipals(cx: *mut JSContext, obj: *mut JSObject, principals: *mut JSPrincipals, bytes: *c_char, length: size_t, filename: *c_char, lineno: c_uint) -> *mut JSScript;
+pub fn JS_CompileScriptForPrincipals(cx: *mut JSContext, obj: *mut JSObject, principals: *mut JSPrincipals, bytes: *const c_char, length: size_t, filename: *const c_char, lineno: c_uint) -> *mut JSScript;
 
-pub fn JS_CompileScriptForPrincipalsVersion(cx: *mut JSContext, obj: *mut JSObject, principals: *mut JSPrincipals, bytes: *c_char, length: size_t, filename: *c_char, lineno: c_uint, version: JSVersion) -> *mut JSScript;
+pub fn JS_CompileScriptForPrincipalsVersion(cx: *mut JSContext, obj: *mut JSObject, principals: *mut JSPrincipals, bytes: *const c_char, length: size_t, filename: *const c_char, lineno: c_uint, version: JSVersion) -> *mut JSScript;
 
-pub fn JS_CompileUCScript(cx: *mut JSContext, obj: *mut JSObject, chars: *jschar, length: size_t, filename: *c_char, lineno: c_uint) -> *mut JSScript;
+pub fn JS_CompileUCScript(cx: *mut JSContext, obj: *mut JSObject, chars: *const jschar, length: size_t, filename: *const c_char, lineno: c_uint) -> *mut JSScript;
 
-pub fn JS_CompileUCScriptForPrincipals(cx: *mut JSContext, obj: *mut JSObject, principals: *mut JSPrincipals, chars: *jschar, length: size_t, filename: *c_char, lineno: c_uint) -> *mut JSScript;
+pub fn JS_CompileUCScriptForPrincipals(cx: *mut JSContext, obj: *mut JSObject, principals: *mut JSPrincipals, chars: *const jschar, length: size_t, filename: *const c_char, lineno: c_uint) -> *mut JSScript;
 
-pub fn JS_CompileUCScriptForPrincipalsVersion(cx: *mut JSContext, obj: *mut JSObject, principals: *mut JSPrincipals, chars: *jschar, length: size_t, filename: *c_char, lineno: c_uint, version: JSVersion) -> *mut JSScript;
+pub fn JS_CompileUCScriptForPrincipalsVersion(cx: *mut JSContext, obj: *mut JSObject, principals: *mut JSPrincipals, chars: *const jschar, length: size_t, filename: *const c_char, lineno: c_uint, version: JSVersion) -> *mut JSScript;
 
-pub fn JS_CompileUCScriptForPrincipalsVersionOrigin(cx: *mut JSContext, obj: *mut JSObject, principals: *mut JSPrincipals, originPrincipals: *mut JSPrincipals, chars: *jschar, length: size_t, filename: *c_char, lineno: c_uint, version: JSVersion) -> *mut JSScript;
+pub fn JS_CompileUCScriptForPrincipalsVersionOrigin(cx: *mut JSContext, obj: *mut JSObject, principals: *mut JSPrincipals, originPrincipals: *mut JSPrincipals, chars: *const jschar, length: size_t, filename: *const c_char, lineno: c_uint, version: JSVersion) -> *mut JSScript;
 
-pub fn JS_CompileUTF8File(cx: *mut JSContext, obj: *mut JSObject, filename: *c_char) -> *mut JSScript;
+pub fn JS_CompileUTF8File(cx: *mut JSContext, obj: *mut JSObject, filename: *const c_char) -> *mut JSScript;
 
-pub fn JS_CompileUTF8FileHandle(cx: *mut JSContext, obj: *mut JSObject, filename: *c_char, fh: *mut FILE) -> *mut JSScript;
+pub fn JS_CompileUTF8FileHandle(cx: *mut JSContext, obj: *mut JSObject, filename: *const c_char, fh: *mut FILE) -> *mut JSScript;
 
-pub fn JS_CompileUTF8FileHandleForPrincipals(cx: *mut JSContext, obj: *mut JSObject, filename: *c_char, fh: *mut FILE, principals: *mut JSPrincipals) -> *mut JSScript;
+pub fn JS_CompileUTF8FileHandleForPrincipals(cx: *mut JSContext, obj: *mut JSObject, filename: *const c_char, fh: *mut FILE, principals: *mut JSPrincipals) -> *mut JSScript;
 
-pub fn JS_CompileUTF8FileHandleForPrincipalsVersion(cx: *mut JSContext, obj: *mut JSObject, filename: *c_char, fh: *mut FILE, principals: *mut JSPrincipals, version: JSVersion) -> *mut JSScript;
+pub fn JS_CompileUTF8FileHandleForPrincipalsVersion(cx: *mut JSContext, obj: *mut JSObject, filename: *const c_char, fh: *mut FILE, principals: *mut JSPrincipals, version: JSVersion) -> *mut JSScript;
 
 pub fn JS_GetGlobalFromScript(script: *mut JSScript) -> *mut JSObject;
 
-pub fn JS_CompileFunction(cx: *mut JSContext, obj: *mut JSObject, name: *c_char, nargs: c_uint, argnames: *mut *c_char, bytes: *c_char, length: size_t, filename: *c_char, lineno: c_uint) -> *mut JSFunction;
+pub fn JS_CompileFunction(cx: *mut JSContext, obj: *mut JSObject, name: *const c_char, nargs: c_uint, argnames: *mut *const c_char, bytes: *const c_char, length: size_t, filename: *const c_char, lineno: c_uint) -> *mut JSFunction;
 
-pub fn JS_CompileFunctionForPrincipals(cx: *mut JSContext, obj: *mut JSObject, principals: *mut JSPrincipals, name: *c_char, nargs: c_uint, argnames: *mut *c_char, bytes: *c_char, length: size_t, filename: *c_char, lineno: c_uint) -> *mut JSFunction;
+pub fn JS_CompileFunctionForPrincipals(cx: *mut JSContext, obj: *mut JSObject, principals: *mut JSPrincipals, name: *const c_char, nargs: c_uint, argnames: *mut *const c_char, bytes: *const c_char, length: size_t, filename: *const c_char, lineno: c_uint) -> *mut JSFunction;
 
-pub fn JS_CompileUCFunction(cx: *mut JSContext, obj: *mut JSObject, name: *c_char, nargs: c_uint, argnames: *mut *c_char, chars: *jschar, length: size_t, filename: *c_char, lineno: c_uint) -> *mut JSFunction;
+pub fn JS_CompileUCFunction(cx: *mut JSContext, obj: *mut JSObject, name: *const c_char, nargs: c_uint, argnames: *mut *const c_char, chars: *const jschar, length: size_t, filename: *const c_char, lineno: c_uint) -> *mut JSFunction;
 
-pub fn JS_CompileUCFunctionForPrincipals(cx: *mut JSContext, obj: *mut JSObject, principals: *mut JSPrincipals, name: *c_char, nargs: c_uint, argnames: *mut *c_char, chars: *jschar, length: size_t, filename: *c_char, lineno: c_uint) -> *mut JSFunction;
+pub fn JS_CompileUCFunctionForPrincipals(cx: *mut JSContext, obj: *mut JSObject, principals: *mut JSPrincipals, name: *const c_char, nargs: c_uint, argnames: *mut *const c_char, chars: *const jschar, length: size_t, filename: *const c_char, lineno: c_uint) -> *mut JSFunction;
 
-pub fn JS_CompileUCFunctionForPrincipalsVersion(cx: *mut JSContext, obj: *mut JSObject, principals: *mut JSPrincipals, name: *c_char, nargs: c_uint, argnames: *mut *c_char, chars: *jschar, length: size_t, filename: *c_char, lineno: c_uint, version: JSVersion) -> *mut JSFunction;
+pub fn JS_CompileUCFunctionForPrincipalsVersion(cx: *mut JSContext, obj: *mut JSObject, principals: *mut JSPrincipals, name: *const c_char, nargs: c_uint, argnames: *mut *const c_char, chars: *const jschar, length: size_t, filename: *const c_char, lineno: c_uint, version: JSVersion) -> *mut JSFunction;
 
-pub fn JS_DecompileScript(cx: *mut JSContext, script: *mut JSScript, name: *c_char, indent: c_uint) -> *mut JSString;
+pub fn JS_DecompileScript(cx: *mut JSContext, script: *mut JSScript, name: *const c_char, indent: c_uint) -> *mut JSString;
 
 pub fn JS_DecompileFunction(cx: *mut JSContext, fun: *mut JSFunction, indent: c_uint) -> *mut JSString;
 
@@ -1024,23 +1024,23 @@ pub fn JS_ExecuteScript(cx: *mut JSContext, obj: *mut JSObject, script: *mut JSS
 
 pub fn JS_ExecuteScriptVersion(cx: *mut JSContext, obj: *mut JSObject, script: *mut JSScript, rval: *mut JSVal, version: JSVersion) -> JSBool;
 
-pub fn JS_EvaluateScript(cx: *mut JSContext, obj: *mut JSObject, bytes: *c_char, length: c_uint, filename: *c_char, lineno: c_uint, rval: *mut JSVal) -> JSBool;
+pub fn JS_EvaluateScript(cx: *mut JSContext, obj: *mut JSObject, bytes: *const c_char, length: c_uint, filename: *const c_char, lineno: c_uint, rval: *mut JSVal) -> JSBool;
 
-pub fn JS_EvaluateScriptForPrincipals(cx: *mut JSContext, obj: *mut JSObject, principals: *mut JSPrincipals, bytes: *c_char, length: c_uint, filename: *c_char, lineno: c_uint, rval: *mut JSVal) -> JSBool;
+pub fn JS_EvaluateScriptForPrincipals(cx: *mut JSContext, obj: *mut JSObject, principals: *mut JSPrincipals, bytes: *const c_char, length: c_uint, filename: *const c_char, lineno: c_uint, rval: *mut JSVal) -> JSBool;
 
-pub fn JS_EvaluateScriptForPrincipalsVersion(cx: *mut JSContext, obj: *mut JSObject, principals: *mut JSPrincipals, bytes: *c_char, length: c_uint, filename: *c_char, lineno: c_uint, rval: *mut JSVal, version: JSVersion) -> JSBool;
+pub fn JS_EvaluateScriptForPrincipalsVersion(cx: *mut JSContext, obj: *mut JSObject, principals: *mut JSPrincipals, bytes: *const c_char, length: c_uint, filename: *const c_char, lineno: c_uint, rval: *mut JSVal, version: JSVersion) -> JSBool;
 
-pub fn JS_EvaluateUCScript(cx: *mut JSContext, obj: *mut JSObject, chars: *jschar, length: c_uint, filename: *c_char, lineno: c_uint, rval: *mut JSVal) -> JSBool;
+pub fn JS_EvaluateUCScript(cx: *mut JSContext, obj: *mut JSObject, chars: *const jschar, length: c_uint, filename: *const c_char, lineno: c_uint, rval: *mut JSVal) -> JSBool;
 
-pub fn JS_EvaluateUCScriptForPrincipals(cx: *mut JSContext, obj: *mut JSObject, principals: *mut JSPrincipals, chars: *jschar, length: c_uint, filename: *c_char, lineno: c_uint, rval: *mut JSVal) -> JSBool;
+pub fn JS_EvaluateUCScriptForPrincipals(cx: *mut JSContext, obj: *mut JSObject, principals: *mut JSPrincipals, chars: *const jschar, length: c_uint, filename: *const c_char, lineno: c_uint, rval: *mut JSVal) -> JSBool;
 
-pub fn JS_EvaluateUCScriptForPrincipalsVersion(cx: *mut JSContext, obj: *mut JSObject, principals: *mut JSPrincipals, chars: *jschar, length: c_uint, filename: *c_char, lineno: c_uint, rval: *mut JSVal, version: JSVersion) -> JSBool;
+pub fn JS_EvaluateUCScriptForPrincipalsVersion(cx: *mut JSContext, obj: *mut JSObject, principals: *mut JSPrincipals, chars: *const jschar, length: c_uint, filename: *const c_char, lineno: c_uint, rval: *mut JSVal, version: JSVersion) -> JSBool;
 
-pub fn JS_EvaluateUCScriptForPrincipalsVersionOrigin(cx: *mut JSContext, obj: *mut JSObject, principals: *mut JSPrincipals, originPrincipals: *mut JSPrincipals, chars: *jschar, length: c_uint, filename: *c_char, lineno: c_uint, rval: *mut JSVal, version: JSVersion) -> JSBool;
+pub fn JS_EvaluateUCScriptForPrincipalsVersionOrigin(cx: *mut JSContext, obj: *mut JSObject, principals: *mut JSPrincipals, originPrincipals: *mut JSPrincipals, chars: *const jschar, length: c_uint, filename: *const c_char, lineno: c_uint, rval: *mut JSVal, version: JSVersion) -> JSBool;
 
 pub fn JS_CallFunction(cx: *mut JSContext, obj: *mut JSObject, fun: *mut JSFunction, argc: c_uint, argv: *mut JSVal, rval: *mut JSVal) -> JSBool;
 
-pub fn JS_CallFunctionName(cx: *mut JSContext, obj: *mut JSObject, name: *c_char, argc: c_uint, argv: *mut JSVal, rval: *mut JSVal) -> JSBool;
+pub fn JS_CallFunctionName(cx: *mut JSContext, obj: *mut JSObject, name: *const c_char, argc: c_uint, argv: *mut JSVal, rval: *mut JSVal) -> JSBool;
 
 pub fn JS_CallFunctionValue(cx: *mut JSContext, obj: *mut JSObject, fval: JSVal, argc: c_uint, argv: *mut JSVal, rval: *mut JSVal) -> JSBool;
 
@@ -1056,29 +1056,29 @@ pub fn JS_SaveFrameChain(cx: *mut JSContext) -> JSBool;
 
 pub fn JS_RestoreFrameChain(cx: *mut JSContext);
 
-pub fn JS_NewStringCopyN(cx: *mut JSContext, s: *c_char, n: size_t) -> *mut JSString;
+pub fn JS_NewStringCopyN(cx: *mut JSContext, s: *const c_char, n: size_t) -> *mut JSString;
 
-pub fn JS_NewStringCopyZ(cx: *mut JSContext, s: *c_char) -> *mut JSString;
+pub fn JS_NewStringCopyZ(cx: *mut JSContext, s: *const c_char) -> *mut JSString;
 
 pub fn JS_InternJSString(cx: *mut JSContext, str: *mut JSString) -> *mut JSString;
 
-pub fn JS_InternStringN(cx: *mut JSContext, s: *c_char, length: size_t) -> *mut JSString;
+pub fn JS_InternStringN(cx: *mut JSContext, s: *const c_char, length: size_t) -> *mut JSString;
 
-pub fn JS_InternString(cx: *mut JSContext, s: *c_char) -> *mut JSString;
+pub fn JS_InternString(cx: *mut JSContext, s: *const c_char) -> *mut JSString;
 
 pub fn JS_NewUCString(cx: *mut JSContext, chars: *mut jschar, length: size_t) -> *mut JSString;
 
-pub fn JS_NewUCStringCopyN(cx: *mut JSContext, s: *jschar, n: size_t) -> *mut JSString;
+pub fn JS_NewUCStringCopyN(cx: *mut JSContext, s: *const jschar, n: size_t) -> *mut JSString;
 
-pub fn JS_NewUCStringCopyZ(cx: *mut JSContext, s: *jschar) -> *mut JSString;
+pub fn JS_NewUCStringCopyZ(cx: *mut JSContext, s: *const jschar) -> *mut JSString;
 
-pub fn JS_InternUCStringN(cx: *mut JSContext, s: *jschar, length: size_t) -> *mut JSString;
+pub fn JS_InternUCStringN(cx: *mut JSContext, s: *const jschar, length: size_t) -> *mut JSString;
 
-pub fn JS_InternUCString(cx: *mut JSContext, s: *jschar) -> *mut JSString;
+pub fn JS_InternUCString(cx: *mut JSContext, s: *const jschar) -> *mut JSString;
 
 pub fn JS_CompareStrings(cx: *mut JSContext, str1: *mut JSString, str2: *mut JSString, result: *mut int32_t) -> JSBool;
 
-pub fn JS_StringEqualsAscii(cx: *mut JSContext, str: *mut JSString, asciiBytes: *c_char, _match: *mut JSBool) -> JSBool;
+pub fn JS_StringEqualsAscii(cx: *mut JSContext, str: *mut JSString, asciiBytes: *const c_char, _match: *mut JSBool) -> JSBool;
 
 pub fn JS_PutEscapedString(cx: *mut JSContext, buffer: *mut c_char, size: size_t, str: *mut JSString, quote: c_char) -> size_t;
 
@@ -1086,21 +1086,21 @@ pub fn JS_FileEscapedString(fp: *mut FILE, str: *mut JSString, quote: c_char) ->
 
 pub fn JS_GetStringLength(str: *mut JSString) -> size_t;
 
-pub fn JS_GetStringCharsAndLength(cx: *mut JSContext, str: *mut JSString, length: *mut size_t) -> *jschar;
+pub fn JS_GetStringCharsAndLength(cx: *mut JSContext, str: *mut JSString, length: *mut size_t) -> *const jschar;
 
-pub fn JS_GetInternedStringChars(str: *mut JSString) -> *jschar;
+pub fn JS_GetInternedStringChars(str: *mut JSString) -> *const jschar;
 
-pub fn JS_GetInternedStringCharsAndLength(str: *mut JSString, length: *mut size_t) -> *jschar;
+pub fn JS_GetInternedStringCharsAndLength(str: *mut JSString, length: *mut size_t) -> *const jschar;
 
-pub fn JS_GetStringCharsZ(cx: *mut JSContext, str: *mut JSString) -> *jschar;
+pub fn JS_GetStringCharsZ(cx: *mut JSContext, str: *mut JSString) -> *const jschar;
 
-pub fn JS_GetStringCharsZAndLength(cx: *mut JSContext, str: *mut JSString, length: *mut size_t) -> *jschar;
+pub fn JS_GetStringCharsZAndLength(cx: *mut JSContext, str: *mut JSString, length: *mut size_t) -> *const jschar;
 
 pub fn JS_FlattenString(cx: *mut JSContext, str: *mut JSString) -> *mut JSFlatString;
 
-pub fn JS_GetFlatStringChars(str: *mut JSFlatString) -> *jschar;
+pub fn JS_GetFlatStringChars(str: *mut JSFlatString) -> *const jschar;
 
-pub fn JS_FlatStringEqualsAscii(str: *mut JSFlatString, asciiBytes: *c_char) -> JSBool;
+pub fn JS_FlatStringEqualsAscii(str: *mut JSFlatString, asciiBytes: *const c_char) -> JSBool;
 
 pub fn JS_PutEscapedFlatString(buffer: *mut c_char, size: size_t, str: *mut JSFlatString, quote: c_char) -> size_t;
 
@@ -1110,7 +1110,7 @@ pub fn JS_NewDependentString(cx: *mut JSContext, str: *mut JSString, start: size
 
 pub fn JS_ConcatStrings(cx: *mut JSContext, left: *mut JSString, right: *mut JSString) -> *mut JSString;
 
-pub fn JS_UndependString(cx: *mut JSContext, str: *mut JSString) -> *jschar;
+pub fn JS_UndependString(cx: *mut JSContext, str: *mut JSString) -> *const jschar;
 
 pub fn JS_MakeStringImmutable(cx: *mut JSContext, str: *mut JSString) -> JSBool;
 
@@ -1118,11 +1118,11 @@ pub fn JS_CStringsAreUTF8() -> JSBool;
 
 pub fn JS_SetCStringsAreUTF8();
 
-pub fn JS_EncodeCharacters(cx: *mut JSContext, src: *jschar, srclen: size_t, dst: *mut c_char, dstlenp: *mut size_t) -> JSBool;
+pub fn JS_EncodeCharacters(cx: *mut JSContext, src: *const jschar, srclen: size_t, dst: *mut c_char, dstlenp: *mut size_t) -> JSBool;
 
-pub fn JS_DecodeBytes(cx: *mut JSContext, src: *c_char, srclen: size_t, dst: *mut jschar, dstlenp: *mut size_t) -> JSBool;
+pub fn JS_DecodeBytes(cx: *mut JSContext, src: *const c_char, srclen: size_t, dst: *mut jschar, dstlenp: *mut size_t) -> JSBool;
 
-pub fn JS_DecodeUTF8(cx: *mut JSContext, src: *c_char, srclen: size_t, dst: *mut jschar, dstlenp: *mut size_t) -> JSBool;
+pub fn JS_DecodeUTF8(cx: *mut JSContext, src: *const c_char, srclen: size_t, dst: *mut jschar, dstlenp: *mut size_t) -> JSBool;
 
 pub fn JS_EncodeString(cx: *mut JSContext, str: *mut JSString) -> *mut c_char;
 
@@ -1132,17 +1132,17 @@ pub fn JS_EncodeStringToBuffer(str: *mut JSString, buffer: *mut c_char, length: 
 
 pub fn JS_Stringify(cx: *mut JSContext, vp: *mut JSVal, replacer: *mut JSObject, space: JSVal, callback: JSONWriteCallback, data: *mut c_void) -> JSBool;
 
-pub fn JS_ParseJSON(cx: *mut JSContext, chars: *jschar, len: uint32_t, vp: *mut JSVal) -> JSBool;
+pub fn JS_ParseJSON(cx: *mut JSContext, chars: *const jschar, len: uint32_t, vp: *mut JSVal) -> JSBool;
 
-pub fn JS_ParseJSONWithReviver(cx: *mut JSContext, chars: *jschar, len: uint32_t, reviver: JSVal, vp: *mut JSVal) -> JSBool;
+pub fn JS_ParseJSONWithReviver(cx: *mut JSContext, chars: *const jschar, len: uint32_t, reviver: JSVal, vp: *mut JSVal) -> JSBool;
 
-pub fn JS_ReadStructuredClone(cx: *mut JSContext, data: *uint64_t, nbytes: size_t, version: uint32_t, vp: *mut JSVal, optionalCallbacks: *JSStructuredCloneCallbacks, closure: *mut c_void) -> JSBool;
+pub fn JS_ReadStructuredClone(cx: *mut JSContext, data: *const uint64_t, nbytes: size_t, version: uint32_t, vp: *mut JSVal, optionalCallbacks: *const JSStructuredCloneCallbacks, closure: *mut c_void) -> JSBool;
 
-pub fn JS_WriteStructuredClone(cx: *mut JSContext, v: JSVal, datap: *mut *mut uint64_t, nbytesp: *mut size_t, optionalCallbacks: *JSStructuredCloneCallbacks, closure: *mut c_void) -> JSBool;
+pub fn JS_WriteStructuredClone(cx: *mut JSContext, v: JSVal, datap: *mut *mut uint64_t, nbytesp: *mut size_t, optionalCallbacks: *const JSStructuredCloneCallbacks, closure: *mut c_void) -> JSBool;
 
-pub fn JS_StructuredClone(cx: *mut JSContext, v: JSVal, vp: *mut JSVal, optionalCallbacks: *JSStructuredCloneCallbacks, closure: *mut c_void) -> JSBool;
+pub fn JS_StructuredClone(cx: *mut JSContext, v: JSVal, vp: *mut JSVal, optionalCallbacks: *const JSStructuredCloneCallbacks, closure: *mut c_void) -> JSBool;
 
-pub fn JS_SetStructuredCloneCallbacks(rt: *mut JSRuntime, callbacks: *JSStructuredCloneCallbacks);
+pub fn JS_SetStructuredCloneCallbacks(rt: *mut JSRuntime, callbacks: *const JSStructuredCloneCallbacks);
 
 pub fn JS_ReadUint32Pair(r: *mut JSStructuredCloneReader, p1: *mut uint32_t, p2: *mut uint32_t) -> JSBool;
 
@@ -1152,7 +1152,7 @@ pub fn JS_ReadTypedArray(r: *mut JSStructuredCloneReader, vp: *mut JSVal) -> JSB
 
 pub fn JS_WriteUint32Pair(w: *mut JSStructuredCloneWriter, tag: uint32_t, data: uint32_t) -> JSBool;
 
-pub fn JS_WriteBytes(w: *mut JSStructuredCloneWriter, p: *c_void, len: size_t) -> JSBool;
+pub fn JS_WriteBytes(w: *mut JSStructuredCloneWriter, p: *const c_void, len: size_t) -> JSBool;
 
 pub fn JS_WriteTypedArray(w: *mut JSStructuredCloneWriter, v: JSVal) -> JSBool;
 
@@ -1160,13 +1160,13 @@ pub fn JS_SetLocaleCallbacks(cx: *mut JSContext, callbacks: *mut JSLocaleCallbac
 
 pub fn JS_GetLocaleCallbacks(cx: *mut JSContext) -> *mut JSLocaleCallbacks;
 
-pub fn JS_ReportError(cx: *mut JSContext, format: *c_char, ...);
+pub fn JS_ReportError(cx: *mut JSContext, format: *const c_char, ...);
 
 pub fn JS_ReportErrorNumber(cx: *mut JSContext, errorCallback: JSErrorCallback, userRef: *mut c_void, errorNumber: c_uint, ...);
 
 pub fn JS_ReportErrorNumberUC(cx: *mut JSContext, errorCallback: JSErrorCallback, userRef: *mut c_void, errorNumber: c_uint, ...);
 
-pub fn JS_ReportWarning(cx: *mut JSContext, format: *c_char, ...) -> JSBool;
+pub fn JS_ReportWarning(cx: *mut JSContext, format: *const c_char, ...) -> JSBool;
 
 pub fn JS_ReportErrorFlagsAndNumber(cx: *mut JSContext, flags: c_uint, errorCallback: JSErrorCallback, userRef: *mut c_void, errorNumber: c_uint, ...) -> JSBool;
 
@@ -1228,7 +1228,7 @@ pub fn JS_DropExceptionState(cx: *mut JSContext, state: *mut JSExceptionState);
 
 pub fn JS_ErrorFromException(cx: *mut JSContext, v: JSVal) -> *mut JSErrorReport;
 
-pub fn JS_ThrowReportedError(cx: *mut JSContext, message: *c_char, reportp: *mut JSErrorReport) -> JSBool;
+pub fn JS_ThrowReportedError(cx: *mut JSContext, message: *const c_char, reportp: *mut JSErrorReport) -> JSBool;
 
 pub fn JS_ThrowStopIteration(cx: *mut JSContext) -> JSBool;
 
@@ -1242,7 +1242,7 @@ pub fn JS_SetRuntimeThread(rt: *mut JSRuntime);
 
 pub fn JS_SetNativeStackBounds(rt: *mut JSRuntime, minValue: uintptr_t, maxValue: uintptr_t);
 
-pub fn JS_NewObjectForConstructor(cx: *mut JSContext, clasp: *JSClass, vp: *JSVal) -> *mut JSObject;
+pub fn JS_NewObjectForConstructor(cx: *mut JSContext, clasp: *mut JSClass, vp: *const JSVal) -> *mut JSObject;
 
 pub fn JS_IndexToId(cx: *mut JSContext, index: uint32_t, id: *mut jsid) -> JSBool;
 
@@ -1254,7 +1254,7 @@ pub fn JS_EncodeScript(cx: *mut JSContext, script: *mut JSScript, lengthp: *mut 
 
 pub fn JS_EncodeInterpretedFunction(cx: *mut JSContext, funobj: JSRawObject, lengthp: *mut uint32_t) -> *mut c_void;
 
-pub fn JS_DecodeScript(cx: *mut JSContext, data: *c_void, length: uint32_t, principals: *mut JSPrincipals, originPrincipals: *mut JSPrincipals) -> *mut JSScript;
+pub fn JS_DecodeScript(cx: *mut JSContext, data: *const c_void, length: uint32_t, principals: *mut JSPrincipals, originPrincipals: *mut JSPrincipals) -> *mut JSScript;
 
-pub fn JS_DecodeInterpretedFunction(cx: *mut JSContext, data: *c_void, length: uint32_t, principals: *mut JSPrincipals, originPrincipals: *mut JSPrincipals) -> *mut JSObject;
+pub fn JS_DecodeInterpretedFunction(cx: *mut JSContext, data: *const c_void, length: uint32_t, principals: *mut JSPrincipals, originPrincipals: *mut JSPrincipals) -> *mut JSObject;
 }
