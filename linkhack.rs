@@ -6,12 +6,14 @@
 
 #[cfg(target_os = "linux")]
 #[link(name = "pthread")]
+#[link(name = "nspr4")]
 #[link(name = "js_static")]
 #[link(name = "stdc++")]
 #[link(name = "z")]
 extern { }
 
 #[cfg(target_os = "macos")]
+#[link(name = "nspr4")]
 #[link(name = "js_static")]
 #[link(name = "stdc++")]
 #[link(name = "z")]
