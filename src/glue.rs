@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use jsapi::{JSContext, JSPropertyDescriptor, jschar};
+use jsapi::{JSContext, JSPropertyDescriptor, jschar, JSRuntime};
 use jsapi::{JSTracer, JSFunction, JSNative, JSErrorFormatString, JSFreeOp};
 use jsapi::{JSClass, JSString, JSObject, jsid, JSVersion, JSTraceOp};
 use jsapi::{Enum_OnNewGlobalHookOption, JSPrincipals, Enum_JSType, Struct_JSFreeOp};
@@ -200,4 +200,7 @@ pub fn proxy_Slice(cx: *mut JSContext, obj: JSHandleObject, begin: u32, end: u32
 pub fn objectNeedsPostBarrier(obj: *mut JSObject) -> int;
 pub fn objectPostBarrier(obj: *mut *mut JSObject);
 pub fn objectRelocate(obj: *mut *mut JSObject);
+
+pub fn getPersistentRootedObjectList(rt: *mut JSRuntime) -> *libc::c_void;
+pub fn insertObjectLinkedListElement(list: *libc::c_void, elem: *libc::c_void);
 }
