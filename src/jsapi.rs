@@ -107,7 +107,7 @@ pub type JSCallOnceType = Struct_PRCallOnceType;
 pub type JSInitCallback = ::std::option::Option<extern "C" fn() -> c_int>;
 pub type JSTraceDataOp =
     ::std::option::Option<extern "C" fn
-                              (arg1: *mut c_void, arg2: *mut c_void)>;
+                              (arg1: *mut JSTracer, arg2: *mut c_void)>; //jdm void->jstracer
 pub type Enum_JSValueType = c_uchar;
 pub static JSVAL_TYPE_DOUBLE: c_uchar = 0;
 pub static JSVAL_TYPE_INT32: c_uchar = 1;

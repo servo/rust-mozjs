@@ -196,4 +196,8 @@ pub fn proxy_Watch(cx: *mut JSContext, obj: JSHandleObject, id: JSHandleId,
 pub fn proxy_Unwatch(cx: *mut JSContext, obj: JSHandleObject, id: JSHandleId) -> bool;
 pub fn proxy_Slice(cx: *mut JSContext, obj: JSHandleObject, begin: u32, end: u32,
                    result: JSHandleObject) -> bool;
+
+pub fn objectNeedsPostBarrier(obj: *mut JSObject) -> int;
+pub fn objectPostBarrier(obj: *mut *mut JSObject);
+pub fn objectRelocate(obj: *mut *mut JSObject);
 }

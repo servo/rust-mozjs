@@ -855,4 +855,26 @@ proxy_Slice(JSContext *cx, JS::HandleObject proxy, uint32_t begin, uint32_t end,
     return js::proxy_Slice(cx, proxy, begin, end, result);
 }
 
+int
+objectNeedsPostBarrier(JSObject* obj)
+{
+    return js::GCMethods<JSObject*>::needsPostBarrier(obj);
+}
+
+void
+objectPostBarrier(JSObject** obj)
+{
+#ifdef JSGC_GENERATIONAL
+    return js::GCMethods<JSObject*>::postBarrier(obj);
+#endif
+}
+
+void
+objectRelocate(JSObject** obj)
+{
+#ifdef JSGC_GENERATIONAL
+    return js::GCMethods<JSObject*>::postBarrier(obj);
+#endif
+}
+
 } // extern "C"
