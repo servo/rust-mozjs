@@ -231,6 +231,16 @@ impl JSVal {
     }
 
     #[cfg(target_word_size = "64")]
+    pub fn is_boolean(&self) -> bool {
+        self.v == JSVAL_SHIFTED_TAG_BOOLEAN as u64
+    }
+
+    #[cfg(target_word_size = "32")]
+    pub fn is_boolean(&self) -> bool {
+        (self.v >> 32) == JSVAL_TAG_BOOLEAN as u64
+    }
+
+    #[cfg(target_word_size = "64")]
     pub fn is_double(&self) -> bool {
         self.v <= JSVAL_SHIFTED_TAG_MAX_DOUBLE as u64
     }
@@ -271,6 +281,17 @@ impl JSVal {
     #[cfg(target_word_size = "32")]
     pub fn is_object(&self) -> bool {
         (self.v >> 32) == JSVAL_TAG_OBJECT as u64
+    }
+
+    #[cfg(target_word_size = "64")]
+    pub fn to_boolean(&self) -> bool {
+        assert!(self.is_boolean());
+        (self.v & JSVAL_PAYLOAD_MASK) != 0
+    }
+
+    #[cfg(target_word_size = "32")]
+    pub fn to_boolean(&self) -> bool {
+        (self.v & 0x00000000FFFFFFFF) != 0
     }
 
     pub fn to_object(&self) -> *mut JSObject {
