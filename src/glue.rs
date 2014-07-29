@@ -197,9 +197,10 @@ pub fn proxy_Unwatch(cx: *mut JSContext, obj: JSHandleObject, id: JSHandleId) ->
 pub fn proxy_Slice(cx: *mut JSContext, obj: JSHandleObject, begin: u32, end: u32,
                    result: JSHandleObject) -> bool;
 
-pub fn objectNeedsPostBarrier(obj: *mut JSObject) -> int;
+pub fn objectNeedsPostBarrier(obj: *mut JSObject) -> bool;
 pub fn objectPostBarrier(obj: *mut *mut JSObject);
 pub fn objectRelocate(obj: *mut *mut JSObject);
+pub fn objectIsPoisoned(obj: *mut JSObject) -> bool;
 
 pub fn getPersistentRootedObjectList(rt: *mut JSRuntime) -> *libc::c_void;
 pub fn insertObjectLinkedListElement(list: *libc::c_void, elem: *libc::c_void);
