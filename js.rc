@@ -9,7 +9,7 @@
 
 #![feature(globs, link_args, managed_boxes, phase)]
 
-#![allow(non_uppercase_statics, non_camel_case_types)]
+#![allow(non_uppercase_statics, non_camel_case_types, non_snake_case_functions)]
 
 extern crate green;
 extern crate libc;
