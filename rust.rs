@@ -109,7 +109,7 @@ impl Cx {
         }
     }
 
-    pub fn set_error_reporter(&self, reportfn: unsafe extern "C" fn(*mut JSContext, *c_char, *mut JSErrorReport)) {
+    pub fn set_error_reporter(&self, reportfn: unsafe extern "C" fn(*mut JSContext, *const c_char, *mut JSErrorReport)) {
         unsafe {
             JS_SetErrorReporter(self.ptr, Some(reportfn));
         }
@@ -117,36 +117,35 @@ impl Cx {
 
     pub fn evaluate_script(&self, glob: *mut JSObject, script: String, filename: String, line_num: uint)
                     -> Result<(),()> {
-        let script_utf16 = script.to_utf16();
-        filename.to_c_str().with_ref(|filename_cstr| {
-            let mut rval: JSVal = NullValue();
-            debug!("Evaluating script from {:s} with content {}", filename, script);
-            // SpiderMonkey does not approve of null pointers.
-            let (ptr, len) = if script_utf16.len() == 0 {
-                static empty: &'static [u16] = &[];
-                (empty.as_ptr(), 0)
+        let script_utf16: Vec<u16> = script.as_slice().utf16_units().collect();
+        let filename_cstr = filename.to_c_str();
+        let mut rval: JSVal = NullValue();
+        debug!("Evaluating script from {:s} with content {}", filename, script);
+        // SpiderMonkey does not approve of null pointers.
+        let (ptr, len) = if script_utf16.len() == 0 {
+            static empty: &'static [u16] = &[];
+            (empty.as_ptr(), 0)
+        } else {
+            (script_utf16.as_ptr(), script_utf16.len() as c_uint)
+        };
+        assert!(ptr.is_not_null());
+        unsafe {
+            if ERR == JS_EvaluateUCScript(self.ptr, glob, ptr, len,
+                                          filename_cstr.as_ptr(), line_num as c_uint,
+                                          &mut rval) {
+                debug!("...err!");
+                Err(())
             } else {
-                (script_utf16.as_ptr(), script_utf16.len() as c_uint)
-            };
-            assert!(ptr.is_not_null());
-            unsafe {
-                if ERR == JS_EvaluateUCScript(self.ptr, glob, ptr, len,
-                                              filename_cstr, line_num as c_uint,
-                                              &mut rval) {
-                    debug!("...err!");
-                    Err(())
-                } else {
-                    // we could return the script result but then we'd have
-                    // to root it and so forth and, really, who cares?
-                    debug!("...ok!");
-                    Ok(())
-                }
+                // we could return the script result but then we'd have
+                // to root it and so forth and, really, who cares?
+                debug!("...ok!");
+                Ok(())
             }
-        })
+        }
     }
 }
 
-pub extern fn reportError(_cx: *mut JSContext, msg: *c_char, report: *mut JSErrorReport) {
+pub extern fn reportError(_cx: *mut JSContext, msg: *const c_char, report: *mut JSErrorReport) {
     unsafe {
         let fnptr = (*report).filename;
         let fname = if fnptr.is_not_null() {from_c_str(fnptr)} else {"none".to_string()};

@@ -2,14 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#![crate_id = "github.com/mozilla-servo/rust-mozjs#js:0.1"]
-#![crate_type = "lib"]
-#![crate_type = "dylib"]
+#![crate_name = "js"]
 #![crate_type = "rlib"]
 
-#![feature(globs, link_args, managed_boxes, phase)]
+#![feature(globs, link_args, managed_boxes, phase, unsafe_destructor)]
 
-#![allow(non_uppercase_statics, non_camel_case_types)]
+#![allow(non_uppercase_statics, non_camel_case_types, non_snake_case_functions)]
 
 extern crate green;
 extern crate libc;
@@ -50,8 +48,8 @@ pub mod jsfriendapi;
 pub static JSOPTION_STRICT: uint32_t =    0b00000000000001u32;
 pub static JSOPTION_WERROR: uint32_t =    0b00000000000010u32;
 pub static JSOPTION_VAROBJFIX: uint32_t = 0b00000000000100u32;
-pub static JSOPTION_METHODJIT: uint32_t = (1 << 14) as u32;
-pub static JSOPTION_TYPE_INFERENCE: uint32_t = (1 << 18) as u32;
+pub static JSOPTION_METHODJIT: uint32_t = (1u32 << 14) as u32;
+pub static JSOPTION_TYPE_INFERENCE: uint32_t = (1u32 << 18) as u32;
 
 pub static default_heapsize: u32 = 32_u32 * 1024_u32 * 1024_u32;
 pub static default_stacksize: uint = 8192u;
@@ -78,11 +76,11 @@ pub static JSPROP_NATIVE_ACCESSORS: c_uint = 0x08;
 
 pub static JSCLASS_RESERVED_SLOTS_SHIFT: c_uint = 8;
 pub static JSCLASS_RESERVED_SLOTS_WIDTH: c_uint = 8;
-pub static JSCLASS_RESERVED_SLOTS_MASK: c_uint = ((1 << JSCLASS_RESERVED_SLOTS_WIDTH) - 1);
+pub static JSCLASS_RESERVED_SLOTS_MASK: c_uint = ((1u << JSCLASS_RESERVED_SLOTS_WIDTH as uint) - 1) as c_uint;
 
 pub static JSCLASS_HIGH_FLAGS_SHIFT: c_uint =
     JSCLASS_RESERVED_SLOTS_SHIFT + JSCLASS_RESERVED_SLOTS_WIDTH;
-pub static JSCLASS_IS_GLOBAL: c_uint = (1<<(JSCLASS_HIGH_FLAGS_SHIFT+1));
+pub static JSCLASS_IS_GLOBAL: c_uint = (1<<((JSCLASS_HIGH_FLAGS_SHIFT as uint)+1));
 
 pub static JSCLASS_GLOBAL_SLOT_COUNT: c_uint = JSProto_LIMIT * 3 + 24;
 
@@ -102,7 +100,7 @@ pub enum JSGCTraceKind {
 }
 
 pub fn JSCLASS_HAS_RESERVED_SLOTS(n: c_uint) -> c_uint {
-    (n & JSCLASS_RESERVED_SLOTS_MASK) << JSCLASS_RESERVED_SLOTS_SHIFT
+    (n & JSCLASS_RESERVED_SLOTS_MASK) << (JSCLASS_RESERVED_SLOTS_SHIFT as uint)
 }
 
 #[inline(always)]
@@ -137,14 +135,14 @@ pub unsafe fn JS_CALLEE(_cx: *mut JSContext, vp: *mut JSVal) -> JSVal {
 // '__test' module.
 #[cfg(test)]
 #[start]
-fn start(argc: int, argv: **u8) -> int {
+fn start(argc: int, argv: *const *const u8) -> int {
     green::start(argc, argv, rustuv::event_loop, __test::main)
 }
 
 pub type JSObjectOp = extern "C" fn(*mut JSContext, JSHandleObject) -> *mut JSObject;
 
 pub struct Class {
-    pub name: *libc::c_char,
+    pub name: *const libc::c_char,
     pub flags: uint32_t,
     pub addProperty: JSPropertyOp,
     pub delProperty: JSPropertyOp,
@@ -165,46 +163,46 @@ pub struct Class {
 }
 
 pub struct ClassExtension {
-    pub equality: *u8,
+    pub equality: *const u8,
     pub outerObject: Option<JSObjectOp>,
     pub innerObject: Option<JSObjectOp>,
-    pub iteratorObject: *u8,
-    pub unused: *u8,
-    pub isWrappedNative: *u8,
+    pub iteratorObject: *const u8,
+    pub unused: *const u8,
+    pub isWrappedNative: *const u8,
 }
 
 pub struct ObjectOps {
-    pub lookupGeneric: *u8,
-    pub lookupProperty: *u8,
-    pub lookupElement: *u8,
-    pub lookupSpecial: *u8,
-    pub defineGeneric: *u8,
-    pub defineProperty: *u8,
-    pub defineElement: *u8,
-    pub defineSpecial: *u8,
-    pub getGeneric: *u8,
-    pub getProperty: *u8,
-    pub getElement: *u8,
-    pub getElementIfPresent: *u8,
-    pub getSpecial: *u8,
-    pub setGeneric: *u8,
-    pub setProperty: *u8,
-    pub setElement: *u8,
-    pub setSpecial: *u8,
-    pub getGenericAttributes: *u8,
-    pub getPropertyAttributes: *u8,
-    pub getElementAttributes: *u8,
-    pub getSpecialAttributes: *u8,
-    pub setGenericAttributes: *u8,
-    pub setPropertyAttributes: *u8,
-    pub setElementAttributes: *u8,
-    pub setSpecialAttributes: *u8,
-    pub deleteProperty: *u8,
-    pub deleteElement: *u8,
-    pub deleteSpecial: *u8,
+    pub lookupGeneric: *const u8,
+    pub lookupProperty: *const u8,
+    pub lookupElement: *const u8,
+    pub lookupSpecial: *const u8,
+    pub defineGeneric: *const u8,
+    pub defineProperty: *const u8,
+    pub defineElement: *const u8,
+    pub defineSpecial: *const u8,
+    pub getGeneric: *const u8,
+    pub getProperty: *const u8,
+    pub getElement: *const u8,
+    pub getElementIfPresent: *const u8,
+    pub getSpecial: *const u8,
+    pub setGeneric: *const u8,
+    pub setProperty: *const u8,
+    pub setElement: *const u8,
+    pub setSpecial: *const u8,
+    pub getGenericAttributes: *const u8,
+    pub getPropertyAttributes: *const u8,
+    pub getElementAttributes: *const u8,
+    pub getSpecialAttributes: *const u8,
+    pub setGenericAttributes: *const u8,
+    pub setPropertyAttributes: *const u8,
+    pub setElementAttributes: *const u8,
+    pub setSpecialAttributes: *const u8,
+    pub deleteProperty: *const u8,
+    pub deleteElement: *const u8,
+    pub deleteSpecial: *const u8,
 
-    pub enumerate: *u8,
-    pub typeOf: *u8,
+    pub enumerate: *const u8,
+    pub typeOf: *const u8,
     pub thisObject: Option<JSObjectOp>,
-    pub clear: *u8,
+    pub clear: *const u8,
 }
