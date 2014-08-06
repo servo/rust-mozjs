@@ -9,6 +9,7 @@ use libc::c_char;
 use std::cmp;
 use std::rc;
 use std::rt::Runtime;
+use std::string;
 use jsapi::*;
 use jsval::{JSVal, NullValue};
 use default_stacksize;
@@ -17,7 +18,6 @@ use JSOPTION_VAROBJFIX;
 use JSOPTION_METHODJIT;
 use JSOPTION_TYPE_INFERENCE;
 use ERR;
-use std::str::raw::from_c_str;
 use green::task::GreenTask;
 
 // ___________________________________________________________________________
@@ -164,9 +164,9 @@ impl Cx {
 pub extern fn reportError(_cx: *mut JSContext, msg: *const c_char, report: *mut JSErrorReport) {
     unsafe {
         let fnptr = (*report).filename;
-        let fname = if fnptr.is_not_null() {from_c_str(fnptr)} else {"none".to_string()};
+        let fname = if fnptr.is_not_null() {string::raw::from_buf(fnptr as *const i8 as *const u8)} else {"none".to_string()};
         let lineno = (*report).lineno;
-        let msg = from_c_str(msg);
+        let msg = string::raw::from_buf(msg as *const i8 as *const u8);
         error!("Error at {:s}:{}: {:s}\n", fname, lineno, msg);
     }
 }
