@@ -414,7 +414,7 @@ pub struct Struct_JSErrorFormatString {
 pub type JSErrorFormatString = Struct_JSErrorFormatString;
 // Up-to-date mozjs 075904f5f7ee1176f28630d1dff47820020e5928
 pub type JSErrorCallback =
-    ::std::option::Option<extern "C" fn
+    ::std::option::Option<unsafe extern "C" fn //jdm +unsafe
                               (arg1: *mut c_void, arg2: *const c_schar,
                                arg3: c_uint) -> *const JSErrorFormatString>;
 pub type JSLocaleToUpperCase =

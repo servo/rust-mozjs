@@ -82,7 +82,7 @@ pub static JSCLASS_IMPLEMENTS_BARRIERS: c_uint = 1 << 5;
 
 pub static JSCLASS_RESERVED_SLOTS_SHIFT: uint = 8;
 pub static JSCLASS_RESERVED_SLOTS_WIDTH: uint = 8;
-pub static JSCLASS_RESERVED_SLOTS_MASK: uint = ((1u << JSCLASS_RESERVED_SLOTS_WIDTH) - 1);
+pub static JSCLASS_RESERVED_SLOTS_MASK: uint = ((1 << JSCLASS_RESERVED_SLOTS_WIDTH) - 1);
 
 pub static JSCLASS_HIGH_FLAGS_SHIFT: uint =
     JSCLASS_RESERVED_SLOTS_SHIFT + JSCLASS_RESERVED_SLOTS_WIDTH;
@@ -281,6 +281,6 @@ pub struct ContextFriendFields {
     pub runtime_: *mut JSRuntime,
     pub compartment_: *mut libc::c_void,
     pub zone_: *mut libc::c_void,
-    pub thingGCRooters: [*mut *mut libc::c_void, ..14], //THING_ROOT_LIMIT
+    pub thingGCRooters: [*const *const libc::c_void, ..14], //THING_ROOT_LIMIT
     pub autoGCRooters: *mut libc::c_void,
 }
