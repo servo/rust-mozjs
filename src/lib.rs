@@ -17,7 +17,7 @@ extern crate log;
 extern crate rustuv;
 extern crate serialize;
 
-use libc::{c_int, c_uint, c_void};
+use libc::{c_uint, c_void};
 use libc::types::common::c99::uint32_t;
 use jsapi::{JSContext, JSPropertyOp, JSStrictPropertyOp, JSEnumerateOp, Enum_JSProtoKey,
             JSObject, JSResolveOp, JSConvertOp, JSFinalizeOp, JSTraceOp, JSProto_LIMIT,
@@ -54,7 +54,6 @@ pub static JSOPTION_TYPE_INFERENCE: uint32_t = (1u32 << 18) as u32;
 
 pub static default_heapsize: u32 = 32_u32 * 1024_u32 * 1024_u32;
 pub static default_stacksize: uint = 8192u;
-pub static ERR: c_int = 0;
 
 pub static JSID_TYPE_STRING: i64 = 0;
 pub static JSID_TYPE_INT: i64 = 1;
@@ -81,13 +80,13 @@ pub static PROXY_MINIMUM_SLOTS: c_uint = 4;
 
 pub static JSCLASS_IMPLEMENTS_BARRIERS: c_uint = 1 << 5;
 
-pub static JSCLASS_RESERVED_SLOTS_SHIFT: c_uint = 8;
-pub static JSCLASS_RESERVED_SLOTS_WIDTH: c_uint = 8;
-pub static JSCLASS_RESERVED_SLOTS_MASK: c_uint = ((1u << JSCLASS_RESERVED_SLOTS_WIDTH as uint) - 1) as c_uint;
+pub static JSCLASS_RESERVED_SLOTS_SHIFT: uint = 8;
+pub static JSCLASS_RESERVED_SLOTS_WIDTH: uint = 8;
+pub static JSCLASS_RESERVED_SLOTS_MASK: uint = ((1u << JSCLASS_RESERVED_SLOTS_WIDTH) - 1);
 
-pub static JSCLASS_HIGH_FLAGS_SHIFT: c_uint =
+pub static JSCLASS_HIGH_FLAGS_SHIFT: uint =
     JSCLASS_RESERVED_SLOTS_SHIFT + JSCLASS_RESERVED_SLOTS_WIDTH;
-pub static JSCLASS_IS_GLOBAL: c_uint = (1<<((JSCLASS_HIGH_FLAGS_SHIFT as uint)+1));
+pub static JSCLASS_IS_GLOBAL: c_uint = 1<<(JSCLASS_HIGH_FLAGS_SHIFT+1);
 
 pub static JSCLASS_GLOBAL_SLOT_COUNT: c_uint = 3 + JSProto_LIMIT * 3 + 31;
 
@@ -109,7 +108,7 @@ pub enum JSGCTraceKind {
 }
 
 pub fn JSCLASS_HAS_RESERVED_SLOTS(n: c_uint) -> c_uint {
-    (n & JSCLASS_RESERVED_SLOTS_MASK) << (JSCLASS_RESERVED_SLOTS_SHIFT as uint)
+    (n & (JSCLASS_RESERVED_SLOTS_MASK as c_uint)) << JSCLASS_RESERVED_SLOTS_SHIFT
 }
 
 #[inline(always)]
@@ -205,12 +204,12 @@ pub type LookupElementOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleO
                                                        JSMutableHandleObject, MutableHandle<*mut c_void>) -> bool>;
 pub type DefineGenericOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, JSHandleId,
                                                        JSHandleValue, JSPropertyOp, JSStrictPropertyOp,
-                                                       uint) -> bool>;
+                                                       c_uint) -> bool>;
 pub type DefinePropOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, Handle<*mut c_void>,
                                                     JSHandleValue, JSPropertyOp, JSStrictPropertyOp,
-                                                    uint) -> bool>;
+                                                    c_uint) -> bool>;
 pub type DefineElementOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, u32, JSHandleValue,
-                                                       JSPropertyOp, JSStrictPropertyOp, uint) -> bool>;
+                                                       JSPropertyOp, JSStrictPropertyOp, c_uint) -> bool>;
 pub type GenericIdOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, JSHandleObject,
                                                    JSHandleId, JSMutableHandleValue) -> bool>;
 pub type PropertyIdOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, JSHandleObject,
@@ -225,7 +224,7 @@ pub type StrictPropertyIdOp = Option<unsafe extern "C" fn(*mut JSContext, JSHand
 pub type StrictElementIdOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, u32,
                                                          JSMutableHandleValue, bool) -> bool>;
 pub type GenericAttributesOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, JSHandleId,
-                                                           *mut uint) -> bool>;
+                                                           *mut c_uint) -> bool>;
 pub type PropertyAttributesOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject,
                                                             Handle<*mut c_void>, *mut uint) -> bool>;
 pub type DeletePropertyOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject,
@@ -279,9 +278,9 @@ pub enum ThingRootKind {
 }
 
 pub struct ContextFriendFields {
-    pub runtime_: *JSRuntime,
-    pub compartment_: *libc::c_void,
-    pub zone_: *libc::c_void,
-    pub thingGCRooters: [**libc::c_void, ..14], //THING_ROOT_LIMIT
-    pub autoGCRooters: *libc::c_void,
+    pub runtime_: *mut JSRuntime,
+    pub compartment_: *mut libc::c_void,
+    pub zone_: *mut libc::c_void,
+    pub thingGCRooters: [*mut *mut libc::c_void, ..14], //THING_ROOT_LIMIT
+    pub autoGCRooters: *mut libc::c_void,
 }
