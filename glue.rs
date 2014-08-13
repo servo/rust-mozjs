@@ -11,6 +11,8 @@ use jsval::JSVal;
 
 pub type c_bool = libc::c_int;
 
+pub static JS_STRUCTURED_CLONE_VERSION: u32 = 1;
+
 pub struct ProxyTraps {
     pub getPropertyDescriptor: Option<extern "C" fn(*mut JSContext, *mut JSObject, jsid, c_bool, *mut JSPropertyDescriptor) -> c_bool>,
     pub getOwnPropertyDescriptor: Option<extern "C" fn(*mut JSContext, *mut JSObject, jsid, JSBool, *mut JSPropertyDescriptor) -> JSBool>,
