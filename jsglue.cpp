@@ -57,6 +57,164 @@ struct ProxyTraps {
 
 int HandlerFamily = js::JSSLOT_PROXY_EXTRA + 0 /*JSPROXYSLOT_EXPANDO*/;
 
+#define DEFER_TO_TRAP_OR_BASE_CLASS(_base)                                      \
+    /* ES5 Harmony derived proxy traps. */                                      \
+    virtual bool has(JSContext* cx, JSObject* proxy, jsid id, bool* bp)         \
+    {                                                                           \
+        return mTraps.has                                                       \
+               ? mTraps.has(cx, proxy, id, bp)                                  \
+               : _base::has(cx, proxy, id, bp);                                 \
+    }                                                                           \
+                                                                                \
+    virtual bool hasOwn(JSContext* cx, JSObject* proxy, jsid id, bool* bp)      \
+    {                                                                           \
+        return mTraps.hasOwn                                                    \
+               ? mTraps.hasOwn(cx, proxy, id, bp)                               \
+               : _base::hasOwn(cx, proxy, id, bp);                              \
+    }                                                                           \
+                                                                                \
+    virtual bool get(JSContext* cx, JSObject* proxy, JSObject* receiver,        \
+                     jsid id, JS::Value* vp)                                    \
+    {                                                                           \
+        return mTraps.get                                                       \
+               ? mTraps.get(cx, proxy, receiver, id, vp)                        \
+               : _base::get(cx, proxy, receiver, id, vp);                       \
+    }                                                                           \
+                                                                                \
+    virtual bool set(JSContext* cx, JSObject* proxy, JSObject* receiver,        \
+                     jsid id, bool strict, JS::Value* vp)                       \
+    {                                                                           \
+        return mTraps.set                                                       \
+               ? mTraps.set(cx, proxy, receiver, id, strict, vp)                \
+               : _base::set(cx, proxy, receiver, id, strict, vp);               \
+    }                                                                           \
+                                                                                \
+    virtual bool keys(JSContext* cx, JSObject* proxy, JS::AutoIdVector& props)  \
+    {                                                                           \
+        return mTraps.keys                                                      \
+               ? mTraps.keys(cx, proxy, props)                                  \
+               : _base::keys(cx, proxy, props);                                 \
+    }                                                                           \
+                                                                                \
+    virtual bool iterate(JSContext* cx, JSObject* proxy, unsigned flags,        \
+                         JS::Value* vp)                                         \
+    {                                                                           \
+        return mTraps.iterate                                                   \
+               ? mTraps.iterate(cx, proxy, flags, vp)                           \
+               : _base::iterate(cx, proxy, flags, vp);                          \
+    }                                                                           \
+                                                                                \
+    /* Spidermonkey extensions. */                                              \
+    virtual bool call(JSContext* cx, JSObject* proxy, unsigned argc,            \
+                      JS::Value* vp)                                            \
+    {                                                                           \
+        return mTraps.call                                                      \
+               ? mTraps.call(cx, proxy, argc, vp)                               \
+               : _base::call(cx, proxy, argc, vp);                              \
+    }                                                                           \
+                                                                                \
+    virtual bool construct(JSContext* cx, JSObject* proxy, unsigned argc,       \
+                           JS::Value* argv, JS::Value* rval)                    \
+    {                                                                           \
+        return mTraps.construct                                                 \
+               ? mTraps.construct(cx, proxy, argc, argv, rval)                  \
+               : _base::construct(cx, proxy, argc, argv, rval);                 \
+    }                                                                           \
+                                                                                \
+    virtual bool nativeCall(JSContext* cx, JS::IsAcceptableThis test,           \
+                            JS::NativeImpl impl, JS::CallArgs args)             \
+    {                                                                           \
+        return mTraps.nativeCall                                                \
+               ? mTraps.nativeCall(cx, test, impl, args)                        \
+               : _base::nativeCall(cx, test, impl, args);                       \
+    }                                                                           \
+                                                                                \
+    virtual bool hasInstance(JSContext* cx, JSObject* proxy,                    \
+                             const JS::Value* vp, bool* bp)                     \
+    {                                                                           \
+        return mTraps.hasInstance                                               \
+               ? mTraps.hasInstance(cx, proxy, vp, bp)                          \
+               : _base::hasInstance(cx, proxy, vp, bp);                         \
+    }                                                                           \
+                                                                                \
+    virtual JSType typeOf(JSContext* cx, JSObject* proxy)                       \
+    {                                                                           \
+        return mTraps.typeOf                                                    \
+               ? mTraps.typeOf(cx, proxy)                                       \
+               : _base::typeOf(cx, proxy);                                      \
+    }                                                                           \
+                                                                                \
+    virtual bool objectClassIs(JSObject* obj, js::ESClassValue classValue,      \
+                               JSContext* cx)                                   \
+    {                                                                           \
+        return mTraps.objectClassIs                                             \
+               ? mTraps.objectClassIs(obj, classValue, cx)                      \
+               : _base::objectClassIs(obj, classValue, cx);                     \
+    }                                                                           \
+                                                                                \
+    virtual JSString* obj_toString(JSContext* cx, JSObject* proxy)              \
+    {                                                                           \
+        return mTraps.obj_toString                                              \
+               ? mTraps.obj_toString(cx, proxy)                                 \
+               : _base::obj_toString(cx, proxy);                                \
+    }                                                                           \
+                                                                                \
+    virtual JSString* fun_toString(JSContext* cx, JSObject* proxy,              \
+                                   unsigned indent)                             \
+    {                                                                           \
+        return mTraps.fun_toString                                              \
+               ? mTraps.fun_toString(cx, proxy, indent)                         \
+               : _base::fun_toString(cx, proxy, indent);                        \
+    }                                                                           \
+                                                                                \
+    virtual bool defaultValue(JSContext* cx, JSObject* obj, JSType hint,        \
+                              JS::Value* vp)                                    \
+    {                                                                           \
+        return mTraps.defaultValue                                              \
+               ? mTraps.defaultValue(cx, obj, hint, vp)                         \
+               : _base::defaultValue(cx, obj, hint, vp);                        \
+    }                                                                           \
+                                                                                \
+    virtual bool iteratorNext(JSContext* cx, JSObject* proxy, JS::Value* vp)    \
+    {                                                                           \
+        return mTraps.iteratorNext                                              \
+               ? mTraps.iteratorNext(cx, proxy, vp)                             \
+               : _base::iteratorNext(cx, proxy, vp);                            \
+    }                                                                           \
+                                                                                \
+    virtual void finalize(JSFreeOp* fop, JSObject* proxy)                       \
+    {                                                                           \
+        return mTraps.finalize                                                  \
+               ? mTraps.finalize(fop, proxy)                                    \
+               : _base::finalize(fop, proxy);                                   \
+    }                                                                           \
+                                                                                \
+    virtual bool getElementIfPresent(JSContext* cx, JSObject* obj,              \
+                                     JSObject* receiver, uint32_t index,        \
+                                     JS::Value* vp, bool* present)              \
+    {                                                                           \
+        return mTraps.getElementIfPresent                                       \
+               ? mTraps.getElementIfPresent(cx, obj, receiver, index, vp,       \
+                                            present)                            \
+               : _base::getElementIfPresent(cx, obj, receiver, index, vp,       \
+                                            present);                           \
+    }                                                                           \
+                                                                                \
+    virtual bool getPrototypeOf(JSContext* cx, JSObject* proxy,                 \
+                                JSObject** proto)                               \
+    {                                                                           \
+        return mTraps.getPrototypeOf                                            \
+               ? mTraps.getPrototypeOf(cx, proxy, proto)                        \
+               : _base::getPrototypeOf(cx, proxy, proto);                       \
+    }                                                                           \
+                                                                                \
+    virtual void trace(JSTracer* trc, JSObject* proxy)                          \
+    {                                                                           \
+        return mTraps.trace                                                     \
+               ? mTraps.trace(trc, proxy)                                       \
+               : _base::trace(trc, proxy);                                      \
+    }
+
 class WrapperProxyHandler : public js::DirectWrapper
 {
     ProxyTraps mTraps;
@@ -116,158 +274,7 @@ class WrapperProxyHandler : public js::DirectWrapper
                 DirectWrapper::enumerate(cx, proxy, props);
     }
 
-    /* ES5 Harmony derived proxy traps. */
-    virtual bool has(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
-    {
-        return mTraps.has ?
-                mTraps.has(cx, proxy, id, bp) :
-                DirectWrapper::has(cx, proxy, id, bp);
-    }
-
-    virtual bool hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
-    {
-        return mTraps.hasOwn ?
-                mTraps.hasOwn(cx, proxy, id, bp) :
-                DirectWrapper::hasOwn(cx, proxy, id, bp);
-    }
-
-    virtual bool get(JSContext *cx, JSObject *proxy, JSObject *receiver,
-                     jsid id, JS::Value *vp)
-    {
-        return mTraps.get ?
-                mTraps.get(cx, proxy, receiver, id, vp) :
-                DirectWrapper::get(cx, proxy, receiver, id, vp);
-    }
-
-    virtual bool set(JSContext *cx, JSObject *proxy, JSObject *receiver,
-                     jsid id, bool strict, JS::Value *vp)
-    {
-        return mTraps.set ?
-                mTraps.set(cx, proxy, receiver, id, strict, vp) :
-                DirectWrapper::set(cx, proxy, receiver, id, strict, vp);
-    }
-
-    virtual bool keys(JSContext *cx, JSObject *proxy, JS::AutoIdVector &props)
-    {
-        return mTraps.keys ?
-                mTraps.keys(cx, proxy, props) :
-                DirectWrapper::keys(cx, proxy, props);
-    }
-
-    virtual bool iterate(JSContext *cx, JSObject *proxy, unsigned flags,
-                         JS::Value *vp)
-    {
-        return mTraps.iterate ?
-                mTraps.iterate(cx, proxy, flags, vp) :
-                DirectWrapper::iterate(cx, proxy, flags, vp);
-    }
-
-    /* Spidermonkey extensions. */
-    virtual bool call(JSContext *cx, JSObject *proxy, unsigned argc, JS::Value *vp)
-    {
-        return mTraps.call ?
-                mTraps.call(cx, proxy, argc, vp) :
-                DirectWrapper::call(cx, proxy, argc, vp);
-    }
-
-    virtual bool construct(JSContext *cx, JSObject *proxy, unsigned argc, JS::Value *argv, JS::Value *rval)
-    {
-        return mTraps.construct ?
-                mTraps.construct(cx, proxy, argc, argv, rval) :
-                DirectWrapper::construct(cx, proxy, argc, argv, rval);
-    }
-
-    virtual bool nativeCall(JSContext *cx, JS::IsAcceptableThis test, JS::NativeImpl impl, JS::CallArgs args)
-    {
-        return mTraps.nativeCall ?
-                mTraps.nativeCall(cx, test, impl, args) :
-                DirectWrapper::nativeCall(cx, test, impl, args);
-    }
-
-    virtual bool hasInstance(JSContext *cx, JSObject *proxy, const JS::Value *vp, bool *bp)
-    {
-        return mTraps.hasInstance ?
-                mTraps.hasInstance(cx, proxy, vp, bp) :
-                DirectWrapper::hasInstance(cx, proxy, vp, bp);
-    }
-
-    virtual JSType typeOf(JSContext *cx, JSObject *proxy)
-    {
-        return mTraps.typeOf ?
-                mTraps.typeOf(cx, proxy) :
-                DirectWrapper::typeOf(cx, proxy);
-    }
-
-    virtual bool objectClassIs(JSObject *obj, js::ESClassValue classValue, JSContext *cx)
-    {
-        return mTraps.objectClassIs ?
-                mTraps.objectClassIs(obj, classValue, cx) :
-                DirectWrapper::objectClassIs(obj, classValue, cx);
-    }
-
-    virtual JSString *obj_toString(JSContext *cx, JSObject *proxy)
-    {
-        return mTraps.obj_toString ?
-                mTraps.obj_toString(cx, proxy) :
-                DirectWrapper::obj_toString(cx, proxy);
-    }
-
-    virtual JSString *fun_toString(JSContext *cx, JSObject *proxy, unsigned indent)
-    {
-        return mTraps.fun_toString ?
-                mTraps.fun_toString(cx, proxy, indent) :
-                DirectWrapper::fun_toString(cx, proxy, indent);
-    }
-
-    /*virtual bool regexp_toShared(JSContext *cx, JSObject *proxy, RegExpGuard *g)
-      {
-      return mTraps.regexp_toShared ?
-      mTraps.regexp_toShared(cx, proxy, g) :
-      DirectWrapper::regexp_toShared(cx, proxy, g);
-      }*/
-
-    virtual bool defaultValue(JSContext *cx, JSObject *obj, JSType hint, JS::Value *vp)
-    {
-        return mTraps.defaultValue ?
-                mTraps.defaultValue(cx, obj, hint, vp) :
-                DirectWrapper::defaultValue(cx, obj, hint, vp);
-    }
-
-    virtual bool iteratorNext(JSContext *cx, JSObject *proxy, JS::Value *vp)
-    {
-        return mTraps.iteratorNext ?
-                mTraps.iteratorNext(cx, proxy, vp) :
-                DirectWrapper::iteratorNext(cx, proxy, vp);
-    }
-
-    virtual void finalize(JSFreeOp *fop, JSObject *proxy)
-    {
-        return mTraps.finalize ?
-                mTraps.finalize(fop, proxy) :
-                DirectWrapper::finalize(fop, proxy);
-    }
-
-    virtual bool getElementIfPresent(JSContext *cx, JSObject *obj, JSObject *receiver,
-                                     uint32_t index, JS::Value *vp, bool *present)
-    {
-        return mTraps.getElementIfPresent ?
-                mTraps.getElementIfPresent(cx, obj, receiver, index, vp, present) :
-                DirectWrapper::getElementIfPresent(cx, obj, receiver, index, vp, present);
-    }
-
-    virtual bool getPrototypeOf(JSContext *cx, JSObject *proxy, JSObject **proto)
-    {
-        return mTraps.getPrototypeOf ?
-                mTraps.getPrototypeOf(cx, proxy, proto) :
-                DirectWrapper::getPrototypeOf(cx, proxy, proto);
-    }
-
-    virtual void trace(JSTracer *trc, JSObject *proxy)
-    {
-        return mTraps.trace ?
-                mTraps.trace(trc, proxy) :
-                DirectWrapper::trace(trc, proxy);
-    }
+    DEFER_TO_TRAP_OR_BASE_CLASS(DirectWrapper)
 };
 
 class ForwardingProxyHandler : public js::BaseProxyHandler
@@ -318,158 +325,7 @@ class ForwardingProxyHandler : public js::BaseProxyHandler
         return mTraps.enumerate(cx, proxy, props);
     }
 
-    /* ES5 Harmony derived proxy traps. */
-    virtual bool has(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
-    {
-        return mTraps.has ?
-               mTraps.has(cx, proxy, id, bp) :
-               BaseProxyHandler::has(cx, proxy, id, bp);
-    }
-
-    virtual bool hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
-    {
-        return mTraps.hasOwn ?
-               mTraps.hasOwn(cx, proxy, id, bp) :
-               BaseProxyHandler::hasOwn(cx, proxy, id, bp);
-    }
-
-    virtual bool get(JSContext *cx, JSObject *proxy, JSObject *receiver,
-                     jsid id, JS::Value *vp)
-    {
-        return mTraps.get ?
-               mTraps.get(cx, proxy, receiver, id, vp) :
-               BaseProxyHandler::get(cx, proxy, receiver, id, vp);
-    }
-
-    virtual bool set(JSContext *cx, JSObject *proxy, JSObject *receiver,
-                     jsid id, bool strict, JS::Value *vp)
-    {
-        return mTraps.set ?
-               mTraps.set(cx, proxy, receiver, id, strict, vp) :
-               BaseProxyHandler::set(cx, proxy, receiver, id, strict, vp);
-    }
-
-    virtual bool keys(JSContext *cx, JSObject *proxy, JS::AutoIdVector &props)
-    {
-        return mTraps.keys ?
-                mTraps.keys(cx, proxy, props) :
-                BaseProxyHandler::keys(cx, proxy, props);
-    }
-
-    virtual bool iterate(JSContext *cx, JSObject *proxy, unsigned flags,
-                         JS::Value *vp)
-    {
-        return mTraps.iterate ?
-                mTraps.iterate(cx, proxy, flags, vp) :
-                BaseProxyHandler::iterate(cx, proxy, flags, vp);
-    }
-
-    /* Spidermonkey extensions. */
-    virtual bool call(JSContext *cx, JSObject *proxy, unsigned argc, JS::Value *vp)
-    {
-        return mTraps.call ?
-                mTraps.call(cx, proxy, argc, vp) :
-                BaseProxyHandler::call(cx, proxy, argc, vp);
-    }
-
-    virtual bool construct(JSContext *cx, JSObject *proxy, unsigned argc, JS::Value *argv, JS::Value *rval)
-    {
-        return mTraps.construct ?
-                mTraps.construct(cx, proxy, argc, argv, rval) :
-                BaseProxyHandler::construct(cx, proxy, argc, argv, rval);
-    }
-
-    virtual bool nativeCall(JSContext *cx, JS::IsAcceptableThis test, JS::NativeImpl impl, JS::CallArgs args)
-    {
-        return mTraps.nativeCall ?
-                mTraps.nativeCall(cx, test, impl, args) :
-                BaseProxyHandler::nativeCall(cx, test, impl, args);
-    }
-
-    virtual bool hasInstance(JSContext *cx, JSObject *proxy, const JS::Value *vp, bool *bp)
-    {
-        return mTraps.hasInstance ?
-                mTraps.hasInstance(cx, proxy, vp, bp) :
-                BaseProxyHandler::hasInstance(cx, proxy, vp, bp);
-    }
-
-    virtual JSType typeOf(JSContext *cx, JSObject *proxy)
-    {
-        return mTraps.typeOf ?
-                mTraps.typeOf(cx, proxy) :
-                BaseProxyHandler::typeOf(cx, proxy);
-    }
-
-    virtual bool objectClassIs(JSObject *obj, js::ESClassValue classValue, JSContext *cx)
-    {
-        return mTraps.objectClassIs ?
-                mTraps.objectClassIs(obj, classValue, cx) :
-                BaseProxyHandler::objectClassIs(obj, classValue, cx);
-    }
-
-    virtual JSString *obj_toString(JSContext *cx, JSObject *proxy)
-    {
-        return mTraps.obj_toString ?
-                mTraps.obj_toString(cx, proxy) :
-                BaseProxyHandler::obj_toString(cx, proxy);
-    }
-
-    virtual JSString *fun_toString(JSContext *cx, JSObject *proxy, unsigned indent)
-    {
-        return mTraps.fun_toString ?
-                mTraps.fun_toString(cx, proxy, indent) :
-                BaseProxyHandler::fun_toString(cx, proxy, indent);
-    }
-
-    /*virtual bool regexp_toShared(JSContext *cx, JSObject *proxy, RegExpGuard *g)
-    {
-        return mTraps.regexp_toShared ?
-                mTraps.regexp_toShared(cx, proxy, g) :
-                BaseProxyHandler::regexp_toShared(cx, proxy, g);
-                }*/
-
-    virtual bool defaultValue(JSContext *cx, JSObject *obj, JSType hint, JS::Value *vp)
-    {
-        return mTraps.defaultValue ?
-                mTraps.defaultValue(cx, obj, hint, vp) :
-                BaseProxyHandler::defaultValue(cx, obj, hint, vp);
-    }
-
-    virtual bool iteratorNext(JSContext *cx, JSObject *proxy, JS::Value *vp)
-    {
-        return mTraps.iteratorNext ?
-                mTraps.iteratorNext(cx, proxy, vp) :
-                BaseProxyHandler::iteratorNext(cx, proxy, vp);
-    }
-
-    virtual void finalize(JSFreeOp *fop, JSObject *proxy)
-    {
-        return mTraps.finalize ?
-                mTraps.finalize(fop, proxy) :
-                BaseProxyHandler::finalize(fop, proxy);
-    }
-
-    virtual bool getElementIfPresent(JSContext *cx, JSObject *obj, JSObject *receiver,
-                                     uint32_t index, JS::Value *vp, bool *present)
-    {
-        return mTraps.getElementIfPresent ?
-                mTraps.getElementIfPresent(cx, obj, receiver, index, vp, present) :
-                BaseProxyHandler::getElementIfPresent(cx, obj, receiver, index, vp, present);
-    }
-
-    virtual bool getPrototypeOf(JSContext *cx, JSObject *proxy, JSObject **proto)
-    {
-        return mTraps.getPrototypeOf ?
-                mTraps.getPrototypeOf(cx, proxy, proto) :
-                BaseProxyHandler::getPrototypeOf(cx, proxy, proto);
-    }
-
-    virtual void trace(JSTracer *trc, JSObject *proxy)
-    {
-        return mTraps.trace ?
-                mTraps.trace(trc, proxy) :
-                BaseProxyHandler::trace(trc, proxy);
-    }
+    DEFER_TO_TRAP_OR_BASE_CLASS(BaseProxyHandler)
 };
 
 extern "C" {
