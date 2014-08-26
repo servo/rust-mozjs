@@ -330,11 +330,11 @@ class ForwardingProxyHandler : public js::BaseProxyHandler
 
 extern "C" {
 
-JSBool
+bool
 InvokeGetOwnPropertyDescriptor(
         void* handler,
         JSContext *cx, JSObject *proxy,
-        jsid id, JSBool set,
+        jsid id, bool set,
         JSPropertyDescriptor *desc)
 {
     return static_cast<ForwardingProxyHandler*>(handler)->getOwnPropertyDescriptor(cx, proxy,
