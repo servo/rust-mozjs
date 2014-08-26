@@ -9,39 +9,37 @@ use jsapi::*;
 use jsfriendapi::JSJitInfo;
 use jsval::JSVal;
 
-pub type c_bool = libc::c_int;
-
 pub static JS_STRUCTURED_CLONE_VERSION: u32 = 1;
 
 pub struct ProxyTraps {
-    pub getPropertyDescriptor: Option<extern "C" fn(*mut JSContext, *mut JSObject, jsid, c_bool, *mut JSPropertyDescriptor) -> c_bool>,
-    pub getOwnPropertyDescriptor: Option<extern "C" fn(*mut JSContext, *mut JSObject, jsid, JSBool, *mut JSPropertyDescriptor) -> JSBool>,
-    pub defineProperty: Option<extern "C" fn(*mut JSContext, *mut JSObject, jsid, *mut JSPropertyDescriptor) -> JSBool>,
+    pub getPropertyDescriptor: Option<extern "C" fn(*mut JSContext, *mut JSObject, jsid, bool, *mut JSPropertyDescriptor) -> bool>,
+    pub getOwnPropertyDescriptor: Option<extern "C" fn(*mut JSContext, *mut JSObject, jsid, bool, *mut JSPropertyDescriptor) -> bool>,
+    pub defineProperty: Option<extern "C" fn(*mut JSContext, *mut JSObject, jsid, *mut JSPropertyDescriptor) -> bool>,
     pub getOwnPropertyNames: *const u8, //XXX need a representation for AutoIdVector&
-    pub delete_: Option<extern "C" fn(*mut JSContext, *mut JSObject, jsid, *mut bool) -> JSBool>,
+    pub delete_: Option<extern "C" fn(*mut JSContext, *mut JSObject, jsid, *mut bool) -> bool>,
     pub enumerate: *const u8, //XXX need a representation for AutoIdVector&
 
-    pub has: Option<extern "C" fn(*mut JSContext, *mut JSObject, jsid, *mut JSBool) -> JSBool>,
-    pub hasOwn: Option<extern "C" fn(*mut JSContext, *mut JSObject, jsid, *mut JSBool) -> JSBool>,
-    pub get: Option<extern "C" fn(*mut JSContext, *mut JSObject, *mut JSObject, jsid, *mut JSVal) -> JSBool>,
-    pub set: Option<extern "C" fn(*mut JSContext, *mut JSObject, *mut JSObject, jsid, JSBool, *mut JSVal) -> JSBool>,
+    pub has: Option<extern "C" fn(*mut JSContext, *mut JSObject, jsid, *mut bool) -> bool>,
+    pub hasOwn: Option<extern "C" fn(*mut JSContext, *mut JSObject, jsid, *mut bool) -> bool>,
+    pub get: Option<extern "C" fn(*mut JSContext, *mut JSObject, *mut JSObject, jsid, *mut JSVal) -> bool>,
+    pub set: Option<extern "C" fn(*mut JSContext, *mut JSObject, *mut JSObject, jsid, bool, *mut JSVal) -> bool>,
     pub keys: *const u8, //XXX need a representation for AutoIdVector&
-    pub iterate: Option<extern "C" fn(*mut JSContext, *mut JSObject, uint, *mut JSVal) -> JSBool>,
+    pub iterate: Option<extern "C" fn(*mut JSContext, *mut JSObject, uint, *mut JSVal) -> bool>,
 
-    pub call: Option<extern "C" fn(*mut JSContext, *mut JSObject, uint, *mut JSVal) -> JSBool>,
-    pub construct: Option<extern "C" fn(*mut JSContext, *mut JSObject, uint, *mut JSVal, *mut JSVal) -> JSBool>,
+    pub call: Option<extern "C" fn(*mut JSContext, *mut JSObject, uint, *mut JSVal) -> bool>,
+    pub construct: Option<extern "C" fn(*mut JSContext, *mut JSObject, uint, *mut JSVal, *mut JSVal) -> bool>,
     pub nativeCall: *const u8, //XXX need a representation for IsAcceptableThis, NativeImpl, and CallArgs
-    pub hasInstance: Option<extern "C" fn(*mut JSContext, *mut JSObject, *mut JSVal, *mut JSBool) -> JSBool>,
+    pub hasInstance: Option<extern "C" fn(*mut JSContext, *mut JSObject, *mut JSVal, *mut bool) -> bool>,
     pub typeOf: Option<extern "C" fn(*mut JSContext, *mut JSObject) -> uint>, //XXX JSType enum
-    pub objectClassIs: Option<extern "C" fn(*mut JSObject, uint, *mut JSContext) -> JSBool>, //XXX ESClassValue enum
+    pub objectClassIs: Option<extern "C" fn(*mut JSObject, uint, *mut JSContext) -> bool>, //XXX ESClassValue enum
     pub obj_toString: Option<extern "C" fn(*mut JSContext, *mut JSObject) -> *mut JSString>,
     pub fun_toString: Option<extern "C" fn(*mut JSContext, *mut JSObject, uint) -> *mut JSString>,
     //regexp_toShared: *u8,
-    pub defaultValue: Option<extern "C" fn(*mut JSContext, *mut JSObject, uint, *mut JSVal) -> JSBool>, //XXX JSType enum
-    pub iteratorNext: Option<extern "C" fn(*mut JSContext, *mut JSObject, *mut JSVal) -> JSBool>,
+    pub defaultValue: Option<extern "C" fn(*mut JSContext, *mut JSObject, uint, *mut JSVal) -> bool>, //XXX JSType enum
+    pub iteratorNext: Option<extern "C" fn(*mut JSContext, *mut JSObject, *mut JSVal) -> bool>,
     pub finalize: Option<extern "C" fn(*mut JSFreeOp, *mut JSObject)>,
-    pub getElementIfPresent: Option<extern "C" fn(*mut JSContext, *mut JSObject, *mut JSObject, u32, *mut JSVal, *mut JSBool) -> JSBool>,
-    pub getPrototypeOf: Option<extern "C" fn(*mut JSContext, *mut JSObject, *mut *mut JSObject) -> JSBool>,
+    pub getElementIfPresent: Option<extern "C" fn(*mut JSContext, *mut JSObject, *mut JSObject, u32, *mut JSVal, *mut bool) -> bool>,
+    pub getPrototypeOf: Option<extern "C" fn(*mut JSContext, *mut JSObject, *mut *mut JSObject) -> bool>,
     pub trace: Option<extern "C" fn(*mut JSTracer, *mut JSObject)>,
 }
 
@@ -107,7 +105,7 @@ pub fn js_IsFunctionProxyClass(obj: *mut JSObject) -> bool;
 pub fn IsProxyHandlerFamily(obj: *mut JSObject) -> bool;
 pub fn GetProxyHandlerExtra(obj: *mut JSObject) -> *const libc::c_void;
 pub fn GetProxyHandler(obj: *mut JSObject) -> *mut libc::c_void;
-pub fn InvokeGetOwnPropertyDescriptor(handler: *mut libc::c_void, cx: *mut JSContext, proxy: *mut JSObject, id: jsid, set: JSBool, desc: *mut JSPropertyDescriptor) -> JSBool;
+pub fn InvokeGetOwnPropertyDescriptor(handler: *mut libc::c_void, cx: *mut JSContext, proxy: *mut JSObject, id: jsid, set: bool, desc: *mut JSPropertyDescriptor) -> bool;
 pub fn GetGlobalForObjectCrossCompartment(obj: *mut JSObject) -> *mut JSObject;
 pub fn ReportError(cx: *mut JSContext, error: *const libc::c_char);
 pub fn IsWrapper(obj: *mut JSObject) -> JSBool;
