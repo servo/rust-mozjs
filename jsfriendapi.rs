@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use jsapi::{JSContext, JSObject};
+use jsapi::{JSContext, JSObject, JSPropertyDescriptor, JSBool};
 
 pub type JSJitPropertyOp = *const u8;
 
@@ -17,6 +17,8 @@ pub struct JSJitInfo {
 extern {
 pub fn JS_ObjectToOuterObject(cx: *mut JSContext,
                               obj: *mut JSObject) -> *mut JSObject;
+pub fn JS_WrapPropertyDescriptor(cx: *mut JSContext,
+                                 desc: *mut JSPropertyDescriptor) -> JSBool;
 }
 
 //pub type JSJitInfo = JSJitInfo_struct;
