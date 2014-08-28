@@ -14,28 +14,28 @@ ifeq ($(shell $(CXX) -v 2>&1 | grep -c 'clang version\|Apple.*clang'),1)
 CFLAGS += -Wno-c++0x-extensions -Wno-return-type-c-linkage -Wno-invalid-offsetof
 endif
 
-RUST_SRC = $(shell find $(VPATH)/. -type f -name '*.rs')
+RUST_SRC = $(shell find $(VPATH)/src -type f -name '*.rs')
 
 .PHONY: all
 all: libjs.dummy
 
-libjs.dummy: js.rc $(RUST_SRC) libjsglue.a $(EXT_DEPS)
+libjs.dummy: src/lib.rs $(RUST_SRC) libjsglue.a $(EXT_DEPS)
 	$(RUSTC) $(RUSTFLAGS) $< --out-dir .
 	touch $@
 
-js-test: js.rc $(RUST_SRC) libjsglue.a
+js-test: src/lib.rs $(RUST_SRC) libjsglue.a
 	$(RUSTC) $(RUSTFLAGS) $< -o $@ --test
 
 libjsglue.a: jsglue.o
 	$(AR) rcs libjsglue.a jsglue.o
 
-jsglue.o: jsglue.cpp
+jsglue.o: src/jsglue.cpp
 	$(CXX) $(CFLAGS) -fno-rtti $< -o $@ -c
 
 .PHONY: doc
 doc: $(RUSTDOC_TARGET)/js/index.html
 
-$(RUSTDOC_TARGET)/js/index.html: js.rc $(RUST_SRC) libjsglue.a $(EXT_DEPS)
+$(RUSTDOC_TARGET)/js/index.html: src/lib.rs $(RUST_SRC) libjsglue.a $(EXT_DEPS)
 	$(RUSTDOC) $(RUSTDOC_FLAGS) $< -o $(RUSTDOC_TARGET)
 
 check: js-test
