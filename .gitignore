@@ -2,3 +2,5 @@ libmozjs.so
 *~
 js
 /doc
+/target
+/Cargo.lock
