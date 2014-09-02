@@ -354,13 +354,25 @@ RUST_FUNCTION_VALUE_TO_JITINFO(jsval v)
     return FUNCTION_VALUE_TO_JITINFO(v);
 }
 
+// Rust code doesn't understand the various JSJit*CallArgs classes, so we have to hack
+// around SpiderMonkey's desire to pass them around in place of the raw values and pointers.
+typedef bool
+(* ServoJSJitGetterOp)(JSContext *cx, JS::HandleObject thisObj,
+                       void *specializedThis, jsval* vp);
+typedef bool
+(* ServoJSJitSetterOp)(JSContext *cx, JS::HandleObject thisObj,
+                       void *specializedThis, jsval* argv);
+typedef bool
+(* ServoJSJitMethodOp)(JSContext *cx, JS::HandleObject thisObj,
+                       void *specializedThis, unsigned argc, jsval* vp);
+
 bool
 CallJitGetterOp(const JSJitInfo* info, JSContext* cx,
                 JS::Handle<JSObject*> thisObj, void* specializedThis,
                 JS::Value* vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(0, vp);
-    return info->getter(cx, thisObj, specializedThis, JSJitGetterCallArgs(args));
+    return ((ServoJSJitGetterOp)info->getter)(cx, thisObj, specializedThis, args.base());
 }
 
 bool
@@ -369,7 +381,7 @@ CallJitSetterOp(const JSJitInfo* info, JSContext* cx,
                 JS::Value* vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(1, vp);
-    return info->setter(cx, thisObj, specializedThis, JSJitSetterCallArgs(args));
+    return ((ServoJSJitSetterOp)info->setter)(cx, thisObj, specializedThis, args.base());
 }
 
 bool
@@ -378,7 +390,7 @@ CallJitMethodOp(const JSJitInfo* info, JSContext* cx,
                 uint32_t argc, JS::Value* vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-    return info->method(cx, thisObj, specializedThis, JSJitMethodCallArgs(args));
+    return ((ServoJSJitMethodOp)info->method)(cx, thisObj, specializedThis, args.length(), args.base());
 }
 
 void

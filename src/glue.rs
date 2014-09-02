@@ -105,9 +105,9 @@ pub fn DefineFunctionWithReserved(cx: *mut JSContext, obj: *mut JSObject,
 pub fn GetObjectJSClass(obj: *mut JSObject) -> *const JSClass;
 pub fn RUST_js_GetErrorMessage(userRef: *mut libc::c_void, locale: *const libc::c_char,
                                errorNumber: libc::c_uint) -> *const JSErrorFormatString;
-pub fn IsProxyHandlerFamily(obj: JSHandleObject) -> bool;
-pub fn GetProxyHandlerExtra(obj: JSHandleObject) -> *const libc::c_void;
-pub fn GetProxyHandler(obj: JSHandleObject) -> *mut libc::c_void;
+pub fn IsProxyHandlerFamily(obj: *mut JSObject) -> bool;
+pub fn GetProxyHandlerExtra(obj: *mut JSObject) -> *const libc::c_void;
+pub fn GetProxyHandler(obj: *mut JSObject) -> *mut libc::c_void;
 pub fn InvokeGetOwnPropertyDescriptor(handler: *mut libc::c_void, cx: *mut JSContext, proxy: JSHandleObject, id: JSHandleId, desc: MutableHandle<JSPropertyDescriptor>, flags: libc::c_uint) -> bool;
 pub fn GetGlobalForObjectCrossCompartment(obj: *mut JSObject) -> *mut JSObject;
 pub fn ReportError(cx: *mut JSContext, error: *const libc::c_char);
