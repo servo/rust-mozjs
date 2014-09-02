@@ -108,14 +108,6 @@ int HandlerFamily = 0 /*JSPROXYSLOT_EXPANDO*/;
     }                                                                           \
                                                                                 \
     /* Spidermonkey extensions. */                                              \
-    virtual bool isExtensible(JSContext *cx, JS::HandleObject proxy,            \
-                              bool *extensible)                                 \
-    {                                                                           \
-        return mTraps.isExtensible                                              \
-               ? mTraps.isExtensible(cx, proxy, extensible)                     \
-               : _base::isExtensible(cx, proxy, extensible);                    \
-    }                                                                           \
-                                                                                \
     virtual bool call(JSContext *cx, JS::HandleObject proxy,                    \
                       const JS::CallArgs &args)                                 \
     {                                                                           \
@@ -263,6 +255,13 @@ class WrapperProxyHandler : public js::DirectProxyHandler
                 DirectProxyHandler::enumerate(cx, proxy, props);
     }
 
+    virtual bool isExtensible(JSContext *cx, JS::HandleObject proxy, bool *extensible)
+    {
+        return mTraps.isExtensible
+               ? mTraps.isExtensible(cx, proxy, extensible)
+               : DirectProxyHandler::isExtensible(cx, proxy, extensible);
+    }
+
     DEFER_TO_TRAP_OR_BASE_CLASS(DirectProxyHandler)
 };
 
@@ -319,6 +318,11 @@ class ForwardingProxyHandler : public js::BaseProxyHandler
                            JS::AutoIdVector &props)
     {
         return mTraps.enumerate(cx, proxy, props);
+    }
+
+    virtual bool isExtensible(JSContext *cx, JS::HandleObject proxy, bool *extensible)
+    {
+        return mTraps.isExtensible(cx, proxy, extensible);
     }
 
     DEFER_TO_TRAP_OR_BASE_CLASS(BaseProxyHandler)
