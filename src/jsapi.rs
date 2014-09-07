@@ -661,7 +661,7 @@ extern "C" {
                               name: *const c_schar);
     pub fn JS_CallIdTracer(trc: *mut c_void, idp: *mut Struct_jsid,
                            name: *const c_schar);
-    pub fn JS_CallObjectTracer(trc: *mut JSTracer, objp: *mut *mut c_void, //jdm c_void->JSTracer
+    pub fn JS_CallObjectTracer(trc: *mut JSTracer, objp: *mut *mut JSObject, //jdm c_void->JSTracer, c_void->JSObject
                                name: *const c_schar);
     pub fn JS_CallStringTracer(trc: *mut c_void, strp: *mut *mut c_void,
                                name: *const c_schar);
@@ -799,7 +799,7 @@ extern "C" {
      *mut c_void;
     pub fn JS_RefreshCrossCompartmentWrappers(cx: *mut Struct_JSContext,
                                               obj: c_void) -> bool;
-    pub fn JS_EnterCompartment(cx: *mut Struct_JSContext, target: *mut c_void)
+    pub fn JS_EnterCompartment(cx: *mut Struct_JSContext, target: *mut JSObject) //jdm c_void->JSObject
      -> *mut Struct_JSCompartment;
     pub fn JS_LeaveCompartment(cx: *mut Struct_JSContext,
                                oldCompartment: *mut Struct_JSCompartment);
@@ -823,7 +823,7 @@ extern "C" {
     pub fn JS_GetFunctionPrototype(cx: *mut Struct_JSContext,
                                    forObj: HandleObject) -> *mut c_void;
     pub fn JS_GetObjectPrototype(cx: *mut Struct_JSContext,
-                                 forObj: HandleObject) -> *mut c_void;
+                                 forObj: HandleObject) -> *mut JSObject; //jdm c_void->JSObject
     pub fn JS_GetArrayPrototype(cx: *mut Struct_JSContext,
                                 forObj: HandleObject) -> *mut c_void;
     pub fn JS_GetGlobalForObject(cx: *mut Struct_JSContext, obj: *mut c_void)
@@ -923,7 +923,7 @@ extern "C" {
     pub fn JS_LinkConstructorAndPrototype(cx: *mut Struct_JSContext,
                                           ctor: JSHandleObject, proto: JSHandleObject) -> //jdm c_void->JSHandleObject
      bool;
-    pub fn JS_GetClass(obj: *mut c_void) -> *const Struct_JSClass;
+    pub fn JS_GetClass(obj: *mut JSObject) -> *const Struct_JSClass; //jdm c_void->JSObject
     pub fn JS_InstanceOf(cx: *mut Struct_JSContext, obj: c_void,
                          clasp: *const Struct_JSClass, args: *mut c_void) -> bool;
     pub fn JS_HasInstance(cx: *mut Struct_JSContext, obj: c_void, v: c_void,
@@ -947,18 +947,18 @@ extern "C" {
                               principals: *mut Struct_JSPrincipals,
                               hookOption: Enum_OnNewGlobalHookOption,
                               options: c_void) -> *mut c_void;
-    pub fn JS_GlobalObjectTraceHook(trc: *mut JSTracer, global: *mut c_void); //jdm c_void->JSTracer
+    pub fn JS_GlobalObjectTraceHook(trc: *mut JSTracer, global: *mut JSObject); //jdm c_void->JSTracer, c_void->JSObject
     pub fn JS_FireOnNewGlobalObject(cx: *mut Struct_JSContext,
                                     global: HandleObject);
     pub fn JS_NewObject(cx: *mut Struct_JSContext, clasp: *const Struct_JSClass,
-                        proto: HandleObject, parent: HandleObject) -> *mut c_void; //jdm c_void->HandleObject
+                        proto: HandleObject, parent: HandleObject) -> *mut JSObject; //jdm c_void->HandleObject, c_void->JSObject
     pub fn JS_IsExtensible(cx: *mut Struct_JSContext, obj: HandleObject,
                            extensible: *mut bool) -> bool;
     pub fn JS_IsNative(obj: *mut c_void) -> bool;
     pub fn JS_GetObjectRuntime(obj: *mut c_void) -> *mut Struct_JSRuntime;
     pub fn JS_NewObjectWithGivenProto(cx: *mut Struct_JSContext,
                                       clasp: *const Struct_JSClass, proto: HandleObject, //jdm c_void->HandleObject
-                                      parent: HandleObject) -> *mut c_void; //jdm c_void->HandleObject
+                                      parent: HandleObject) -> *mut JSObject; //jdm c_void->HandleObject,c_void->JSObject
     pub fn JS_DeepFreezeObject(cx: *mut Struct_JSContext, obj: c_void) ->
      bool;
     pub fn JS_FreezeObject(cx: *mut Struct_JSContext, obj: c_void) -> bool;
@@ -977,7 +977,7 @@ extern "C" {
                              name: *const c_schar, value: HandleValue,
                              attrs: c_uint, getter: JSPropertyOp,
                              setter: JSStrictPropertyOp) -> bool;
-    pub fn JS_DefinePropertyById(cx: *mut Struct_JSContext, obj: *mut c_void,
+    pub fn JS_DefinePropertyById(cx: *mut Struct_JSContext, obj: *mut JSObject, //jdm c_void->JSObject
                                  id: Struct_jsid, value: jsval,
                                  getter: JSPropertyOp,
                                  setter: JSStrictPropertyOp, attrs: c_uint) ->
@@ -1129,21 +1129,21 @@ extern "C" {
      *mut c_void;
     pub fn JS_NextProperty(cx: *mut Struct_JSContext, iterobj: c_void,
                            idp: *mut Struct_jsid) -> bool;
-    pub fn JS_GetReservedSlot(obj: *mut c_void, index: uint32_t) -> jsval;
-    pub fn JS_SetReservedSlot(obj: *mut c_void, index: uint32_t, v: jsval);
+    pub fn JS_GetReservedSlot(obj: *mut JSObject, index: uint32_t) -> jsval;
+    pub fn JS_SetReservedSlot(obj: *mut JSObject, index: uint32_t, v: jsval);
     pub fn JS_NewFunction(cx: *mut Struct_JSContext, call: JSNative,
                           nargs: c_uint, flags: c_uint, parent: JSHandleObject, //jdm c_void->JSHandleObject
-                          name: *const c_schar) -> *mut c_void;
+                          name: *const c_schar) -> *mut JSFunction; //jdm c_void->JSFunction
     pub fn JS_NewFunctionById(cx: *mut Struct_JSContext, call: JSNative,
                               nargs: c_uint, flags: c_uint, parent: c_void,
                               id: c_void) -> *mut c_void;
-    pub fn JS_GetFunctionObject(fun: *mut c_void) -> *mut JSObject; //jdm c_void->JSObject
+    pub fn JS_GetFunctionObject(fun: *mut JSFunction) -> *mut JSObject; //jdm c_void->JSFunction,c_void->JSObject
     pub fn JS_GetFunctionId(fun: *mut c_void) -> *mut c_void;
     pub fn JS_GetFunctionDisplayId(fun: *mut c_void) -> *mut c_void;
     pub fn JS_GetFunctionArity(fun: *mut c_void) -> uint16_t;
     pub fn JS_ObjectIsFunction(cx: *mut Struct_JSContext, obj: *mut c_void) ->
      bool;
-    pub fn JS_ObjectIsCallable(cx: *mut Struct_JSContext, obj: *mut c_void) ->
+    pub fn JS_ObjectIsCallable(cx: *mut Struct_JSContext, obj: *mut JSObject) -> //jdm c_void->JSObject
      bool;
     pub fn JS_IsNativeFunction(funobj: *mut c_void, call: JSNative) -> bool;
     pub fn JS_IsConstructor(fun: *mut c_void) -> bool;
@@ -1161,7 +1161,7 @@ extern "C" {
                                  id: c_void, call: JSNative, nargs: c_uint,
                                  attrs: c_uint) -> *mut c_void;
     pub fn JS_CloneFunctionObject(cx: *mut Struct_JSContext, funobj: JSHandleObject,
-                                  parent: JSHandleObject) -> *mut c_void; //jdm +handles
+                                  parent: JSHandleObject) -> *mut JSObject; //jdm +handles, c_void->JSObject
     pub fn JS_BufferIsCompilableUnit(cx: *mut Struct_JSContext, obj: c_void,
                                      utf8: *const c_schar, length: size_t) -> bool;
     pub fn JS_CompileScript(cx: *mut Struct_JSContext, obj: HandleObject,
@@ -1220,7 +1220,7 @@ extern "C" {
     pub fn JS_SaveFrameChain(cx: *mut Struct_JSContext) -> bool;
     pub fn JS_RestoreFrameChain(cx: *mut Struct_JSContext);
     pub fn JS_NewStringCopyN(cx: *mut Struct_JSContext, s: *const c_schar,
-                             n: size_t) -> *mut c_void;
+                             n: size_t) -> *mut JSString; //jdm c_void->JSString
     pub fn JS_NewStringCopyZ(cx: *mut Struct_JSContext, s: *const c_schar) ->
      *mut c_void;
     pub fn JS_InternJSString(cx: *mut Struct_JSContext, str: HandleString) ->
@@ -1230,9 +1230,9 @@ extern "C" {
     pub fn JS_InternString(cx: *mut Struct_JSContext, s: *const c_schar) ->
      *mut c_void;
     pub fn JS_NewUCString(cx: *mut Struct_JSContext, chars: *mut jschar,
-                          length: size_t) -> *mut c_void;
+                          length: size_t) -> *mut JSString; //jdm c_void->JSString
     pub fn JS_NewUCStringCopyN(cx: *mut Struct_JSContext, s: *const jschar,
-                               n: size_t) -> *mut c_void;
+                               n: size_t) -> *mut JSString; //jdm -> c_void->JSString
     pub fn JS_NewUCStringCopyZ(cx: *mut Struct_JSContext, s: *const jschar) ->
      *mut c_void;
     pub fn JS_InternUCStringN(cx: *mut Struct_JSContext, s: *const jschar,
@@ -1252,7 +1252,7 @@ extern "C" {
                                 quote: c_schar) -> bool;
     pub fn JS_GetStringLength(str: *mut c_void) -> size_t;
     pub fn JS_GetStringCharsAndLength(cx: *mut Struct_JSContext,
-                                      str: *mut c_void, length: *mut size_t)
+                                      str: *mut JSString, length: *mut size_t) //jdm c_void->JSString
      -> *const jschar;
     pub fn JS_GetInternedStringChars(str: *mut c_void) -> *const jschar;
     pub fn JS_GetInternedStringCharsAndLength(str: *mut c_void,
@@ -1467,14 +1467,14 @@ pub type JSMutableHandleValue<'a> = MutableHandle<'a, JSVal>;
 pub struct JSTracer(c_void);
 pub type JSRuntime= c_void;
 pub type JSContext= c_void;
-pub type JSObject= c_void;
+pub enum JSObject {}
 //pub type jsid = ptrdiff_t;
 pub type jsid = Struct_jsid;
 pub type JSFunctionSpec = Struct_JSFunctionSpec;
 pub type JSPropertyDescriptor = Struct_JSPropertyDescriptor;
-pub type JSFunction= c_void;
+pub enum JSFunction {}
 pub type JSFreeOp = Struct_JSFreeOp;
-pub type JSString = c_void;
+pub enum JSString {}
 pub type JSErrorReport = Struct_JSErrorReport;
 pub type JSClass = Struct_JSClass;
 pub type JSPropertySpec = Struct_JSPropertySpec;
@@ -1500,6 +1500,12 @@ impl<'a, T> MutableHandle<'a, T> {
     pub fn immut<'b>(&'b self) -> Handle<'b, T> {
         Handle {
             unnamed_field1: &*self.unnamed_field1
+        }
+    }
+
+    pub fn clone<'b>(&'b mut self) -> MutableHandle<'b, T> {
+        MutableHandle {
+            unnamed_field1: &mut *self.unnamed_field1
         }
     }
 }
