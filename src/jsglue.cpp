@@ -45,6 +45,7 @@ struct ProxyTraps {
     bool (*nativeCall)(JSContext *cx, JS::IsAcceptableThis test, JS::NativeImpl impl, JS::CallArgs args);
     bool (*hasInstance)(JSContext *cx, JS::HandleObject proxy, const JS::MutableHandleValue vp, bool *bp);
     bool (*objectClassIs)(JS::HandleObject obj, js::ESClassValue classValue, JSContext *cx);
+    const char *(*className)(JSContext *cx, JS::HandleObject proxy);
     JSString *(*fun_toString)(JSContext *cx, JS::HandleObject proxy, unsigned indent);
     //bool (*regexp_toShared)(JSContext *cx, JS::HandleObject proxy, RegExpGuard *g);
     bool (*defaultValue)(JSContext *cx, JS::HandleObject obj, JSType hint, JS::MutableHandleValue vp);
@@ -146,6 +147,13 @@ int HandlerFamily = 0 /*JSPROXYSLOT_EXPANDO*/;
         return mTraps.objectClassIs                                             \
                ? mTraps.objectClassIs(obj, classValue, cx)                      \
                : _base::objectClassIs(obj, classValue, cx);                     \
+    }                                                                           \
+                                                                                \
+    virtual const char *className(JSContext *cx, JS::HandleObject proxy)        \
+    {                                                                           \
+        return mTraps.className                                                 \
+               ? mTraps.className(cx, proxy)                                    \
+               : _base::className(cx, proxy);                                   \
     }                                                                           \
                                                                                 \
     virtual JSString *fun_toString(JSContext *cx, JS::HandleObject proxy,       \
@@ -463,7 +471,7 @@ SetProxyExtra(JSObject* obj, uint32_t slot, jsval val)
 bool
 GetObjectProto(JSContext* cx, JS::HandleObject obj, JS::MutableHandleObject proto)
 {
-    js::GetObjectProto(cx, obj, proto);
+    return js::GetObjectProto(cx, obj, proto);
 }
 
 JSObject*

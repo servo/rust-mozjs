@@ -72,12 +72,27 @@ unsafe extern fn gc_callback(rt: *mut JSRuntime, _status: JSGCStatus, _data: *mu
     JS_SetNativeStackBounds(rt, cmp::min(start, end) as uintptr_t, cmp::max(start, end) as uintptr_t);
 }
 
+extern {
+    fn pthread_setspecific(key: i32, arg: *const libc::c_void) -> i32;
+    fn GetThreadKey() -> *const i32;
+}
+
+pub fn init_thread() {
+    use std::rt::local::Local;
+    use std::rt::task::Task;
+    //use std::rt::local_heap::LocalHeap;
+    let mut task = Local::borrow(None::<Task>);
+    unsafe {
+        pthread_setspecific(*GetThreadKey(), &task.heap as *const _ as *const _);
+    }
+ }
+
 pub fn rt() -> rt {
     unsafe {
         let runtime = JS_NewRuntime(default_heapsize, JS_NO_HELPER_THREADS, ptr::mut_null());
         JS_SetGCCallback(runtime, Some(gc_callback), ptr::mut_null());
-        JS_SetGlobalJitCompilerOption(runtime, JSJITCOMPILER_ION_ENABLE, 1);
-        JS_SetGlobalJitCompilerOption(runtime, JSJITCOMPILER_BASELINE_ENABLE, 1);
+        JS_SetGlobalJitCompilerOption(runtime, JSJITCOMPILER_ION_ENABLE, 0);
+        JS_SetGlobalJitCompilerOption(runtime, JSJITCOMPILER_BASELINE_ENABLE, 0);
         JS_SetGlobalJitCompilerOption(runtime, JSJITCOMPILER_PARALLEL_COMPILATION_ENABLE, 0);
         return new_runtime(runtime);
     }

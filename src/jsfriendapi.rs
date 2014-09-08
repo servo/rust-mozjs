@@ -25,6 +25,10 @@ pub struct JSJitInfo {
 }
 
 extern {
+    pub fn PR_GetCurrentThread() -> *const libc::c_void;
+}
+
+extern {
 pub fn JS_ObjectToOuterObject(cx: *mut JSContext,
                               obj: *mut JSObject) -> *mut JSObject;
 pub fn JS_WrapPropertyDescriptor(cx: *mut JSContext,
