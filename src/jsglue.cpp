@@ -345,9 +345,18 @@ InvokeGetOwnPropertyDescriptor(
         JS::HandleId id, JS::MutableHandle<JSPropertyDescriptor> desc,
         unsigned flags)
 {
-    return static_cast<ForwardingProxyHandler*>(handler)->getOwnPropertyDescriptor(cx, proxy,
-                                                                                   id, desc,
-                                                                                   flags);
+  return static_cast<js::BaseProxyHandler*>(handler)->getOwnPropertyDescriptor(cx, proxy,
+                                                                              id, desc,
+                                                                              flags);
+}
+
+bool
+InvokeHasOwn(
+    void* handler,
+    JSContext *cx, JS::HandleObject proxy,
+    JS::HandleId id, bool* hasOwn)
+{
+  return static_cast<js::BaseProxyHandler*>(handler)->hasOwn(cx, proxy, id, hasOwn);
 }
 
 jsval
@@ -468,6 +477,14 @@ SetProxyExtra(JSObject* obj, uint32_t slot, jsval val)
     return js::SetProxyExtra(obj, slot, val);
 }
 
+void
+SetDOMProxyInformation(const void *domProxyHandlerFamily, uint32_t domProxyExpandoSlot,
+                       js::DOMProxyShadowsCheck domProxyShadowsCheck)
+{
+  return js::SetDOMProxyInformation(domProxyHandlerFamily, domProxyExpandoSlot,
+                                    domProxyShadowsCheck);
+}
+
 bool
 GetObjectProto(JSContext* cx, JS::HandleObject obj, JS::MutableHandleObject proto)
 {
@@ -531,6 +548,12 @@ const JSErrorFormatString*
 RUST_js_GetErrorMessage(void* userRef, const char* locale, uint32_t errorNumber)
 {
     return js_GetErrorMessage(userRef, locale, errorNumber);
+}
+
+void*
+GetProxyHandlerFamily()
+{
+  return &HandlerFamily;
 }
 
 bool

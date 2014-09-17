@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use jsapi::{JSContext, JSObject, JSPropertyDescriptor, JSMutableHandleValue, JSHandleValue};
-use jsapi::Struct_JSStructuredCloneCallbacks;
+use jsapi::{JSRuntime, Struct_JSStructuredCloneCallbacks, JSHandleObject, JSHandleId};
 use glue::JSBool;
 use libc;
 
@@ -42,6 +42,7 @@ pub fn JS_WriteStructuredClone(cx: *mut JSContext, v: JSHandleValue, datap: *mut
                                optionalCallbacks: *const Struct_JSStructuredCloneCallbacks,
                                closure: *mut libc::c_void,
                                transferable: JSHandleValue) -> bool;
+pub fn SetDOMCallbacks(rt: *mut JSRuntime, callbacks: *const DOMCallbacks);
 }
 
 //pub type JSJitInfo = JSJitInfo_struct;
@@ -56,3 +57,21 @@ pub mod bindgen {
         pub fn JS_GetAddressableObject(rt: *mut JSRuntime, candidateObj: uintptr_t) -> *mut JSObject;
     }
 }
+
+pub type DOMInstanceClassMatchesProto = Option<extern fn(protoObject: *mut JSObject,
+                                                         protoID: u32,
+                                                         depth: u32) -> bool>;
+pub struct DOMCallbacks {
+    pub instanceClassMatchesProto: DOMInstanceClassMatchesProto,
+}
+
+pub enum DOMProxyShadowsResult {
+    ShadowCheckFailed = 0,
+    Shadows = 1,
+    DoesntShadow = 2,
+    DoesntShadowUnique = 3,
+}
+
+pub type DOMProxyShadowsCheck = Option<unsafe extern fn(cx: *mut JSContext,
+                                                        object: JSHandleObject,
+                                                        id: JSHandleId) -> DOMProxyShadowsResult>;

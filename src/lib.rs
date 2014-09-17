@@ -95,6 +95,10 @@ pub static JSCLASS_USERBIT1: u32 = 1 << 7;
 
 pub static JSSLOT_PROXY_PRIVATE: u32 = /*1*/0; //XXXjdm wrong fo sho
 
+pub static PROXY_PRIVATE_SLOT: u32 = 0;
+pub static PROXY_HANDLER_SLOT: u32 = 1;
+pub static PROXY_EXTRA_SLOT: u32 = 2;
+
 pub static JSRESOLVE_QUALIFIED: u32 = 0x01;
 pub static JSRESOLVE_ASSIGNING: u32 = 0x02;
 pub static JSRESOLVE_DETECTING: u32 = 0x04;

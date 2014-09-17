@@ -91,8 +91,8 @@ pub fn rt() -> rt {
     unsafe {
         let runtime = JS_NewRuntime(default_heapsize, JS_NO_HELPER_THREADS, ptr::mut_null());
         JS_SetGCCallback(runtime, Some(gc_callback), ptr::mut_null());
-        JS_SetGlobalJitCompilerOption(runtime, JSJITCOMPILER_ION_ENABLE, 0);
-        JS_SetGlobalJitCompilerOption(runtime, JSJITCOMPILER_BASELINE_ENABLE, 0);
+        JS_SetGlobalJitCompilerOption(runtime, JSJITCOMPILER_ION_ENABLE, 1);
+        JS_SetGlobalJitCompilerOption(runtime, JSJITCOMPILER_BASELINE_ENABLE, 1);
         JS_SetGlobalJitCompilerOption(runtime, JSJITCOMPILER_PARALLEL_COMPILATION_ENABLE, 0);
         return new_runtime(runtime);
     }

@@ -11,7 +11,7 @@ use jsapi::{Handle, MutableHandle};
 use jsapi::{JSHandleObject, JSHandleId, JSMutableHandleValue};
 use jsapi::{JSMutableHandleObject, JSHandleValue};
 
-use jsfriendapi::JSJitInfo;
+use jsfriendapi::{JSJitInfo, DOMProxyShadowsCheck};
 use jsval::JSVal;
 use libc;
 use libc::c_void;
@@ -88,6 +88,10 @@ pub fn GetProxyExtra(obj: *mut JSObject, slot: libc::c_uint) -> JSVal;
 pub fn GetProxyPrivate(obj: *mut JSObject) -> JSVal;
 pub fn SetProxyExtra(obj: *mut JSObject, slot: libc::c_uint, val: JSVal);
 
+pub fn SetDOMProxyInformation(domProxyHandlerFamily: *const libc::c_void,
+                              domProxyExpandoSlot: u32,
+                              domProxyShadowsCheck: DOMProxyShadowsCheck);
+
 pub fn GetObjectProto(cx: *mut JSContext, obj: JSHandleObject, proto: JSMutableHandleObject) -> bool;
 pub fn GetObjectParent(obj: *mut JSObject) -> *mut JSObject;
 
@@ -106,10 +110,12 @@ pub fn DefineFunctionWithReserved(cx: *mut JSContext, obj: *mut JSObject,
 pub fn GetObjectJSClass(obj: *mut JSObject) -> *const JSClass;
 pub fn RUST_js_GetErrorMessage(userRef: *mut libc::c_void, locale: *const libc::c_char,
                                errorNumber: libc::c_uint) -> *const JSErrorFormatString;
+pub fn GetProxyHandlerFamily() -> *const libc::c_void;
 pub fn IsProxyHandlerFamily(obj: *mut JSObject) -> bool;
 pub fn GetProxyHandlerExtra(obj: *mut JSObject) -> *const libc::c_void;
 pub fn GetProxyHandler(obj: *mut JSObject) -> *mut libc::c_void;
 pub fn InvokeGetOwnPropertyDescriptor(handler: *mut libc::c_void, cx: *mut JSContext, proxy: JSHandleObject, id: JSHandleId, desc: MutableHandle<JSPropertyDescriptor>, flags: libc::c_uint) -> bool;
+pub fn InvokeHasOwn(handler: *mut libc::c_void, cx: *mut JSContext, proxy: JSHandleObject, id: JSHandleId, hasOwn: *mut bool) -> bool;
 pub fn GetGlobalForObjectCrossCompartment(obj: *mut JSObject) -> *mut JSObject;
 pub fn ReportError(cx: *mut JSContext, error: *const libc::c_char);
 pub fn IsWrapper(obj: *mut JSObject) -> JSBool;
