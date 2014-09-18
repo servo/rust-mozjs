@@ -26,12 +26,12 @@ use jsapi::JS_ComputeThis;
 use jsval::JSVal;
 
 // These are just macros in jsapi.h
-pub use JS_NewRuntime = jsapi::JS_Init;
-pub use JS_DestroyRuntime = jsapi::JS_Finish;
+pub use jsapi::JS_Init as JS_NewRuntime;
+pub use jsapi::JS_Finish as JS_DestroyRuntime;
 /*
 FIXME: Not sure where JS_Lock is
-pub use JS_LockRuntime = jsapi::bindgen::JS_Lock;
-pub use JS_UnlockRuntime = jsapi::bindgen::JS_Unlock;
+pub use jsapi::bindgen::JS_Lock as JS_LockRuntime;
+pub use jsapi::bindgen::JS_Unlock as JS_UnlockRuntime;
 */
 
 pub use jsfriendapi::JSJitInfo;

@@ -5,6 +5,7 @@
 //! Rust wrappers around the raw JS apis
 
 use libc::types::os::arch::c95::{size_t, c_uint};
+use libc::uintptr_t;
 use libc::c_char;
 use std::cmp;
 use std::rc;
@@ -56,14 +57,15 @@ impl RtUtils for rc::Rc<rt_rsrc> {
     }
 }
 
-extern fn gc_callback(rt: *mut JSRuntime, _status: JSGCStatus) {
+unsafe extern fn gc_callback(rt: *mut JSRuntime, _status: JSGCStatus) {
     use std::rt::local::Local;
     use std::rt::task::Task;
     unsafe {
         let mut task = Local::borrow(None::<Task>);
         let green_task: Box<GreenTask> = task.maybe_take_runtime().unwrap();
         let (start, end) = green_task.stack_bounds();
-        JS_SetNativeStackBounds(rt, cmp::min(start, end), cmp::max(start, end));
+        JS_SetNativeStackBounds(rt, cmp::min(start, end) as uintptr_t,
+                                    cmp::max(start, end) as uintptr_t);
         task.put_runtime(green_task);
     }
 }
@@ -161,14 +163,12 @@ impl Cx {
     }
 }
 
-pub extern fn reportError(_cx: *mut JSContext, msg: *const c_char, report: *mut JSErrorReport) {
-    unsafe {
-        let fnptr = (*report).filename;
-        let fname = if fnptr.is_not_null() {string::raw::from_buf(fnptr as *const i8 as *const u8)} else {"none".to_string()};
-        let lineno = (*report).lineno;
-        let msg = string::raw::from_buf(msg as *const i8 as *const u8);
-        error!("Error at {:s}:{}: {:s}\n", fname, lineno, msg);
-    }
+pub unsafe extern fn reportError(_cx: *mut JSContext, msg: *const c_char, report: *mut JSErrorReport) {
+    let fnptr = (*report).filename;
+    let fname = if fnptr.is_not_null() {string::raw::from_buf(fnptr as *const i8 as *const u8)} else {"none".to_string()};
+    let lineno = (*report).lineno;
+    let msg = string::raw::from_buf(msg as *const i8 as *const u8);
+    error!("Error at {:s}:{}: {:s}\n", fname, lineno, msg);
 }
 
 pub fn with_compartment<R>(cx: *mut JSContext, object: *mut JSObject, cb: || -> R) -> R {
