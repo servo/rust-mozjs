@@ -7,7 +7,7 @@
 
 #![feature(globs, link_args, managed_boxes, phase, unsafe_destructor)]
 
-#![allow(non_uppercase_statics, non_camel_case_types, non_snake_case_functions)]
+#![allow(non_uppercase_statics, non_camel_case_types, non_snake_case)]
 
 extern crate green;
 extern crate libc;
@@ -41,7 +41,6 @@ pub mod jsapi;
 pub mod linkhack;
 pub mod rust;
 pub mod glue;
-pub mod trace;
 pub mod jsval;
 pub mod jsfriendapi;
 
@@ -157,6 +156,7 @@ pub type ClassObjectCreationOp = Option<extern "C" fn(*mut JSContext, Enum_JSPro
 pub type FinishClassInitOp = Option<extern "C" fn(*mut JSContext, JSHandleObject, JSHandleObject) -> bool>;
 
 // Up-to-date mozjs 075904f5f7ee1176f28630d1dff47820020e5928
+#[repr(C)]
 pub struct Class {
     pub name: *const libc::c_char,
     pub flags: uint32_t,
@@ -183,6 +183,7 @@ pub struct Class {
 }
 
 // Up-to-date mozjs 075904f5f7ee1176f28630d1dff47820020e5928
+#[repr(C)]
 pub struct ClassSpec {
     pub createConstructor: ClassObjectCreationOp,
     pub createPrototype: ClassObjectCreationOp,
@@ -192,6 +193,7 @@ pub struct ClassSpec {
 }
 
 // Up-to-date mozjs 075904f5f7ee1176f28630d1dff47820020e5928
+#[repr(C)]
 pub struct ClassExtension {
     pub outerObject: JSObjectOp,
     pub innerObject: JSObjectOp,
@@ -238,6 +240,7 @@ pub type WatchOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, J
 pub type UnwatchOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, JSHandleId) -> bool>;
 pub type SliceOp = Option<unsafe extern "C" fn(*mut JSContext, JSHandleObject, u32, u32, JSHandleObject) -> bool>;
 
+#[repr(C)]
 pub struct ObjectOps {
     pub lookupGeneric: LookupGenericOp,
     pub lookupProperty: LookupPropOp,
@@ -281,6 +284,7 @@ pub enum ThingRootKind {
     THING_ROOT_LIMIT, //14
 }
 
+#[repr(C)]
 pub struct ContextFriendFields {
     pub runtime_: *mut JSRuntime,
     pub compartment_: *mut libc::c_void,

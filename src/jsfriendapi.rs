@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#![allow(ctypes)]
+
 use jsapi::{JSContext, JSObject, JSPropertyDescriptor, JSMutableHandleValue, JSHandleValue};
 use jsapi::{JSRuntime, Struct_JSStructuredCloneCallbacks, JSHandleObject, JSHandleId};
 use glue::JSBool;
@@ -15,6 +17,7 @@ pub enum OpType {
     Method = 2,
 }
 
+#[repr(C)]
 pub struct JSJitInfo {
     pub op: JSJitPropertyOp,
     pub protoID: u16,
@@ -28,7 +31,7 @@ extern {
     pub fn PR_GetCurrentThread() -> *const libc::c_void;
 }
 
-extern {
+extern "C" {
 pub fn JS_ObjectToOuterObject(cx: *mut JSContext,
                               obj: *mut JSObject) -> *mut JSObject;
 pub fn JS_WrapPropertyDescriptor(cx: *mut JSContext,
@@ -48,12 +51,12 @@ pub fn SetDOMCallbacks(rt: *mut JSRuntime, callbacks: *const DOMCallbacks);
 //pub type JSJitInfo = JSJitInfo_struct;
 
 pub mod bindgen {
-    use jsapi::{JSContext, JSObject, JSClass, JSRuntime, JSHandleObject};
+    use jsapi::{JSContext, JSObject, JSClass, JSRuntime, JSHandleObject, Handle};
     use libc::uintptr_t;
 
-    extern {
+    extern "C" {
         pub fn JS_NewObjectWithUniqueType(cx: *mut JSContext, clasp: *const JSClass,
-                                          proto: JSHandleObject, parent: JSHandleObject) -> *mut JSObject;
+                                          proto: JSHandleObject, parent: Handle<*mut JSObject>) -> *mut JSObject;
         pub fn JS_GetAddressableObject(rt: *mut JSRuntime, candidateObj: uintptr_t) -> *mut JSObject;
     }
 }
@@ -61,6 +64,7 @@ pub mod bindgen {
 pub type DOMInstanceClassMatchesProto = Option<extern fn(protoObject: *mut JSObject,
                                                          protoID: u32,
                                                          depth: u32) -> bool>;
+#[repr(C)]
 pub struct DOMCallbacks {
     pub instanceClassMatchesProto: DOMInstanceClassMatchesProto,
 }

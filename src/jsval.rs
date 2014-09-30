@@ -76,6 +76,7 @@ enum ValueShiftedTag {
 static JSVAL_PAYLOAD_MASK: u64 = 0x00007FFFFFFFFFFF;
 
 #[deriving(PartialEq,Clone)]
+#[repr(C)]
 pub struct JSVal {
     v: u64
 }
