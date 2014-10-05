@@ -4,22 +4,29 @@
 
 //! Rust wrappers around the raw JS apis
 
+use libc;
 use libc::types::os::arch::c95::{size_t, c_uint};
 use libc::uintptr_t;
 use libc::c_char;
 use std::cmp;
+use std::ptr;
 use std::rc;
 use std::rt::Runtime;
 use std::string;
-use jsapi::*;
+use jsapi::{JSContext, JSRuntime, JSGCStatus, JS_NewRuntime, JSObject};
+use jsapi::{JS_SetNativeStackBounds, JS_SetGCCallback, JS_DestroyContext};
+use jsapi::{JS_EnterCompartment, JS_LeaveCompartment};
+use jsapi::{JS_SetErrorReporter, JS_NO_HELPER_THREADS};
+use jsapi::{JS_EvaluateUCScript, JS_BeginRequest, JS_EndRequest};
+use jsapi::{JS_NewContext, JSErrorReport, JSJITCOMPILER_ION_ENABLE};
+use jsapi::{Handle, MutableHandle, JS_DestroyRuntime};
+use jsapi::{JS_SetGlobalJitCompilerOption, JSJITCOMPILER_BASELINE_ENABLE};
+use jsapi::{JSJITCOMPILER_PARALLEL_COMPILATION_ENABLE};
 use jsval::{JSVal, NullValue};
+//use glue::{CompartmentOptions_SetVersion};
+use glue::{/*CompartmentOptions_SetTraceGlobal,*/ ContextOptions_SetVarObjFix};
 use default_stacksize;
 use default_heapsize;
-use JSOPTION_VAROBJFIX;
-use JSOPTION_METHODJIT;
-use JSOPTION_TYPE_INFERENCE;
-use ERR;
-use green::task::GreenTask;
 
 // ___________________________________________________________________________
 // friendly Rustic API to runtimes
@@ -33,7 +40,7 @@ pub struct rt_rsrc {
 impl Drop for rt_rsrc {
     fn drop(&mut self) {
         unsafe {
-            JS_Finish(self.ptr);
+            JS_DestroyRuntime(self.ptr);
         }
     }
 }
@@ -57,23 +64,35 @@ impl RtUtils for rc::Rc<rt_rsrc> {
     }
 }
 
-unsafe extern fn gc_callback(rt: *mut JSRuntime, _status: JSGCStatus) {
+unsafe extern fn gc_callback(rt: *mut JSRuntime, _status: JSGCStatus, _data: *mut libc::c_void) {
     use std::rt::local::Local;
     use std::rt::task::Task;
-    unsafe {
-        let mut task = Local::borrow(None::<Task>);
-        let green_task: Box<GreenTask> = task.maybe_take_runtime().unwrap();
-        let (start, end) = green_task.stack_bounds();
-        JS_SetNativeStackBounds(rt, cmp::min(start, end) as uintptr_t,
-                                    cmp::max(start, end) as uintptr_t);
-        task.put_runtime(green_task);
-    }
+    let mut task = Local::borrow(None::<Task>);
+    let (start, end) = task.stack_bounds();
+    JS_SetNativeStackBounds(rt, cmp::min(start, end) as uintptr_t, cmp::max(start, end) as uintptr_t);
 }
+
+extern {
+    fn pthread_setspecific(key: i32, arg: *const libc::c_void) -> i32;
+    fn GetThreadKey() -> *const i32;
+}
+
+pub fn init_thread() {
+    use std::rt::local::Local;
+    use std::rt::task::Task;
+    let task = Local::borrow(None::<Task>);
+    unsafe {
+        pthread_setspecific(*GetThreadKey(), &task.heap as *const _ as *const _);
+    }
+ }
 
 pub fn rt() -> rt {
     unsafe {
-        let runtime = JS_Init(default_heapsize);
-        JS_SetGCCallback(runtime, Some(gc_callback));
+        let runtime = JS_NewRuntime(default_heapsize, JS_NO_HELPER_THREADS, ptr::null_mut());
+        JS_SetGCCallback(runtime, Some(gc_callback), ptr::null_mut());
+        JS_SetGlobalJitCompilerOption(runtime, JSJITCOMPILER_ION_ENABLE, 1);
+        JS_SetGlobalJitCompilerOption(runtime, JSJITCOMPILER_BASELINE_ENABLE, 1);
+        JS_SetGlobalJitCompilerOption(runtime, JSJITCOMPILER_PARALLEL_COMPILATION_ENABLE, 0);
         return new_runtime(runtime);
     }
 }
@@ -104,20 +123,9 @@ pub fn new_context(ptr: *mut JSContext, rt: rt) -> rc::Rc<Cx> {
 
 impl Cx {
     pub fn set_default_options_and_version(&self) {
-        self.set_options(JSOPTION_VAROBJFIX | JSOPTION_METHODJIT |
-                         JSOPTION_TYPE_INFERENCE);
-        self.set_version(JSVERSION_LATEST);
-    }
-
-    pub fn set_options(&self, v: c_uint) {
         unsafe {
-            JS_SetOptions(self.ptr, v);
-        }
-    }
-
-    pub fn set_version(&self, v: JSVersion) {
-        unsafe {
-            JS_SetVersion(self.ptr, v);
+            ContextOptions_SetVarObjFix(self.ptr, true);
+            //CompartmentOptions_SetVersion(self.ptr, JSVERSION_LATEST);
         }
     }
 
@@ -147,10 +155,16 @@ impl Cx {
             (script_utf16.as_ptr(), script_utf16.len() as c_uint)
         };
         assert!(ptr.is_not_null());
+        let globhandle = Handle {
+            unnamed_field1: &glob,
+        };
+        let rvalhandle = MutableHandle {
+            unnamed_field1: &mut rval,
+        };
         unsafe {
-            if ERR == JS_EvaluateUCScript(self.ptr, glob, ptr, len,
-                                          filename_cstr.as_ptr(), line_num as c_uint,
-                                          &mut rval) {
+            if !JS_EvaluateUCScript(self.ptr, globhandle, ptr, len,
+                                    filename_cstr.as_ptr(),
+                                    line_num as c_uint, rvalhandle) {
                 debug!("...err!");
                 Err(())
             } else {
@@ -173,10 +187,57 @@ pub unsafe extern fn reportError(_cx: *mut JSContext, msg: *const c_char, report
 
 pub fn with_compartment<R>(cx: *mut JSContext, object: *mut JSObject, cb: || -> R) -> R {
     unsafe {
-        let call = JS_EnterCrossCompartmentCall(cx, object);
+        let _ar = JSAutoRequest::new(cx);
+        let old_compartment = JS_EnterCompartment(cx, object);
         let result = cb();
-        JS_LeaveCrossCompartmentCall(call);
+        JS_LeaveCompartment(cx, old_compartment);
         result
+    }
+}
+
+pub struct JSAutoCompartment {
+    cx: *mut JSContext,
+    old: *mut libc::c_void,
+}
+
+impl JSAutoCompartment {
+    pub fn new(cx: *mut JSContext, object: *mut JSObject) -> JSAutoCompartment {
+        let old_compartment = unsafe { JS_EnterCompartment(cx, object) };
+        JSAutoCompartment {
+            cx: cx,
+            old: old_compartment,
+        }
+    }    
+}
+
+impl Drop for JSAutoCompartment {
+    fn drop(&mut self) {
+        unsafe {
+            JS_LeaveCompartment(self.cx, self.old);
+        }
+    }
+}
+
+pub struct JSAutoRequest {
+    cx: *mut JSContext,
+}
+
+impl JSAutoRequest {
+    pub fn new(cx: *mut JSContext) -> JSAutoRequest {
+        unsafe {
+            JS_BeginRequest(cx);
+        }
+        JSAutoRequest {
+            cx: cx,
+        }
+    }
+}
+
+impl Drop for JSAutoRequest {
+    fn drop(&mut self) {
+        unsafe {
+            JS_EndRequest(self.cx);
+        }
     }
 }
 

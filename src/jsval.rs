@@ -4,14 +4,14 @@
 
 use jsapi::{JSObject, JSString, JSGCTraceKind, JSTRACE_OBJECT, JSTRACE_STRING};
 
-use libc::c_void;
 use std::mem;
+use libc::c_void;
 
 #[cfg(target_word_size = "64")]
 static JSVAL_TAG_SHIFT: uint = 47u;
 
 #[repr(u8)]
-enum ValueType {
+pub enum ValueType {
     JSVAL_TYPE_DOUBLE              = 0x00,
     JSVAL_TYPE_INT32               = 0x01,
     JSVAL_TYPE_UNDEFINED           = 0x02,
@@ -75,11 +75,10 @@ enum ValueShiftedTag {
 #[cfg(target_word_size = "64")]
 static JSVAL_PAYLOAD_MASK: u64 = 0x00007FFFFFFFFFFF;
 
-// JSVal was originally type of u64.
-// now this become {u64} because of the union abi issue on ARM arch. See #398.
 #[deriving(PartialEq,Clone)]
+#[repr(C)]
 pub struct JSVal {
-    pub v: u64
+    v: u64
 }
 
 #[cfg(target_word_size = "64")]
@@ -379,6 +378,5 @@ impl JSVal {
         } else {
             JSTRACE_STRING
         }
-
     }
 }
