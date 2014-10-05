@@ -9,6 +9,8 @@
 
 #![allow(non_uppercase_statics, non_camel_case_types, non_snake_case_functions)]
 
+#![reexport_test_harness_main = "test_main"]
+
 extern crate green;
 extern crate libc;
 #[phase(plugin, link)]
@@ -129,14 +131,10 @@ pub unsafe fn JS_CALLEE(_cx: *mut JSContext, vp: *mut JSVal) -> JSVal {
 }
 
 // Run tests with libgreen instead of libnative.
-//
-// FIXME: This egregiously hacks around starting the test runner in a different
-// threading mode than the default by reaching into the auto-generated
-// '__test' module.
 #[cfg(test)]
 #[start]
 fn start(argc: int, argv: *const *const u8) -> int {
-    green::start(argc, argv, rustuv::event_loop, __test::main)
+    green::start(argc, argv, rustuv::event_loop, test_main)
 }
 
 pub type JSObjectOp = extern "C" fn(*mut JSContext, JSHandleObject) -> *mut JSObject;
