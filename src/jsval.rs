@@ -232,7 +232,7 @@ impl JSVal {
 
     #[cfg(target_word_size = "64")]
     pub fn is_boolean(&self) -> bool {
-        self.v == JSVAL_SHIFTED_TAG_BOOLEAN as u64
+        (self.v >> JSVAL_TAG_SHIFT) == JSVAL_TAG_BOOLEAN as u64
     }
 
     #[cfg(target_word_size = "32")]
