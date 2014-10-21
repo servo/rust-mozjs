@@ -6,6 +6,9 @@ authors = ["The Servo Project Developers"]
 
 build = "make -f makefile.cargo"
 
+[features]
+debugmozjs = ['mozjs-sys/debugmozjs']
+
 [dependencies.mozjs-sys]
 
 git = "https://github.com/servo/mozjs"

@@ -10,10 +10,14 @@ AR ?= ar
 
 endif
 
-CFLAGS += -fPIC
+CFLAGS += -fPIC -DJS_NO_JSVAL_JSID_STRUCT_TYPES
 
 ifeq ($(shell $(CXX) -v 2>&1 | grep -c 'clang version\|Apple.*clang'),1)
 CFLAGS += -Wno-c++0x-extensions -Wno-return-type-c-linkage -Wno-invalid-offsetof
+endif
+
+ifneq (,$(CARGO_FEATURE_DEBUGMOZJS))
+	CFLAGS += -g -O0 -DDEBUG -D_DEBUG
 endif
 
 MOZJS_OUTDIR = $(shell find $(OUT_DIR)/.. -name 'mozjs-sys-*' -type d)
