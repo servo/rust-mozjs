@@ -57,7 +57,8 @@ impl RtUtils for rc::Rc<rt_rsrc> {
     }
 }
 
-unsafe extern fn gc_callback(rt: *mut JSRuntime, _status: JSGCStatus) {
+/// If you set your own callback, the first step should be a call to this one.
+pub unsafe extern fn gc_callback(rt: *mut JSRuntime, _status: JSGCStatus) {
     use std::rt::local::Local;
     use std::rt::task::Task;
     unsafe {
