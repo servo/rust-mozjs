@@ -7,7 +7,7 @@
 
 #![feature(globs, link_args, managed_boxes, phase, unsafe_destructor)]
 
-#![allow(non_uppercase_statics, non_camel_case_types, non_snake_case_functions)]
+#![allow(non_uppercase_statics, non_camel_case_types, non_snake_case, ctypes)]
 
 #![reexport_test_harness_main = "test_main"]
 
