@@ -8,7 +8,7 @@ use libc::c_void;
 use std::mem;
 
 #[cfg(target_word_size = "64")]
-static JSVAL_TAG_SHIFT: uint = 47u;
+const JSVAL_TAG_SHIFT: uint = 47u;
 
 #[repr(u8)]
 enum ValueType {
@@ -27,10 +27,10 @@ enum ValueType {
 }
 
 #[cfg(target_word_size = "64")]
-static JSVAL_TAG_MAX_DOUBLE: u32 = 0x1FFF0u32;
+const JSVAL_TAG_MAX_DOUBLE: u32 = 0x1FFF0u32;
 
 #[cfg(target_word_size = "32")]
-static JSVAL_TAG_CLEAR: u32 = 0xFFFFFF80;
+const JSVAL_TAG_CLEAR: u32 = 0xFFFFFF80;
 
 #[cfg(target_word_size = "64")]
 #[repr(u32)]
@@ -73,7 +73,7 @@ enum ValueShiftedTag {
 
 
 #[cfg(target_word_size = "64")]
-static JSVAL_PAYLOAD_MASK: u64 = 0x00007FFFFFFFFFFF;
+const JSVAL_PAYLOAD_MASK: u64 = 0x00007FFFFFFFFFFF;
 
 // JSVal was originally type of u64.
 // now this become {u64} because of the union abi issue on ARM arch. See #398.
@@ -252,13 +252,13 @@ impl JSVal {
 
     #[cfg(target_word_size = "64")]
     pub fn is_primitive(&self) -> bool {
-        static JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_PRIMITIVE_SET: u64 = JSVAL_SHIFTED_TAG_OBJECT as u64;
+        const JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_PRIMITIVE_SET: u64 = JSVAL_SHIFTED_TAG_OBJECT as u64;
         self.v < JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_PRIMITIVE_SET
     }
 
     #[cfg(target_word_size = "32")]
     pub fn is_primitive(&self) -> bool {
-        static JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET: u64 = JSVAL_TAG_OBJECT as u64;
+        const JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET: u64 = JSVAL_TAG_OBJECT as u64;
         (self.v >> 32) < JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET
     }
 
@@ -301,14 +301,14 @@ impl JSVal {
 
     #[cfg(target_word_size = "64")]
     pub fn is_object_or_null(&self) -> bool {
-        static JSVAL_LOWER_INCL_SHIFTED_TAG_OF_OBJ_OR_NULL_SET: u64 = JSVAL_SHIFTED_TAG_NULL as u64;
+        const JSVAL_LOWER_INCL_SHIFTED_TAG_OF_OBJ_OR_NULL_SET: u64 = JSVAL_SHIFTED_TAG_NULL as u64;
         assert!((self.v >> JSVAL_TAG_SHIFT) <= JSVAL_TAG_OBJECT as u64);
         self.v >= JSVAL_LOWER_INCL_SHIFTED_TAG_OF_OBJ_OR_NULL_SET
     }
 
     #[cfg(target_word_size = "32")]
     pub fn is_object_or_null(&self) -> bool {
-        static JSVAL_LOWER_INCL_TAG_OF_OBJ_OR_NULL_SET: u64 = JSVAL_TAG_NULL as u64;
+        const JSVAL_LOWER_INCL_TAG_OF_OBJ_OR_NULL_SET: u64 = JSVAL_TAG_NULL as u64;
         assert!((self.v >> 32) <= JSVAL_TAG_OBJECT as u64);
         (self.v >> 32) >= JSVAL_LOWER_INCL_TAG_OF_OBJ_OR_NULL_SET
     }
@@ -343,13 +343,13 @@ impl JSVal {
 
     #[cfg(target_word_size = "64")]
     pub fn is_gcthing(&self) -> bool {
-        static JSVAL_LOWER_INCL_SHIFTED_TAG_OF_GCTHING_SET: u64 = JSVAL_SHIFTED_TAG_STRING as u64;
+        const JSVAL_LOWER_INCL_SHIFTED_TAG_OF_GCTHING_SET: u64 = JSVAL_SHIFTED_TAG_STRING as u64;
         self.v >= JSVAL_LOWER_INCL_SHIFTED_TAG_OF_GCTHING_SET
     }
 
     #[cfg(target_word_size = "32")]
     pub fn is_gcthing(&self) -> bool {
-        static JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET: u64 = JSVAL_TAG_STRING as u64;
+        const JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET: u64 = JSVAL_TAG_STRING as u64;
         (self.v >> 32) >= JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET
     }
 

@@ -9,7 +9,7 @@ use jsapi::*;
 use jsfriendapi::JSJitInfo;
 use jsval::JSVal;
 
-pub static JS_STRUCTURED_CLONE_VERSION: u32 = 1;
+pub const JS_STRUCTURED_CLONE_VERSION: u32 = 1;
 
 pub struct ProxyTraps {
     pub getPropertyDescriptor: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, jsid, bool, *mut JSPropertyDescriptor) -> bool>,
