@@ -5,7 +5,7 @@
 #![crate_name = "js"]
 #![crate_type = "rlib"]
 
-#![feature(globs, link_args, managed_boxes, phase, unsafe_destructor)]
+#![feature(globs, link_args, phase, unsafe_destructor)]
 
 #![allow(non_uppercase_statics, non_camel_case_types, non_snake_case, ctypes)]
 
@@ -47,53 +47,53 @@ pub mod jsval;
 pub mod jsfriendapi;
 
 // FIXME: Add the remaining options
-pub static JSOPTION_STRICT: uint32_t =    0b00000000000001u32;
-pub static JSOPTION_WERROR: uint32_t =    0b00000000000010u32;
-pub static JSOPTION_VAROBJFIX: uint32_t = 0b00000000000100u32;
-pub static JSOPTION_METHODJIT: uint32_t = (1u32 << 14) as u32;
-pub static JSOPTION_TYPE_INFERENCE: uint32_t = (1u32 << 18) as u32;
+pub const JSOPTION_STRICT: uint32_t =    0b00000000000001u32;
+pub const JSOPTION_WERROR: uint32_t =    0b00000000000010u32;
+pub const JSOPTION_VAROBJFIX: uint32_t = 0b00000000000100u32;
+pub const JSOPTION_METHODJIT: uint32_t = (1u32 << 14) as u32;
+pub const JSOPTION_TYPE_INFERENCE: uint32_t = (1u32 << 18) as u32;
 
-pub static default_heapsize: u32 = 32_u32 * 1024_u32 * 1024_u32;
-pub static default_stacksize: uint = 8192u;
-pub static ERR: JSBool = 0_i32;
+pub const default_heapsize: u32 = 32_u32 * 1024_u32 * 1024_u32;
+pub const default_stacksize: uint = 8192u;
+pub const ERR: JSBool = 0_i32;
 
-pub static JSID_TYPE_STRING: i64 = 0;
-pub static JSID_TYPE_INT: i64 = 1;
-pub static JSID_TYPE_VOID: i64 = 2;
-pub static JSID_TYPE_OBJECT: i64 = 4;
-pub static JSID_TYPE_DEFAULT_XML_NAMESPACE: i64 = 6;
-pub static JSID_TYPE_MASK: i64 = 7;
+pub const JSID_TYPE_STRING: i64 = 0;
+pub const JSID_TYPE_INT: i64 = 1;
+pub const JSID_TYPE_VOID: i64 = 2;
+pub const JSID_TYPE_OBJECT: i64 = 4;
+pub const JSID_TYPE_DEFAULT_XML_NAMESPACE: i64 = 6;
+pub const JSID_TYPE_MASK: i64 = 7;
 
-pub static JSID_VOID: jsid = JSID_TYPE_VOID as jsid;
+pub const JSID_VOID: jsid = JSID_TYPE_VOID as jsid;
 
-pub static JSFUN_CONSTRUCTOR: u32 = 0x200; /* native that can be called as a ctor */
+pub const JSFUN_CONSTRUCTOR: u32 = 0x200; /* native that can be called as a ctor */
 
-pub static JSPROP_ENUMERATE: c_uint = 0x01;
-pub static JSPROP_READONLY: c_uint  = 0x02;
-pub static JSPROP_PERMANENT: c_uint = 0x04;
-pub static JSPROP_GETTER: c_uint = 0x10;
-pub static JSPROP_SETTER: c_uint = 0x20;
-pub static JSPROP_SHARED: c_uint =    0x40;
-pub static JSPROP_NATIVE_ACCESSORS: c_uint = 0x08;
+pub const JSPROP_ENUMERATE: c_uint = 0x01;
+pub const JSPROP_READONLY: c_uint  = 0x02;
+pub const JSPROP_PERMANENT: c_uint = 0x04;
+pub const JSPROP_GETTER: c_uint = 0x10;
+pub const JSPROP_SETTER: c_uint = 0x20;
+pub const JSPROP_SHARED: c_uint =    0x40;
+pub const JSPROP_NATIVE_ACCESSORS: c_uint = 0x08;
 
-pub static JSCLASS_RESERVED_SLOTS_SHIFT: c_uint = 8;
-pub static JSCLASS_RESERVED_SLOTS_WIDTH: c_uint = 8;
-pub static JSCLASS_RESERVED_SLOTS_MASK: c_uint = ((1u << JSCLASS_RESERVED_SLOTS_WIDTH as uint) - 1) as c_uint;
+pub const JSCLASS_RESERVED_SLOTS_SHIFT: c_uint = 8;
+pub const JSCLASS_RESERVED_SLOTS_WIDTH: c_uint = 8;
+pub const JSCLASS_RESERVED_SLOTS_MASK: c_uint = ((1u << JSCLASS_RESERVED_SLOTS_WIDTH as uint) - 1) as c_uint;
 
-pub static JSCLASS_HIGH_FLAGS_SHIFT: c_uint =
+pub const JSCLASS_HIGH_FLAGS_SHIFT: c_uint =
     JSCLASS_RESERVED_SLOTS_SHIFT + JSCLASS_RESERVED_SLOTS_WIDTH;
-pub static JSCLASS_IS_GLOBAL: c_uint = (1<<((JSCLASS_HIGH_FLAGS_SHIFT as uint)+1));
+pub const JSCLASS_IS_GLOBAL: c_uint = (1<<((JSCLASS_HIGH_FLAGS_SHIFT as uint)+1));
 
-pub static JSCLASS_GLOBAL_SLOT_COUNT: c_uint = JSProto_LIMIT * 3 + 24;
+pub const JSCLASS_GLOBAL_SLOT_COUNT: c_uint = JSProto_LIMIT * 3 + 24;
 
-pub static JSCLASS_IS_DOMJSCLASS: u32 = 1 << 4;
-pub static JSCLASS_USERBIT1: u32 = 1 << 7;
+pub const JSCLASS_IS_DOMJSCLASS: u32 = 1 << 4;
+pub const JSCLASS_USERBIT1: u32 = 1 << 7;
 
-pub static JSSLOT_PROXY_PRIVATE: u32 = 1;
+pub const JSSLOT_PROXY_PRIVATE: u32 = 1;
 
-pub static JSRESOLVE_QUALIFIED: u32 = 0x01;
-pub static JSRESOLVE_ASSIGNING: u32 = 0x02;
-pub static JSRESOLVE_DETECTING: u32 = 0x04;
+pub const JSRESOLVE_QUALIFIED: u32 = 0x01;
+pub const JSRESOLVE_ASSIGNING: u32 = 0x02;
+pub const JSRESOLVE_DETECTING: u32 = 0x04;
 
 pub enum JSGCTraceKind {
     JSTRACE_OBJECT,

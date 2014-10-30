@@ -24,7 +24,7 @@ pub type JSCallOnceType = JSBool;
 pub type JSInitCallback = *mut u8;
 
 pub type JSProtoKey = c_uint;
-pub static JSProto_LIMIT: JSProtoKey = 41;
+pub const JSProto_LIMIT: JSProtoKey = 41;
 
 #[repr(u32)]
 pub enum JSVersion {
@@ -69,7 +69,7 @@ pub enum JSGCTraceKind {
     JSTRACE_SCRIPT = 2,
 }
 
-pub static JS_DEFAULT_ZEAL_FREQ: u32 = 100;
+pub const JS_DEFAULT_ZEAL_FREQ: u32 = 100;
 
 pub type moz_static_assert6 = [c_int, ..1u];
 pub struct JSHandleObject {
@@ -148,23 +148,23 @@ pub type JSNative =
                    Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: c_uint, arg3: *mut JSVal) -> JSBool>;
 pub type Enum_JSContextOp = c_uint;
-pub static JSCONTEXT_NEW: c_uint = 0;
-pub static JSCONTEXT_DESTROY: c_uint = 1;
+pub const JSCONTEXT_NEW: c_uint = 0;
+pub const JSCONTEXT_DESTROY: c_uint = 1;
 pub type JSContextOp = Enum_JSContextOp;
 pub type JSContextCallback =
                    Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: c_uint)
                               -> JSBool>;
 pub type Enum_JSGCStatus = c_uint;
-pub static JSGC_BEGIN: c_uint = 0;
-pub static JSGC_END: c_uint = 1;
+pub const JSGC_BEGIN: c_uint = 0;
+pub const JSGC_END: c_uint = 1;
 pub type JSGCStatus = Enum_JSGCStatus;
 pub type JSGCCallback =
                    Option<unsafe extern "C" fn
                               (arg1: *mut JSRuntime, arg2: JSGCStatus)>;
 pub type Enum_JSFinalizeStatus = c_uint;
-pub static JSFINALIZE_START: c_uint = 0;
-pub static JSFINALIZE_END: c_uint = 1;
+pub const JSFINALIZE_START: c_uint = 0;
+pub const JSFINALIZE_END: c_uint = 1;
 pub type JSFinalizeStatus = Enum_JSFinalizeStatus;
 pub type JSFinalizeCallback =
                    Option<unsafe extern "C" fn
@@ -178,16 +178,16 @@ pub type JSErrorReporter =
                    Option<unsafe extern "C" fn
                               (arg1: *mut JSContext, arg2: *const c_char, arg3: *mut JSErrorReport)>;
 pub type Enum_JSExnType = c_int;
-pub static JSEXN_NONE: c_int = -1;
-pub static JSEXN_ERR: c_int = 0;
-pub static JSEXN_INTERNALERR: c_int = 1;
-pub static JSEXN_EVALERR: c_int = 2;
-pub static JSEXN_RANGEERR: c_int = 3;
-pub static JSEXN_REFERENCEERR: c_int = 4;
-pub static JSEXN_SYNTAXERR: c_int = 5;
-pub static JSEXN_TYPEERR: c_int = 6;
-pub static JSEXN_URIERR: c_int = 7;
-pub static JSEXN_LIMIT: c_int = 8;
+pub const JSEXN_NONE: c_int = -1;
+pub const JSEXN_ERR: c_int = 0;
+pub const JSEXN_INTERNALERR: c_int = 1;
+pub const JSEXN_EVALERR: c_int = 2;
+pub const JSEXN_RANGEERR: c_int = 3;
+pub const JSEXN_REFERENCEERR: c_int = 4;
+pub const JSEXN_SYNTAXERR: c_int = 5;
+pub const JSEXN_TYPEERR: c_int = 6;
+pub const JSEXN_URIERR: c_int = 7;
+pub const JSEXN_LIMIT: c_int = 8;
 pub type JSExnType = Enum_JSExnType;
 pub struct JSErrorFormatString {
     pub format: *const c_char,
@@ -256,8 +256,8 @@ pub type JSEnumerateDiagnosticMemoryCallback =
                               (arg1: *mut c_void, arg2: size_t)
                               -> JSBool>;
 pub type Enum_JSGCRootType = c_uint;
-pub static JS_GC_ROOT_VALUE_PTR: c_uint = 0;
-pub static JS_GC_ROOT_GCTHING_PTR: c_uint = 1;
+pub const JS_GC_ROOT_VALUE_PTR: c_uint = 0;
+pub const JS_GC_ROOT_GCTHING_PTR: c_uint = 1;
 pub type JSGCRootType = Enum_JSGCRootType;
 pub type JSGCRootMapFun =
                    Option<unsafe extern "C" fn
@@ -275,30 +275,30 @@ pub struct JSTracer {
     pub realLocation: *mut c_void,
 }
 pub type Enum_JSGCParamKey = c_uint;
-pub static JSGC_MAX_BYTES: c_uint = 0;
-pub static JSGC_MAX_MALLOC_BYTES: c_uint = 1;
-pub static JSGC_BYTES: c_uint = 3;
-pub static JSGC_NUMBER: c_uint = 4;
-pub static JSGC_MAX_CODE_CACHE_BYTES: c_uint = 5;
-pub static JSGC_MODE: c_uint = 6;
-pub static JSGC_UNUSED_CHUNKS: c_uint = 7;
-pub static JSGC_TOTAL_CHUNKS: c_uint = 8;
-pub static JSGC_SLICE_TIME_BUDGET: c_uint = 9;
-pub static JSGC_MARK_STACK_LIMIT: c_uint = 10;
-pub static JSGC_HIGH_FREQUENCY_TIME_LIMIT: c_uint = 11;
-pub static JSGC_HIGH_FREQUENCY_LOW_LIMIT: c_uint = 12;
-pub static JSGC_HIGH_FREQUENCY_HIGH_LIMIT: c_uint = 13;
-pub static JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX: c_uint = 14;
-pub static JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN: c_uint = 15;
-pub static JSGC_LOW_FREQUENCY_HEAP_GROWTH: c_uint = 16;
-pub static JSGC_DYNAMIC_HEAP_GROWTH: c_uint = 17;
-pub static JSGC_DYNAMIC_MARK_SLICE: c_uint = 18;
-pub static JSGC_ANALYSIS_PURGE_TRIGGER: c_uint = 19;
+pub const JSGC_MAX_BYTES: c_uint = 0;
+pub const JSGC_MAX_MALLOC_BYTES: c_uint = 1;
+pub const JSGC_BYTES: c_uint = 3;
+pub const JSGC_NUMBER: c_uint = 4;
+pub const JSGC_MAX_CODE_CACHE_BYTES: c_uint = 5;
+pub const JSGC_MODE: c_uint = 6;
+pub const JSGC_UNUSED_CHUNKS: c_uint = 7;
+pub const JSGC_TOTAL_CHUNKS: c_uint = 8;
+pub const JSGC_SLICE_TIME_BUDGET: c_uint = 9;
+pub const JSGC_MARK_STACK_LIMIT: c_uint = 10;
+pub const JSGC_HIGH_FREQUENCY_TIME_LIMIT: c_uint = 11;
+pub const JSGC_HIGH_FREQUENCY_LOW_LIMIT: c_uint = 12;
+pub const JSGC_HIGH_FREQUENCY_HIGH_LIMIT: c_uint = 13;
+pub const JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX: c_uint = 14;
+pub const JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN: c_uint = 15;
+pub const JSGC_LOW_FREQUENCY_HEAP_GROWTH: c_uint = 16;
+pub const JSGC_DYNAMIC_HEAP_GROWTH: c_uint = 17;
+pub const JSGC_DYNAMIC_MARK_SLICE: c_uint = 18;
+pub const JSGC_ANALYSIS_PURGE_TRIGGER: c_uint = 19;
 pub type JSGCParamKey = Enum_JSGCParamKey;
 pub type Enum_JSGCMode = c_uint;
-pub static JSGC_MODE_GLOBAL: c_uint = 0;
-pub static JSGC_MODE_COMPARTMENT: c_uint = 1;
-pub static JSGC_MODE_INCREMENTAL: c_uint = 2;
+pub const JSGC_MODE_GLOBAL: c_uint = 0;
+pub const JSGC_MODE_COMPARTMENT: c_uint = 1;
+pub const JSGC_MODE_INCREMENTAL: c_uint = 2;
 pub type JSGCMode = Enum_JSGCMode;
 pub type JSClassInternal =                Option<extern "C" fn()>;
 pub struct JSClass {
@@ -369,8 +369,8 @@ pub struct JSSecurityCallbacks {
     pub contentSecurityPolicyAllows: JSCSPEvalChecker,
 }
 pub type Enum_JSExecPart = c_uint;
-pub static JSEXEC_PROLOG: c_uint = 0;
-pub static JSEXEC_MAIN: c_uint = 1;
+pub const JSEXEC_PROLOG: c_uint = 0;
+pub const JSEXEC_MAIN: c_uint = 1;
 pub type JSExecPart = Enum_JSExecPart;
 pub type JSONWriteCallback =
                    Option<extern "C" fn
@@ -403,11 +403,11 @@ pub struct JSErrorReport {
     pub column: c_uint,
 }
 
-pub static JSREPORT_ERROR: c_uint = 0x0;
-pub static JSREPORT_WARNING: c_uint = 0x1;
-pub static JSREPORT_EXCEPTION: c_uint = 0x2;
-pub static JSREPORT_STRICT: c_uint = 0x4;
-pub static JSREPORT_STRICT_MODE_ERROR: c_uint = 0x8;
+pub const JSREPORT_ERROR: c_uint = 0x0;
+pub const JSREPORT_WARNING: c_uint = 0x1;
+pub const JSREPORT_EXCEPTION: c_uint = 0x2;
+pub const JSREPORT_STRICT: c_uint = 0x4;
+pub const JSREPORT_STRICT_MODE_ERROR: c_uint = 0x8;
 
 extern "C" {
 pub fn JS_CreateHandleObject(cx: *mut JSContext, obj: *mut JSObject, phandle: *mut JSHandleObject) -> JSBool;
