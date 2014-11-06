@@ -19,7 +19,6 @@ use JSOPTION_VAROBJFIX;
 use JSOPTION_METHODJIT;
 use JSOPTION_TYPE_INFERENCE;
 use ERR;
-use green::task::GreenTask;
 
 // ___________________________________________________________________________
 // friendly Rustic API to runtimes
@@ -61,14 +60,12 @@ impl RtUtils for rc::Rc<rt_rsrc> {
 pub unsafe extern fn gc_callback(rt: *mut JSRuntime, _status: JSGCStatus) {
     use std::rt::local::Local;
     use std::rt::task::Task;
-    unsafe {
-        let mut task = Local::borrow(None::<Task>);
-        let runtime = task.take_runtime();
-        let (start, end) = runtime.stack_bounds();
-        JS_SetNativeStackBounds(rt, cmp::min(start, end) as uintptr_t,
-                                    cmp::max(start, end) as uintptr_t);
-        task.put_runtime(runtime);
-    }
+    let mut task = Local::borrow(None::<Task>);
+    let runtime = task.take_runtime();
+    let (start, end) = runtime.stack_bounds();
+    JS_SetNativeStackBounds(rt, cmp::min(start, end) as uintptr_t,
+                            cmp::max(start, end) as uintptr_t);
+    task.put_runtime(runtime);
 }
 
 pub fn rt() -> rt {

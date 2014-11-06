@@ -11,6 +11,7 @@ use std::mem;
 const JSVAL_TAG_SHIFT: uint = 47u;
 
 #[repr(u8)]
+#[allow(dead_code)]
 enum ValueType {
     JSVAL_TYPE_DOUBLE              = 0x00,
     JSVAL_TYPE_INT32               = 0x01,
@@ -34,6 +35,7 @@ const JSVAL_TAG_CLEAR: u32 = 0xFFFFFF80;
 
 #[cfg(target_word_size = "64")]
 #[repr(u32)]
+#[allow(dead_code)]
 enum ValueTag {
     JSVAL_TAG_DOUBLE               = JSVAL_TAG_MAX_DOUBLE | (JSVAL_TYPE_DOUBLE as u32),
     JSVAL_TAG_INT32                = JSVAL_TAG_MAX_DOUBLE | (JSVAL_TYPE_INT32 as u32),
@@ -47,6 +49,7 @@ enum ValueTag {
 
 #[cfg(target_word_size = "32")]
 #[repr(u32)]
+#[allow(dead_code)]
 enum ValueTag {
     JSVAL_TAG_PRIVATE              = 0,
     JSVAL_TAG_INT32                = JSVAL_TAG_CLEAR as u32 | (JSVAL_TYPE_INT32 as u32),
@@ -60,6 +63,7 @@ enum ValueTag {
 
 #[cfg(target_word_size = "64")]
 #[repr(u64)]
+#[allow(dead_code)]
 enum ValueShiftedTag {
     JSVAL_SHIFTED_TAG_MAX_DOUBLE   = (((JSVAL_TAG_MAX_DOUBLE as u64) << JSVAL_TAG_SHIFT) | 0xFFFFFFFFu64),
     JSVAL_SHIFTED_TAG_INT32        = ((JSVAL_TAG_INT32 as u64)      << JSVAL_TAG_SHIFT),
