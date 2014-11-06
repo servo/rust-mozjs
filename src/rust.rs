@@ -56,22 +56,9 @@ impl RtUtils for rc::Rc<rt_rsrc> {
     }
 }
 
-/// If you set your own callback, the first step should be a call to this one.
-pub unsafe extern fn gc_callback(rt: *mut JSRuntime, _status: JSGCStatus) {
-    use std::rt::local::Local;
-    use std::rt::task::Task;
-    let mut task = Local::borrow(None::<Task>);
-    let runtime = task.take_runtime();
-    let (start, end) = runtime.stack_bounds();
-    JS_SetNativeStackBounds(rt, cmp::min(start, end) as uintptr_t,
-                            cmp::max(start, end) as uintptr_t);
-    task.put_runtime(runtime);
-}
-
 pub fn rt() -> rt {
     unsafe {
         let runtime = JS_Init(default_heapsize);
-        JS_SetGCCallback(runtime, Some(gc_callback));
         return new_runtime(runtime);
     }
 }
