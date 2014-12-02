@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use jsapi::{JSObject, JSString, JSGCTraceKind, JSTRACE_OBJECT, JSTRACE_STRING};
+use jsapi::{JSObject, JSString, JSGCTraceKind};
+use jsapi::JSGCTraceKind::{JSTRACE_OBJECT, JSTRACE_STRING};
 
 use libc::c_void;
 use std::mem;
@@ -13,18 +14,18 @@ const JSVAL_TAG_SHIFT: uint = 47u;
 #[repr(u8)]
 #[allow(dead_code)]
 enum ValueType {
-    JSVAL_TYPE_DOUBLE              = 0x00,
-    JSVAL_TYPE_INT32               = 0x01,
-    JSVAL_TYPE_UNDEFINED           = 0x02,
-    JSVAL_TYPE_BOOLEAN             = 0x03,
-    JSVAL_TYPE_MAGIC               = 0x04,
-    JSVAL_TYPE_STRING              = 0x05,
-    JSVAL_TYPE_NULL                = 0x06,
-    JSVAL_TYPE_OBJECT              = 0x07,
+    DOUBLE              = 0x00,
+    INT32               = 0x01,
+    UNDEFINED           = 0x02,
+    BOOLEAN             = 0x03,
+    MAGIC               = 0x04,
+    STRING              = 0x05,
+    NULL                = 0x06,
+    OBJECT              = 0x07,
 
     /* These never appear in a jsval; they are only provided as an out-of-band value. */
-    JSVAL_TYPE_UNKNOWN             = 0x20,
-    JSVAL_TYPE_MISSING             = 0x21
+    UNKNOWN             = 0x20,
+    MISSING             = 0x21
 }
 
 #[cfg(target_word_size = "64")]
@@ -37,42 +38,42 @@ const JSVAL_TAG_CLEAR: u32 = 0xFFFFFF80;
 #[repr(u32)]
 #[allow(dead_code)]
 enum ValueTag {
-    JSVAL_TAG_DOUBLE               = JSVAL_TAG_MAX_DOUBLE | (JSVAL_TYPE_DOUBLE as u32),
-    JSVAL_TAG_INT32                = JSVAL_TAG_MAX_DOUBLE | (JSVAL_TYPE_INT32 as u32),
-    JSVAL_TAG_UNDEFINED            = JSVAL_TAG_MAX_DOUBLE | (JSVAL_TYPE_UNDEFINED as u32),
-    JSVAL_TAG_STRING               = JSVAL_TAG_MAX_DOUBLE | (JSVAL_TYPE_STRING as u32),
-    JSVAL_TAG_BOOLEAN              = JSVAL_TAG_MAX_DOUBLE | (JSVAL_TYPE_BOOLEAN as u32),
-    JSVAL_TAG_MAGIC                = JSVAL_TAG_MAX_DOUBLE | (JSVAL_TYPE_MAGIC as u32),
-    JSVAL_TAG_NULL                 = JSVAL_TAG_MAX_DOUBLE | (JSVAL_TYPE_NULL as u32),
-    JSVAL_TAG_OBJECT               = JSVAL_TAG_MAX_DOUBLE | (JSVAL_TYPE_OBJECT as u32),
+    DOUBLE               = JSVAL_TAG_MAX_DOUBLE | (ValueType::DOUBLE as u32),
+    INT32                = JSVAL_TAG_MAX_DOUBLE | (ValueType::INT32 as u32),
+    UNDEFINED            = JSVAL_TAG_MAX_DOUBLE | (ValueType::UNDEFINED as u32),
+    STRING               = JSVAL_TAG_MAX_DOUBLE | (ValueType::STRING as u32),
+    BOOLEAN              = JSVAL_TAG_MAX_DOUBLE | (ValueType::BOOLEAN as u32),
+    MAGIC                = JSVAL_TAG_MAX_DOUBLE | (ValueType::MAGIC as u32),
+    NULL                 = JSVAL_TAG_MAX_DOUBLE | (ValueType::NULL as u32),
+    OBJECT               = JSVAL_TAG_MAX_DOUBLE | (ValueType::OBJECT as u32),
 }
 
 #[cfg(target_word_size = "32")]
 #[repr(u32)]
 #[allow(dead_code)]
 enum ValueTag {
-    JSVAL_TAG_PRIVATE              = 0,
-    JSVAL_TAG_INT32                = JSVAL_TAG_CLEAR as u32 | (JSVAL_TYPE_INT32 as u32),
-    JSVAL_TAG_UNDEFINED            = JSVAL_TAG_CLEAR as u32 | (JSVAL_TYPE_UNDEFINED as u32),
-    JSVAL_TAG_STRING               = JSVAL_TAG_CLEAR as u32 | (JSVAL_TYPE_STRING as u32),
-    JSVAL_TAG_BOOLEAN              = JSVAL_TAG_CLEAR as u32 | (JSVAL_TYPE_BOOLEAN as u32),
-    JSVAL_TAG_MAGIC                = JSVAL_TAG_CLEAR as u32 | (JSVAL_TYPE_MAGIC as u32),
-    JSVAL_TAG_NULL                 = JSVAL_TAG_CLEAR as u32 | (JSVAL_TYPE_NULL as u32),
-    JSVAL_TAG_OBJECT               = JSVAL_TAG_CLEAR as u32 | (JSVAL_TYPE_OBJECT as u32),
+    PRIVATE              = 0,
+    INT32                = JSVAL_TAG_CLEAR as u32 | (ValueType::INT32 as u32),
+    UNDEFINED            = JSVAL_TAG_CLEAR as u32 | (ValueType::UNDEFINED as u32),
+    STRING               = JSVAL_TAG_CLEAR as u32 | (ValueType::STRING as u32),
+    BOOLEAN              = JSVAL_TAG_CLEAR as u32 | (ValueType::BOOLEAN as u32),
+    MAGIC                = JSVAL_TAG_CLEAR as u32 | (ValueType::MAGIC as u32),
+    NULL                 = JSVAL_TAG_CLEAR as u32 | (ValueType::NULL as u32),
+    OBJECT               = JSVAL_TAG_CLEAR as u32 | (ValueType::OBJECT as u32),
 }
 
 #[cfg(target_word_size = "64")]
 #[repr(u64)]
 #[allow(dead_code)]
 enum ValueShiftedTag {
-    JSVAL_SHIFTED_TAG_MAX_DOUBLE   = (((JSVAL_TAG_MAX_DOUBLE as u64) << JSVAL_TAG_SHIFT) | 0xFFFFFFFFu64),
-    JSVAL_SHIFTED_TAG_INT32        = ((JSVAL_TAG_INT32 as u64)      << JSVAL_TAG_SHIFT),
-    JSVAL_SHIFTED_TAG_UNDEFINED    = ((JSVAL_TAG_UNDEFINED as u64)  << JSVAL_TAG_SHIFT),
-    JSVAL_SHIFTED_TAG_STRING       = ((JSVAL_TAG_STRING as u64)     << JSVAL_TAG_SHIFT),
-    JSVAL_SHIFTED_TAG_BOOLEAN      = ((JSVAL_TAG_BOOLEAN as u64)    << JSVAL_TAG_SHIFT),
-    JSVAL_SHIFTED_TAG_MAGIC        = ((JSVAL_TAG_MAGIC as u64)      << JSVAL_TAG_SHIFT),
-    JSVAL_SHIFTED_TAG_NULL         = ((JSVAL_TAG_NULL as u64)       << JSVAL_TAG_SHIFT),
-    JSVAL_SHIFTED_TAG_OBJECT       = ((JSVAL_TAG_OBJECT as u64)     << JSVAL_TAG_SHIFT)
+    MAX_DOUBLE   = (((JSVAL_TAG_MAX_DOUBLE as u64) << JSVAL_TAG_SHIFT) | 0xFFFFFFFFu64),
+    INT32        = ((ValueTag::INT32 as u64)      << JSVAL_TAG_SHIFT),
+    UNDEFINED    = ((ValueTag::UNDEFINED as u64)  << JSVAL_TAG_SHIFT),
+    STRING       = ((ValueTag::STRING as u64)     << JSVAL_TAG_SHIFT),
+    BOOLEAN      = ((ValueTag::BOOLEAN as u64)    << JSVAL_TAG_SHIFT),
+    MAGIC        = ((ValueTag::MAGIC as u64)      << JSVAL_TAG_SHIFT),
+    NULL         = ((ValueTag::NULL as u64)       << JSVAL_TAG_SHIFT),
+    OBJECT       = ((ValueTag::OBJECT as u64)     << JSVAL_TAG_SHIFT)
 }
 
 
@@ -104,24 +105,24 @@ fn BuildJSVal(tag: ValueTag, payload: u64) -> JSVal {
 
 #[inline(always)]
 pub fn NullValue() -> JSVal {
-    BuildJSVal(JSVAL_TAG_NULL, 0)
+    BuildJSVal(ValueTag::NULL, 0)
 }
 
 #[inline(always)]
 pub fn UndefinedValue() -> JSVal {
-    BuildJSVal(JSVAL_TAG_UNDEFINED, 0)
+    BuildJSVal(ValueTag::UNDEFINED, 0)
 }
 
 #[inline(always)]
 pub fn Int32Value(i: i32) -> JSVal {
-    BuildJSVal(JSVAL_TAG_INT32, i as u32 as u64)
+    BuildJSVal(ValueTag::INT32, i as u32 as u64)
 }
 
 #[cfg(target_word_size = "64")]
 #[inline(always)]
 pub fn DoubleValue(f: f64) -> JSVal {
     let bits: u64 = unsafe { mem::transmute(f) };
-    assert!(bits <= JSVAL_SHIFTED_TAG_MAX_DOUBLE as u64)
+    assert!(bits <= ValueShiftedTag::MAX_DOUBLE as u64)
     JSVal {
         v: bits
     }
@@ -152,19 +153,19 @@ pub fn UInt32Value(ui: u32) -> JSVal {
 pub fn StringValue(s: &JSString) -> JSVal {
     let bits = s as *const JSString as uint as u64;
     assert!((bits >> JSVAL_TAG_SHIFT) == 0);
-    BuildJSVal(JSVAL_TAG_STRING, bits)
+    BuildJSVal(ValueTag::STRING, bits)
 }
 
 #[cfg(target_word_size = "32")]
 #[inline(always)]
 pub fn StringValue(s: &JSString) -> JSVal {
     let bits = s as *const JSString as uint as u64;
-    BuildJSVal(JSVAL_TAG_STRING, bits)
+    BuildJSVal(ValueTag::STRING, bits)
 }
 
 #[inline(always)]
 pub fn BooleanValue(b: bool) -> JSVal {
-    BuildJSVal(JSVAL_TAG_BOOLEAN, b as u64)
+    BuildJSVal(ValueTag::BOOLEAN, b as u64)
 }
 
 #[cfg(target_word_size = "64")]
@@ -172,14 +173,14 @@ pub fn BooleanValue(b: bool) -> JSVal {
 pub fn ObjectValue(o: &JSObject) -> JSVal {
     let bits = o as *const JSObject as uint as u64;
     assert!((bits >> JSVAL_TAG_SHIFT) == 0);
-    BuildJSVal(JSVAL_TAG_OBJECT, bits)
+    BuildJSVal(ValueTag::OBJECT, bits)
 }
 
 #[cfg(target_word_size = "32")]
 #[inline(always)]
 pub fn ObjectValue(o: &JSObject) -> JSVal {
     let bits = o as *const JSObject as uint as u64;
-    BuildJSVal(JSVAL_TAG_OBJECT, bits)
+    BuildJSVal(ValueTag::OBJECT, bits)
 }
 
 #[inline(always)]
@@ -206,28 +207,28 @@ pub fn PrivateValue(o: *const c_void) -> JSVal {
 pub fn PrivateValue(o: *const c_void) -> JSVal {
     let ptrBits = o as uint as u64;
     assert!((ptrBits & 1) == 0);
-    BuildJSVal(JSVAL_TAG_PRIVATE, ptrBits)
+    BuildJSVal(ValueTag::PRIVATE, ptrBits)
 }
 
 impl JSVal {
     #[cfg(target_word_size = "64")]
     pub fn is_undefined(&self) -> bool {
-        self.v == JSVAL_SHIFTED_TAG_UNDEFINED as u64
+        self.v == ValueShiftedTag::UNDEFINED as u64
     }
 
     #[cfg(target_word_size = "32")]
     pub fn is_undefined(&self) -> bool {
-        (self.v >> 32) == JSVAL_TAG_UNDEFINED as u64
+        (self.v >> 32) == ValueTag::UNDEFINED as u64
     }
 
     #[cfg(target_word_size = "64")]
     pub fn is_null(&self) -> bool {
-        self.v == JSVAL_SHIFTED_TAG_NULL as u64
+        self.v == ValueShiftedTag::NULL as u64
     }
 
     #[cfg(target_word_size = "32")]
     pub fn is_null(&self) -> bool {
-        (self.v >> 32) == JSVAL_TAG_NULL as u64
+        (self.v >> 32) == ValueTag::NULL as u64
     }
 
     pub fn is_null_or_undefined(&self) -> bool {
@@ -236,17 +237,17 @@ impl JSVal {
 
     #[cfg(target_word_size = "64")]
     pub fn is_boolean(&self) -> bool {
-        (self.v >> JSVAL_TAG_SHIFT) == JSVAL_TAG_BOOLEAN as u64
+        (self.v >> JSVAL_TAG_SHIFT) == ValueTag::BOOLEAN as u64
     }
 
     #[cfg(target_word_size = "32")]
     pub fn is_boolean(&self) -> bool {
-        (self.v >> 32) == JSVAL_TAG_BOOLEAN as u64
+        (self.v >> 32) == ValueTag::BOOLEAN as u64
     }
 
     #[cfg(target_word_size = "64")]
     pub fn is_double(&self) -> bool {
-        self.v <= JSVAL_SHIFTED_TAG_MAX_DOUBLE as u64
+        self.v <= ValueShiftedTag::MAX_DOUBLE as u64
     }
 
     #[cfg(target_word_size = "32")]
@@ -256,35 +257,35 @@ impl JSVal {
 
     #[cfg(target_word_size = "64")]
     pub fn is_primitive(&self) -> bool {
-        const JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_PRIMITIVE_SET: u64 = JSVAL_SHIFTED_TAG_OBJECT as u64;
+        const JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_PRIMITIVE_SET: u64 = ValueShiftedTag::OBJECT as u64;
         self.v < JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_PRIMITIVE_SET
     }
 
     #[cfg(target_word_size = "32")]
     pub fn is_primitive(&self) -> bool {
-        const JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET: u64 = JSVAL_TAG_OBJECT as u64;
+        const JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET: u64 = ValueTag::OBJECT as u64;
         (self.v >> 32) < JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET
     }
 
     #[cfg(target_word_size = "64")]
     pub fn is_string(&self) -> bool {
-        (self.v >> JSVAL_TAG_SHIFT) == JSVAL_TAG_STRING as u64
+        (self.v >> JSVAL_TAG_SHIFT) == ValueTag::STRING as u64
     }
 
     #[cfg(target_word_size = "32")]
     pub fn is_string(&self) -> bool {
-        (self.v >> 32) == JSVAL_TAG_STRING as u64
+        (self.v >> 32) == ValueTag::STRING as u64
     }
 
     #[cfg(target_word_size = "64")]
     pub fn is_object(&self) -> bool {
-        assert!((self.v >> JSVAL_TAG_SHIFT) <= JSVAL_TAG_OBJECT as u64);
-        self.v >= JSVAL_SHIFTED_TAG_OBJECT as u64
+        assert!((self.v >> JSVAL_TAG_SHIFT) <= ValueTag::OBJECT as u64);
+        self.v >= ValueShiftedTag::OBJECT as u64
     }
 
     #[cfg(target_word_size = "32")]
     pub fn is_object(&self) -> bool {
-        (self.v >> 32) == JSVAL_TAG_OBJECT as u64
+        (self.v >> 32) == ValueTag::OBJECT as u64
     }
 
     #[cfg(target_word_size = "64")]
@@ -305,15 +306,15 @@ impl JSVal {
 
     #[cfg(target_word_size = "64")]
     pub fn is_object_or_null(&self) -> bool {
-        const JSVAL_LOWER_INCL_SHIFTED_TAG_OF_OBJ_OR_NULL_SET: u64 = JSVAL_SHIFTED_TAG_NULL as u64;
-        assert!((self.v >> JSVAL_TAG_SHIFT) <= JSVAL_TAG_OBJECT as u64);
+        const JSVAL_LOWER_INCL_SHIFTED_TAG_OF_OBJ_OR_NULL_SET: u64 = ValueShiftedTag::NULL as u64;
+        assert!((self.v >> JSVAL_TAG_SHIFT) <= ValueTag::OBJECT as u64);
         self.v >= JSVAL_LOWER_INCL_SHIFTED_TAG_OF_OBJ_OR_NULL_SET
     }
 
     #[cfg(target_word_size = "32")]
     pub fn is_object_or_null(&self) -> bool {
-        const JSVAL_LOWER_INCL_TAG_OF_OBJ_OR_NULL_SET: u64 = JSVAL_TAG_NULL as u64;
-        assert!((self.v >> 32) <= JSVAL_TAG_OBJECT as u64);
+        const JSVAL_LOWER_INCL_TAG_OF_OBJ_OR_NULL_SET: u64 = ValueTag::NULL as u64;
+        assert!((self.v >> 32) <= ValueTag::OBJECT as u64);
         (self.v >> 32) >= JSVAL_LOWER_INCL_TAG_OF_OBJ_OR_NULL_SET
     }
 
@@ -347,13 +348,13 @@ impl JSVal {
 
     #[cfg(target_word_size = "64")]
     pub fn is_gcthing(&self) -> bool {
-        const JSVAL_LOWER_INCL_SHIFTED_TAG_OF_GCTHING_SET: u64 = JSVAL_SHIFTED_TAG_STRING as u64;
+        const JSVAL_LOWER_INCL_SHIFTED_TAG_OF_GCTHING_SET: u64 = ValueShiftedTag::STRING as u64;
         self.v >= JSVAL_LOWER_INCL_SHIFTED_TAG_OF_GCTHING_SET
     }
 
     #[cfg(target_word_size = "32")]
     pub fn is_gcthing(&self) -> bool {
-        const JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET: u64 = JSVAL_TAG_STRING as u64;
+        const JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET: u64 = ValueTag::STRING as u64;
         (self.v >> 32) >= JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET
     }
 
