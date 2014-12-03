@@ -12,7 +12,6 @@ use std::rc;
 use std::rt::Runtime;
 use std::string;
 use jsapi::*;
-use jsapi::JSVersion::JSVERSION_LATEST;
 use jsval::{JSVal, NullValue};
 use default_stacksize;
 use default_heapsize;
