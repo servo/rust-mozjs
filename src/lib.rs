@@ -9,14 +9,9 @@
 
 #![allow(non_upper_case_globals, non_camel_case_types, non_snake_case, improper_ctypes)]
 
-#![reexport_test_harness_main = "test_main"]
-
-extern crate green;
 extern crate libc;
 #[phase(plugin, link)]
 extern crate log;
-#[cfg(test)]
-extern crate rustuv;
 extern crate serialize;
 
 use libc::c_uint;
@@ -128,13 +123,6 @@ pub unsafe fn JS_THIS_OBJECT(cx: *mut JSContext, vp: *mut JSVal) -> *mut JSObjec
 #[inline(always)]
 pub unsafe fn JS_CALLEE(_cx: *mut JSContext, vp: *mut JSVal) -> JSVal {
     *vp
-}
-
-// Run tests with libgreen instead of libnative.
-#[cfg(test)]
-#[start]
-fn start(argc: int, argv: *const *const u8) -> int {
-    green::start(argc, argv, rustuv::event_loop, test_main)
 }
 
 pub type JSObjectOp = extern "C" fn(*mut JSContext, JSHandleObject) -> *mut JSObject;
