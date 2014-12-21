@@ -9,7 +9,6 @@ use libc::uintptr_t;
 use libc::c_char;
 use std::cmp;
 use std::rc;
-use std::rt::Runtime;
 use std::string;
 use jsapi::*;
 use jsapi::JSVersion::JSVERSION_LATEST;
@@ -124,7 +123,7 @@ impl Cx {
         let script_utf16: Vec<u16> = script.as_slice().utf16_units().collect();
         let filename_cstr = filename.to_c_str();
         let mut rval: JSVal = NullValue();
-        debug!("Evaluating script from {:s} with content {}", filename, script);
+        debug!("Evaluating script from {} with content {}", filename, script);
         // SpiderMonkey does not approve of null pointers.
         let (ptr, len) = if script_utf16.len() == 0 {
             static empty: &'static [u16] = &[];
@@ -154,7 +153,7 @@ pub unsafe extern fn reportError(_cx: *mut JSContext, msg: *const c_char, report
     let fname = if fnptr.is_not_null() {string::raw::from_buf(fnptr as *const i8 as *const u8)} else {"none".to_string()};
     let lineno = (*report).lineno;
     let msg = string::raw::from_buf(msg as *const i8 as *const u8);
-    error!("Error at {:s}:{}: {:s}\n", fname, lineno, msg);
+    error!("Error at {}:{}: {}\n", fname, lineno, msg);
 }
 
 pub fn with_compartment<R>(cx: *mut JSContext, object: *mut JSObject, cb: || -> R) -> R {
