@@ -15,15 +15,15 @@ pub struct ProxyTraps {
     pub getPropertyDescriptor: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, jsid, bool, *mut JSPropertyDescriptor) -> bool>,
     pub getOwnPropertyDescriptor: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, jsid, bool, *mut JSPropertyDescriptor) -> bool>,
     pub defineProperty: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, jsid, *mut JSPropertyDescriptor) -> bool>,
-    pub getOwnPropertyNames: *const u8, //XXX need a representation for AutoIdVector&
+    pub getOwnPropertyNames: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, *mut AutoIdVector) -> bool>,
     pub delete_: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, jsid, *mut bool) -> bool>,
-    pub enumerate: *const u8, //XXX need a representation for AutoIdVector&
+    pub enumerate: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, *mut AutoIdVector) -> bool>,
 
     pub has: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, jsid, *mut bool) -> bool>,
     pub hasOwn: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, jsid, *mut bool) -> bool>,
     pub get: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, *mut JSObject, jsid, *mut JSVal) -> bool>,
     pub set: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, *mut JSObject, jsid, bool, *mut JSVal) -> bool>,
-    pub keys: *const u8, //XXX need a representation for AutoIdVector&
+    pub keys: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, *mut AutoIdVector) -> bool>,
     pub iterate: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, uint, *mut JSVal) -> bool>,
 
     pub call: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, uint, *mut JSVal) -> bool>,
@@ -42,6 +42,8 @@ pub struct ProxyTraps {
     pub getPrototypeOf: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, *mut *mut JSObject) -> bool>,
     pub trace: Option<unsafe extern "C" fn(*mut JSTracer, *mut JSObject)>,
 }
+
+pub enum AutoIdVector {}
 
 #[link(name = "jsglue")]
 extern { }
@@ -110,4 +112,6 @@ pub fn GetGlobalForObjectCrossCompartment(obj: *mut JSObject) -> *mut JSObject;
 pub fn ReportError(cx: *mut JSContext, error: *const libc::c_char);
 pub fn IsWrapper(obj: *mut JSObject) -> JSBool;
 pub fn UnwrapObject(obj: *mut JSObject, stopAtOuter: JSBool, flags: *mut libc::c_uint) -> *mut JSObject;
+
+pub fn AppendToAutoIdVector(v: *mut AutoIdVector, id: jsid) -> bool;
 }

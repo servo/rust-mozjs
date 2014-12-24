@@ -22,10 +22,10 @@ struct ProxyTraps {
     bool (*defineProperty)(JSContext *cx, JSObject *proxy, jsid id,
                            JSPropertyDescriptor *desc);
     bool (*getOwnPropertyNames)(JSContext *cx, JSObject *proxy,
-                                JS::AutoIdVector &props);
+                                JS::AutoIdVector *props);
     bool (*delete_)(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
     bool (*enumerate)(JSContext *cx, JSObject *proxy,
-                      JS::AutoIdVector &props);
+                      JS::AutoIdVector *props);
 
     bool (*has)(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
     bool (*hasOwn)(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
@@ -33,7 +33,7 @@ struct ProxyTraps {
                 jsid id, JS::Value *vp);
     bool (*set)(JSContext *cx, JSObject *proxy, JSObject *receiver,
                 jsid id, bool strict, JS::Value *vp);
-    bool (*keys)(JSContext *cx, JSObject *proxy, JS::AutoIdVector &props);
+    bool (*keys)(JSContext *cx, JSObject *proxy, JS::AutoIdVector *props);
     bool (*iterate)(JSContext *cx, JSObject *proxy, unsigned flags,
                     JS::Value *vp);
 
@@ -92,7 +92,7 @@ int HandlerFamily = js::JSSLOT_PROXY_EXTRA + 0 /*JSPROXYSLOT_EXPANDO*/;
     virtual bool keys(JSContext* cx, JSObject* proxy, JS::AutoIdVector& props)  \
     {                                                                           \
         return mTraps.keys                                                      \
-               ? mTraps.keys(cx, proxy, props)                                  \
+               ? mTraps.keys(cx, proxy, &props)                                 \
                : _base::keys(cx, proxy, props);                                 \
     }                                                                           \
                                                                                 \
@@ -255,7 +255,7 @@ class WrapperProxyHandler : public js::DirectWrapper
                                      JS::AutoIdVector &props)
     {
         return mTraps.getOwnPropertyNames ?
-                mTraps.getOwnPropertyNames(cx, proxy, props) :
+                mTraps.getOwnPropertyNames(cx, proxy, &props) :
                 DirectWrapper::getOwnPropertyNames(cx, proxy, props);
     }
 
@@ -270,7 +270,7 @@ class WrapperProxyHandler : public js::DirectWrapper
                            JS::AutoIdVector &props)
     {
         return mTraps.enumerate ?
-                mTraps.enumerate(cx, proxy, props) :
+                mTraps.enumerate(cx, proxy, &props) :
                 DirectWrapper::enumerate(cx, proxy, props);
     }
 
@@ -311,7 +311,7 @@ class ForwardingProxyHandler : public js::BaseProxyHandler
     virtual bool getOwnPropertyNames(JSContext *cx, JSObject *proxy,
                                      JS::AutoIdVector &props)
     {
-        return mTraps.getOwnPropertyNames(cx, proxy, props);
+        return mTraps.getOwnPropertyNames(cx, proxy, &props);
     }
 
     virtual bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
@@ -322,7 +322,7 @@ class ForwardingProxyHandler : public js::BaseProxyHandler
     virtual bool enumerate(JSContext *cx, JSObject *proxy,
                            JS::AutoIdVector &props)
     {
-        return mTraps.enumerate(cx, proxy, props);
+        return mTraps.enumerate(cx, proxy, &props);
     }
 
     DEFER_TO_TRAP_OR_BASE_CLASS(BaseProxyHandler)
@@ -556,6 +556,12 @@ JSObject*
 UnwrapObject(JSObject* obj, JSBool stopAtOuter, unsigned* flags)
 {
     return js::UnwrapObject(obj, stopAtOuter, flags);
+}
+
+bool
+AppendToAutoIdVector(JS::AutoIdVector* v, jsid id)
+{
+    return v->append(id);
 }
 
 } // extern "C"
