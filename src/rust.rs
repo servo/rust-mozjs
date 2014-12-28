@@ -91,7 +91,9 @@ pub fn new_context(ptr: *mut JSContext, rt: rt) -> rc::Rc<Cx> {
 impl Cx {
     pub fn set_default_options_and_version(&self) {
         self.set_options(JSOPTION_VAROBJFIX | JSOPTION_METHODJIT |
-                         JSOPTION_TYPE_INFERENCE);
+                         JSOPTION_TYPE_INFERENCE |
+                         JSOPTION_DONT_REPORT_UNCAUGHT |
+                         JSOPTION_AUTOJSAPI_OWNS_ERROR_REPORTING);
         self.set_version(JSVERSION_LATEST);
     }
 
