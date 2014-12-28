@@ -46,6 +46,7 @@ pub const JSOPTION_STRICT: uint32_t =    0b00000000000001u32;
 pub const JSOPTION_WERROR: uint32_t =    0b00000000000010u32;
 pub const JSOPTION_VAROBJFIX: uint32_t = 0b00000000000100u32;
 pub const JSOPTION_DONT_REPORT_UNCAUGHT: uint32_t = (1u32 << 8) as u32;
+pub const JSOPTION_AUTOJSAPI_OWNS_ERROR_REPORTING: uint32_t = (1u32 << 10) as u32;
 pub const JSOPTION_METHODJIT: uint32_t = (1u32 << 14) as u32;
 pub const JSOPTION_TYPE_INFERENCE: uint32_t = (1u32 << 18) as u32;
 
