@@ -149,6 +149,7 @@ pub struct Class {
     pub ops: ObjectOps,
 }
 
+#[deriving(Copy)]
 pub struct ClassExtension {
     pub equality: *const u8,
     pub outerObject: Option<JSObjectOp>,
@@ -158,6 +159,7 @@ pub struct ClassExtension {
     pub isWrappedNative: *const u8,
 }
 
+#[deriving(Copy)]
 pub struct ObjectOps {
     pub lookupGeneric: *const u8,
     pub lookupProperty: *const u8,
