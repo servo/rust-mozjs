@@ -127,6 +127,7 @@ pub unsafe fn JS_CALLEE(_cx: *mut JSContext, vp: *mut JSVal) -> JSVal {
 
 pub type JSObjectOp = extern "C" fn(*mut JSContext, JSHandleObject) -> *mut JSObject;
 
+#[deriving(Copy)]
 pub struct Class {
     pub name: *const libc::c_char,
     pub flags: uint32_t,
