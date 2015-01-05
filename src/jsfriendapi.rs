@@ -25,11 +25,13 @@ pub fn JS_WrapPropertyDescriptor(cx: *mut JSContext,
 
 pub mod bindgen {
     use jsapi::{JSContext, JSObject, JSClass, JSRuntime};
-    use libc::uintptr_t;
+    use libc::{uintptr_t, uint8_t, uint32_t};
 
     extern {
         pub fn JS_NewObjectWithUniqueType(cx: *mut JSContext, clasp: *const JSClass,
                                           proto: *const JSObject, parent: *const JSObject) -> *mut JSObject;
         pub fn JS_GetAddressableObject(rt: *mut JSRuntime, candidateObj: uintptr_t) -> *mut JSObject;
+        pub fn JS_NewUint8ClampedArray(cx: *mut JSContext, nelements: uint32_t) -> *mut JSObject;
+        pub fn JS_GetUint8ClampedArrayData(obj: *mut JSObject, cx: *mut JSContext) -> *mut uint8_t;
     }
 }
