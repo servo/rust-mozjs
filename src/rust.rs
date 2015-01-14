@@ -18,6 +18,8 @@ use default_heapsize;
 use JSOPTION_VAROBJFIX;
 use JSOPTION_METHODJIT;
 use JSOPTION_TYPE_INFERENCE;
+use JSOPTION_DONT_REPORT_UNCAUGHT;
+use JSOPTION_AUTOJSAPI_OWNS_ERROR_REPORTING;
 use ERR;
 
 // ___________________________________________________________________________
