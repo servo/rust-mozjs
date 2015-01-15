@@ -5,12 +5,12 @@
 #![crate_name = "js"]
 #![crate_type = "rlib"]
 
-#![feature(globs, link_args, phase, unsafe_destructor)]
+#![feature(link_args, unsafe_destructor, int_uint)]
 
 #![allow(non_upper_case_globals, non_camel_case_types, non_snake_case, improper_ctypes)]
 
 extern crate libc;
-#[phase(plugin, link)]
+#[macro_use]
 extern crate log;
 extern crate serialize;
 
@@ -37,7 +37,6 @@ pub mod jsapi;
 pub mod linkhack;
 pub mod rust;
 pub mod glue;
-pub mod trace;
 pub mod jsval;
 pub mod jsfriendapi;
 

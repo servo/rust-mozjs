@@ -8,7 +8,9 @@ use libc::types::os::arch::c95::{size_t, c_uint};
 use libc::uintptr_t;
 use libc::c_char;
 use std::cmp;
+use std::ffi;
 use std::rc;
+use std::str;
 use std::string;
 use jsapi::*;
 use jsapi::JSVersion::JSVERSION_LATEST;
@@ -154,13 +156,19 @@ impl Cx {
 
 pub unsafe extern fn reportError(_cx: *mut JSContext, msg: *const c_char, report: *mut JSErrorReport) {
     let fnptr = (*report).filename;
-    let fname = if fnptr.is_not_null() {string::raw::from_buf(fnptr as *const i8 as *const u8)} else {"none".to_string()};
+    let fname = if fnptr.is_not_null() {
+        let c_str = ffi::c_str_to_bytes(&fnptr);
+        str::from_utf8(c_str).ok().unwrap().to_string()
+    } else {
+        "none".to_string()
+    };
     let lineno = (*report).lineno;
-    let msg = string::raw::from_buf(msg as *const i8 as *const u8);
+    let c_str = ffi::c_str_to_bytes(&msg);
+    let msg = str::from_utf8(c_str).ok().unwrap().to_string();
     error!("Error at {}:{}: {}\n", fname, lineno, msg);
 }
 
-pub fn with_compartment<R>(cx: *mut JSContext, object: *mut JSObject, cb: || -> R) -> R {
+pub fn with_compartment<R, F: Fn() -> R>(cx: *mut JSContext, object: *mut JSObject, cb: F) -> R {
     unsafe {
         let call = JS_EnterCrossCompartmentCall(cx, object);
         let result = cb();
