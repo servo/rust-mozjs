@@ -110,13 +110,14 @@ pub unsafe fn JS_SET_RVAL(_cx: *mut JSContext, vp: *mut JSVal, v: JSVal) {
     *vp = v;
 }
 
-#[inline(alwyas)]
+#[inline(always)]
 pub unsafe fn JS_THIS_OBJECT(cx: *mut JSContext, vp: *mut JSVal) -> *mut JSObject {
+    let val = *vp.offset(1);
     let r =
-        if (*(vp.offset(1))).is_primitive() {
+        if val.is_primitive() {
             JS_ComputeThis(cx, vp)
         } else {
-            *(vp.offset(1))
+            val
         };
     r.to_object_or_null()
 }
@@ -128,7 +129,7 @@ pub unsafe fn JS_CALLEE(_cx: *mut JSContext, vp: *mut JSVal) -> JSVal {
 
 pub type JSObjectOp = extern "C" fn(*mut JSContext, JSHandleObject) -> *mut JSObject;
 
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct Class {
     pub name: *const libc::c_char,
     pub flags: uint32_t,
@@ -150,7 +151,7 @@ pub struct Class {
     pub ops: ObjectOps,
 }
 
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct ClassExtension {
     pub equality: *const u8,
     pub outerObject: Option<JSObjectOp>,
@@ -160,7 +161,7 @@ pub struct ClassExtension {
     pub isWrappedNative: *const u8,
 }
 
-#[deriving(Copy)]
+#[derive(Copy)]
 pub struct ObjectOps {
     pub lookupGeneric: *const u8,
     pub lookupProperty: *const u8,
