@@ -319,6 +319,7 @@ pub struct JSClass {
     pub trace: JSTraceOp,
     pub reserved: [*mut c_void; 40u],
 }
+unsafe impl Sync for JSClass {}
 pub struct JSConstDoubleSpec {
     pub dval: c_double,
     pub name: *const c_char,

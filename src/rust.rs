@@ -168,7 +168,7 @@ pub unsafe extern fn reportError(_cx: *mut JSContext, msg: *const c_char, report
     error!("Error at {}:{}: {}\n", fname, lineno, msg);
 }
 
-pub fn with_compartment<R, F: Fn() -> R>(cx: *mut JSContext, object: *mut JSObject, cb: F) -> R {
+pub fn with_compartment<R, F: FnMut() -> R>(cx: *mut JSContext, object: *mut JSObject, mut cb: F) -> R {
     unsafe {
         let call = JS_EnterCrossCompartmentCall(cx, object);
         let result = cb();
