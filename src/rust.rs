@@ -8,7 +8,9 @@ use libc::types::os::arch::c95::{size_t, c_uint};
 use libc::uintptr_t;
 use libc::c_char;
 use std::cmp;
+use std::ffi;
 use std::rc;
+use std::str;
 use std::string;
 use jsapi::*;
 use jsapi::JSVersion::JSVERSION_LATEST;
@@ -52,7 +54,7 @@ pub trait RtUtils {
 impl RtUtils for rc::Rc<rt_rsrc> {
     fn cx(&self) -> rc::Rc<Cx> {
         unsafe {
-            new_context(JS_NewContext(self.deref().ptr,
+            new_context(JS_NewContext(self.ptr,
                                       default_stacksize as size_t), self.clone())
         }
     }
@@ -112,7 +114,7 @@ impl Cx {
 
     pub fn set_logging_error_reporter(&self) {
         unsafe {
-            JS_SetErrorReporter(self.ptr, Some(reportError));
+            JS_SetErrorReporter(self.ptr, Some(reportError as unsafe extern "C" fn(*mut JSContext, *const c_char, *mut JSErrorReport)));
         }
     }
 
@@ -125,7 +127,7 @@ impl Cx {
     pub fn evaluate_script(&self, glob: *mut JSObject, script: String, filename: String, line_num: uint)
                     -> Result<(),()> {
         let script_utf16: Vec<u16> = script.as_slice().utf16_units().collect();
-        let filename_cstr = filename.to_c_str();
+        let filename_cstr = ffi::CString::from_slice(filename.as_bytes());
         let mut rval: JSVal = NullValue();
         debug!("Evaluating script from {} with content {}", filename, script);
         // SpiderMonkey does not approve of null pointers.
@@ -135,7 +137,7 @@ impl Cx {
         } else {
             (script_utf16.as_ptr(), script_utf16.len() as c_uint)
         };
-        assert!(ptr.is_not_null());
+        assert!(!ptr.is_null());
         unsafe {
             if ERR == JS_EvaluateUCScript(self.ptr, glob, ptr, len,
                                           filename_cstr.as_ptr(), line_num as c_uint,
@@ -154,13 +156,19 @@ impl Cx {
 
 pub unsafe extern fn reportError(_cx: *mut JSContext, msg: *const c_char, report: *mut JSErrorReport) {
     let fnptr = (*report).filename;
-    let fname = if fnptr.is_not_null() {string::raw::from_buf(fnptr as *const i8 as *const u8)} else {"none".to_string()};
+    let fname = if !fnptr.is_null() {
+        let c_str = ffi::c_str_to_bytes(&fnptr);
+        str::from_utf8(c_str).ok().unwrap().to_string()
+    } else {
+        "none".to_string()
+    };
     let lineno = (*report).lineno;
-    let msg = string::raw::from_buf(msg as *const i8 as *const u8);
+    let c_str = ffi::c_str_to_bytes(&msg);
+    let msg = str::from_utf8(c_str).ok().unwrap().to_string();
     error!("Error at {}:{}: {}\n", fname, lineno, msg);
 }
 
-pub fn with_compartment<R>(cx: *mut JSContext, object: *mut JSObject, cb: || -> R) -> R {
+pub fn with_compartment<R, F: FnMut() -> R>(cx: *mut JSContext, object: *mut JSObject, mut cb: F) -> R {
     unsafe {
         let call = JS_EnterCrossCompartmentCall(cx, object);
         let result = cb();

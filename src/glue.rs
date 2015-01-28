@@ -42,6 +42,7 @@ pub struct ProxyTraps {
     pub getPrototypeOf: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, *mut *mut JSObject) -> bool>,
     pub trace: Option<unsafe extern "C" fn(*mut JSTracer, *mut JSObject)>,
 }
+unsafe impl Sync for ProxyTraps {}
 
 pub enum AutoIdVector {}
 
