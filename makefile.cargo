@@ -20,7 +20,7 @@ ifneq (,$(CARGO_FEATURE_DEBUGMOZJS))
 	CFLAGS += -g -O0 -DDEBUG -D_DEBUG
 endif
 
-MOZJS_OUTDIR = $(shell find $(OUT_DIR)/.. -name 'mozjs-sys-*' -type d)
+MOZJS_OUTDIR = $(shell find $(OUT_DIR)/../.. -name 'mozjs-sys-*' -type d)/out
 CFLAGS += -I$(MOZJS_OUTDIR)/dist/include
 
 .PHONY: all
