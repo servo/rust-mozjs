@@ -12,3 +12,6 @@ debugmozjs = ['mozjs-sys/debugmozjs']
 [dependencies.mozjs-sys]
 
 git = "https://github.com/servo/mozjs"
+
+[dependencies]
+libc = "*"
