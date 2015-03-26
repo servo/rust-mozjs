@@ -7,10 +7,9 @@ authors = ["The Servo Project Developers"]
 build = "build.rs"
 
 [features]
-debugmozjs = ['mozjs-sys/debugmozjs']
+debugmozjs = ['mozjs_sys/debugmozjs']
 
-[dependencies.mozjs-sys]
-
+[dependencies.mozjs_sys]
 git = "https://github.com/servo/mozjs"
 
 [dependencies]
