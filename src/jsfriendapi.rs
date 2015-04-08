@@ -58,5 +58,11 @@ pub mod bindgen {
 
         pub fn JS_NewFloat64Array(cx: *mut JSContext, nelements: uint32_t) -> *mut JSObject;
         pub fn JS_GetFloat64ArrayData(obj: *mut JSObject, cx: *mut JSContext) -> *mut c_double;
+
+        pub fn JS_GetObjectAsArrayBufferView(cx: *mut JSContext,
+                                             obj: *mut JSObject,
+                                             length: *mut uint32_t,
+                                             data: *mut *mut uint8_t)
+                                             -> *mut JSObject;
     }
 }
