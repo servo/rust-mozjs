@@ -12,6 +12,7 @@ use std::ffi;
 use std::rc;
 use std::str;
 use std::string;
+use std::u32;
 use jsapi::*;
 use jsapi::JSVersion::JSVERSION_LATEST;
 use jsval::{JSVal, NullValue};
@@ -26,6 +27,58 @@ use ERR;
 
 // ___________________________________________________________________________
 // friendly Rustic API to runtimes
+
+/// A wrapper for the `JSRuntime` and `JSContext` structures in SpiderMonkey.
+pub struct Runtime {
+    pub rt: rt,
+    pub cx: rc::Rc<Cx>,
+}
+
+impl Runtime {
+    /// Creates a new `JSRuntime` and `JSContext`.
+    pub fn new() -> Runtime {
+        let js_runtime = rt();
+        assert!({
+            let ptr: *mut JSRuntime = (*js_runtime).ptr;
+            !ptr.is_null()
+        });
+
+        // Unconstrain the runtime's threshold on nominal heap size, to avoid
+        // triggering GC too often if operating continuously near an arbitrary
+        // finite threshold. This leaves the maximum-JS_malloc-bytes threshold
+        // still in effect to cause periodical, and we hope hygienic,
+        // last-ditch GCs from within the GC's allocator.
+        unsafe {
+            JS_SetGCParameter(js_runtime.ptr, JSGC_MAX_BYTES, u32::MAX);
+        }
+
+        let js_context = js_runtime.cx();
+        assert!({
+            let ptr: *mut JSContext = (*js_context).ptr;
+            !ptr.is_null()
+        });
+        js_context.set_default_options_and_version();
+        js_context.set_logging_error_reporter();
+        unsafe {
+            JS_SetGCZeal((*js_context).ptr, 0, JS_DEFAULT_ZEAL_FREQ);
+        }
+
+        Runtime {
+            rt: js_runtime,
+            cx: js_context,
+        }
+    }
+
+    /// Returns the `JSRuntime` object.
+    pub fn rt(&self) -> *mut JSRuntime {
+        self.rt.ptr
+    }
+
+    /// Returns the `JSContext` object.
+    pub fn cx(&self) -> *mut JSContext {
+        self.cx.ptr
+    }
+}
 
 pub type rt = rc::Rc<rt_rsrc>;
 
