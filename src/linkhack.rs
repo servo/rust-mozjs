@@ -7,12 +7,14 @@
 #[cfg(target_os = "linux")]
 #[link(name = "pthread")]
 #[link(name = "js_static", kind = "static")]
+#[link(name = "mozglue", kind = "static")]
 #[link(name = "stdc++")]
 #[link(name = "z")]
 extern { }
 
 #[cfg(target_os = "macos")]
 #[link(name = "js_static", kind = "static")]
+#[link(name = "mozglue", kind = "static")]
 #[link(name = "stdc++")]
 #[link(name = "z")]
 extern { }
