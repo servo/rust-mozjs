@@ -125,7 +125,6 @@ pub struct Cx {
     pub rt: rt,
 }
 
-#[unsafe_destructor]
 impl Drop for Cx {
     fn drop(&mut self) {
         unsafe {
