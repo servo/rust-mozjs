@@ -71,7 +71,7 @@ pub enum JSGCTraceKind {
 
 pub const JS_DEFAULT_ZEAL_FREQ: u32 = 100;
 
-pub type moz_static_assert6 = [c_int; 1u];
+pub type moz_static_assert6 = [c_int; 1];
 pub struct JSHandleObject {
     pub unnamed_field1: *mut *mut JSObject,
 }
@@ -317,14 +317,14 @@ pub struct JSClass {
     pub hasInstance: JSHasInstanceOp,
     pub construct: JSNative,
     pub trace: JSTraceOp,
-    pub reserved: [*mut c_void; 40u],
+    pub reserved: [*mut c_void; 40],
 }
 unsafe impl Sync for JSClass {}
 pub struct JSConstDoubleSpec {
     pub dval: c_double,
     pub name: *const c_char,
     pub flags: uint8_t,
-    pub spare: [uint8_t; 3u],
+    pub spare: [uint8_t; 3],
 }
 pub struct JSStrictPropertyOpWrapper {
     pub op: JSNative,

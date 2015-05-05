@@ -24,18 +24,18 @@ pub struct ProxyTraps {
     pub get: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, *mut JSObject, jsid, *mut JSVal) -> bool>,
     pub set: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, *mut JSObject, jsid, bool, *mut JSVal) -> bool>,
     pub keys: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, *mut AutoIdVector) -> bool>,
-    pub iterate: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, uint, *mut JSVal) -> bool>,
+    pub iterate: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, usize, *mut JSVal) -> bool>,
 
-    pub call: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, uint, *mut JSVal) -> bool>,
-    pub construct: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, uint, *mut JSVal, *mut JSVal) -> bool>,
+    pub call: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, usize, *mut JSVal) -> bool>,
+    pub construct: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, usize, *mut JSVal, *mut JSVal) -> bool>,
     pub nativeCall: *const u8, //XXX need a representation for IsAcceptableThis, NativeImpl, and CallArgs
     pub hasInstance: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, *mut JSVal, *mut bool) -> bool>,
-    pub typeOf: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject) -> uint>, //XXX JSType enum
-    pub objectClassIs: Option<unsafe extern "C" fn(*mut JSObject, uint, *mut JSContext) -> bool>, //XXX ESClassValue enum
+    pub typeOf: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject) -> usize>, //XXX JSType enum
+    pub objectClassIs: Option<unsafe extern "C" fn(*mut JSObject, usize, *mut JSContext) -> bool>, //XXX ESClassValue enum
     pub obj_toString: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject) -> *mut JSString>,
-    pub fun_toString: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, uint) -> *mut JSString>,
+    pub fun_toString: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, usize) -> *mut JSString>,
     //regexp_toShared: *u8,
-    pub defaultValue: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, uint, *mut JSVal) -> bool>, //XXX JSType enum
+    pub defaultValue: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, usize, *mut JSVal) -> bool>, //XXX JSType enum
     pub iteratorNext: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, *mut JSVal) -> bool>,
     pub finalize: Option<unsafe extern "C" fn(*mut JSFreeOp, *mut JSObject)>,
     pub getElementIfPresent: Option<unsafe extern "C" fn(*mut JSContext, *mut JSObject, *mut JSObject, u32, *mut JSVal, *mut bool) -> bool>,

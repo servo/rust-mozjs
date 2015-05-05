@@ -5,14 +5,14 @@
 #![crate_name = "js"]
 #![crate_type = "rlib"]
 
-#![feature(link_args, unsafe_destructor, int_uint)]
+#![feature(link_args, unsafe_destructor,collections)]
 
 #![allow(non_upper_case_globals, non_camel_case_types, non_snake_case, improper_ctypes)]
 
 extern crate libc;
 #[macro_use]
 extern crate log;
-extern crate serialize;
+extern crate rustc_serialize as serialize;
 
 use libc::c_uint;
 use libc::types::common::c99::uint32_t;
@@ -50,7 +50,7 @@ pub const JSOPTION_METHODJIT: uint32_t = (1u32 << 14) as u32;
 pub const JSOPTION_TYPE_INFERENCE: uint32_t = (1u32 << 18) as u32;
 
 pub const default_heapsize: u32 = 32_u32 * 1024_u32 * 1024_u32;
-pub const default_stacksize: uint = 8192u;
+pub const default_stacksize: usize = 8192;
 pub const ERR: JSBool = 0_i32;
 
 pub const JSID_TYPE_STRING: i64 = 0;
@@ -74,11 +74,11 @@ pub const JSPROP_NATIVE_ACCESSORS: c_uint = 0x08;
 
 pub const JSCLASS_RESERVED_SLOTS_SHIFT: c_uint = 8;
 pub const JSCLASS_RESERVED_SLOTS_WIDTH: c_uint = 8;
-pub const JSCLASS_RESERVED_SLOTS_MASK: c_uint = ((1u << JSCLASS_RESERVED_SLOTS_WIDTH as uint) - 1) as c_uint;
+pub const JSCLASS_RESERVED_SLOTS_MASK: c_uint = ((1 << JSCLASS_RESERVED_SLOTS_WIDTH) - 1) as c_uint;
 
 pub const JSCLASS_HIGH_FLAGS_SHIFT: c_uint =
     JSCLASS_RESERVED_SLOTS_SHIFT + JSCLASS_RESERVED_SLOTS_WIDTH;
-pub const JSCLASS_IS_GLOBAL: c_uint = (1<<((JSCLASS_HIGH_FLAGS_SHIFT as uint)+1));
+pub const JSCLASS_IS_GLOBAL: c_uint = 1 << (JSCLASS_HIGH_FLAGS_SHIFT + 1);
 
 pub const JSCLASS_GLOBAL_SLOT_COUNT: c_uint = JSProto_LIMIT * 3 + 24;
 
@@ -98,7 +98,7 @@ pub enum JSGCTraceKind {
 }
 
 pub fn JSCLASS_HAS_RESERVED_SLOTS(n: c_uint) -> c_uint {
-    (n & JSCLASS_RESERVED_SLOTS_MASK) << (JSCLASS_RESERVED_SLOTS_SHIFT as uint)
+    (n & JSCLASS_RESERVED_SLOTS_MASK) << JSCLASS_RESERVED_SLOTS_SHIFT
 }
 
 #[inline(always)]
@@ -129,7 +129,7 @@ pub unsafe fn JS_CALLEE(_cx: *mut JSContext, vp: *mut JSVal) -> JSVal {
 
 pub type JSObjectOp = extern "C" fn(*mut JSContext, JSHandleObject) -> *mut JSObject;
 
-#[derive(Copy)]
+#[derive(Copy, Clone)]
 pub struct Class {
     pub name: *const libc::c_char,
     pub flags: uint32_t,
@@ -151,7 +151,7 @@ pub struct Class {
     pub ops: ObjectOps,
 }
 
-#[derive(Copy)]
+#[derive(Copy, Clone)]
 pub struct ClassExtension {
     pub equality: *const u8,
     pub outerObject: Option<JSObjectOp>,
@@ -161,7 +161,7 @@ pub struct ClassExtension {
     pub isWrappedNative: *const u8,
 }
 
-#[derive(Copy)]
+#[derive(Copy, Clone)]
 pub struct ObjectOps {
     pub lookupGeneric: *const u8,
     pub lookupProperty: *const u8,

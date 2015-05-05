@@ -5,13 +5,10 @@
 //! Rust wrappers around the raw JS apis
 
 use libc::types::os::arch::c95::{size_t, c_uint};
-use libc::uintptr_t;
 use libc::c_char;
-use std::cmp;
 use std::ffi;
 use std::rc;
 use std::str;
-use std::string;
 use std::u32;
 use jsapi::*;
 use jsapi::JSVersion::JSVERSION_LATEST;
@@ -128,7 +125,6 @@ pub struct Cx {
     pub rt: rt,
 }
 
-#[unsafe_destructor]
 impl Drop for Cx {
     fn drop(&mut self) {
         unsafe {
@@ -177,10 +173,10 @@ impl Cx {
         }
     }
 
-    pub fn evaluate_script(&self, glob: *mut JSObject, script: String, filename: String, line_num: uint)
+    pub fn evaluate_script(&self, glob: *mut JSObject, script: String, filename: String, line_num: usize)
                     -> Result<(),()> {
-        let script_utf16: Vec<u16> = script.as_slice().utf16_units().collect();
-        let filename_cstr = ffi::CString::from_slice(filename.as_bytes());
+        let script_utf16: Vec<u16> = script.utf16_units().collect();
+        let filename_cstr = ffi::CString::new(filename.as_bytes()).unwrap();
         let mut rval: JSVal = NullValue();
         debug!("Evaluating script from {} with content {}", filename, script);
         // SpiderMonkey does not approve of null pointers.
@@ -210,14 +206,14 @@ impl Cx {
 pub unsafe extern fn reportError(_cx: *mut JSContext, msg: *const c_char, report: *mut JSErrorReport) {
     let fnptr = (*report).filename;
     let fname = if !fnptr.is_null() {
-        let c_str = ffi::c_str_to_bytes(&fnptr);
-        str::from_utf8(c_str).ok().unwrap().to_string()
+        let c_str = ffi::CStr::from_ptr(fnptr);
+        str::from_utf8(c_str.to_bytes()).ok().unwrap().to_string()
     } else {
         "none".to_string()
     };
     let lineno = (*report).lineno;
-    let c_str = ffi::c_str_to_bytes(&msg);
-    let msg = str::from_utf8(c_str).ok().unwrap().to_string();
+    let c_str = ffi::CStr::from_ptr(msg);
+    let msg = str::from_utf8(c_str.to_bytes()).ok().unwrap().to_string();
     error!("Error at {}:{}: {}\n", fname, lineno, msg);
 }
 
