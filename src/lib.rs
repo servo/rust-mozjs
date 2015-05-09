@@ -5,9 +5,9 @@
 #![crate_name = "js"]
 #![crate_type = "rlib"]
 
-#![feature(link_args, unsafe_destructor,collections)]
+#![feature(link_args, collections)]
 
-#![allow(non_upper_case_globals, non_camel_case_types, non_snake_case, improper_ctypes)]
+#![allow(non_upper_case_globals, non_camel_case_types, non_snake_case, improper_ctypes, raw_pointer_derive)]
 
 extern crate libc;
 #[macro_use]

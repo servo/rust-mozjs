@@ -64,6 +64,7 @@ mod ValueTag {
 }
 
 #[cfg(target_pointer_width = "64")]
+#[allow(dead_code)]
 mod ValueShiftedTag {
     use super::{JSVAL_TAG_MAX_DOUBLE, JSVAL_TAG_SHIFT, ValueTag};
 

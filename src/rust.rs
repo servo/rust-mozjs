@@ -34,10 +34,11 @@ pub struct Runtime {
 impl Runtime {
     /// Creates a new `JSRuntime` and `JSContext`.
     pub fn new() -> Runtime {
-        let js_runtime = rt();
-        assert!({
-            let ptr: *mut JSRuntime = (*js_runtime).ptr;
-            !ptr.is_null()
+        let js_runtime = unsafe { JS_Init(default_heapsize) };
+        assert!(!js_runtime.is_null());
+
+        let js_runtime = rc::Rc::new(rt_rsrc {
+            ptr: js_runtime
         });
 
         // Unconstrain the runtime's threshold on nominal heap size, to avoid
@@ -49,10 +50,14 @@ impl Runtime {
             JS_SetGCParameter(js_runtime.ptr, JSGC_MAX_BYTES, u32::MAX);
         }
 
-        let js_context = js_runtime.cx();
-        assert!({
-            let ptr: *mut JSContext = (*js_context).ptr;
-            !ptr.is_null()
+        let js_context = unsafe {
+            JS_NewContext(js_runtime.ptr, default_stacksize as size_t)
+        };
+        assert!(!js_context.is_null());
+
+        let js_context = rc::Rc::new(Cx {
+            ptr: js_context,
+            rt: js_runtime.clone(),
         });
         js_context.set_default_options_and_version();
         js_context.set_logging_error_reporter();
@@ -91,32 +96,6 @@ impl Drop for rt_rsrc {
     }
 }
 
-pub fn new_runtime(p: *mut JSRuntime) -> rt {
-    return rc::Rc::new(rt_rsrc {
-        ptr: p
-    })
-}
-
-pub trait RtUtils {
-    fn cx(&self) -> rc::Rc<Cx>;
-}
-
-impl RtUtils for rc::Rc<rt_rsrc> {
-    fn cx(&self) -> rc::Rc<Cx> {
-        unsafe {
-            new_context(JS_NewContext(self.ptr,
-                                      default_stacksize as size_t), self.clone())
-        }
-    }
-}
-
-pub fn rt() -> rt {
-    unsafe {
-        let runtime = JS_Init(default_heapsize);
-        return new_runtime(runtime);
-    }
-}
-
 // ___________________________________________________________________________
 // contexts
 
@@ -131,13 +110,6 @@ impl Drop for Cx {
             JS_DestroyContext(self.ptr);
         }
     }
-}
-
-pub fn new_context(ptr: *mut JSContext, rt: rt) -> rc::Rc<Cx> {
-    return rc::Rc::new(Cx {
-        ptr: ptr,
-        rt: rt,
-    })
 }
 
 impl Cx {
@@ -228,15 +200,13 @@ pub fn with_compartment<R, F: FnMut() -> R>(cx: *mut JSContext, object: *mut JSO
 
 #[cfg(test)]
 pub mod test {
-    use super::rt;
-    use super::RtUtils;
+    use super::Runtime;
 
     #[test]
     pub fn dummy() {
-        let rt = rt();
-        let cx = rt.cx();
-        cx.deref().set_default_options_and_version();
-        cx.deref().set_logging_error_reporter();
+        let rt = Runtime::new();
+        rt.cx.set_default_options_and_version();
+        rt.cx.set_logging_error_reporter();
     }
 
 }
