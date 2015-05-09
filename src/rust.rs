@@ -34,10 +34,11 @@ pub struct Runtime {
 impl Runtime {
     /// Creates a new `JSRuntime` and `JSContext`.
     pub fn new() -> Runtime {
-        let js_runtime = rt();
-        assert!({
-            let ptr: *mut JSRuntime = (*js_runtime).ptr;
-            !ptr.is_null()
+        let js_runtime = unsafe { JS_Init(default_heapsize) };
+        assert!(!js_runtime.is_null());
+
+        let js_runtime = rc::Rc::new(rt_rsrc {
+            ptr: js_runtime
         });
 
         // Unconstrain the runtime's threshold on nominal heap size, to avoid
@@ -92,19 +93,6 @@ impl Drop for rt_rsrc {
         unsafe {
             JS_Finish(self.ptr);
         }
-    }
-}
-
-pub fn new_runtime(p: *mut JSRuntime) -> rt {
-    return rc::Rc::new(rt_rsrc {
-        ptr: p
-    })
-}
-
-pub fn rt() -> rt {
-    unsafe {
-        let runtime = JS_Init(default_heapsize);
-        return new_runtime(runtime);
     }
 }
 
