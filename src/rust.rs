@@ -7,7 +7,6 @@
 use libc::types::os::arch::c95::{size_t, c_uint};
 use libc::c_char;
 use std::ffi;
-use std::rc;
 use std::str;
 use std::u32;
 use jsapi::*;
@@ -26,10 +25,9 @@ use ERR;
 // friendly Rustic API to runtimes
 
 /// A wrapper for the `JSRuntime` and `JSContext` structures in SpiderMonkey.
-#[derive(Clone)]
 pub struct Runtime {
-    pub rt: rt,
-    pub cx: rc::Rc<Cx>,
+    rt: *mut JSRuntime,
+    cx: *mut JSContext,
 }
 
 impl Runtime {
@@ -67,13 +65,6 @@ impl Runtime {
             JS_SetGCZeal(js_context, 0, JS_DEFAULT_ZEAL_FREQ);
         }
 
-        let js_runtime = rc::Rc::new(rt_rsrc {
-            ptr: js_runtime
-        });
-        let js_context = rc::Rc::new(Cx {
-            ptr: js_context,
-            rt: js_runtime.clone(),
-        });
         Runtime {
             rt: js_runtime,
             cx: js_context,
@@ -82,12 +73,12 @@ impl Runtime {
 
     /// Returns the `JSRuntime` object.
     pub fn rt(&self) -> *mut JSRuntime {
-        self.rt.ptr
+        self.rt
     }
 
     /// Returns the `JSContext` object.
     pub fn cx(&self) -> *mut JSContext {
-        self.cx.ptr
+        self.cx
     }
 
     pub fn evaluate_script(&self, global: *mut JSObject, script: String,
@@ -125,32 +116,11 @@ impl Runtime {
     }
 }
 
-pub type rt = rc::Rc<rt_rsrc>;
-
-pub struct rt_rsrc {
-    pub ptr : *mut JSRuntime,
-}
-
-impl Drop for rt_rsrc {
+impl Drop for Runtime {
     fn drop(&mut self) {
         unsafe {
-            JS_Finish(self.ptr);
-        }
-    }
-}
-
-// ___________________________________________________________________________
-// contexts
-
-pub struct Cx {
-    pub ptr: *mut JSContext,
-    pub rt: rt,
-}
-
-impl Drop for Cx {
-    fn drop(&mut self) {
-        unsafe {
-            JS_DestroyContext(self.ptr);
+            JS_DestroyContext(self.cx);
+            JS_Finish(self.rt);
         }
     }
 }
