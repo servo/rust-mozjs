@@ -37,34 +37,42 @@ impl Runtime {
         let js_runtime = unsafe { JS_Init(default_heapsize) };
         assert!(!js_runtime.is_null());
 
-        let js_runtime = rc::Rc::new(rt_rsrc {
-            ptr: js_runtime
-        });
-
         // Unconstrain the runtime's threshold on nominal heap size, to avoid
         // triggering GC too often if operating continuously near an arbitrary
         // finite threshold. This leaves the maximum-JS_malloc-bytes threshold
         // still in effect to cause periodical, and we hope hygienic,
         // last-ditch GCs from within the GC's allocator.
         unsafe {
-            JS_SetGCParameter(js_runtime.ptr, JSGC_MAX_BYTES, u32::MAX);
+            JS_SetGCParameter(js_runtime, JSGC_MAX_BYTES, u32::MAX);
         }
 
         let js_context = unsafe {
-            JS_NewContext(js_runtime.ptr, default_stacksize as size_t)
+            JS_NewContext(js_runtime, default_stacksize as size_t)
         };
         assert!(!js_context.is_null());
 
+        unsafe {
+            JS_SetOptions(js_context,
+                          JSOPTION_VAROBJFIX |
+                          JSOPTION_METHODJIT |
+                          JSOPTION_TYPE_INFERENCE |
+                          JSOPTION_DONT_REPORT_UNCAUGHT |
+                          JSOPTION_AUTOJSAPI_OWNS_ERROR_REPORTING);
+
+            JS_SetVersion(js_context, JSVERSION_LATEST);
+            JS_SetErrorReporter(js_context,
+                                Some(reportError as unsafe extern "C"
+                                     fn(*mut JSContext, *const c_char, *mut JSErrorReport)));
+            JS_SetGCZeal(js_context, 0, JS_DEFAULT_ZEAL_FREQ);
+        }
+
+        let js_runtime = rc::Rc::new(rt_rsrc {
+            ptr: js_runtime
+        });
         let js_context = rc::Rc::new(Cx {
             ptr: js_context,
             rt: js_runtime.clone(),
         });
-        js_context.set_default_options_and_version();
-        js_context.set_logging_error_reporter();
-        unsafe {
-            JS_SetGCZeal((*js_context).ptr, 0, JS_DEFAULT_ZEAL_FREQ);
-        }
-
         Runtime {
             rt: js_runtime,
             cx: js_context,
@@ -113,38 +121,6 @@ impl Drop for Cx {
 }
 
 impl Cx {
-    pub fn set_default_options_and_version(&self) {
-        self.set_options(JSOPTION_VAROBJFIX | JSOPTION_METHODJIT |
-                         JSOPTION_TYPE_INFERENCE |
-                         JSOPTION_DONT_REPORT_UNCAUGHT |
-                         JSOPTION_AUTOJSAPI_OWNS_ERROR_REPORTING);
-        self.set_version(JSVERSION_LATEST);
-    }
-
-    pub fn set_options(&self, v: c_uint) {
-        unsafe {
-            JS_SetOptions(self.ptr, v);
-        }
-    }
-
-    pub fn set_version(&self, v: JSVersion) {
-        unsafe {
-            JS_SetVersion(self.ptr, v);
-        }
-    }
-
-    pub fn set_logging_error_reporter(&self) {
-        unsafe {
-            JS_SetErrorReporter(self.ptr, Some(reportError as unsafe extern "C" fn(*mut JSContext, *const c_char, *mut JSErrorReport)));
-        }
-    }
-
-    pub fn set_error_reporter(&self, reportfn: unsafe extern "C" fn(*mut JSContext, *const c_char, *mut JSErrorReport)) {
-        unsafe {
-            JS_SetErrorReporter(self.ptr, Some(reportfn));
-        }
-    }
-
     pub fn evaluate_script(&self, glob: *mut JSObject, script: String, filename: String, line_num: usize)
                     -> Result<(),()> {
         let script_utf16: Vec<u16> = script.utf16_units().collect();
@@ -204,9 +180,7 @@ pub mod test {
 
     #[test]
     pub fn dummy() {
-        let rt = Runtime::new();
-        rt.cx.set_default_options_and_version();
-        rt.cx.set_logging_error_reporter();
+        let _rt = Runtime::new();
     }
 
 }
