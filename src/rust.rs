@@ -727,13 +727,52 @@ pub unsafe extern fn reportError(_cx: *mut JSContext, msg: *const c_char, report
 
 #[cfg(test)]
 pub mod test {
+    use {JSCLASS_IS_GLOBAL, JSCLASS_GLOBAL_SLOT_COUNT};
+    use {JSCLASS_RESERVED_SLOTS_MASK, JSCLASS_RESERVED_SLOTS_SHIFT};
     use super::Runtime;
     use jsapi::JS_Init;
+    use jsapi::JSClass;
+    use jsapi::{JS_NewGlobalObject, JS_PropertyStub, JS_StrictPropertyStub};
+    use jsapi::{RootedObject, CompartmentOptions, OnNewGlobalHookOption};
+    use jsapi::_Z24JS_GlobalObjectTraceHookP8JSTracerP8JSObject;
+
+    use libc;
+
+    use std::ptr;
 
     #[test]
     pub fn dummy() {
+        static CLASS: JSClass = JSClass {
+            name: b"Global\0" as *const u8 as *const libc::c_char,
+            flags: JSCLASS_IS_GLOBAL |
+                ((JSCLASS_GLOBAL_SLOT_COUNT & JSCLASS_RESERVED_SLOTS_MASK) <<
+                 JSCLASS_RESERVED_SLOTS_SHIFT),
+                // JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT),
+            addProperty: None,
+            delProperty: None,
+            getProperty: None,
+            setProperty: None,
+            enumerate: None,
+            resolve: None,
+            convert: None,
+            finalize: None,
+            call: None,
+            hasInstance: None,
+            construct: None,
+            trace: Some(_Z24JS_GlobalObjectTraceHookP8JSTracerP8JSObject),
+
+            reserved: [0 as *mut libc::c_void; 25]
+        };
+
         unsafe { assert_eq!(JS_Init(), 1); }
-        let _rt = Runtime::new();
+        let rt = Runtime::new();
+        let global = RootedObject::new(rt.cx(), unsafe {
+            JS_NewGlobalObject(rt.cx(), &CLASS, ptr::null_mut(),
+                               OnNewGlobalHookOption::FireOnNewGlobalHook,
+                               &CompartmentOptions::default())
+        });
+        assert!(rt.evaluate_script(global.handle(), "1 + 1".to_owned(),
+                                   "test".to_owned(), 1).is_ok());
     }
 
 }
