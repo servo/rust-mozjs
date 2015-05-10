@@ -89,6 +89,40 @@ impl Runtime {
     pub fn cx(&self) -> *mut JSContext {
         self.cx.ptr
     }
+
+    pub fn evaluate_script(&self, global: *mut JSObject, script: String,
+                           filename: String, line_num: usize)
+                           -> Result<(), ()> {
+        let script_utf16: Vec<u16> = script.utf16_units().collect();
+        let filename_cstr = ffi::CString::new(filename.as_bytes()).unwrap();
+        debug!("Evaluating script from {} with content {}", filename, script);
+
+        // SpiderMonkey does not approve of null pointers.
+        let (ptr, len) = if script_utf16.len() == 0 {
+            static empty: &'static [u16] = &[];
+            (empty.as_ptr(), 0)
+        } else {
+            (script_utf16.as_ptr(), script_utf16.len() as c_uint)
+        };
+        assert!(!ptr.is_null());
+
+        let mut rval: JSVal = NullValue();
+        let result = unsafe {
+            JS_EvaluateUCScript(self.cx(), global, ptr, len,
+                                filename_cstr.as_ptr(), line_num as c_uint,
+                                &mut rval)
+        };
+
+        if result == ERR {
+            debug!("...err!");
+            Err(())
+        } else {
+            // we could return the script result but then we'd have
+            // to root it and so forth and, really, who cares?
+            debug!("...ok!");
+            Ok(())
+        }
+    }
 }
 
 pub type rt = rc::Rc<rt_rsrc>;
@@ -117,37 +151,6 @@ impl Drop for Cx {
     fn drop(&mut self) {
         unsafe {
             JS_DestroyContext(self.ptr);
-        }
-    }
-}
-
-impl Cx {
-    pub fn evaluate_script(&self, glob: *mut JSObject, script: String, filename: String, line_num: usize)
-                    -> Result<(),()> {
-        let script_utf16: Vec<u16> = script.utf16_units().collect();
-        let filename_cstr = ffi::CString::new(filename.as_bytes()).unwrap();
-        let mut rval: JSVal = NullValue();
-        debug!("Evaluating script from {} with content {}", filename, script);
-        // SpiderMonkey does not approve of null pointers.
-        let (ptr, len) = if script_utf16.len() == 0 {
-            static empty: &'static [u16] = &[];
-            (empty.as_ptr(), 0)
-        } else {
-            (script_utf16.as_ptr(), script_utf16.len() as c_uint)
-        };
-        assert!(!ptr.is_null());
-        unsafe {
-            if ERR == JS_EvaluateUCScript(self.ptr, glob, ptr, len,
-                                          filename_cstr.as_ptr(), line_num as c_uint,
-                                          &mut rval) {
-                debug!("...err!");
-                Err(())
-            } else {
-                // we could return the script result but then we'd have
-                // to root it and so forth and, really, who cares?
-                debug!("...ok!");
-                Ok(())
-            }
         }
     }
 }
