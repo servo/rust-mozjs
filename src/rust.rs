@@ -7,7 +7,6 @@
 use libc::types::os::arch::c95::{size_t, c_uint};
 use libc::c_char;
 use std::ffi;
-use std::rc;
 use std::str;
 use std::u32;
 use jsapi::*;
@@ -27,8 +26,8 @@ use ERR;
 
 /// A wrapper for the `JSRuntime` and `JSContext` structures in SpiderMonkey.
 pub struct Runtime {
-    pub rt: rt,
-    pub cx: rc::Rc<Cx>,
+    rt: *mut JSRuntime,
+    cx: *mut JSContext,
 }
 
 impl Runtime {
@@ -37,32 +36,33 @@ impl Runtime {
         let js_runtime = unsafe { JS_Init(default_heapsize) };
         assert!(!js_runtime.is_null());
 
-        let js_runtime = rc::Rc::new(rt_rsrc {
-            ptr: js_runtime
-        });
-
         // Unconstrain the runtime's threshold on nominal heap size, to avoid
         // triggering GC too often if operating continuously near an arbitrary
         // finite threshold. This leaves the maximum-JS_malloc-bytes threshold
         // still in effect to cause periodical, and we hope hygienic,
         // last-ditch GCs from within the GC's allocator.
         unsafe {
-            JS_SetGCParameter(js_runtime.ptr, JSGC_MAX_BYTES, u32::MAX);
+            JS_SetGCParameter(js_runtime, JSGC_MAX_BYTES, u32::MAX);
         }
 
         let js_context = unsafe {
-            JS_NewContext(js_runtime.ptr, default_stacksize as size_t)
+            JS_NewContext(js_runtime, default_stacksize as size_t)
         };
         assert!(!js_context.is_null());
 
-        let js_context = rc::Rc::new(Cx {
-            ptr: js_context,
-            rt: js_runtime.clone(),
-        });
-        js_context.set_default_options_and_version();
-        js_context.set_logging_error_reporter();
         unsafe {
-            JS_SetGCZeal((*js_context).ptr, 0, JS_DEFAULT_ZEAL_FREQ);
+            JS_SetOptions(js_context,
+                          JSOPTION_VAROBJFIX |
+                          JSOPTION_METHODJIT |
+                          JSOPTION_TYPE_INFERENCE |
+                          JSOPTION_DONT_REPORT_UNCAUGHT |
+                          JSOPTION_AUTOJSAPI_OWNS_ERROR_REPORTING);
+
+            JS_SetVersion(js_context, JSVERSION_LATEST);
+            JS_SetErrorReporter(js_context,
+                                Some(reportError as unsafe extern "C"
+                                     fn(*mut JSContext, *const c_char, *mut JSErrorReport)));
+            JS_SetGCZeal(js_context, 0, JS_DEFAULT_ZEAL_FREQ);
         }
 
         Runtime {
@@ -73,84 +73,21 @@ impl Runtime {
 
     /// Returns the `JSRuntime` object.
     pub fn rt(&self) -> *mut JSRuntime {
-        self.rt.ptr
+        self.rt
     }
 
     /// Returns the `JSContext` object.
     pub fn cx(&self) -> *mut JSContext {
-        self.cx.ptr
-    }
-}
-
-pub type rt = rc::Rc<rt_rsrc>;
-
-pub struct rt_rsrc {
-    pub ptr : *mut JSRuntime,
-}
-
-impl Drop for rt_rsrc {
-    fn drop(&mut self) {
-        unsafe {
-            JS_Finish(self.ptr);
-        }
-    }
-}
-
-// ___________________________________________________________________________
-// contexts
-
-pub struct Cx {
-    pub ptr: *mut JSContext,
-    pub rt: rt,
-}
-
-impl Drop for Cx {
-    fn drop(&mut self) {
-        unsafe {
-            JS_DestroyContext(self.ptr);
-        }
-    }
-}
-
-impl Cx {
-    pub fn set_default_options_and_version(&self) {
-        self.set_options(JSOPTION_VAROBJFIX | JSOPTION_METHODJIT |
-                         JSOPTION_TYPE_INFERENCE |
-                         JSOPTION_DONT_REPORT_UNCAUGHT |
-                         JSOPTION_AUTOJSAPI_OWNS_ERROR_REPORTING);
-        self.set_version(JSVERSION_LATEST);
+        self.cx
     }
 
-    pub fn set_options(&self, v: c_uint) {
-        unsafe {
-            JS_SetOptions(self.ptr, v);
-        }
-    }
-
-    pub fn set_version(&self, v: JSVersion) {
-        unsafe {
-            JS_SetVersion(self.ptr, v);
-        }
-    }
-
-    pub fn set_logging_error_reporter(&self) {
-        unsafe {
-            JS_SetErrorReporter(self.ptr, Some(reportError as unsafe extern "C" fn(*mut JSContext, *const c_char, *mut JSErrorReport)));
-        }
-    }
-
-    pub fn set_error_reporter(&self, reportfn: unsafe extern "C" fn(*mut JSContext, *const c_char, *mut JSErrorReport)) {
-        unsafe {
-            JS_SetErrorReporter(self.ptr, Some(reportfn));
-        }
-    }
-
-    pub fn evaluate_script(&self, glob: *mut JSObject, script: String, filename: String, line_num: usize)
-                    -> Result<(),()> {
+    pub fn evaluate_script(&self, global: *mut JSObject, script: String,
+                           filename: String, line_num: usize)
+                           -> Result<(), ()> {
         let script_utf16: Vec<u16> = script.utf16_units().collect();
         let filename_cstr = ffi::CString::new(filename.as_bytes()).unwrap();
-        let mut rval: JSVal = NullValue();
         debug!("Evaluating script from {} with content {}", filename, script);
+
         // SpiderMonkey does not approve of null pointers.
         let (ptr, len) = if script_utf16.len() == 0 {
             static empty: &'static [u16] = &[];
@@ -159,18 +96,31 @@ impl Cx {
             (script_utf16.as_ptr(), script_utf16.len() as c_uint)
         };
         assert!(!ptr.is_null());
+
+        let mut rval: JSVal = NullValue();
+        let result = unsafe {
+            JS_EvaluateUCScript(self.cx(), global, ptr, len,
+                                filename_cstr.as_ptr(), line_num as c_uint,
+                                &mut rval)
+        };
+
+        if result == ERR {
+            debug!("...err!");
+            Err(())
+        } else {
+            // we could return the script result but then we'd have
+            // to root it and so forth and, really, who cares?
+            debug!("...ok!");
+            Ok(())
+        }
+    }
+}
+
+impl Drop for Runtime {
+    fn drop(&mut self) {
         unsafe {
-            if ERR == JS_EvaluateUCScript(self.ptr, glob, ptr, len,
-                                          filename_cstr.as_ptr(), line_num as c_uint,
-                                          &mut rval) {
-                debug!("...err!");
-                Err(())
-            } else {
-                // we could return the script result but then we'd have
-                // to root it and so forth and, really, who cares?
-                debug!("...ok!");
-                Ok(())
-            }
+            JS_DestroyContext(self.cx);
+            JS_Finish(self.rt);
         }
     }
 }
@@ -204,9 +154,7 @@ pub mod test {
 
     #[test]
     pub fn dummy() {
-        let rt = Runtime::new();
-        rt.cx.set_default_options_and_version();
-        rt.cx.set_logging_error_reporter();
+        let _rt = Runtime::new();
     }
 
 }
