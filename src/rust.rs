@@ -26,6 +26,7 @@ use ERR;
 // friendly Rustic API to runtimes
 
 /// A wrapper for the `JSRuntime` and `JSContext` structures in SpiderMonkey.
+#[derive(Clone)]
 pub struct Runtime {
     pub rt: rt,
     pub cx: rc::Rc<Cx>,
