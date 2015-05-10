@@ -9,6 +9,6 @@ install:
 build: false
 
 test_script:
-  - cargo build
+  - RUST_BACKTRACE=1 cargo build --verbose
   - cargo test --verbose
 
