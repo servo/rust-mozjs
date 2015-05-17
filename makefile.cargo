@@ -10,7 +10,7 @@ AR ?= ar
 
 endif
 
-CFLAGS += -fPIC -DJS_NO_JSVAL_JSID_STRUCT_TYPES
+CFLAGS += -fPIC -std=c++11 -DJS_NO_JSVAL_JSID_STRUCT_TYPES
 
 ifeq ($(shell $(CXX) -v 2>&1 | grep -c 'clang version\|Apple.*clang'),1)
 CFLAGS += -Wno-c++0x-extensions -Wno-return-type-c-linkage -Wno-invalid-offsetof
