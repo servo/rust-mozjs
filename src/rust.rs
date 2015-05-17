@@ -18,7 +18,7 @@ use jsapi::{JS_NewContext, JS_DestroyContext, JS_NewRuntime, JS_DestroyRuntime};
 use jsapi::{JSContext, JSRuntime, JSObject, JSFlatString, JSFunction, JSString, Symbol, JSScript, jsid, Value};
 use jsapi::{RuntimeOptionsRef, ContextOptionsRef, ReadOnlyCompileOptions};
 use jsapi::{JS_SetErrorReporter, Evaluate3, JSErrorReport};
-use jsapi::{JS_SetGCParameter, JS_SetGCZeal, JSGCParamKey};
+use jsapi::{JS_SetGCParameter, JSGCParamKey};
 use jsapi::{Heap, Cell, HeapCellPostBarrier, HeapCellRelocate, HeapValuePostBarrier, HeapValueRelocate};
 use jsapi::{ThingRootKind, ContextFriendFields};
 use jsapi::{Rooted, RootedValue, Handle, MutableHandle, MutableHandleValue, HandleValue};
@@ -32,7 +32,6 @@ use jsapi::{JSVAL_NULL, JSVAL_VOID, JSID_VOID};
 use jsval::UndefinedValue;
 use glue::{CreateAutoObjectVector, AppendToAutoObjectVector, DeleteAutoObjectVector};
 use glue::{NewCompileOptions, DeleteCompileOptions};
-use JS_DEFAULT_ZEAL_FREQ;
 use default_stacksize;
 use default_heapsize;
 
@@ -78,7 +77,6 @@ impl Runtime {
             (*contextopts).set_dontReportUncaught_(true);
             (*contextopts).set_autoJSAPIOwnsErrorReporting_(true);
             JS_SetErrorReporter(js_runtime, Some(reportError));
-            JS_SetGCZeal(js_context, 0, JS_DEFAULT_ZEAL_FREQ);
         }
 
         Runtime {
