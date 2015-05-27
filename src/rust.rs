@@ -594,7 +594,9 @@ fn convert_from_int32<T: Default + NumCast>(
 
     let val = unsafe { *v.ptr };
     if val.is_int32() {
-        return Ok(T::from(val.to_int32()).unwrap());
+        if let Some(result) = T::from(val.to_int32()) {
+            return Ok(result);
+        }
     }
 
     let mut out = Default::default();
