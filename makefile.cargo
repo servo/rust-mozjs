@@ -20,8 +20,7 @@ ifneq (,$(CARGO_FEATURE_DEBUGMOZJS))
 	CFLAGS += -g -O0 -DDEBUG -D_DEBUG
 endif
 
-MOZJS_OUTDIR = $(shell find $(OUT_DIR)/../.. -name 'mozjs_sys-*' -type d)/out
-CFLAGS += -I$(MOZJS_OUTDIR)/dist/include
+CFLAGS += -I$(DEP_MOZJS_OUTDIR)/dist/include
 
 .PHONY: all
 all: $(OUT_DIR)/libjsglue.a
