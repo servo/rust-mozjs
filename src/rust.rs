@@ -264,6 +264,10 @@ impl<T: Copy> MutableHandle<T> {
     pub fn set(&mut self, v: T) {
         unsafe { *self.ptr = v }
     }
+
+    pub fn handle(&self) -> Handle<T> {
+        Handle { ptr: unsafe { &*self.ptr } }
+    }
 }
 
 impl<T> Drop for Rooted<T> {
@@ -397,6 +401,10 @@ impl<T: GCMethods<T> + Copy> Heap<T> {
 
     pub fn get(&self) -> T {
         self.ptr
+    }
+
+    pub fn handle(&self) -> Handle<T> {
+        Handle { ptr: &self.ptr }
     }
 }
 
