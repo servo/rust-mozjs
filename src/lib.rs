@@ -72,6 +72,9 @@ pub const JSSLOT_PROXY_PRIVATE: u32 = 1;
 
 pub const JS_DEFAULT_ZEAL_FREQ: u32 = 100;
 
+pub const JSTrue: u8 = 1;
+pub const JSFalse: u8 = 0;
+
 #[link(name = "jsglue")]
 extern { }
 
