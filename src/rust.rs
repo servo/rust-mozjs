@@ -13,6 +13,7 @@ use std::mem;
 use std::u32;
 use std::default::Default;
 use std::intrinsics::return_address;
+use std::ops::{Deref, DerefMut};
 use num::NumCast;
 use jsapi::{JS_NewContext, JS_DestroyContext, JS_NewRuntime, JS_DestroyRuntime};
 use jsapi::{JSContext, JSRuntime, JSObject, JSFlatString, JSFunction, JSString, Symbol, JSScript, jsid, Value};
@@ -212,6 +213,28 @@ impl<T: RootKind> Rooted<T> {
 impl<T: Copy> Handle<T> {
     pub fn get(&self) -> T {
         unsafe { *self.ptr }
+    }
+}
+
+impl<T: Copy> Deref for Handle<T> {
+    type Target = T;
+
+    fn deref<'a>(&'a self) -> &'a T {
+        unsafe { &*self.ptr }
+    }
+}
+
+impl<T: Copy> Deref for MutableHandle<T> {
+    type Target = T;
+
+    fn deref<'a>(&'a self) -> &'a T {
+        unsafe { &*self.ptr }
+    }
+}
+
+impl<T: Copy> DerefMut for MutableHandle<T> {
+    fn deref_mut<'a>(&'a mut self) -> &'a mut T {
+        unsafe { &mut *self.ptr }
     }
 }
 
