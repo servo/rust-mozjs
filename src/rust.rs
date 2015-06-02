@@ -181,7 +181,7 @@ impl RootKind for Value {
 }
 
 impl<T: RootKind> Rooted<T> {
-    pub fn new(cx: *mut JSContext, initial: T) -> Rooted<T> {
+    pub fn new_with_addr(cx: *mut JSContext, initial: T, addr: *const u8) -> Rooted<T> {
         let ctxfriend: &mut ContextFriendFields = unsafe {
             mem::transmute(cx)
         };
@@ -193,8 +193,12 @@ impl<T: RootKind> Rooted<T> {
             ptr: initial,
         };
 
-        ctxfriend.thingGCRooters[kind] = unsafe { mem::transmute(return_address()) };
+        ctxfriend.thingGCRooters[kind] = unsafe { mem::transmute(addr) };
         root
+    }
+
+    pub fn new(cx: *mut JSContext, initial: T) -> Rooted<T> {
+        Rooted::new_with_addr(cx, initial, unsafe { return_address() })
     }
 
     pub fn handle(&self) -> Handle<T> {
