@@ -22,7 +22,8 @@ use jsapi::{JS_SetErrorReporter, Evaluate3, JSErrorReport};
 use jsapi::{JS_SetGCParameter, JSGCParamKey};
 use jsapi::{Heap, Cell, HeapCellPostBarrier, HeapCellRelocate, HeapValuePostBarrier, HeapValueRelocate};
 use jsapi::{ThingRootKind, ContextFriendFields};
-use jsapi::{Rooted, RootedValue, Handle, MutableHandle, MutableHandleValue, HandleValue};
+use jsapi::{Rooted, RootedValue, Handle, MutableHandle};
+use jsapi::{MutableHandleValue, HandleValue, HandleObject};
 use jsapi::AutoObjectVector;
 use jsapi::{ToBooleanSlow, ToNumberSlow, ToStringSlow};
 use jsapi::{ToInt32Slow, ToUint32Slow, ToUint16Slow, ToInt64Slow, ToUint64Slow};
@@ -253,6 +254,14 @@ impl HandleValue {
         HandleValue {
             ptr: &JSVAL_VOID
         }
+    }
+}
+
+const ConstNullValue: *mut JSObject = 0 as *mut JSObject;
+
+impl HandleObject {
+    pub fn null() -> HandleObject {
+        HandleObject { ptr: &ConstNullValue }
     }
 }
 
