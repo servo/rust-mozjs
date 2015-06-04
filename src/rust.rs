@@ -14,6 +14,7 @@ use std::u32;
 use std::default::Default;
 use std::intrinsics::return_address;
 use std::ops::{Deref, DerefMut};
+use std::cell::UnsafeCell;
 use num::NumCast;
 use jsapi::{JS_NewContext, JS_DestroyContext, JS_NewRuntime, JS_DestroyRuntime};
 use jsapi::{JSContext, JSRuntime, JSObject, JSFlatString, JSFunction, JSString, Symbol, JSScript, jsid, Value};
@@ -397,39 +398,52 @@ impl GCMethods<Value> for Value {
 
 impl<T: GCMethods<T> + Copy> Heap<T> {
     pub fn set(&mut self, v: T) {
-        if T::needs_post_barrier(v) {
-            self.ptr = v;
-            unsafe { T::post_barrier(&mut self.ptr) };
-        } else if T::needs_post_barrier(self.ptr) {
-            unsafe { T::relocate(&mut self.ptr) };
-            self.ptr = v;
-        } else {
-            self.ptr = v;
+        unsafe {
+            if T::needs_post_barrier(v) {
+                *self.ptr.get() = v;
+                T::post_barrier(self.ptr.get());
+            } else if T::needs_post_barrier(self.get()) {
+                T::relocate(self.ptr.get());
+                *self.ptr.get() = v;
+            } else {
+                *self.ptr.get() = v;
+            }
         }
     }
 
     pub fn get(&self) -> T {
-        self.ptr
+        unsafe { *self.ptr.get() }
+    }
+
+    pub fn get_unsafe(&self) -> *mut T {
+        self.ptr.get()
     }
 
     pub fn handle(&self) -> Handle<T> {
-        Handle { ptr: &self.ptr }
+        Handle { ptr: self.ptr.get() as *const _ }
     }
 }
 
-// XXX derive Default instead?
-impl<T: Default + GCMethods<T> + Copy> Default for Heap<T> {
-    fn default() -> Heap<T> {
-        Heap::<T> {
-           ptr: T::default()
+impl Default for Heap<*mut JSObject> {
+    fn default() -> Heap<*mut JSObject> {
+        Heap {
+            ptr: UnsafeCell::new(ptr::null_mut())
+        }
+    }
+}
+
+impl Default for Heap<Value> {
+    fn default() -> Heap<Value> {
+        Heap {
+            ptr: UnsafeCell::new(Value::default())
         }
     }
 }
 
 impl<T: GCMethods<T> + Copy> Drop for Heap<T> {
     fn drop(&mut self) {
-        if T::needs_post_barrier(self.ptr) {
-            unsafe { T::relocate(&mut self.ptr) };
+        if T::needs_post_barrier(self.get()) {
+            unsafe { T::relocate(self.get_unsafe()) };
         }
     }
 }

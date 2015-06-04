@@ -1,4 +1,5 @@
 use libc::types::common::c95::FILE;
+use std::cell::UnsafeCell;
 
 pub type JSConstDoubleSpec = JSConstScalarSpec<f64>;
 pub type JSConstIntegerSpec = JSConstScalarSpec<i32>;
@@ -569,9 +570,8 @@ impl ::std::default::Default for AutoCheckCannotGC {
 pub enum PersistentRootedMarker { }
 use rust::GCMethods;
 #[repr(C)]
-#[derive(Clone, PartialEq)]
 pub struct Heap<T: GCMethods<T> + Copy> {
-    pub ptr: T,
+    pub ptr: UnsafeCell<T>,
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
