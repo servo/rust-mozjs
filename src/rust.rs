@@ -533,6 +533,12 @@ impl CallArgs {
             ptr: unsafe { self.argv_.offset(-2) }
         }
     }
+
+    pub fn thisv(&self) -> HandleValue {
+        HandleValue {
+            ptr: unsafe { self.argv_.offset(-1) }
+        }
+    }
 }
 
 impl JSJitGetterCallArgs {
