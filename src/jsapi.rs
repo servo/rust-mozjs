@@ -4198,7 +4198,11 @@ extern "C" {
                                                                  contents:
                                                                      *const HandleValueArray)
      -> *mut JSObject;
-    fn _Z17JS_NewArrayObjectP9JSContextj(cx: *mut JSContext, length: u32)
+    #[cfg(target_pointer_width = "64")]
+    fn _Z17JS_NewArrayObjectP9JSContextm(cx: *mut JSContext, length: ::libc::size_t)
+     -> *mut JSObject;
+    #[cfg(target_pointer_width = "32")]
+    fn _Z17JS_NewArrayObjectP9JSContextj(cx: *mut JSContext, length: ::libc::size_t)
      -> *mut JSObject;
     fn _Z16JS_IsArrayObjectP9JSContextN2JS6HandleINS1_5ValueEEE(cx:
                                                                     *mut JSContext,
@@ -8701,7 +8705,13 @@ pub unsafe extern "C" fn JS_NewArrayObject(cx: *mut JSContext,
  -> *mut JSObject {
     _Z17JS_NewArrayObjectP9JSContextRKN2JS16HandleValueArrayE(cx, contents)
 }
-pub unsafe extern "C" fn JS_NewArrayObject1(cx: *mut JSContext, length: u32)
+#[cfg(target_pointer_width = "64")]
+pub unsafe extern "C" fn JS_NewArrayObject1(cx: *mut JSContext, length: ::libc::size_t)
+ -> *mut JSObject {
+    _Z17JS_NewArrayObjectP9JSContextm(cx, length)
+}
+#[cfg(target_pointer_width = "32")]
+pub unsafe extern "C" fn JS_NewArrayObject1(cx: *mut JSContext, length: ::libc::size_t)
  -> *mut JSObject {
     _Z17JS_NewArrayObjectP9JSContextj(cx, length)
 }
