@@ -12162,6 +12162,7 @@ extern "C" {
                                                                    out:
                                                                        *mut u16)
      -> u8;
+    #[cfg(target_os = "linux")]
     #[cfg(target_pointer_width = "64")]
     fn _ZN2js11ToInt64SlowEP9JSContextN2JS6HandleINS2_5ValueEEEPl(cx:
                                                                       *mut JSContext,
@@ -12170,7 +12171,7 @@ extern "C" {
                                                                   out:
                                                                       *mut i64)
      -> u8;
-    #[cfg(target_pointer_width = "32")]
+    #[cfg(any(target_pointer_width = "32", target_os = "macos"))]
     fn _ZN2js11ToInt64SlowEP9JSContextN2JS6HandleINS2_5ValueEEEPx(cx:
                                                                       *mut JSContext,
                                                                   v:
@@ -12178,6 +12179,16 @@ extern "C" {
                                                                   out:
                                                                       *mut i64)
      -> u8;
+    #[cfg(target_os = "linux")]
+    #[cfg(target_pointer_width = "64")]
+    fn _ZN2js12ToUint64SlowEP9JSContextN2JS6HandleINS2_5ValueEEEPy(cx:
+                                                                       *mut JSContext,
+                                                                   v:
+                                                                       HandleValue,
+                                                                   out:
+                                                                       *mut u64)
+     -> u8;
+    #[cfg(target_os="linux")]
     #[cfg(target_pointer_width = "64")]
     fn _ZN2js12ToUint64SlowEP9JSContextN2JS6HandleINS2_5ValueEEEPm(cx:
                                                                        *mut JSContext,
@@ -12186,7 +12197,7 @@ extern "C" {
                                                                    out:
                                                                        *mut u64)
      -> u8;
-    #[cfg(target_pointer_width = "32")]
+    #[cfg(any(target_pointer_width = "32", target_os = "macos"))]
     fn _ZN2js12ToUint64SlowEP9JSContextN2JS6HandleINS2_5ValueEEEPy(cx:
                                                                        *mut JSContext,
                                                                    v:
@@ -12279,22 +12290,24 @@ pub unsafe extern "C" fn ToUint16Slow(cx: *mut JSContext, v: HandleValue,
                                       out: *mut u16) -> u8 {
     _ZN2js12ToUint16SlowEP9JSContextN2JS6HandleINS2_5ValueEEEPt(cx, v, out)
 }
+#[cfg(target_os = "linux")]
 #[cfg(target_pointer_width = "64")]
 pub unsafe extern "C" fn ToInt64Slow(cx: *mut JSContext, v: HandleValue,
                                      out: *mut i64) -> u8 {
     _ZN2js11ToInt64SlowEP9JSContextN2JS6HandleINS2_5ValueEEEPl(cx, v, out)
 }
-#[cfg(target_pointer_width = "32")]
+#[cfg(any(target_pointer_width = "32", target_os = "macos"))]
 pub unsafe extern "C" fn ToInt64Slow(cx: *mut JSContext, v: HandleValue,
                                      out: *mut i64) -> u8 {
     _ZN2js11ToInt64SlowEP9JSContextN2JS6HandleINS2_5ValueEEEPx(cx, v, out)
 }
+#[cfg(target_os = "linux")]
 #[cfg(target_pointer_width = "64")]
 pub unsafe extern "C" fn ToUint64Slow(cx: *mut JSContext, v: HandleValue,
                                       out: *mut u64) -> u8 {
     _ZN2js12ToUint64SlowEP9JSContextN2JS6HandleINS2_5ValueEEEPm(cx, v, out)
 }
-#[cfg(target_pointer_width = "32")]
+#[cfg(any(target_pointer_width = "32", target_os = "macos"))]
 pub unsafe extern "C" fn ToUint64Slow(cx: *mut JSContext, v: HandleValue,
                                       out: *mut u64) -> u8 {
     _ZN2js12ToUint64SlowEP9JSContextN2JS6HandleINS2_5ValueEEEPy(cx, v, out)
@@ -12438,6 +12451,24 @@ impl ::std::default::Default for JSAutoStructuredCloneBuffer {
     }
 }
 extern "C" {
+    #[cfg(target_os = "macos")]
+    #[cfg(target_pointer_width = "64")]
+    fn _Z22JS_ReadStructuredCloneP9JSContextPymjN2JS13MutableHandleINS2_5ValueEEEPK26JSStructuredCloneCallbacksPv(cx:
+                                                                                                                      *mut JSContext,
+                                                                                                                  data:
+                                                                                                                      *mut u64,
+                                                                                                                  nbytes:
+                                                                                                                      ::libc::size_t,
+                                                                                                                  version:
+                                                                                                                      u32,
+                                                                                                                  vp:
+                                                                                                                      MutableHandleValue,
+                                                                                                                  optionalCallbacks:
+                                                                                                                      *const JSStructuredCloneCallbacks,
+                                                                                                                  closure:
+                                                                                                                      *mut ::libc::c_void)
+     -> u8;
+    #[cfg(target_os = "linux")]
     #[cfg(target_pointer_width = "64")]
     fn _Z22JS_ReadStructuredCloneP9JSContextPmmjN2JS13MutableHandleINS2_5ValueEEEPK26JSStructuredCloneCallbacksPv(cx:
                                                                                                                       *mut JSContext,
@@ -12470,6 +12501,24 @@ extern "C" {
                                                                                                                   closure:
                                                                                                                       *mut ::libc::c_void)
      -> u8;
+    #[cfg(target_os = "macos")]
+    #[cfg(target_pointer_width = "64")]
+    fn _Z23JS_WriteStructuredCloneP9JSContextN2JS6HandleINS1_5ValueEEEPPyPmPK26JSStructuredCloneCallbacksPvS4_(cx:
+                                                                                                                   *mut JSContext,
+                                                                                                               v:
+                                                                                                                   HandleValue,
+                                                                                                               datap:
+                                                                                                                   *mut *mut u64,
+                                                                                                               nbytesp:
+                                                                                                                   *mut ::libc::size_t,
+                                                                                                               optionalCallbacks:
+                                                                                                                   *const JSStructuredCloneCallbacks,
+                                                                                                               closure:
+                                                                                                                   *mut ::libc::c_void,
+                                                                                                               transferable:
+                                                                                                                   HandleValue)
+     -> u8;
+    #[cfg(target_os = "linux")]
     #[cfg(target_pointer_width = "64")]
     fn _Z23JS_WriteStructuredCloneP9JSContextN2JS6HandleINS1_5ValueEEEPPmS5_PK26JSStructuredCloneCallbacksPvS4_(cx:
                                                                                                                    *mut JSContext,
@@ -12564,6 +12613,25 @@ extern "C" {
                                                                                      HandleValue)
      -> u8;
 }
+#[cfg(target_os = "macos")]
+#[cfg(target_pointer_width = "64")]
+pub unsafe extern "C" fn JS_ReadStructuredClone(cx: *mut JSContext,
+                                                data: *mut u64, nbytes: ::libc::size_t,
+                                                version: u32,
+                                                vp: MutableHandleValue,
+                                                optionalCallbacks:
+                                                    *const JSStructuredCloneCallbacks,
+                                                closure: *mut ::libc::c_void)
+ -> u8 {
+    _Z22JS_ReadStructuredCloneP9JSContextPymjN2JS13MutableHandleINS2_5ValueEEEPK26JSStructuredCloneCallbacksPv(cx,
+                                                                                                               data,
+                                                                                                               nbytes,
+                                                                                                               version,
+                                                                                                               vp,
+                                                                                                               optionalCallbacks,
+                                                                                                               closure)
+}
+#[cfg(target_os = "linux")]
 #[cfg(target_pointer_width = "64")]
 pub unsafe extern "C" fn JS_ReadStructuredClone(cx: *mut JSContext,
                                                 data: *mut u64, nbytes: ::libc::size_t,
@@ -12598,6 +12666,26 @@ pub unsafe extern "C" fn JS_ReadStructuredClone(cx: *mut JSContext,
                                                                                                                optionalCallbacks,
                                                                                                                closure)
 }
+#[cfg(target_os = "macos")]
+#[cfg(target_pointer_width = "64")]
+pub unsafe extern "C" fn JS_WriteStructuredClone(cx: *mut JSContext,
+                                                 v: HandleValue,
+                                                 datap: *mut *mut u64,
+                                                 nbytesp: *mut ::libc::size_t,
+                                                 optionalCallbacks:
+                                                     *const JSStructuredCloneCallbacks,
+                                                 closure: *mut ::libc::c_void,
+                                                 transferable: HandleValue)
+ -> u8 {
+    _Z23JS_WriteStructuredCloneP9JSContextN2JS6HandleINS1_5ValueEEEPPyPmPK26JSStructuredCloneCallbacksPvS4_(cx,
+                                                                                                            v,
+                                                                                                            datap,
+                                                                                                            nbytesp,
+                                                                                                            optionalCallbacks,
+                                                                                                            closure,
+                                                                                                            transferable)
+}
+#[cfg(target_os = "linux")]
 #[cfg(target_pointer_width = "64")]
 pub unsafe extern "C" fn JS_WriteStructuredClone(cx: *mut JSContext,
                                                  v: HandleValue,
