@@ -327,7 +327,7 @@ impl JSVal {
 
     pub fn to_double(&self) -> f64 {
         assert!(self.is_double());
-        self.asBits() as f64
+        unsafe { mem::transmute(self.asBits()) }
     }
 
     pub fn to_number(&self) -> f64 {
