@@ -98,7 +98,7 @@ impl Runtime {
         self.cx
     }
 
-    pub fn evaluate_script(&self, glob: *mut JSObject, script: String, filename: String, line_num: u32)
+    pub fn evaluate_script(&self, glob: HandleObject, script: String, filename: String, line_num: u32)
                     -> Result<(),()> {
         let script_utf16: Vec<u16> = script.utf16_units().collect();
         let filename_cstr = ffi::CString::new(filename.as_bytes()).unwrap();
@@ -111,10 +111,11 @@ impl Runtime {
             (script_utf16.as_ptr(), script_utf16.len() as c_uint)
         };
         assert!(!ptr.is_null());
+        let _ar = JSAutoRequest::new(self.cx());
+        let _ac = JSAutoCompartment::new(self.cx(), glob.get());
         let options = CompileOptionsWrapper::new(self.cx(), filename_cstr.as_ptr(), line_num);
 
         let scopechain = AutoObjectVectorWrapper::new(self.cx());
-        scopechain.append(glob);
 
         let mut rval = RootedValue::new(self.cx(), UndefinedValue());
 
