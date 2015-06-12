@@ -465,6 +465,12 @@ CreateWrapperProxyHandler(const ProxyTraps* aTraps)
     return new WrapperProxyHandler(*aTraps);
 }
 
+const void*
+GetCrossCompartmentWrapper()
+{
+    return &js::CrossCompartmentWrapper::singleton;
+}
+
 JS::ReadOnlyCompileOptions*
 NewCompileOptions(JSContext* aCx, const char* aFile, unsigned aLine)
 {
