@@ -12,7 +12,6 @@
 extern crate libc;
 #[macro_use]
 extern crate log;
-extern crate num;
 extern crate rustc_serialize as serialize;
 
 use libc::c_uint;

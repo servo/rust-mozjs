@@ -15,7 +15,6 @@ use std::default::Default;
 use std::intrinsics::return_address;
 use std::ops::{Deref, DerefMut};
 use std::cell::UnsafeCell;
-use num::NumCast;
 use jsapi::{JS_NewContext, JS_DestroyContext, JS_NewRuntime, JS_DestroyRuntime};
 use jsapi::{JSContext, JSRuntime, JSObject, JSFlatString, JSFunction, JSString, Symbol, JSScript, jsid, Value};
 use jsapi::{RuntimeOptionsRef, ContextOptionsRef, ReadOnlyCompileOptions};
@@ -651,7 +650,7 @@ pub fn ToNumber(cx: *mut JSContext, v: HandleValue) -> Result<f64, ()> {
 }
 
 #[inline]
-fn convert_from_int32<T: Default + NumCast>(
+fn convert_from_int32<T: Default + Copy>(
     cx: *mut JSContext,
     v: HandleValue,
     conv_fn: unsafe extern "C" fn(*mut JSContext, HandleValue, *mut T) -> u8)
@@ -659,9 +658,10 @@ fn convert_from_int32<T: Default + NumCast>(
 
     let val = unsafe { *v.ptr };
     if val.is_int32() {
-        if let Some(result) = T::from(val.to_int32()) {
-            return Ok(result);
-        }
+        let intval: i64 = val.to_int32() as i64;
+        // TODO: do something better here that works on big endian
+        let intval = unsafe { *(&intval as *const i64 as *const T) };
+        return Ok(intval);
     }
 
     let mut out = Default::default();
