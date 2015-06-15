@@ -271,7 +271,7 @@ impl<T: Copy> MutableHandle<T> {
         unsafe { *self.ptr }
     }
 
-    pub fn set(&mut self, v: T) {
+    pub fn set(&self, v: T) {
         unsafe { *self.ptr = v }
     }
 
