@@ -5,3 +5,8 @@ rust:
 script:
   - cargo build --verbose
   - cargo test --verbose
+branches:
+  except:
+    - master
+notifications:
+  webhooks: http://build.servo.org:54856/travis
