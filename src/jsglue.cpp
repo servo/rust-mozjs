@@ -278,6 +278,11 @@ class WrapperProxyHandler : public js::Wrapper
     WrapperProxyHandler(const ProxyTraps& aTraps)
     : js::Wrapper(0), mTraps(aTraps) {}
 
+    virtual bool finalizeInBackground(JS::Value priv) const override
+    {
+        return false;
+    }
+
     DEFER_TO_TRAP_OR_BASE_CLASS(js::Wrapper)
 
     virtual bool getOwnPropertyDescriptor(JSContext *cx, JS::HandleObject proxy,
@@ -351,6 +356,11 @@ class ForwardingProxyHandler : public js::BaseProxyHandler
 
     const void* getExtra() const {
         return mExtra;
+    }
+
+    virtual bool finalizeInBackground(JS::Value priv) const override
+    {
+        return false;
     }
 
     DEFER_TO_TRAP_OR_BASE_CLASS(BaseProxyHandler)
