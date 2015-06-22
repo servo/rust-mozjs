@@ -5,7 +5,9 @@
 #![crate_name = "js"]
 #![crate_type = "rlib"]
 
-#![feature(link_args, collections, core)]
+#![feature(collections, str_utf16)]
+#![feature(core, core_intrinsics)]
+#![feature(link_args)]
 
 #![allow(non_upper_case_globals, non_camel_case_types, non_snake_case, improper_ctypes, raw_pointer_derive)]
 
