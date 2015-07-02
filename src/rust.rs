@@ -728,9 +728,11 @@ pub unsafe extern fn reportError(_cx: *mut JSContext, msg: *const c_char, report
 #[cfg(test)]
 pub mod test {
     use super::Runtime;
+    use jsapi::JS_Init;
 
     #[test]
     pub fn dummy() {
+        unsafe { assert_eq!(JS_Init(), 1); }
         let _rt = Runtime::new();
     }
 
