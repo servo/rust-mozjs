@@ -1298,7 +1298,6 @@ pub type JS_ICUFreeFn =
     ::std::option::Option<unsafe extern "C" fn
                               (arg1: *const ::libc::c_void,
                                p: *mut ::libc::c_void)>;
-#[repr(C)]
 pub struct JSAutoRequest {
     pub mContext: *mut JSContext,
 }
@@ -1383,7 +1382,6 @@ pub struct AutoSaveContextOptions {
 impl ::std::default::Default for AutoSaveContextOptions {
     fn default() -> AutoSaveContextOptions { unsafe { ::std::mem::zeroed() } }
 }
-#[repr(C)]
 pub struct JSAutoCompartment {
     pub cx_: *mut JSContext,
     pub oldCompartment_: *mut JSCompartment,

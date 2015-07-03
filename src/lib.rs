@@ -5,9 +5,10 @@
 #![crate_name = "js"]
 #![crate_type = "rlib"]
 
-#![feature(collections, str_utf16)]
-#![feature(core, core_intrinsics)]
+#![feature(core_intrinsics)]
 #![feature(link_args)]
+#![feature(str_utf16)]
+#![feature(unsafe_no_drop_flag)]
 
 #![allow(non_upper_case_globals, non_camel_case_types, non_snake_case, improper_ctypes, raw_pointer_derive)]
 
@@ -16,22 +17,16 @@ extern crate libc;
 extern crate log;
 extern crate rustc_serialize as serialize;
 
-use libc::c_uint;
-
-/*
-FIXME: Not sure where JS_Lock is
-pub use jsapi::bindgen::JS_Lock as JS_LockRuntime;
-pub use jsapi::bindgen::JS_Unlock as JS_UnlockRuntime;
-*/
-
 pub mod jsapi;
 pub mod linkhack;
 pub mod rust;
 pub mod glue;
 pub mod jsval;
 
-use jsapi::{JSContext, JSObject, JS_ComputeThis, JSProtoKey};
+use jsapi::{JSContext, JSProtoKey};
 use jsval::JSVal;
+
+use libc::c_uint;
 
 pub const default_heapsize: u32 = 32_u32 * 1024_u32 * 1024_u32;
 pub const default_stacksize: usize = 8192;
