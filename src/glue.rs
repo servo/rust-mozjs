@@ -229,4 +229,5 @@ extern "C" {
     pub fn AppendToAutoObjectVector(v: *mut AutoObjectVector,
                                     obj: *mut JSObject) -> u8;
     pub fn DeleteAutoObjectVector(v: *mut AutoObjectVector);
+    pub fn CollectServoSizes(rt: *mut JSRuntime, sizes: *mut ServoSizes) -> bool;
 }

@@ -130,6 +130,15 @@ pub enum JSVersion {
     JSVERSION_UNKNOWN = -1,
     JSVERSION_LATEST = 185,
 }
+#[repr(C)]
+pub struct ServoSizes {
+    pub gcHeapUsed: ::libc::size_t,
+    pub gcHeapUnused: ::libc::size_t,
+    pub gcHeapAdmin: ::libc::size_t,
+    pub gcHeapDecommitted: ::libc::size_t,
+    pub mallocHeap: ::libc::size_t,
+    pub nonHeap: ::libc::size_t,
+}
 #[repr(i32)]
 #[derive(Copy, Clone)]
 pub enum JSType {

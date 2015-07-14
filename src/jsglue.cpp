@@ -17,6 +17,7 @@
 #include "js/Proxy.h"
 #include "js/Class.h"
 #include "jswrapper.h"
+#include "js/MemoryMetrics.h"
 
 #include "assert.h"
 
@@ -638,6 +639,34 @@ void
 DeleteAutoObjectVector(JS::AutoObjectVector* v)
 {
     delete v;
+}
+
+#if defined(__linux__)
+ #include <malloc.h>
+#elif defined(__APPLE__)
+ #include <malloc/malloc.h>
+#else
+ #error "unsupported platform"
+#endif
+
+// SpiderMonkey-in-Rust currently uses system malloc, not jemalloc.
+static size_t MallocSizeOf(const void* aPtr)
+{
+#if defined(__linux__)
+    return malloc_usable_size((void*)aPtr);
+#elif defined(__APPLE__)
+    return malloc_size((void*)aPtr);
+#else
+    #error "unsupported platform"
+#endif
+}
+
+bool
+CollectServoSizes(JSRuntime *rt, JS::ServoSizes *sizes)
+{
+    mozilla::PodZero(sizes);
+    return JS::AddServoSizeOf(rt, MallocSizeOf,
+                              /* ObjectPrivateVisitor = */ nullptr, sizes);
 }
 
 } // extern "C"
