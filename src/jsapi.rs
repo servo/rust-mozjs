@@ -995,7 +995,7 @@ pub type JSClassInternal = ::std::option::Option<unsafe extern "C" fn()>;
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct JSClass {
-    pub name: *const i8,
+    pub name: *const ::libc::c_char,
     pub flags: u32,
     pub addProperty: JSAddPropertyOp,
     pub delProperty: JSDeletePropertyOp,
@@ -1017,7 +1017,7 @@ impl ::std::default::Default for JSClass {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct Class {
-    pub name: *const i8,
+    pub name: *const ::libc::c_char,
     pub flags: u32,
     pub addProperty: JSAddPropertyOp,
     pub delProperty: JSDeletePropertyOp,
@@ -1194,7 +1194,7 @@ pub type JSInterruptCallback =
     ::std::option::Option<unsafe extern "C" fn(cx: *mut JSContext) -> u8>;
 pub type JSErrorReporter =
     ::std::option::Option<unsafe extern "C" fn
-                              (cx: *mut JSContext, message: *const i8,
+                              (cx: *mut JSContext, message: *const ::libc::c_char,
                                report: *mut JSErrorReport)>;
 #[repr(i32)]
 #[derive(Copy, Clone)]
@@ -1213,7 +1213,7 @@ pub enum JSExnType {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct JSErrorFormatString {
-    pub format: *const i8,
+    pub format: *const ::libc::c_char,
     pub argCount: u16,
     pub exnType: i16,
 }
@@ -1479,7 +1479,7 @@ impl ::std::default::Default for JSNativeWrapper {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct JSPropertySpec {
-    pub name: *const i8,
+    pub name: *const ::libc::c_char,
     pub flags: u8,
     pub getter: JSNativeWrapper,
     pub setter: JSNativeWrapper,
@@ -1531,7 +1531,7 @@ impl ::std::default::Default for jsapi_h_unnamed_4 {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct JSFunctionSpec {
-    pub name: *const i8,
+    pub name: *const ::libc::c_char,
     pub call: JSNativeWrapper,
     pub nargs: u16,
     pub flags: u16,
@@ -1700,7 +1700,7 @@ impl ::std::default::Default for JSLocaleCallbacks {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct JSErrorReport {
-    pub filename: *const i8,
+    pub filename: *const ::libc::c_char,
     pub lineno: u32,
     pub column: u32,
     pub isMuted: u8,
@@ -3619,7 +3619,7 @@ extern "C" {
                                                                                                      obj:
                                                                                                          HandleObject,
                                                                                                      name:
-                                                                                                         *const i8,
+                                                                                                         *const ::libc::c_char,
                                                                                                      value:
                                                                                                          HandleValue,
                                                                                                      attrs:
@@ -3634,7 +3634,7 @@ extern "C" {
                                                                                               obj:
                                                                                                   HandleObject,
                                                                                               name:
-                                                                                                  *const i8,
+                                                                                                  *const ::libc::c_char,
                                                                                               value:
                                                                                                   HandleObject,
                                                                                               attrs:
@@ -3649,7 +3649,7 @@ extern "C" {
                                                                                                             obj:
                                                                                                                 HandleObject,
                                                                                                             name:
-                                                                                                                *const i8,
+                                                                                                                *const ::libc::c_char,
                                                                                                             value:
                                                                                                                 HandleString,
                                                                                                             attrs:
@@ -3664,7 +3664,7 @@ extern "C" {
                                                                                             obj:
                                                                                                 HandleObject,
                                                                                             name:
-                                                                                                *const i8,
+                                                                                                *const ::libc::c_char,
                                                                                             value:
                                                                                                 i32,
                                                                                             attrs:
@@ -3679,7 +3679,7 @@ extern "C" {
                                                                                             obj:
                                                                                                 HandleObject,
                                                                                             name:
-                                                                                                *const i8,
+                                                                                                *const ::libc::c_char,
                                                                                             value:
                                                                                                 u32,
                                                                                             attrs:
@@ -3694,7 +3694,7 @@ extern "C" {
                                                                                             obj:
                                                                                                 HandleObject,
                                                                                             name:
-                                                                                                *const i8,
+                                                                                                *const ::libc::c_char,
                                                                                             value:
                                                                                                 f64,
                                                                                             attrs:
@@ -3851,7 +3851,7 @@ extern "C" {
                                                                             obj:
                                                                                 HandleObject,
                                                                             name:
-                                                                                *const i8,
+                                                                                *const ::libc::c_char,
                                                                             foundp:
                                                                                 *mut u8)
      -> u8;
@@ -3869,7 +3869,7 @@ extern "C" {
                                                                   obj:
                                                                       HandleObject,
                                                                   name:
-                                                                      *const i8,
+                                                                      *const ::libc::c_char,
                                                                   foundp:
                                                                       *mut u8)
      -> u8;
@@ -3923,7 +3923,7 @@ extern "C" {
                                                                                                                       obj:
                                                                                                                           HandleObject,
                                                                                                                       name:
-                                                                                                                          *const i8,
+                                                                                                                          *const ::libc::c_char,
                                                                                                                       desc:
                                                                                                                           MutableHandle<JSPropertyDescriptor>)
      -> u8;
@@ -3932,7 +3932,7 @@ extern "C" {
                                                                                                  obj:
                                                                                                      HandleObject,
                                                                                                  name:
-                                                                                                     *const i8,
+                                                                                                     *const ::libc::c_char,
                                                                                                  vp:
                                                                                                      MutableHandleValue)
      -> u8;
@@ -3961,7 +3961,7 @@ extern "C" {
                                                                                   obj:
                                                                                       HandleObject,
                                                                                   name:
-                                                                                      *const i8,
+                                                                                      *const ::libc::c_char,
                                                                                   v:
                                                                                       HandleValue)
      -> u8;
@@ -4458,7 +4458,7 @@ extern "C" {
                                                               call: JSNative,
                                                               nargs: u32,
                                                               flags: u32,
-                                                              name: *const i8)
+                                                              name: *const ::libc::c_char)
      -> *mut JSFunction;
     fn _Z18JS_NewFunctionByIdP9JSContextPFbS0_jPN2JS5ValueEEjjNS1_6HandleI4jsidEE(cx:
                                                                                       *mut JSContext,
@@ -4518,7 +4518,7 @@ extern "C" {
                                                                                          obj:
                                                                                              Handle<*mut JSObject>,
                                                                                          name:
-                                                                                             *const i8,
+                                                                                             *const ::libc::c_char,
                                                                                          call:
                                                                                              JSNative,
                                                                                          nargs:
@@ -4693,11 +4693,11 @@ extern "C" {
                                                                                                                                                 options:
                                                                                                                                                     *const ReadOnlyCompileOptions,
                                                                                                                                                 name:
-                                                                                                                                                    *const i8,
+                                                                                                                                                    *const ::libc::c_char,
                                                                                                                                                 nargs:
                                                                                                                                                     u32,
                                                                                                                                                 argnames:
-                                                                                                                                                    *const *const i8,
+                                                                                                                                                    *const *const ::libc::c_char,
                                                                                                                                                 chars:
                                                                                                                                                     *const i16,
                                                                                                                                                 length:
@@ -4713,11 +4713,11 @@ extern "C" {
                                                                                                                                                 options:
                                                                                                                                                     *const ReadOnlyCompileOptions,
                                                                                                                                                 name:
-                                                                                                                                                    *const i8,
+                                                                                                                                                    *const ::libc::c_char,
                                                                                                                                                 nargs:
                                                                                                                                                     u32,
                                                                                                                                                 argnames:
-                                                                                                                                                    *const *const i8,
+                                                                                                                                                    *const *const ::libc::c_char,
                                                                                                                                                 chars:
                                                                                                                                                     *const i16,
                                                                                                                                                 length:
@@ -4974,12 +4974,12 @@ extern "C" {
     fn _Z17JS_SaveFrameChainP9JSContext(cx: *mut JSContext) -> u8;
     fn _Z20JS_RestoreFrameChainP9JSContext(cx: *mut JSContext);
     #[cfg(target_pointer_width = "64")]
-    fn _Z17JS_NewStringCopyNP9JSContextPKcm(cx: *mut JSContext, s: *const i8,
+    fn _Z17JS_NewStringCopyNP9JSContextPKcm(cx: *mut JSContext, s: *const ::libc::c_char,
                                             n: ::libc::size_t) -> *mut JSString;
     #[cfg(target_pointer_width = "32")]
-    fn _Z17JS_NewStringCopyNP9JSContextPKcj(cx: *mut JSContext, s: *const i8,
+    fn _Z17JS_NewStringCopyNP9JSContextPKcj(cx: *mut JSContext, s: *const ::libc::c_char,
                                             n: ::libc::size_t) -> *mut JSString;
-    fn _Z17JS_NewStringCopyZP9JSContextPKc(cx: *mut JSContext, s: *const i8)
+    fn _Z17JS_NewStringCopyZP9JSContextPKc(cx: *mut JSContext, s: *const ::libc::c_char)
      -> *mut JSString;
     fn _Z17JS_InternJSStringP9JSContextN2JS6HandleIP8JSStringEE(cx:
                                                                     *mut JSContext,
@@ -5141,7 +5141,7 @@ extern "C" {
                                                                         *mut JSContext,
                                                                     str:
                                                                         HandleString)
-     -> *mut i8;
+     -> *mut ::libc::c_char;
     fn _Z26JS_GetStringEncodingLengthP9JSContextP8JSString(cx: *mut JSContext,
                                                            str: *mut JSString)
      -> u32;
@@ -5249,7 +5249,7 @@ extern "C" {
     fn _Z21JS_GetLocaleCallbacksP9JSRuntime(rt: *mut JSRuntime)
      -> *const JSLocaleCallbacks;
     fn _Z14JS_ReportErrorP9JSContextPKcz(cx: *mut JSContext,
-                                         format: *const i8, ...);
+                                         format: *const ::libc::c_char, ...);
     fn _Z20JS_ReportErrorNumberP9JSContextPFPK19JSErrorFormatStringPvjES4_jz(cx:
                                                                                  *mut JSContext,
                                                                              errorCallback:
@@ -8147,7 +8147,7 @@ pub unsafe extern "C" fn ObjectToCompletePropertyDescriptor(cx:
                                                                                                                                               desc)
 }
 pub unsafe extern "C" fn JS_DefineProperty(cx: *mut JSContext,
-                                           obj: HandleObject, name: *const i8,
+                                           obj: HandleObject, name: *const ::libc::c_char,
                                            value: HandleValue, attrs: u32,
                                            getter: JSNative, setter: JSNative)
  -> u8 {
@@ -8161,7 +8161,7 @@ pub unsafe extern "C" fn JS_DefineProperty(cx: *mut JSContext,
 }
 pub unsafe extern "C" fn JS_DefineProperty1(cx: *mut JSContext,
                                             obj: HandleObject,
-                                            name: *const i8,
+                                            name: *const ::libc::c_char,
                                             value: HandleObject, attrs: u32,
                                             getter: JSNative,
                                             setter: JSNative) -> u8 {
@@ -8175,7 +8175,7 @@ pub unsafe extern "C" fn JS_DefineProperty1(cx: *mut JSContext,
 }
 pub unsafe extern "C" fn JS_DefineProperty2(cx: *mut JSContext,
                                             obj: HandleObject,
-                                            name: *const i8,
+                                            name: *const ::libc::c_char,
                                             value: HandleString, attrs: u32,
                                             getter: JSNative,
                                             setter: JSNative) -> u8 {
@@ -8189,7 +8189,7 @@ pub unsafe extern "C" fn JS_DefineProperty2(cx: *mut JSContext,
 }
 pub unsafe extern "C" fn JS_DefineProperty3(cx: *mut JSContext,
                                             obj: HandleObject,
-                                            name: *const i8, value: i32,
+                                            name: *const ::libc::c_char, value: i32,
                                             attrs: u32, getter: JSNative,
                                             setter: JSNative) -> u8 {
     _Z17JS_DefinePropertyP9JSContextN2JS6HandleIP8JSObjectEEPKcijPFbS0_jPNS1_5ValueEESB_(cx,
@@ -8202,7 +8202,7 @@ pub unsafe extern "C" fn JS_DefineProperty3(cx: *mut JSContext,
 }
 pub unsafe extern "C" fn JS_DefineProperty4(cx: *mut JSContext,
                                             obj: HandleObject,
-                                            name: *const i8, value: u32,
+                                            name: *const ::libc::c_char, value: u32,
                                             attrs: u32, getter: JSNative,
                                             setter: JSNative) -> u8 {
     _Z17JS_DefinePropertyP9JSContextN2JS6HandleIP8JSObjectEEPKcjjPFbS0_jPNS1_5ValueEESB_(cx,
@@ -8215,7 +8215,7 @@ pub unsafe extern "C" fn JS_DefineProperty4(cx: *mut JSContext,
 }
 pub unsafe extern "C" fn JS_DefineProperty5(cx: *mut JSContext,
                                             obj: HandleObject,
-                                            name: *const i8, value: f64,
+                                            name: *const ::libc::c_char, value: f64,
                                             attrs: u32, getter: JSNative,
                                             setter: JSNative) -> u8 {
     _Z17JS_DefinePropertyP9JSContextN2JS6HandleIP8JSObjectEEPKcdjPFbS0_jPNS1_5ValueEESB_(cx,
@@ -8368,7 +8368,7 @@ pub unsafe extern "C" fn JS_DefineProperties(cx: *mut JSContext,
 }
 pub unsafe extern "C" fn JS_AlreadyHasOwnProperty(cx: *mut JSContext,
                                                   obj: HandleObject,
-                                                  name: *const i8,
+                                                  name: *const ::libc::c_char,
                                                   foundp: *mut u8) -> u8 {
     _Z24JS_AlreadyHasOwnPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKcPb(cx,
                                                                          obj,
@@ -8385,7 +8385,7 @@ pub unsafe extern "C" fn JS_AlreadyHasOwnPropertyById(cx: *mut JSContext,
                                                                                       foundp)
 }
 pub unsafe extern "C" fn JS_HasProperty(cx: *mut JSContext, obj: HandleObject,
-                                        name: *const i8, foundp: *mut u8)
+                                        name: *const ::libc::c_char, foundp: *mut u8)
  -> u8 {
     _Z14JS_HasPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKcPb(cx, obj, name,
                                                                foundp)
@@ -8444,7 +8444,7 @@ pub unsafe extern "C" fn JS_GetPropertyDescriptorById(cx: *mut JSContext,
 }
 pub unsafe extern "C" fn JS_GetPropertyDescriptor(cx: *mut JSContext,
                                                   obj: HandleObject,
-                                                  name: *const i8,
+                                                  name: *const ::libc::c_char,
                                                   desc:
                                                       MutableHandle<JSPropertyDescriptor>)
  -> u8 {
@@ -8454,7 +8454,7 @@ pub unsafe extern "C" fn JS_GetPropertyDescriptor(cx: *mut JSContext,
                                                                                                                    desc)
 }
 pub unsafe extern "C" fn JS_GetProperty(cx: *mut JSContext, obj: HandleObject,
-                                        name: *const i8,
+                                        name: *const ::libc::c_char,
                                         vp: MutableHandleValue) -> u8 {
     _Z14JS_GetPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKcNS1_13MutableHandleINS1_5ValueEEE(cx,
                                                                                               obj,
@@ -8482,7 +8482,7 @@ pub unsafe extern "C" fn JS_ForwardGetPropertyTo(cx: *mut JSContext,
                                                                                                                    vp)
 }
 pub unsafe extern "C" fn JS_SetProperty(cx: *mut JSContext, obj: HandleObject,
-                                        name: *const i8, v: HandleValue)
+                                        name: *const ::libc::c_char, v: HandleValue)
  -> u8 {
     _Z14JS_SetPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKcNS2_INS1_5ValueEEE(cx,
                                                                                obj,
@@ -8949,7 +8949,7 @@ pub unsafe extern "C" fn JS_SetReservedSlot(obj: *mut JSObject, index: u32,
 }
 pub unsafe extern "C" fn JS_NewFunction(cx: *mut JSContext, call: JSNative,
                                         nargs: u32, flags: u32,
-                                        name: *const i8) -> *mut JSFunction {
+                                        name: *const ::libc::c_char) -> *mut JSFunction {
     _Z14JS_NewFunctionP9JSContextPFbS0_jPN2JS5ValueEEjjPKc(cx, call, nargs,
                                                            flags, name)
 }
@@ -9024,7 +9024,7 @@ pub unsafe extern "C" fn JS_DefineFunctions(cx: *mut JSContext,
 }
 pub unsafe extern "C" fn JS_DefineFunction(cx: *mut JSContext,
                                            obj: Handle<*mut JSObject>,
-                                           name: *const i8, call: JSNative,
+                                           name: *const ::libc::c_char, call: JSNative,
                                            nargs: u32, attrs: u32)
  -> *mut JSFunction {
     _Z17JS_DefineFunctionP9JSContextN2JS6HandleIP8JSObjectEEPKcPFbS0_jPNS1_5ValueEEjj(cx,
@@ -9202,8 +9202,8 @@ pub unsafe extern "C" fn CompileFunction(cx: *mut JSContext,
                                          scopeChain: *mut AutoObjectVector,
                                          options:
                                              *const ReadOnlyCompileOptions,
-                                         name: *const i8, nargs: u32,
-                                         argnames: *const *const i8,
+                                         name: *const ::libc::c_char, nargs: u32,
+                                         argnames: *const *const ::libc::c_char,
                                          chars: *const i16, length: ::libc::size_t,
                                          fun: MutableHandleFunction) -> u8 {
     _ZN2JS15CompileFunctionEP9JSContextRNS_16AutoObjectVectorERKNS_22ReadOnlyCompileOptionsEPKcjPKS8_PKDsmNS_13MutableHandleIP10JSFunctionEE(cx,
@@ -9221,8 +9221,8 @@ pub unsafe extern "C" fn CompileFunction(cx: *mut JSContext,
                                          scopeChain: *mut AutoObjectVector,
                                          options:
                                              *const ReadOnlyCompileOptions,
-                                         name: *const i8, nargs: u32,
-                                         argnames: *const *const i8,
+                                         name: *const ::libc::c_char, nargs: u32,
+                                         argnames: *const *const ::libc::c_char,
                                          chars: *const i16, length: ::libc::size_t,
                                          fun: MutableHandleFunction) -> u8 {
     _ZN2JS15CompileFunctionEP9JSContextRNS_16AutoObjectVectorERKNS_22ReadOnlyCompileOptionsEPKcjPKS8_PKDsjNS_13MutableHandleIP10JSFunctionEE(cx,
@@ -9487,16 +9487,16 @@ pub unsafe extern "C" fn JS_RestoreFrameChain(cx: *mut JSContext) {
     _Z20JS_RestoreFrameChainP9JSContext(cx)
 }
 #[cfg(target_pointer_width = "64")]
-pub unsafe extern "C" fn JS_NewStringCopyN(cx: *mut JSContext, s: *const i8,
+pub unsafe extern "C" fn JS_NewStringCopyN(cx: *mut JSContext, s: *const ::libc::c_char,
                                            n: ::libc::size_t) -> *mut JSString {
     _Z17JS_NewStringCopyNP9JSContextPKcm(cx, s, n)
 }
 #[cfg(target_pointer_width = "32")]
-pub unsafe extern "C" fn JS_NewStringCopyN(cx: *mut JSContext, s: *const i8,
+pub unsafe extern "C" fn JS_NewStringCopyN(cx: *mut JSContext, s: *const ::libc::c_char,
                                            n: ::libc::size_t) -> *mut JSString {
     _Z17JS_NewStringCopyNP9JSContextPKcj(cx, s, n)
 }
-pub unsafe extern "C" fn JS_NewStringCopyZ(cx: *mut JSContext, s: *const i8)
+pub unsafe extern "C" fn JS_NewStringCopyZ(cx: *mut JSContext, s: *const ::libc::c_char)
  -> *mut JSString {
     _Z17JS_NewStringCopyZP9JSContextPKc(cx, s)
 }
@@ -9709,7 +9709,7 @@ pub unsafe extern "C" fn JS_EncodeString(cx: *mut JSContext,
     _Z15JS_EncodeStringP9JSContextP8JSString(cx, str)
 }
 pub unsafe extern "C" fn JS_EncodeStringToUTF8(cx: *mut JSContext,
-                                               str: HandleString) -> *mut i8 {
+                                               str: HandleString) -> *mut ::libc::c_char {
     _Z21JS_EncodeStringToUTF8P9JSContextN2JS6HandleIP8JSStringEE(cx, str)
 }
 pub unsafe extern "C" fn JS_GetStringEncodingLength(cx: *mut JSContext,
@@ -9833,7 +9833,7 @@ pub unsafe extern "C" fn JS_GetLocaleCallbacks(rt: *mut JSRuntime)
     _Z21JS_GetLocaleCallbacksP9JSRuntime(rt)
 }
 pub unsafe extern "C" fn JS_ReportError(cx: *mut JSContext,
-                                        format: *const i8) {
+                                        format: *const ::libc::c_char) {
     _Z14JS_ReportErrorP9JSContextPKcz(cx, format)
 }
 pub unsafe extern "C" fn JS_ReportErrorNumber(cx: *mut JSContext,
@@ -9849,7 +9849,7 @@ pub unsafe extern "C" fn JS_ReportErrorNumber1(cx: *mut JSContext,
                                                errorCallback: JSErrorCallback,
                                                userRef: *mut ::libc::c_void,
                                                errorNumber: u32,
-                                               arg1: *const i8) {
+                                               arg1: *const ::libc::c_char) {
     _Z20JS_ReportErrorNumberP9JSContextPFPK19JSErrorFormatStringPvjES4_jz(cx,
                                                                           errorCallback,
                                                                           userRef,

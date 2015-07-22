@@ -588,7 +588,7 @@ pub struct CompileOptionsWrapper {
 }
 
 impl CompileOptionsWrapper {
-    pub fn new(cx: *mut JSContext, file: *const i8, line: c_uint) -> CompileOptionsWrapper {
+    pub fn new(cx: *mut JSContext, file: *const ::libc::c_char, line: c_uint) -> CompileOptionsWrapper {
         CompileOptionsWrapper {
             ptr: unsafe { NewCompileOptions(cx, file, line) }
         }

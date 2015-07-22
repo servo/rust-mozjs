@@ -193,7 +193,7 @@ extern "C" {
     pub fn CreateWrapperProxyHandler(aTraps: *const ProxyTraps)
      -> *const ::libc::c_void;
     pub fn GetCrossCompartmentWrapper() -> *const ::libc::c_void;
-    pub fn NewCompileOptions(aCx: *mut JSContext, aFile: *const i8,
+    pub fn NewCompileOptions(aCx: *mut JSContext, aFile: *const ::libc::c_char,
                              aLine: u32) -> *mut ReadOnlyCompileOptions;
     pub fn DeleteCompileOptions(aOpts: *mut ReadOnlyCompileOptions);
     pub fn NewProxyObject(aCx: *mut JSContext,
