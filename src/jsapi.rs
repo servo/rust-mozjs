@@ -2760,18 +2760,8 @@ extern "C" {
 
 extern "C" {
     fn _Z9JS_AssertPKcS0_i(s: *const i8, file: *const i8, ln: i32);
-    fn _ZN2js6detail16ScrambleHashCodeEj(h: u32) -> u32;
-    fn _ZN2js8FinishGCEP9JSRuntime(rt: *mut JSRuntime);
-    fn _ZN2js2gc26MarkPersistentRootedChainsEP8JSTracer(arg1: *mut JSTracer);
-    fn _ZN2js2gc28FinishPersistentRootedChainsEP9JSRuntime(arg1:
-                                                               *mut JSRuntime);
-    fn _ZN2js10GetRuntimeEPK9JSContext(cx: *const JSContext)
-     -> *mut JSRuntime;
     fn _Z13JS_GetRuntimeP9JSContext(cx: *mut JSContext)
      -> *mut JSRuntime;
-    fn _ZN2js21GetContextCompartmentEPK9JSContext(cx: *const JSContext)
-     -> *mut JSCompartment;
-    fn _ZN2js14GetContextZoneEPK9JSContext(cx: *const JSContext) -> *mut Zone;
     fn _ZN2JS18GCTraceKindToAsciiE13JSGCTraceKind(kind: JSGCTraceKind)
      -> *const i8;
     fn _Z18JS_CallValueTracerP8JSTracerPN2JS4HeapINS1_5ValueEEEPKc(trc:
@@ -2863,10 +2853,6 @@ extern "C" {
     fn _ZN2js29CurrentThreadCanAccessRuntimeEP9JSRuntime(rt: *mut JSRuntime)
      -> u8;
     fn _ZN2js26CurrentThreadCanAccessZoneEPN2JS4ZoneE(zone: *mut Zone) -> u8;
-    fn _ZN2js2gc20AssertGCThingHasTypeEPNS0_4CellE13JSGCTraceKind(cell:
-                                                                      *mut Cell,
-                                                                  kind:
-                                                                      JSGCTraceKind);
     fn _ZN2JS13GetObjectZoneEP8JSObject(obj: *mut JSObject) -> *mut Zone;
     fn _ZN2JS16PrepareZoneForGCEPNS_4ZoneE(zone: *mut Zone);
     fn _ZN2JS16PrepareForFullGCEP9JSRuntime(rt: *mut JSRuntime);
@@ -2915,7 +2901,6 @@ extern "C" {
     fn _ZN2JS24IncrementalObjectBarrierEP8JSObject(obj: *mut JSObject);
     fn _ZN2JS16WasIncrementalGCEP9JSRuntime(rt: *mut JSRuntime) -> u8;
     fn _ZN2JS23IsGenerationalGCEnabledEP9JSRuntime(rt: *mut JSRuntime) -> u8;
-    fn _ZN2JS11GetGCNumberEv() -> u32;
     fn _ZN2JS15ShrinkGCBuffersEP9JSRuntime(rt: *mut JSRuntime);
     fn _ZN2JS28UnmarkGrayGCThingRecursivelyENS_9GCCellPtrE(thing: GCCellPtr)
      -> u8;
@@ -2924,48 +2909,13 @@ extern "C" {
     fn _ZN2JS11isGCEnabledEv() -> u8;
     fn _ZN2JS19HeapCellPostBarrierEPPN2js2gc4CellE(cellp: *mut *mut Cell);
     fn _ZN2JS16HeapCellRelocateEPPN2js2gc4CellE(cellp: *mut *mut Cell);
-    fn _ZN2JS26AssertGCThingMustBeTenuredEP8JSObject(obj: *mut JSObject);
-    fn _ZN2JS32IsOptimizedPlaceholderMagicValueERKNS_5ValueE(v: *const Value)
-     -> u8;
-    fn _ZN2JS8SameTypeERKNS_5ValueES2_(lhs: *const Value, rhs: *const Value)
-     -> u8;
     fn _ZN2JS20HeapValuePostBarrierEPNS_5ValueE(valuep: *mut Value);
     fn _ZN2JS17HeapValueRelocateEPNS_5ValueE(valuep: *mut Value);
     fn _Z14JS_ComputeThisP9JSContextPN2JS5ValueE(cx: *mut JSContext,
                                                  vp: *mut Value) -> Value;
-    fn _ZN2JS20CallReceiverFromArgvEPNS_5ValueE(argv: *mut Value)
-     -> CallReceiver;
-    fn _ZN2JS18CallReceiverFromVpEPNS_5ValueE(vp: *mut Value) -> CallReceiver;
-    fn _ZN2JS14CallArgsFromVpEjPNS_5ValueE(argc: u32, vp: *mut Value)
-     -> CallArgs;
-    fn _ZN2JS14CallArgsFromSpEjPNS_5ValueE(argc: u32, sp: *mut Value)
-     -> CallArgs;
-    fn _Z7JS_THISP9JSContextPN2JS5ValueE(cx: *mut JSContext, vp: *mut Value)
-     -> Value;
     fn _Z23INTERNED_STRING_TO_JSIDP9JSContextP8JSString(cx: *mut JSContext,
                                                         str: *mut JSString)
      -> jsid;
-    fn _ZN2js13ObjectClassIsER8JSObjectNS_12ESClassValueEP9JSContext(obj:
-                                                                         *mut JSObject,
-                                                                     classValue:
-                                                                         ESClassValue,
-                                                                     cx:
-                                                                         *mut JSContext)
-     -> u8;
-    fn _ZN2js17IsObjectWithClassERKN2JS5ValueENS_12ESClassValueEP9JSContext(v:
-                                                                                *const Value,
-                                                                            classValue:
-                                                                                ESClassValue,
-                                                                            cx:
-                                                                                *mut JSContext)
-     -> u8;
-    fn _ZN2js5UnboxEP9JSContextN2JS6HandleIP8JSObjectEENS2_13MutableHandleINS2_5ValueEEE(cx:
-                                                                                             *mut JSContext,
-                                                                                         obj:
-                                                                                             HandleObject,
-                                                                                         vp:
-                                                                                             MutableHandleValue)
-     -> u8;
     fn _Z17JS_HoldPrincipalsP12JSPrincipals(principals: *mut JSPrincipals);
     fn _Z17JS_DropPrincipalsP9JSRuntimeP12JSPrincipals(rt: *mut JSRuntime,
                                                        principals:
@@ -3081,8 +3031,6 @@ extern "C" {
                                              data: *mut ::libc::c_void);
     fn _Z15JS_BeginRequestP9JSContext(cx: *mut JSContext);
     fn _Z13JS_EndRequestP9JSContext(cx: *mut JSContext);
-    fn _ZN2js16AssertHeapIsIdleEP9JSRuntime(rt: *mut JSRuntime);
-    fn _ZN2js16AssertHeapIsIdleEP9JSContext(cx: *mut JSContext);
     fn _Z21JS_SetContextCallbackP9JSRuntimePFbP9JSContextjPvES3_(rt:
                                                                      *mut JSRuntime,
                                                                  cxCallback:
@@ -3282,15 +3230,6 @@ extern "C" {
                                                                       obj:
                                                                           HandleObject)
      -> u8;
-    fn _Z18JS_InitCTypesClassP9JSContextN2JS6HandleIP8JSObjectEE(cx:
-                                                                     *mut JSContext,
-                                                                 global:
-                                                                     HandleObject)
-     -> u8;
-    fn _Z21JS_SetCTypesCallbacksP8JSObjectPK17JSCTypesCallbacks(ctypesObj:
-                                                                    *mut JSObject,
-                                                                callbacks:
-                                                                    *const JSCTypesCallbacks);
     fn _Z9JS_mallocP9JSContextj(cx: *mut JSContext, nbytes: u32)
      -> *mut ::libc::c_void;
     fn _Z10JS_reallocP9JSContextPvjj(cx: *mut JSContext,
@@ -3448,15 +3387,6 @@ extern "C" {
                                                                                                                                        result:
                                                                                                                                            *mut ObjectOpResult)
      -> u8;
-    fn _ZN2JS6detail13CheckIsNativeEPFbP9JSContextjPNS_5ValueEE(native:
-                                                                    JSNative)
-     -> i32;
-    fn _ZN2JS6detail15CheckIsGetterOpEPFbP9JSContextNS_6HandleIP8JSObjectEENS3_I4jsidEENS_13MutableHandleINS_5ValueEEEE(op:
-                                                                                                                            JSGetterOp)
-     -> i32;
-    fn _ZN2JS6detail15CheckIsSetterOpEPFbP9JSContextNS_6HandleIP8JSObjectEENS3_I4jsidEENS_13MutableHandleINS_5ValueEEERNS_14ObjectOpResultEE(op:
-                                                                                                                                                 JSSetterOp)
-     -> i32;
     fn _Z12JS_InitClassP9JSContextN2JS6HandleIP8JSObjectEES5_PK7JSClassPFbS0_jPNS1_5ValueEEjPK14JSPropertySpecPK14JSFunctionSpecSF_SI_(cx:
                                                                                                                                            *mut JSContext,
                                                                                                                                        obj:
@@ -4002,13 +3932,6 @@ extern "C" {
                                                                                              *const i8,
                                                                                          result:
                                                                                              *mut ObjectOpResult)
-     -> u8;
-    fn _Z21JS_DeletePropertyByIdP9JSContextN2JS6HandleIP8JSObjectEE4jsid(cx:
-                                                                             *mut JSContext,
-                                                                         obj:
-                                                                             HandleObject,
-                                                                         id:
-                                                                             jsid)
      -> u8;
     fn _Z21JS_DeletePropertyByIdP9JSContextN2JS6HandleIP8JSObjectEENS2_I4jsidEERNS1_14ObjectOpResultE(cx:
                                                                                                           *mut JSContext,
@@ -4640,15 +4563,6 @@ extern "C" {
                                                                                                     script:
                                                                                                         MutableHandleScript)
      -> u8;
-    fn _ZN2JS7CompileEP9JSContextRKNS_22ReadOnlyCompileOptionsEP8_IO_FILENS_13MutableHandleIP8JSScriptEE(cx:
-                                                                                                             *mut JSContext,
-                                                                                                         options:
-                                                                                                             *const ReadOnlyCompileOptions,
-                                                                                                         file:
-                                                                                                             *mut FILE,
-                                                                                                         script:
-                                                                                                             MutableHandleScript)
-     -> u8;
     fn _ZN2JS7CompileEP9JSContextRKNS_22ReadOnlyCompileOptionsEPKcNS_13MutableHandleIP8JSScriptEE(cx:
                                                                                                       *mut JSContext,
                                                                                                   options:
@@ -5023,9 +4937,6 @@ extern "C" {
                                                         size: u32,
                                                         str: *mut JSString,
                                                         quote: i8) -> u32;
-    fn _Z20JS_FileEscapedStringP8_IO_FILEP8JSStringc(fp: *mut FILE,
-                                                     str: *mut JSString,
-                                                     quote: i8) -> u8;
     fn _Z18JS_GetStringLengthP8JSString(str: *mut JSString) -> u32;
     fn _Z15JS_StringIsFlatP8JSString(str: *mut JSString) -> u8;
     fn _Z23JS_StringHasLatin1CharsP8JSString(str: *mut JSString) -> u8;
@@ -5179,7 +5090,6 @@ extern "C" {
                                                               which:
                                                                   SymbolCode)
      -> *mut Symbol;
-    fn _ZN2JS24PropertySpecNameIsSymbolEPKc(name: *const i8) -> u8;
     fn _ZN2JS24PropertySpecNameEqualsIdEPKcNS_6HandleI4jsidEE(name: *const i8,
                                                               id: HandleId)
      -> u8;
@@ -5258,16 +5168,6 @@ extern "C" {
                                                                                  *mut ::libc::c_void,
                                                                              errorNumber:
                                                                                  u32, ...);
-    fn _Z22JS_ReportErrorNumberVAP9JSContextPFPK19JSErrorFormatStringPvjES4_jPc(cx:
-                                                                                    *mut JSContext,
-                                                                                errorCallback:
-                                                                                    JSErrorCallback,
-                                                                                userRef:
-                                                                                    *mut ::libc::c_void,
-                                                                                errorNumber:
-                                                                                    u32,
-                                                                                ap:
-                                                                                    va_list);
     fn _Z22JS_ReportErrorNumberUCP9JSContextPFPK19JSErrorFormatStringPvjES4_jz(cx:
                                                                                    *mut JSContext,
                                                                                errorCallback:
@@ -5720,15 +5620,6 @@ extern "C" {
                                                                                                         args:
                                                                                                             CallArgs)
      -> u8;
-    fn _ZN2JS20CallNonGenericMethodEP9JSContextPFbNS_6HandleINS_5ValueEEEEPFbS1_NS_8CallArgsEES7_(cx:
-                                                                                                      *mut JSContext,
-                                                                                                  Test:
-                                                                                                      IsAcceptableThis,
-                                                                                                  Impl:
-                                                                                                      NativeImpl,
-                                                                                                  args:
-                                                                                                      CallArgs)
-     -> u8;
     fn _Z23JS_SetGrayGCRootsTracerP9JSRuntimePFvP8JSTracerPvES3_(rt:
                                                                      *mut JSRuntime,
                                                                  traceOp:
@@ -5765,9 +5656,6 @@ extern "C" {
                                                                                     proto:
                                                                                         Handle<*mut JSObject>)
      -> *mut JSObject;
-    fn _Z26JS_ObjectCountDynamicSlotsN2JS6HandleIP8JSObjectEE(obj:
-                                                                  HandleObject)
-     -> u32;
     fn _Z17JS_SetProtoCalledP9JSContext(cx: *mut JSContext) -> u32;
     fn _Z25JS_GetCustomIteratorCountP9JSContext(cx: *mut JSContext) -> u32;
     fn _Z33JS_NondeterministicGetWeakMapKeysP9JSContextN2JS6HandleIP8JSObjectEENS1_13MutableHandleIS4_EE(cx:
@@ -6029,20 +5917,6 @@ extern "C" {
      -> UniquePtr;
     fn _ZN2js18GetCompartmentZoneEP13JSCompartment(comp: *mut JSCompartment)
      -> *mut Zone;
-    fn _ZN2js16DumpHeapCompleteEP9JSRuntimeP8_IO_FILENS_24DumpHeapNurseryBehaviourE(rt:
-                                                                                        *mut JSRuntime,
-                                                                                    fp:
-                                                                                        *mut FILE,
-                                                                                    nurseryBehaviour:
-                                                                                        DumpHeapNurseryBehaviour);
-    fn _ZN2js16obj_defineGetterEP9JSContextjPN2JS5ValueE(cx: *mut JSContext,
-                                                         argc: u32,
-                                                         vp: *mut Value)
-     -> u8;
-    fn _ZN2js16obj_defineSetterEP9JSContextjPN2JS5ValueE(cx: *mut JSContext,
-                                                         argc: u32,
-                                                         vp: *mut Value)
-     -> u8;
     fn _ZN2js19IsSystemCompartmentEP13JSCompartment(comp: *mut JSCompartment)
      -> u8;
     fn _ZN2js12IsSystemZoneEPN2JS4ZoneE(zone: *mut Zone) -> u8;
@@ -6068,21 +5942,9 @@ extern "C" {
                                                                           GCThingCallback,
                                                                       data:
                                                                           *mut ::libc::c_void);
-    fn _ZN2js23SizeOfDataIfCDataObjectEPFjPKvEP8JSObject(mallocSizeOf:
-                                                             MallocSizeOf,
-                                                         obj: *mut JSObject)
-     -> u32;
     fn _ZN2js23GetAnyCompartmentInZoneEPN2JS4ZoneE(zone: *mut Zone)
      -> *mut JSCompartment;
-    fn _ZN2js14GetObjectClassEP8JSObject(obj: *mut JSObject) -> *const Class;
-    fn _ZN2js16GetObjectJSClassEP8JSObject(obj: *mut JSObject)
-     -> *const JSClass;
     fn _ZN2js15ProtoKeyToClassE10JSProtoKey(key: JSProtoKey) -> *const Class;
-    fn _ZN2js24StandardClassIsDependentE10JSProtoKey(key: JSProtoKey) -> u8;
-    fn _ZN2js25ParentKeyForStandardClassE10JSProtoKey(key: JSProtoKey)
-     -> JSProtoKey;
-    fn _ZN2js13IsInnerObjectEP8JSObject(obj: *mut JSObject) -> u8;
-    fn _ZN2js13IsOuterObjectEP8JSObject(obj: *mut JSObject) -> u8;
     fn _ZN2js16IsFunctionObjectEP8JSObject(obj: *mut JSObject) -> u8;
     fn _ZN2js13IsScopeObjectEP8JSObject(obj: *mut JSObject) -> u8;
     fn _ZN2js12IsCallObjectEP8JSObject(obj: *mut JSObject) -> u8;
@@ -6099,8 +5961,6 @@ extern "C" {
     fn _ZN2js21AssertSameCompartmentEP9JSContextP8JSObject(cx: *mut JSContext,
                                                            obj:
                                                                *mut JSObject);
-    fn _ZN2js21AssertSameCompartmentEP8JSObjectS1_(objA: *mut JSObject,
-                                                   objB: *mut JSObject);
     fn _ZN2js23NotifyAnimationActivityEP8JSObject(obj: *mut JSObject);
     fn _ZN2js45GetOutermostEnclosingFunctionOfScriptedCallerEP9JSContext(cx:
                                                                              *mut JSContext)
@@ -6163,76 +6023,18 @@ extern "C" {
                                                                                             eval:
                                                                                                 MutableHandleObject)
      -> u8;
-    fn _ZN2js16GetObjectPrivateEP8JSObject(obj: *mut JSObject)
-     -> *mut ::libc::c_void;
-    fn _ZN2js15GetReservedSlotEP8JSObjectj(obj: *mut JSObject, slot: u32)
-     -> *const Value;
     fn _ZN2js40SetReservedOrProxyPrivateSlotWithBarrierEP8JSObjectjRKN2JS5ValueE(obj:
                                                                                      *mut JSObject,
                                                                                  slot:
                                                                                      u32,
                                                                                  value:
                                                                                      *const Value);
-    fn _ZN2js15SetReservedSlotEP8JSObjectjRKN2JS5ValueE(obj: *mut JSObject,
-                                                        slot: u32,
-                                                        value: *const Value);
     fn _ZN2js17GetObjectSlotSpanEP8JSObject(obj: *mut JSObject) -> u32;
-    fn _ZN2js13GetObjectSlotEP8JSObjectj(obj: *mut JSObject, slot: u32)
-     -> *const Value;
-    fn _ZN2js13GetAtomLengthEP6JSAtom(atom: *mut JSAtom) -> u32;
-    fn _ZN2js15GetStringLengthEP8JSString(s: *mut JSString) -> u32;
-    fn _ZN2js19GetFlatStringLengthEP12JSFlatString(s: *mut JSFlatString)
-     -> u32;
-    fn _ZN2js21GetLinearStringLengthEP14JSLinearString(s: *mut JSLinearString)
-     -> u32;
-    fn _ZN2js26LinearStringHasLatin1CharsEP14JSLinearString(s:
-                                                                *mut JSLinearString)
-     -> u8;
-    fn _ZN2js18AtomHasLatin1CharsEP6JSAtom(atom: *mut JSAtom) -> u8;
-    fn _ZN2js20StringHasLatin1CharsEP8JSString(s: *mut JSString) -> u8;
-    fn _ZN2js26GetLatin1LinearStringCharsERKN2JS17AutoCheckCannotGCEP14JSLinearString(nogc:
-                                                                                          *const AutoCheckCannotGC,
-                                                                                      linear:
-                                                                                          *mut JSLinearString)
-     -> *const Latin1Char;
-    fn _ZN2js27GetTwoByteLinearStringCharsERKN2JS17AutoCheckCannotGCEP14JSLinearString(nogc:
-                                                                                           *const AutoCheckCannotGC,
-                                                                                       linear:
-                                                                                           *mut JSLinearString)
-     -> *const i16;
-    fn _ZN2js18AtomToLinearStringEP6JSAtom(atom: *mut JSAtom)
-     -> *mut JSLinearString;
-    fn _ZN2js24FlatStringToLinearStringEP12JSFlatString(s: *mut JSFlatString)
-     -> *mut JSLinearString;
-    fn _ZN2js18GetLatin1AtomCharsERKN2JS17AutoCheckCannotGCEP6JSAtom(nogc:
-                                                                         *const AutoCheckCannotGC,
-                                                                     atom:
-                                                                         *mut JSAtom)
-     -> *const Latin1Char;
-    fn _ZN2js19GetTwoByteAtomCharsERKN2JS17AutoCheckCannotGCEP6JSAtom(nogc:
-                                                                          *const AutoCheckCannotGC,
-                                                                      atom:
-                                                                          *mut JSAtom)
-     -> *const i16;
     fn _ZN2js24StringToLinearStringSlowEP9JSContextP8JSString(cx:
                                                                   *mut JSContext,
                                                               str:
                                                                   *mut JSString)
      -> *mut JSLinearString;
-    fn _ZN2js20StringToLinearStringEP9JSContextP8JSString(cx: *mut JSContext,
-                                                          str: *mut JSString)
-     -> *mut JSLinearString;
-    fn _ZN2js21CopyLinearStringCharsEPDsP14JSLinearStringj(dest: *mut i16,
-                                                           s:
-                                                               *mut JSLinearString,
-                                                           len: u32);
-    fn _ZN2js15CopyStringCharsEP9JSContextPDsP8JSStringj(cx: *mut JSContext,
-                                                         dest: *mut i16,
-                                                         s: *mut JSString,
-                                                         len: u32) -> u8;
-    fn _ZN2js19CopyFlatStringCharsEPDsP12JSFlatStringj(dest: *mut i16,
-                                                       s: *mut JSFlatString,
-                                                       len: u32);
     fn _ZN2js15GetPropertyKeysEP9JSContextN2JS6HandleIP8JSObjectEEjPNS2_12AutoIdVectorE(cx:
                                                                                             *mut JSContext,
                                                                                         obj:
@@ -6273,13 +6075,6 @@ extern "C" {
      -> u8;
     fn _ZN2js28RunningWithTrustedPrincipalsEP9JSContext(cx: *mut JSContext)
      -> u8;
-    fn _ZN2js19GetNativeStackLimitEP9JSContextNS_9StackKindEi(cx:
-                                                                  *mut JSContext,
-                                                              kind: StackKind,
-                                                              extraAllowance:
-                                                                  i32) -> u32;
-    fn _ZN2js19GetNativeStackLimitEP9JSContexti(cx: *mut JSContext,
-                                                extraAllowance: i32) -> u32;
     fn _ZN2js21StartPCCountProfilingEP9JSContext(cx: *mut JSContext);
     fn _ZN2js20StopPCCountProfilingEP9JSContext(cx: *mut JSContext);
     fn _ZN2js13PurgePCCountsEP9JSContext(cx: *mut JSContext);
@@ -6309,7 +6104,6 @@ extern "C" {
      -> *const DOMCallbacks;
     fn _ZN2js19GetTestingFunctionsEP9JSContext(cx: *mut JSContext)
      -> *mut JSObject;
-    fn _ZN2js14CastToJSFreeOpEPNS_6FreeOpE(fop: *mut FreeOp) -> *mut JSFreeOp;
     fn _ZN2js16GetErrorTypeNameEP9JSRuntimes(rt: *mut JSRuntime, exnType: i16)
      -> *mut JSFlatString;
     fn _ZN2js23RegExpToSharedNonInlineEP9JSContextN2JS6HandleIP8JSObjectEEPNS_11RegExpGuardE(cx:
@@ -6334,12 +6128,6 @@ extern "C" {
                                                                                                                             u32,
                                                                                                                         domProxyShadowsCheck:
                                                                                                                             DOMProxyShadowsCheck);
-    fn _ZN2js24GetDOMProxyHandlerFamilyEv() -> *const ::libc::c_void;
-    fn _ZN2js22GetDOMProxyExpandoSlotEv() -> u32;
-    fn _ZN2js23GetDOMProxyShadowsCheckEv() -> DOMProxyShadowsCheck;
-    fn _ZN2js19DOMProxyIsShadowingENS_21DOMProxyShadowsResultE(result:
-                                                                   DOMProxyShadowsResult)
-     -> u8;
     fn _ZN2js11DateIsValidEP9JSContextP8JSObject(cx: *mut JSContext,
                                                  obj: *mut JSObject) -> u8;
     fn _ZN2js21DateGetMsecSinceEpochEP9JSContextP8JSObject(cx: *mut JSContext,
@@ -6670,45 +6458,6 @@ extern "C" {
      -> *mut JSObject;
     fn _ZN2js24UnwrapSharedFloat64ArrayEP8JSObject(obj: *mut JSObject)
      -> *mut JSObject;
-    fn _ZN2js25GetInt8ArrayLengthAndDataEP8JSObjectPjPPa(obj: *mut JSObject,
-                                                         length: *mut u32,
-                                                         data: *mut *mut i8);
-    fn _ZN2js26GetUint8ArrayLengthAndDataEP8JSObjectPjPPh(obj: *mut JSObject,
-                                                          length: *mut u32,
-                                                          data: *mut *mut u8);
-    fn _ZN2js33GetUint8ClampedArrayLengthAndDataEP8JSObjectPjPPh(obj:
-                                                                     *mut JSObject,
-                                                                 length:
-                                                                     *mut u32,
-                                                                 data:
-                                                                     *mut *mut u8);
-    fn _ZN2js26GetInt16ArrayLengthAndDataEP8JSObjectPjPPs(obj: *mut JSObject,
-                                                          length: *mut u32,
-                                                          data:
-                                                              *mut *mut i16);
-    fn _ZN2js27GetUint16ArrayLengthAndDataEP8JSObjectPjPPt(obj: *mut JSObject,
-                                                           length: *mut u32,
-                                                           data:
-                                                               *mut *mut u16);
-    fn _ZN2js26GetInt32ArrayLengthAndDataEP8JSObjectPjPPi(obj: *mut JSObject,
-                                                          length: *mut u32,
-                                                          data:
-                                                              *mut *mut i32);
-    fn _ZN2js27GetUint32ArrayLengthAndDataEP8JSObjectPjPS2_(obj:
-                                                                *mut JSObject,
-                                                            length: *mut u32,
-                                                            data:
-                                                                *mut *mut u32);
-    fn _ZN2js28GetFloat32ArrayLengthAndDataEP8JSObjectPjPPf(obj:
-                                                                *mut JSObject,
-                                                            length: *mut u32,
-                                                            data:
-                                                                *mut *mut f32);
-    fn _ZN2js28GetFloat64ArrayLengthAndDataEP8JSObjectPjPPd(obj:
-                                                                *mut JSObject,
-                                                            length: *mut u32,
-                                                            data:
-                                                                *mut *mut f64);
     fn _ZN2js31GetArrayBufferViewLengthAndDataEP8JSObjectPjPPh(obj:
                                                                    *mut JSObject,
                                                                length:
@@ -6866,18 +6615,12 @@ extern "C" {
                                                                            id:
                                                                                HandleId)
      -> u8;
-    fn _ZN2js6detail13IdMatchesAtomE4jsidP6JSAtom(id: jsid, atom: *mut JSAtom)
-     -> u8;
     fn _ZN2js16DefaultJSContextEP9JSRuntime(rt: *mut JSRuntime)
      -> *mut JSContext;
     fn _ZN2js27SetDefaultJSContextCallbackEP9JSRuntimePFP9JSContextS1_E(rt:
                                                                             *mut JSRuntime,
                                                                         cb:
                                                                             DefaultJSContextCallback);
-    fn _ZN2js24Debug_SetActiveJSContextEP9JSRuntimeP9JSContext(rt:
-                                                                   *mut JSRuntime,
-                                                               cx:
-                                                                   *mut JSContext);
     fn _ZN2js25SetCTypesActivityCallbackEP9JSRuntimePFvP9JSContextNS_18CTypesActivityTypeEE(rt:
                                                                                                 *mut JSRuntime,
                                                                                             cb:
@@ -7004,30 +6747,8 @@ extern "C" {
 pub unsafe extern "C" fn JS_Assert(s: *const i8, file: *const i8, ln: i32) {
     _Z9JS_AssertPKcS0_i(s, file, ln)
 }
-pub unsafe extern "C" fn ScrambleHashCode(h: u32) -> u32 {
-    _ZN2js6detail16ScrambleHashCodeEj(h)
-}
-pub unsafe extern "C" fn FinishGC(rt: *mut JSRuntime) {
-    _ZN2js8FinishGCEP9JSRuntime(rt)
-}
-pub unsafe extern "C" fn MarkPersistentRootedChains(arg1: *mut JSTracer) {
-    _ZN2js2gc26MarkPersistentRootedChainsEP8JSTracer(arg1)
-}
-pub unsafe extern "C" fn FinishPersistentRootedChains(arg1: *mut JSRuntime) {
-    _ZN2js2gc28FinishPersistentRootedChainsEP9JSRuntime(arg1)
-}
-pub unsafe extern "C" fn GetRuntime(cx: *const JSContext) -> *mut JSRuntime {
-    _ZN2js10GetRuntimeEPK9JSContext(cx)
-}
 pub unsafe extern "C" fn JS_GetRuntime(cx: *mut JSContext) -> *mut JSRuntime {
     _Z13JS_GetRuntimeP9JSContext(cx)
-}
-pub unsafe extern "C" fn GetContextCompartment(cx: *const JSContext)
- -> *mut JSCompartment {
-    _ZN2js21GetContextCompartmentEPK9JSContext(cx)
-}
-pub unsafe extern "C" fn GetContextZone(cx: *const JSContext) -> *mut Zone {
-    _ZN2js14GetContextZoneEPK9JSContext(cx)
 }
 pub unsafe extern "C" fn GCTraceKindToAscii(kind: JSGCTraceKind)
  -> *const i8 {
@@ -7140,10 +6861,6 @@ pub unsafe extern "C" fn CurrentThreadCanAccessRuntime(rt: *mut JSRuntime)
 pub unsafe extern "C" fn CurrentThreadCanAccessZone(zone: *mut Zone) -> u8 {
     _ZN2js26CurrentThreadCanAccessZoneEPN2JS4ZoneE(zone)
 }
-pub unsafe extern "C" fn AssertGCThingHasType(cell: *mut Cell,
-                                              kind: JSGCTraceKind) {
-    _ZN2js2gc20AssertGCThingHasTypeEPNS0_4CellE13JSGCTraceKind(cell, kind)
-}
 pub unsafe extern "C" fn GetObjectZone(obj: *mut JSObject) -> *mut Zone {
     _ZN2JS13GetObjectZoneEP8JSObject(obj)
 }
@@ -7224,7 +6941,6 @@ pub unsafe extern "C" fn WasIncrementalGC(rt: *mut JSRuntime) -> u8 {
 pub unsafe extern "C" fn IsGenerationalGCEnabled(rt: *mut JSRuntime) -> u8 {
     _ZN2JS23IsGenerationalGCEnabledEP9JSRuntime(rt)
 }
-pub unsafe extern "C" fn GetGCNumber() -> u32 { _ZN2JS11GetGCNumberEv() }
 pub unsafe extern "C" fn ShrinkGCBuffers(rt: *mut JSRuntime) {
     _ZN2JS15ShrinkGCBuffersEP9JSRuntime(rt)
 }
@@ -7245,17 +6961,6 @@ pub unsafe extern "C" fn HeapCellPostBarrier(cellp: *mut *mut Cell) {
 pub unsafe extern "C" fn HeapCellRelocate(cellp: *mut *mut Cell) {
     _ZN2JS16HeapCellRelocateEPPN2js2gc4CellE(cellp)
 }
-pub unsafe extern "C" fn AssertGCThingMustBeTenured(obj: *mut JSObject) {
-    _ZN2JS26AssertGCThingMustBeTenuredEP8JSObject(obj)
-}
-pub unsafe extern "C" fn IsOptimizedPlaceholderMagicValue(v: *const Value)
- -> u8 {
-    _ZN2JS32IsOptimizedPlaceholderMagicValueERKNS_5ValueE(v)
-}
-pub unsafe extern "C" fn SameType(lhs: *const Value, rhs: *const Value)
- -> u8 {
-    _ZN2JS8SameTypeERKNS_5ValueES2_(lhs, rhs)
-}
 pub unsafe extern "C" fn HeapValuePostBarrier(valuep: *mut Value) {
     _ZN2JS20HeapValuePostBarrierEPNS_5ValueE(valuep)
 }
@@ -7266,48 +6971,9 @@ pub unsafe extern "C" fn JS_ComputeThis(cx: *mut JSContext, vp: *mut Value)
  -> Value {
     _Z14JS_ComputeThisP9JSContextPN2JS5ValueE(cx, vp)
 }
-pub unsafe extern "C" fn CallReceiverFromArgv(argv: *mut Value)
- -> CallReceiver {
-    _ZN2JS20CallReceiverFromArgvEPNS_5ValueE(argv)
-}
-pub unsafe extern "C" fn CallReceiverFromVp(vp: *mut Value) -> CallReceiver {
-    _ZN2JS18CallReceiverFromVpEPNS_5ValueE(vp)
-}
-pub unsafe extern "C" fn CallArgsFromVp(argc: u32, vp: *mut Value)
- -> CallArgs {
-    _ZN2JS14CallArgsFromVpEjPNS_5ValueE(argc, vp)
-}
-pub unsafe extern "C" fn CallArgsFromSp(argc: u32, sp: *mut Value)
- -> CallArgs {
-    _ZN2JS14CallArgsFromSpEjPNS_5ValueE(argc, sp)
-}
-pub unsafe extern "C" fn JS_THIS(cx: *mut JSContext, vp: *mut Value)
- -> Value {
-    _Z7JS_THISP9JSContextPN2JS5ValueE(cx, vp)
-}
 pub unsafe extern "C" fn INTERNED_STRING_TO_JSID(cx: *mut JSContext,
                                                  str: *mut JSString) -> jsid {
     _Z23INTERNED_STRING_TO_JSIDP9JSContextP8JSString(cx, str)
-}
-pub unsafe extern "C" fn ObjectClassIs(obj: *mut JSObject,
-                                       classValue: ESClassValue,
-                                       cx: *mut JSContext) -> u8 {
-    _ZN2js13ObjectClassIsER8JSObjectNS_12ESClassValueEP9JSContext(obj,
-                                                                  classValue,
-                                                                  cx)
-}
-pub unsafe extern "C" fn IsObjectWithClass(v: *const Value,
-                                           classValue: ESClassValue,
-                                           cx: *mut JSContext) -> u8 {
-    _ZN2js17IsObjectWithClassERKN2JS5ValueENS_12ESClassValueEP9JSContext(v,
-                                                                         classValue,
-                                                                         cx)
-}
-pub unsafe extern "C" fn Unbox(cx: *mut JSContext, obj: HandleObject,
-                               vp: MutableHandleValue) -> u8 {
-    _ZN2js5UnboxEP9JSContextN2JS6HandleIP8JSObjectEENS2_13MutableHandleINS2_5ValueEEE(cx,
-                                                                                      obj,
-                                                                                      vp)
 }
 pub unsafe extern "C" fn JS_HoldPrincipals(principals: *mut JSPrincipals) {
     _Z17JS_HoldPrincipalsP12JSPrincipals(principals)
@@ -7459,12 +7125,6 @@ pub unsafe extern "C" fn JS_BeginRequest(cx: *mut JSContext) {
 }
 pub unsafe extern "C" fn JS_EndRequest(cx: *mut JSContext) {
     _Z13JS_EndRequestP9JSContext(cx)
-}
-pub unsafe extern "C" fn AssertHeapIsIdle(rt: *mut JSRuntime) {
-    _ZN2js16AssertHeapIsIdleEP9JSRuntime(rt)
-}
-pub unsafe extern "C" fn AssertHeapIsIdle1(cx: *mut JSContext) {
-    _ZN2js16AssertHeapIsIdleEP9JSContext(cx)
 }
 pub unsafe extern "C" fn JS_SetContextCallback(rt: *mut JSRuntime,
                                                cxCallback: JSContextCallback,
@@ -7743,16 +7403,6 @@ pub unsafe extern "C" fn JS_DefineDebuggerObject(cx: *mut JSContext,
                                                  obj: HandleObject) -> u8 {
     _Z23JS_DefineDebuggerObjectP9JSContextN2JS6HandleIP8JSObjectEE(cx, obj)
 }
-pub unsafe extern "C" fn JS_InitCTypesClass(cx: *mut JSContext,
-                                            global: HandleObject) -> u8 {
-    _Z18JS_InitCTypesClassP9JSContextN2JS6HandleIP8JSObjectEE(cx, global)
-}
-pub unsafe extern "C" fn JS_SetCTypesCallbacks(ctypesObj: *mut JSObject,
-                                               callbacks:
-                                                   *const JSCTypesCallbacks) {
-    _Z21JS_SetCTypesCallbacksP8JSObjectPK17JSCTypesCallbacks(ctypesObj,
-                                                             callbacks)
-}
 pub unsafe extern "C" fn JS_malloc(cx: *mut JSContext, nbytes: u32)
  -> *mut ::libc::c_void {
     _Z9JS_mallocP9JSContextj(cx, nbytes)
@@ -7948,15 +7598,6 @@ pub unsafe extern "C" fn JS_StrictPropertyStub(cx: *mut JSContext,
                                                                                                                                     id,
                                                                                                                                     vp,
                                                                                                                                     result)
-}
-pub unsafe extern "C" fn CheckIsNative(native: JSNative) -> i32 {
-    _ZN2JS6detail13CheckIsNativeEPFbP9JSContextjPNS_5ValueEE(native)
-}
-pub unsafe extern "C" fn CheckIsGetterOp(op: JSGetterOp) -> i32 {
-    _ZN2JS6detail15CheckIsGetterOpEPFbP9JSContextNS_6HandleIP8JSObjectEENS3_I4jsidEENS_13MutableHandleINS_5ValueEEEE(op)
-}
-pub unsafe extern "C" fn CheckIsSetterOp(op: JSSetterOp) -> i32 {
-    _ZN2JS6detail15CheckIsSetterOpEPFbP9JSContextNS_6HandleIP8JSObjectEENS3_I4jsidEENS_13MutableHandleINS_5ValueEEERNS_14ObjectOpResultEE(op)
 }
 pub unsafe extern "C" fn JS_InitClass(cx: *mut JSContext, obj: HandleObject,
                                       parent_proto: HandleObject,
@@ -8524,12 +8165,6 @@ pub unsafe extern "C" fn JS_DeleteProperty1(cx: *mut JSContext,
                                                                                       obj,
                                                                                       name,
                                                                                       result)
-}
-pub unsafe extern "C" fn JS_DeletePropertyById(cx: *mut JSContext,
-                                               obj: HandleObject, id: jsid)
- -> u8 {
-    _Z21JS_DeletePropertyByIdP9JSContextN2JS6HandleIP8JSObjectEE4jsid(cx, obj,
-                                                                      id)
 }
 pub unsafe extern "C" fn JS_DeletePropertyById1(cx: *mut JSContext,
                                                 obj: HandleObject,
@@ -9151,15 +8786,6 @@ pub unsafe extern "C" fn Compile2(cx: *mut JSContext,
                                                                                                  length,
                                                                                                  script)
 }
-pub unsafe extern "C" fn Compile3(cx: *mut JSContext,
-                                  options: *const ReadOnlyCompileOptions,
-                                  file: *mut FILE,
-                                  script: MutableHandleScript) -> u8 {
-    _ZN2JS7CompileEP9JSContextRKNS_22ReadOnlyCompileOptionsEP8_IO_FILENS_13MutableHandleIP8JSScriptEE(cx,
-                                                                                                      options,
-                                                                                                      file,
-                                                                                                      script)
-}
 pub unsafe extern "C" fn Compile4(cx: *mut JSContext,
                                   options: *const ReadOnlyCompileOptions,
                                   filename: *const i8,
@@ -9561,11 +9187,6 @@ pub unsafe extern "C" fn JS_PutEscapedString(cx: *mut JSContext,
     _Z19JS_PutEscapedStringP9JSContextPcjP8JSStringc(cx, buffer, size, str,
                                                      quote)
 }
-pub unsafe extern "C" fn JS_FileEscapedString(fp: *mut FILE,
-                                              str: *mut JSString, quote: i8)
- -> u8 {
-    _Z20JS_FileEscapedStringP8_IO_FILEP8JSStringc(fp, str, quote)
-}
 pub unsafe extern "C" fn JS_GetStringLength(str: *mut JSString) -> u32 {
     _Z18JS_GetStringLengthP8JSString(str)
 }
@@ -9757,9 +9378,6 @@ pub unsafe extern "C" fn GetWellKnownSymbol(cx: *mut JSContext,
  -> *mut Symbol {
     _ZN2JS18GetWellKnownSymbolEP9JSContextNS_10SymbolCodeE(cx, which)
 }
-pub unsafe extern "C" fn PropertySpecNameIsSymbol(name: *const i8) -> u8 {
-    _ZN2JS24PropertySpecNameIsSymbolEPKc(name)
-}
 pub unsafe extern "C" fn PropertySpecNameEqualsId(name: *const i8,
                                                   id: HandleId) -> u8 {
     _ZN2JS24PropertySpecNameEqualsIdEPKcNS_6HandleI4jsidEE(name, id)
@@ -9855,18 +9473,6 @@ pub unsafe extern "C" fn JS_ReportErrorNumber1(cx: *mut JSContext,
                                                                           userRef,
                                                                           errorNumber,
                                                                           arg1)
-}
-pub unsafe extern "C" fn JS_ReportErrorNumberVA(cx: *mut JSContext,
-                                                errorCallback:
-                                                    JSErrorCallback,
-                                                userRef: *mut ::libc::c_void,
-                                                errorNumber: u32,
-                                                ap: va_list) {
-    _Z22JS_ReportErrorNumberVAP9JSContextPFPK19JSErrorFormatStringPvjES4_jPc(cx,
-                                                                             errorCallback,
-                                                                             userRef,
-                                                                             errorNumber,
-                                                                             ap)
 }
 pub unsafe extern "C" fn JS_ReportErrorNumberUC(cx: *mut JSContext,
                                                 errorCallback:
@@ -10396,15 +10002,6 @@ pub unsafe extern "C" fn CallMethodIfWrapped(cx: *mut JSContext,
                                                                                                      _impl,
                                                                                                      args)
 }
-pub unsafe extern "C" fn CallNonGenericMethod(cx: *mut JSContext,
-                                              Test: IsAcceptableThis,
-                                              Impl: NativeImpl,
-                                              args: CallArgs) -> u8 {
-    _ZN2JS20CallNonGenericMethodEP9JSContextPFbNS_6HandleINS_5ValueEEEEPFbS1_NS_8CallArgsEES7_(cx,
-                                                                                               Test,
-                                                                                               Impl,
-                                                                                               args)
-}
 pub unsafe extern "C" fn JS_SetGrayGCRootsTracer(rt: *mut JSRuntime,
                                                  traceOp: JSTraceDataOp,
                                                  data: *mut ::libc::c_void) {
@@ -10446,10 +10043,6 @@ pub unsafe extern "C" fn JS_NewObjectWithoutMetadata(cx: *mut JSContext,
     _Z27JS_NewObjectWithoutMetadataP9JSContextPK7JSClassN2JS6HandleIP8JSObjectEE(cx,
                                                                                  clasp,
                                                                                  proto)
-}
-pub unsafe extern "C" fn JS_ObjectCountDynamicSlots(obj: HandleObject)
- -> u32 {
-    _Z26JS_ObjectCountDynamicSlotsN2JS6HandleIP8JSObjectEE(obj)
 }
 pub unsafe extern "C" fn JS_SetProtoCalled(cx: *mut JSContext) -> u32 {
     _Z17JS_SetProtoCalledP9JSContext(cx)
@@ -10764,21 +10357,6 @@ pub unsafe extern "C" fn GetCompartmentZone(comp: *mut JSCompartment)
  -> *mut Zone {
     _ZN2js18GetCompartmentZoneEP13JSCompartment(comp)
 }
-pub unsafe extern "C" fn DumpHeapComplete(rt: *mut JSRuntime, fp: *mut FILE,
-                                          nurseryBehaviour:
-                                              DumpHeapNurseryBehaviour) {
-    _ZN2js16DumpHeapCompleteEP9JSRuntimeP8_IO_FILENS_24DumpHeapNurseryBehaviourE(rt,
-                                                                                 fp,
-                                                                                 nurseryBehaviour)
-}
-pub unsafe extern "C" fn obj_defineGetter(cx: *mut JSContext, argc: u32,
-                                          vp: *mut Value) -> u8 {
-    _ZN2js16obj_defineGetterEP9JSContextjPN2JS5ValueE(cx, argc, vp)
-}
-pub unsafe extern "C" fn obj_defineSetter(cx: *mut JSContext, argc: u32,
-                                          vp: *mut Value) -> u8 {
-    _ZN2js16obj_defineSetterEP9JSContextjPN2JS5ValueE(cx, argc, vp)
-}
 pub unsafe extern "C" fn IsSystemCompartment(comp: *mut JSCompartment) -> u8 {
     _ZN2js19IsSystemCompartmentEP13JSCompartment(comp)
 }
@@ -10823,36 +10401,12 @@ pub unsafe extern "C" fn IterateGrayObjects(zone: *mut Zone,
                                                                    cellCallback,
                                                                    data)
 }
-pub unsafe extern "C" fn SizeOfDataIfCDataObject(mallocSizeOf: MallocSizeOf,
-                                                 obj: *mut JSObject) -> u32 {
-    _ZN2js23SizeOfDataIfCDataObjectEPFjPKvEP8JSObject(mallocSizeOf, obj)
-}
 pub unsafe extern "C" fn GetAnyCompartmentInZone(zone: *mut Zone)
  -> *mut JSCompartment {
     _ZN2js23GetAnyCompartmentInZoneEPN2JS4ZoneE(zone)
 }
-pub unsafe extern "C" fn GetObjectClass(obj: *mut JSObject) -> *const Class {
-    _ZN2js14GetObjectClassEP8JSObject(obj)
-}
-pub unsafe extern "C" fn GetObjectJSClass(obj: *mut JSObject)
- -> *const JSClass {
-    _ZN2js16GetObjectJSClassEP8JSObject(obj)
-}
 pub unsafe extern "C" fn ProtoKeyToClass(key: JSProtoKey) -> *const Class {
     _ZN2js15ProtoKeyToClassE10JSProtoKey(key)
-}
-pub unsafe extern "C" fn StandardClassIsDependent(key: JSProtoKey) -> u8 {
-    _ZN2js24StandardClassIsDependentE10JSProtoKey(key)
-}
-pub unsafe extern "C" fn ParentKeyForStandardClass(key: JSProtoKey)
- -> JSProtoKey {
-    _ZN2js25ParentKeyForStandardClassE10JSProtoKey(key)
-}
-pub unsafe extern "C" fn IsInnerObject(obj: *mut JSObject) -> u8 {
-    _ZN2js13IsInnerObjectEP8JSObject(obj)
-}
-pub unsafe extern "C" fn IsOuterObject(obj: *mut JSObject) -> u8 {
-    _ZN2js13IsOuterObjectEP8JSObject(obj)
 }
 pub unsafe extern "C" fn IsFunctionObject(obj: *mut JSObject) -> u8 {
     _ZN2js16IsFunctionObjectEP8JSObject(obj)
@@ -10883,10 +10437,6 @@ pub unsafe extern "C" fn SetPendingExceptionCrossContext(cx: *mut JSContext,
 pub unsafe extern "C" fn AssertSameCompartment(cx: *mut JSContext,
                                                obj: *mut JSObject) {
     _ZN2js21AssertSameCompartmentEP9JSContextP8JSObject(cx, obj)
-}
-pub unsafe extern "C" fn AssertSameCompartment1(objA: *mut JSObject,
-                                                objB: *mut JSObject) {
-    _ZN2js21AssertSameCompartmentEP8JSObjectS1_(objA, objB)
 }
 pub unsafe extern "C" fn NotifyAnimationActivity(obj: *mut JSObject) {
     _ZN2js23NotifyAnimationActivityEP8JSObject(obj)
@@ -10957,14 +10507,6 @@ pub unsafe extern "C" fn GetOriginalEval(cx: *mut JSContext,
                                                                                          scope,
                                                                                          eval)
 }
-pub unsafe extern "C" fn GetObjectPrivate(obj: *mut JSObject)
- -> *mut ::libc::c_void {
-    _ZN2js16GetObjectPrivateEP8JSObject(obj)
-}
-pub unsafe extern "C" fn GetReservedSlot(obj: *mut JSObject, slot: u32)
- -> *const Value {
-    _ZN2js15GetReservedSlotEP8JSObjectj(obj, slot)
-}
 pub unsafe extern "C" fn SetReservedOrProxyPrivateSlotWithBarrier(obj:
                                                                       *mut JSObject,
                                                                   slot: u32,
@@ -10974,96 +10516,13 @@ pub unsafe extern "C" fn SetReservedOrProxyPrivateSlotWithBarrier(obj:
                                                                               slot,
                                                                               value)
 }
-pub unsafe extern "C" fn SetReservedSlot(obj: *mut JSObject, slot: u32,
-                                         value: *const Value) {
-    _ZN2js15SetReservedSlotEP8JSObjectjRKN2JS5ValueE(obj, slot, value)
-}
 pub unsafe extern "C" fn GetObjectSlotSpan(obj: *mut JSObject) -> u32 {
     _ZN2js17GetObjectSlotSpanEP8JSObject(obj)
-}
-pub unsafe extern "C" fn GetObjectSlot(obj: *mut JSObject, slot: u32)
- -> *const Value {
-    _ZN2js13GetObjectSlotEP8JSObjectj(obj, slot)
-}
-pub unsafe extern "C" fn GetAtomLength(atom: *mut JSAtom) -> u32 {
-    _ZN2js13GetAtomLengthEP6JSAtom(atom)
-}
-pub unsafe extern "C" fn GetStringLength(s: *mut JSString) -> u32 {
-    _ZN2js15GetStringLengthEP8JSString(s)
-}
-pub unsafe extern "C" fn GetFlatStringLength(s: *mut JSFlatString) -> u32 {
-    _ZN2js19GetFlatStringLengthEP12JSFlatString(s)
-}
-pub unsafe extern "C" fn GetLinearStringLength(s: *mut JSLinearString)
- -> u32 {
-    _ZN2js21GetLinearStringLengthEP14JSLinearString(s)
-}
-pub unsafe extern "C" fn LinearStringHasLatin1Chars(s: *mut JSLinearString)
- -> u8 {
-    _ZN2js26LinearStringHasLatin1CharsEP14JSLinearString(s)
-}
-pub unsafe extern "C" fn AtomHasLatin1Chars(atom: *mut JSAtom) -> u8 {
-    _ZN2js18AtomHasLatin1CharsEP6JSAtom(atom)
-}
-pub unsafe extern "C" fn StringHasLatin1Chars(s: *mut JSString) -> u8 {
-    _ZN2js20StringHasLatin1CharsEP8JSString(s)
-}
-pub unsafe extern "C" fn GetLatin1LinearStringChars(nogc:
-                                                        *const AutoCheckCannotGC,
-                                                    linear:
-                                                        *mut JSLinearString)
- -> *const Latin1Char {
-    _ZN2js26GetLatin1LinearStringCharsERKN2JS17AutoCheckCannotGCEP14JSLinearString(nogc,
-                                                                                   linear)
-}
-pub unsafe extern "C" fn GetTwoByteLinearStringChars(nogc:
-                                                         *const AutoCheckCannotGC,
-                                                     linear:
-                                                         *mut JSLinearString)
- -> *const i16 {
-    _ZN2js27GetTwoByteLinearStringCharsERKN2JS17AutoCheckCannotGCEP14JSLinearString(nogc,
-                                                                                    linear)
-}
-pub unsafe extern "C" fn AtomToLinearString(atom: *mut JSAtom)
- -> *mut JSLinearString {
-    _ZN2js18AtomToLinearStringEP6JSAtom(atom)
-}
-pub unsafe extern "C" fn FlatStringToLinearString(s: *mut JSFlatString)
- -> *mut JSLinearString {
-    _ZN2js24FlatStringToLinearStringEP12JSFlatString(s)
-}
-pub unsafe extern "C" fn GetLatin1AtomChars(nogc: *const AutoCheckCannotGC,
-                                            atom: *mut JSAtom)
- -> *const Latin1Char {
-    _ZN2js18GetLatin1AtomCharsERKN2JS17AutoCheckCannotGCEP6JSAtom(nogc, atom)
-}
-pub unsafe extern "C" fn GetTwoByteAtomChars(nogc: *const AutoCheckCannotGC,
-                                             atom: *mut JSAtom)
- -> *const i16 {
-    _ZN2js19GetTwoByteAtomCharsERKN2JS17AutoCheckCannotGCEP6JSAtom(nogc, atom)
 }
 pub unsafe extern "C" fn StringToLinearStringSlow(cx: *mut JSContext,
                                                   str: *mut JSString)
  -> *mut JSLinearString {
     _ZN2js24StringToLinearStringSlowEP9JSContextP8JSString(cx, str)
-}
-pub unsafe extern "C" fn StringToLinearString(cx: *mut JSContext,
-                                              str: *mut JSString)
- -> *mut JSLinearString {
-    _ZN2js20StringToLinearStringEP9JSContextP8JSString(cx, str)
-}
-pub unsafe extern "C" fn CopyLinearStringChars(dest: *mut i16,
-                                               s: *mut JSLinearString,
-                                               len: u32) {
-    _ZN2js21CopyLinearStringCharsEPDsP14JSLinearStringj(dest, s, len)
-}
-pub unsafe extern "C" fn CopyStringChars(cx: *mut JSContext, dest: *mut i16,
-                                         s: *mut JSString, len: u32) -> u8 {
-    _ZN2js15CopyStringCharsEP9JSContextPDsP8JSStringj(cx, dest, s, len)
-}
-pub unsafe extern "C" fn CopyFlatStringChars(dest: *mut i16,
-                                             s: *mut JSFlatString, len: u32) {
-    _ZN2js19CopyFlatStringCharsEPDsP12JSFlatStringj(dest, s, len)
 }
 pub unsafe extern "C" fn GetPropertyKeys(cx: *mut JSContext,
                                          obj: HandleObject, flags: u32,
@@ -11103,16 +10562,6 @@ pub unsafe extern "C" fn IsObjectInContextCompartment(obj: *mut JSObject,
 pub unsafe extern "C" fn RunningWithTrustedPrincipals(cx: *mut JSContext)
  -> u8 {
     _ZN2js28RunningWithTrustedPrincipalsEP9JSContext(cx)
-}
-pub unsafe extern "C" fn GetNativeStackLimit(cx: *mut JSContext,
-                                             kind: StackKind,
-                                             extraAllowance: i32) -> u32 {
-    _ZN2js19GetNativeStackLimitEP9JSContextNS_9StackKindEi(cx, kind,
-                                                           extraAllowance)
-}
-pub unsafe extern "C" fn GetNativeStackLimit1(cx: *mut JSContext,
-                                              extraAllowance: i32) -> u32 {
-    _ZN2js19GetNativeStackLimitEP9JSContexti(cx, extraAllowance)
 }
 pub unsafe extern "C" fn StartPCCountProfiling(cx: *mut JSContext) {
     _ZN2js21StartPCCountProfilingEP9JSContext(cx)
@@ -11165,9 +10614,6 @@ pub unsafe extern "C" fn GetTestingFunctions(cx: *mut JSContext)
  -> *mut JSObject {
     _ZN2js19GetTestingFunctionsEP9JSContext(cx)
 }
-pub unsafe extern "C" fn CastToJSFreeOp(fop: *mut FreeOp) -> *mut JSFreeOp {
-    _ZN2js14CastToJSFreeOpEPNS_6FreeOpE(fop)
-}
 pub unsafe extern "C" fn GetErrorTypeName(rt: *mut JSRuntime, exnType: i16)
  -> *mut JSFlatString {
     _ZN2js16GetErrorTypeNameEP9JSRuntimes(rt, exnType)
@@ -11201,19 +10647,6 @@ pub unsafe extern "C" fn SetDOMProxyInformation(domProxyHandlerFamily:
     _ZN2js22SetDOMProxyInformationEPKvjPFNS_21DOMProxyShadowsResultEP9JSContextN2JS6HandleIP8JSObjectEENS6_I4jsidEEE(domProxyHandlerFamily,
                                                                                                                      domProxyExpandoSlot,
                                                                                                                      domProxyShadowsCheck)
-}
-pub unsafe extern "C" fn GetDOMProxyHandlerFamily() -> *const ::libc::c_void {
-    _ZN2js24GetDOMProxyHandlerFamilyEv()
-}
-pub unsafe extern "C" fn GetDOMProxyExpandoSlot() -> u32 {
-    _ZN2js22GetDOMProxyExpandoSlotEv()
-}
-pub unsafe extern "C" fn GetDOMProxyShadowsCheck() -> DOMProxyShadowsCheck {
-    _ZN2js23GetDOMProxyShadowsCheckEv()
-}
-pub unsafe extern "C" fn DOMProxyIsShadowing(result: DOMProxyShadowsResult)
- -> u8 {
-    _ZN2js19DOMProxyIsShadowingENS_21DOMProxyShadowsResultE(result)
 }
 pub unsafe extern "C" fn DateIsValid(cx: *mut JSContext, obj: *mut JSObject)
  -> u8 {
@@ -11716,53 +11149,6 @@ pub unsafe extern "C" fn UnwrapSharedFloat64Array(obj: *mut JSObject)
  -> *mut JSObject {
     _ZN2js24UnwrapSharedFloat64ArrayEP8JSObject(obj)
 }
-pub unsafe extern "C" fn GetInt8ArrayLengthAndData(obj: *mut JSObject,
-                                                   length: *mut u32,
-                                                   data: *mut *mut i8) {
-    _ZN2js25GetInt8ArrayLengthAndDataEP8JSObjectPjPPa(obj, length, data)
-}
-pub unsafe extern "C" fn GetUint8ArrayLengthAndData(obj: *mut JSObject,
-                                                    length: *mut u32,
-                                                    data: *mut *mut u8) {
-    _ZN2js26GetUint8ArrayLengthAndDataEP8JSObjectPjPPh(obj, length, data)
-}
-pub unsafe extern "C" fn GetUint8ClampedArrayLengthAndData(obj: *mut JSObject,
-                                                           length: *mut u32,
-                                                           data:
-                                                               *mut *mut u8) {
-    _ZN2js33GetUint8ClampedArrayLengthAndDataEP8JSObjectPjPPh(obj, length,
-                                                              data)
-}
-pub unsafe extern "C" fn GetInt16ArrayLengthAndData(obj: *mut JSObject,
-                                                    length: *mut u32,
-                                                    data: *mut *mut i16) {
-    _ZN2js26GetInt16ArrayLengthAndDataEP8JSObjectPjPPs(obj, length, data)
-}
-pub unsafe extern "C" fn GetUint16ArrayLengthAndData(obj: *mut JSObject,
-                                                     length: *mut u32,
-                                                     data: *mut *mut u16) {
-    _ZN2js27GetUint16ArrayLengthAndDataEP8JSObjectPjPPt(obj, length, data)
-}
-pub unsafe extern "C" fn GetInt32ArrayLengthAndData(obj: *mut JSObject,
-                                                    length: *mut u32,
-                                                    data: *mut *mut i32) {
-    _ZN2js26GetInt32ArrayLengthAndDataEP8JSObjectPjPPi(obj, length, data)
-}
-pub unsafe extern "C" fn GetUint32ArrayLengthAndData(obj: *mut JSObject,
-                                                     length: *mut u32,
-                                                     data: *mut *mut u32) {
-    _ZN2js27GetUint32ArrayLengthAndDataEP8JSObjectPjPS2_(obj, length, data)
-}
-pub unsafe extern "C" fn GetFloat32ArrayLengthAndData(obj: *mut JSObject,
-                                                      length: *mut u32,
-                                                      data: *mut *mut f32) {
-    _ZN2js28GetFloat32ArrayLengthAndDataEP8JSObjectPjPPf(obj, length, data)
-}
-pub unsafe extern "C" fn GetFloat64ArrayLengthAndData(obj: *mut JSObject,
-                                                      length: *mut u32,
-                                                      data: *mut *mut f64) {
-    _ZN2js28GetFloat64ArrayLengthAndDataEP8JSObjectPjPPd(obj, length, data)
-}
 pub unsafe extern "C" fn GetArrayBufferViewLengthAndData(obj: *mut JSObject,
                                                          length: *mut u32,
                                                          data: *mut *mut u8) {
@@ -11984,9 +11370,6 @@ pub unsafe extern "C" fn UnwatchGuts(cx: *mut JSContext, obj: HandleObject,
                                                                         obj,
                                                                         id)
 }
-pub unsafe extern "C" fn IdMatchesAtom(id: jsid, atom: *mut JSAtom) -> u8 {
-    _ZN2js6detail13IdMatchesAtomE4jsidP6JSAtom(id, atom)
-}
 pub unsafe extern "C" fn DefaultJSContext(rt: *mut JSRuntime)
  -> *mut JSContext {
     _ZN2js16DefaultJSContextEP9JSRuntime(rt)
@@ -11995,10 +11378,6 @@ pub unsafe extern "C" fn SetDefaultJSContextCallback(rt: *mut JSRuntime,
                                                      cb:
                                                          DefaultJSContextCallback) {
     _ZN2js27SetDefaultJSContextCallbackEP9JSRuntimePFP9JSContextS1_E(rt, cb)
-}
-pub unsafe extern "C" fn Debug_SetActiveJSContext(rt: *mut JSRuntime,
-                                                  cx: *mut JSContext) {
-    _ZN2js24Debug_SetActiveJSContextEP9JSRuntimeP9JSContext(rt, cx)
 }
 pub unsafe extern "C" fn SetCTypesActivityCallback(rt: *mut JSRuntime,
                                                    cb:
@@ -12224,10 +11603,6 @@ extern "C" {
                                                                   reportScanStack:
                                                                       u8)
      -> *mut JSObject;
-    fn _ZN2JS6detail22AssertArgumentsAreSaneEP9JSContextNS_6HandleINS_5ValueEEE(cx:
-                                                                                    *mut JSContext,
-                                                                                v:
-                                                                                    HandleValue);
     fn _ZN2JS19OrdinaryToPrimitiveEP9JSContextNS_6HandleIP8JSObjectEE6JSTypeNS_13MutableHandleINS_5ValueEEE(cx:
                                                                                                                 *mut JSContext,
                                                                                                             obj:
@@ -12237,46 +11612,6 @@ extern "C" {
                                                                                                             vp:
                                                                                                                 MutableHandleValue)
      -> u8;
-    fn _ZN2JS9ToBooleanENS_6HandleINS_5ValueEEE(v: HandleValue) -> u8;
-    fn _ZN2JS8ToNumberEP9JSContextNS_6HandleINS_5ValueEEEPd(cx:
-                                                                *mut JSContext,
-                                                            v: HandleValue,
-                                                            out: *mut f64)
-     -> u8;
-    fn _ZN2JS9ToIntegerEd(d: f64) -> f64;
-    fn _ZN2JS7ToInt32EP9JSContextNS_6HandleINS_5ValueEEEPi(cx: *mut JSContext,
-                                                           v: HandleValue,
-                                                           out: *mut i32)
-     -> u8;
-    fn _ZN2JS8ToUint32EP9JSContextNS_6HandleINS_5ValueEEEPj(cx:
-                                                                *mut JSContext,
-                                                            v: HandleValue,
-                                                            out: *mut u32)
-     -> u8;
-    fn _ZN2JS8ToUint16EP9JSContextNS_6HandleINS_5ValueEEEPt(cx:
-                                                                *mut JSContext,
-                                                            v: HandleValue,
-                                                            out: *mut u16)
-     -> u8;
-    fn _ZN2JS7ToInt64EP9JSContextNS_6HandleINS_5ValueEEEPx(cx: *mut JSContext,
-                                                           v: HandleValue,
-                                                           out: *mut i64)
-     -> u8;
-    fn _ZN2JS8ToUint64EP9JSContextNS_6HandleINS_5ValueEEEPy(cx:
-                                                                *mut JSContext,
-                                                            v: HandleValue,
-                                                            out: *mut u64)
-     -> u8;
-    fn _ZN2JS8ToStringEP9JSContextNS_6HandleINS_5ValueEEE(cx: *mut JSContext,
-                                                          v: HandleValue)
-     -> *mut JSString;
-    fn _ZN2JS8ToObjectEP9JSContextNS_6HandleINS_5ValueEEE(cx: *mut JSContext,
-                                                          v: HandleValue)
-     -> *mut JSObject;
-    fn _ZN2JS7ToInt32Ed(d: f64) -> i32;
-    fn _ZN2JS8ToUint32Ed(d: f64) -> u32;
-    fn _ZN2JS7ToInt64Ed(d: f64) -> i64;
-    fn _ZN2JS8ToUint64Ed(d: f64) -> u64;
 }
 pub unsafe extern "C" fn ToBooleanSlow(v: HandleValue) -> u8 {
     _ZN2js13ToBooleanSlowEN2JS6HandleINS0_5ValueEEE(v)
@@ -12328,11 +11663,6 @@ pub unsafe extern "C" fn ToObjectSlow(cx: *mut JSContext, v: HandleValue,
     _ZN2js12ToObjectSlowEP9JSContextN2JS6HandleINS2_5ValueEEEb(cx, v,
                                                                reportScanStack)
 }
-pub unsafe extern "C" fn AssertArgumentsAreSane(cx: *mut JSContext,
-                                                v: HandleValue) {
-    _ZN2JS6detail22AssertArgumentsAreSaneEP9JSContextNS_6HandleINS_5ValueEEE(cx,
-                                                                             v)
-}
 pub unsafe extern "C" fn OrdinaryToPrimitive(cx: *mut JSContext,
                                              obj: HandleObject, _type: JSType,
                                              vp: MutableHandleValue) -> u8 {
@@ -12341,46 +11671,6 @@ pub unsafe extern "C" fn OrdinaryToPrimitive(cx: *mut JSContext,
                                                                                                          _type,
                                                                                                          vp)
 }
-pub unsafe extern "C" fn ToBoolean(v: HandleValue) -> u8 {
-    _ZN2JS9ToBooleanENS_6HandleINS_5ValueEEE(v)
-}
-pub unsafe extern "C" fn ToNumber(cx: *mut JSContext, v: HandleValue,
-                                  out: *mut f64) -> u8 {
-    _ZN2JS8ToNumberEP9JSContextNS_6HandleINS_5ValueEEEPd(cx, v, out)
-}
-pub unsafe extern "C" fn ToInteger(d: f64) -> f64 { _ZN2JS9ToIntegerEd(d) }
-pub unsafe extern "C" fn ToInt32(cx: *mut JSContext, v: HandleValue,
-                                 out: *mut i32) -> u8 {
-    _ZN2JS7ToInt32EP9JSContextNS_6HandleINS_5ValueEEEPi(cx, v, out)
-}
-pub unsafe extern "C" fn ToUint32(cx: *mut JSContext, v: HandleValue,
-                                  out: *mut u32) -> u8 {
-    _ZN2JS8ToUint32EP9JSContextNS_6HandleINS_5ValueEEEPj(cx, v, out)
-}
-pub unsafe extern "C" fn ToUint16(cx: *mut JSContext, v: HandleValue,
-                                  out: *mut u16) -> u8 {
-    _ZN2JS8ToUint16EP9JSContextNS_6HandleINS_5ValueEEEPt(cx, v, out)
-}
-pub unsafe extern "C" fn ToInt64(cx: *mut JSContext, v: HandleValue,
-                                 out: *mut i64) -> u8 {
-    _ZN2JS7ToInt64EP9JSContextNS_6HandleINS_5ValueEEEPx(cx, v, out)
-}
-pub unsafe extern "C" fn ToUint64(cx: *mut JSContext, v: HandleValue,
-                                  out: *mut u64) -> u8 {
-    _ZN2JS8ToUint64EP9JSContextNS_6HandleINS_5ValueEEEPy(cx, v, out)
-}
-pub unsafe extern "C" fn ToString(cx: *mut JSContext, v: HandleValue)
- -> *mut JSString {
-    _ZN2JS8ToStringEP9JSContextNS_6HandleINS_5ValueEEE(cx, v)
-}
-pub unsafe extern "C" fn ToObject(cx: *mut JSContext, v: HandleValue)
- -> *mut JSObject {
-    _ZN2JS8ToObjectEP9JSContextNS_6HandleINS_5ValueEEE(cx, v)
-}
-pub unsafe extern "C" fn ToInt321(d: f64) -> i32 { _ZN2JS7ToInt32Ed(d) }
-pub unsafe extern "C" fn ToUint321(d: f64) -> u32 { _ZN2JS8ToUint32Ed(d) }
-pub unsafe extern "C" fn ToInt641(d: f64) -> i64 { _ZN2JS7ToInt64Ed(d) }
-pub unsafe extern "C" fn ToUint641(d: f64) -> u64 { _ZN2JS8ToUint64Ed(d) }
 /* automatically generated by rust-bindgen */
 
 #[repr(i32)]
