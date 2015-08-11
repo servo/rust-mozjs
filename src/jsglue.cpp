@@ -508,9 +508,15 @@ NewProxyObject(JSContext* aCx, const void* aHandler, JS::HandleValue aPriv,
 }
 
 JSObject*
-WrapperNew(JSContext* aCx, JS::HandleObject aObj, const void* aHandler)
+WrapperNew(JSContext* aCx, JS::HandleObject aObj, const void* aHandler,
+           const JSClass* aClass, bool aSingleton)
 {
-    return js::Wrapper::New(aCx, aObj, (const js::Wrapper*)aHandler);
+    js::WrapperOptions options;
+    if (aClass) {
+        options.setClass(js::Valueify(aClass));
+    }
+    options.setSingleton(aSingleton);
+    return js::Wrapper::New(aCx, aObj, (const js::Wrapper*)aHandler, options);
 }
 
 jsval
