@@ -1,3 +1,4 @@
+use libc;
 use libc::types::common::c95::FILE;
 use std::cell::UnsafeCell;
 
@@ -799,7 +800,7 @@ impl ::std::default::Default for CallArgs {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct jsid {
-    pub asBits: u32,
+    pub asBits: libc::size_t,
 }
 pub enum FreeOp { }
 pub enum PropertyName { }
