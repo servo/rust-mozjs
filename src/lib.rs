@@ -15,6 +15,8 @@
 extern crate libc;
 #[macro_use]
 extern crate log;
+#[macro_use]
+extern crate heapsize;
 extern crate rustc_serialize as serialize;
 
 pub mod jsapi;
@@ -23,10 +25,13 @@ pub mod rust;
 pub mod glue;
 pub mod jsval;
 
-use jsapi::{JSContext, JSProtoKey};
+use jsapi::{JSContext, JSProtoKey, Heap};
 use jsval::JSVal;
+use rust::GCMethods;
 
 use libc::c_uint;
+
+use heapsize::HeapSizeOf;
 
 pub const default_heapsize: u32 = 32_u32 * 1024_u32 * 1024_u32;
 pub const default_stacksize: usize = 8192;
@@ -91,3 +96,12 @@ pub unsafe fn JS_ARGV(_cx: *mut JSContext, vp: *mut JSVal) -> *mut JSVal {
 pub unsafe fn JS_CALLEE(_cx: *mut JSContext, vp: *mut JSVal) -> JSVal {
     *vp
 }
+
+// This is measured properly by the heap measurement implemented in SpiderMonkey.
+impl<T: Copy + GCMethods<T>> HeapSizeOf for Heap<T> {
+    fn heap_size_of_children(&self) -> usize {
+        0
+    }
+}
+known_heap_size!(0, JSVal);
+
