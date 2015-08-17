@@ -6,6 +6,7 @@ use jsapi::{JSObject, JSString, JSGCTraceKind};
 use jsapi::JSGCTraceKind::{JSTRACE_OBJECT, JSTRACE_STRING};
 use jsapi::Value;
 use jsapi::jsval_layout;
+use jsapi::JSValueType;
 
 use libc::c_void;
 use std::mem;
@@ -22,52 +23,47 @@ const JSVAL_TAG_MAX_DOUBLE: u32 = 0x1FFF0u32;
 const JSVAL_TAG_CLEAR: u32 = 0xFFFFFF80;
 
 #[cfg(target_pointer_width = "64")]
+#[repr(u32)]
 #[allow(dead_code)]
-mod ValueTag {
-    use jsapi::JSValueType;
-    use super::JSVAL_TAG_MAX_DOUBLE;
-
-    pub const INT32: u32     = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_INT32 as u32);
-    pub const UNDEFINED: u32 = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_UNDEFINED as u32);
-    pub const STRING: u32    = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_STRING as u32);
-    pub const SYMBOL: u32    = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_SYMBOL as u32);
-    pub const BOOLEAN: u32   = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_BOOLEAN as u32);
-    pub const MAGIC: u32     = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_MAGIC as u32);
-    pub const NULL: u32      = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_NULL as u32);
-    pub const OBJECT: u32    = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_OBJECT as u32);
+enum ValueTag {
+    INT32     = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_INT32 as u32),
+    UNDEFINED = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_UNDEFINED as u32),
+    STRING    = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_STRING as u32),
+    SYMBOL    = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_SYMBOL as u32),
+    BOOLEAN   = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_BOOLEAN as u32),
+    MAGIC     = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_MAGIC as u32),
+    NULL      = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_NULL as u32),
+    OBJECT    = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_OBJECT as u32),
 }
 
 #[cfg(target_pointer_width = "32")]
+#[repr(u32)]
 #[allow(dead_code)]
-mod ValueTag {
-    use jsapi::JSValueType;
-    use super::JSVAL_TAG_CLEAR;
-
-    pub const PRIVATE: u32              = 0;
-    pub const INT32: u32                = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_INT32 as u32);
-    pub const UNDEFINED: u32            = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_UNDEFINED as u32);
-    pub const STRING: u32               = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_STRING as u32);
-    pub const SYMBOL: u32               = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_SYMBOL as u32);
-    pub const BOOLEAN: u32              = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_BOOLEAN as u32);
-    pub const MAGIC: u32                = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_MAGIC as u32);
-    pub const NULL: u32                 = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_NULL as u32);
-    pub const OBJECT: u32               = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_OBJECT as u32);
+enum ValueTag {
+    PRIVATE   = 0,
+    INT32     = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_INT32 as u32),
+    UNDEFINED = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_UNDEFINED as u32),
+    STRING    = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_STRING as u32),
+    SYMBOL    = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_SYMBOL as u32),
+    BOOLEAN   = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_BOOLEAN as u32),
+    MAGIC     = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_MAGIC as u32),
+    NULL      = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_NULL as u32),
+    OBJECT    = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_OBJECT as u32),
 }
 
 #[cfg(target_pointer_width = "64")]
+#[repr(u64)]
 #[allow(dead_code)]
-mod ValueShiftedTag {
-    use super::{JSVAL_TAG_MAX_DOUBLE, JSVAL_TAG_SHIFT, ValueTag};
-
-    pub const MAX_DOUBLE: u64   = (((JSVAL_TAG_MAX_DOUBLE as u64) << JSVAL_TAG_SHIFT) | 0xFFFFFFFFu64);
-    pub const INT32: u64        = ((ValueTag::INT32 as u64)      << JSVAL_TAG_SHIFT);
-    pub const UNDEFINED: u64    = ((ValueTag::UNDEFINED as u64)  << JSVAL_TAG_SHIFT);
-    pub const STRING: u64       = ((ValueTag::STRING as u64)     << JSVAL_TAG_SHIFT);
-    pub const SYMBOL: u64       = ((ValueTag::SYMBOL as u64)     << JSVAL_TAG_SHIFT);
-    pub const BOOLEAN: u64      = ((ValueTag::BOOLEAN as u64)    << JSVAL_TAG_SHIFT);
-    pub const MAGIC: u64        = ((ValueTag::MAGIC as u64)      << JSVAL_TAG_SHIFT);
-    pub const NULL: u64         = ((ValueTag::NULL as u64)       << JSVAL_TAG_SHIFT);
-    pub const OBJECT: u64       = ((ValueTag::OBJECT as u64)     << JSVAL_TAG_SHIFT);
+enum ValueShiftedTag {
+    MAX_DOUBLE = (((JSVAL_TAG_MAX_DOUBLE as u64) << JSVAL_TAG_SHIFT) | 0xFFFFFFFFu64),
+    INT32      = ((ValueTag::INT32 as u64)      << JSVAL_TAG_SHIFT),
+    UNDEFINED  = ((ValueTag::UNDEFINED as u64)  << JSVAL_TAG_SHIFT),
+    STRING     = ((ValueTag::STRING as u64)     << JSVAL_TAG_SHIFT),
+    SYMBOL     = ((ValueTag::SYMBOL as u64)     << JSVAL_TAG_SHIFT),
+    BOOLEAN    = ((ValueTag::BOOLEAN as u64)    << JSVAL_TAG_SHIFT),
+    MAGIC      = ((ValueTag::MAGIC as u64)      << JSVAL_TAG_SHIFT),
+    NULL       = ((ValueTag::NULL as u64)       << JSVAL_TAG_SHIFT),
+    OBJECT     = ((ValueTag::OBJECT as u64)     << JSVAL_TAG_SHIFT),
 }
 
 
@@ -84,13 +80,13 @@ fn AsJSVal(val: u64) -> JSVal {
 
 #[cfg(target_pointer_width = "64")]
 #[inline(always)]
-fn BuildJSVal(tag: u32, payload: u64) -> JSVal {
+fn BuildJSVal(tag: ValueTag, payload: u64) -> JSVal {
     AsJSVal(((tag as u32 as u64) << JSVAL_TAG_SHIFT) | payload)
 }
 
 #[cfg(target_pointer_width = "32")]
 #[inline(always)]
-fn BuildJSVal(tag: u32, payload: u64) -> JSVal {
+fn BuildJSVal(tag: ValueTag, payload: u64) -> JSVal {
     AsJSVal(((tag as u32 as u64) << 32) | payload)
 }
 
