@@ -549,7 +549,7 @@ int_to_jsid(int32_t i)
     return INT_TO_JSID(i);
 }
 
-int
+int32_t
 RUST_JSID_TO_INT(JS::HandleId id)
 {
     return JSID_TO_INT(id);
