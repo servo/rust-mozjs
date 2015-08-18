@@ -210,6 +210,7 @@ extern "C" {
     pub fn SetProxyExtra(obj: *mut JSObject, slot: u32, val: Value);
     pub fn RUST_JSID_IS_INT(id: HandleId) -> u8;
     pub fn RUST_JSID_TO_INT(id: HandleId) -> i32;
+    pub fn int_to_jsid(i: i32) -> jsid;
     pub fn RUST_JSID_IS_STRING(id: HandleId) -> u8;
     pub fn RUST_JSID_TO_STRING(id: HandleId) -> *mut JSString;
     pub fn RUST_SET_JITINFO(func: *mut JSFunction, info: *const JSJitInfo);

@@ -543,7 +543,13 @@ RUST_JSID_IS_INT(JS::HandleId id)
     return JSID_IS_INT(id);
 }
 
-int
+jsid
+int_to_jsid(int32_t i)
+{
+    return INT_TO_JSID(i);
+}
+
+int32_t
 RUST_JSID_TO_INT(JS::HandleId id)
 {
     return JSID_TO_INT(id);
