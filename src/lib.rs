@@ -76,6 +76,14 @@ pub const JS_DEFAULT_ZEAL_FREQ: u32 = 100;
 pub const JSTrue: u8 = 1;
 pub const JSFalse: u8 = 0;
 
+pub const JSITER_ENUMERATE: c_uint   = 0x1;
+pub const JSITER_FOREACH: c_uint     = 0x2;
+pub const JSITER_KEYVALUE: c_uint    = 0x4;
+pub const JSITER_OWNONLY: c_uint     = 0x8;
+pub const JSITER_HIDDEN: c_uint      = 0x10;
+pub const JSITER_SYMBOLS: c_uint     = 0x20;
+pub const JSITER_SYMBOLSONLY: c_uint = 0x40;
+
 #[link(name = "jsglue")]
 extern { }
 
