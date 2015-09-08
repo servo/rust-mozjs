@@ -4901,9 +4901,9 @@ extern "C" {
                                                                 str:
                                                                     HandleString)
      -> *mut JSString;
-    fn _Z16JS_InternStringNP9JSContextPKcj(cx: *mut JSContext, s: *const i8,
+    fn _Z16JS_InternStringNP9JSContextPKcj(cx: *mut JSContext, s: *const ::libc::c_char,
                                            length: u32) -> *mut JSString;
-    fn _Z15JS_InternStringP9JSContextPKc(cx: *mut JSContext, s: *const i8)
+    fn _Z15JS_InternStringP9JSContextPKc(cx: *mut JSContext, s: *const ::libc::c_char)
      -> *mut JSString;
     fn _Z14JS_NewUCStringP9JSContextPDsj(cx: *mut JSContext, chars: *mut i16,
                                          length: u32) -> *mut JSString;
@@ -5727,7 +5727,7 @@ extern "C" {
                                                                        *mut JSContext,
                                                                    obj:
                                                                        HandleObject)
-     -> *const i8;
+     -> *const ::libc::c_char;
     fn _ZN2js18ReportOverRecursedEP9JSContext(maybecx: *mut JSContext);
     fn _ZN2js15AddRawValueRootEP9JSContextPN2JS5ValueEPKc(cx: *mut JSContext,
                                                           vp: *mut Value,
@@ -9132,11 +9132,11 @@ pub unsafe extern "C" fn JS_InternJSString(cx: *mut JSContext,
  -> *mut JSString {
     _Z17JS_InternJSStringP9JSContextN2JS6HandleIP8JSStringEE(cx, str)
 }
-pub unsafe extern "C" fn JS_InternStringN(cx: *mut JSContext, s: *const i8,
+pub unsafe extern "C" fn JS_InternStringN(cx: *mut JSContext, s: *const ::libc::c_char,
                                           length: u32) -> *mut JSString {
     _Z16JS_InternStringNP9JSContextPKcj(cx, s, length)
 }
-pub unsafe extern "C" fn JS_InternString(cx: *mut JSContext, s: *const i8)
+pub unsafe extern "C" fn JS_InternString(cx: *mut JSContext, s: *const ::libc::c_char)
  -> *mut JSString {
     _Z15JS_InternStringP9JSContextPKc(cx, s)
 }
@@ -10138,7 +10138,7 @@ pub unsafe extern "C" fn ObjectClassIs1(cx: *mut JSContext, obj: HandleObject,
                                                                                 classValue)
 }
 pub unsafe extern "C" fn ObjectClassName(cx: *mut JSContext,
-                                         obj: HandleObject) -> *const i8 {
+                                         obj: HandleObject) -> *const ::libc::c_char {
     _ZN2js15ObjectClassNameEP9JSContextN2JS6HandleIP8JSObjectEE(cx, obj)
 }
 pub unsafe extern "C" fn ReportOverRecursed(maybecx: *mut JSContext) {
