@@ -720,9 +720,10 @@ pub unsafe extern fn reportError(_cx: *mut JSContext, msg: *const c_char, report
         "none".to_string()
     };
     let lineno = (*report).lineno;
+    let column = (*report).column;
     let c_str = ffi::CStr::from_ptr(msg);
     let msg = str::from_utf8(c_str.to_bytes()).ok().unwrap().to_string();
-    error!("Error at {}:{}: {}\n", fname, lineno, msg);
+    error!("Error at {}:{}:{}: {}\n", fname, lineno, column, msg);
 }
 
 #[cfg(test)]
