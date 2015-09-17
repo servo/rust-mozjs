@@ -20,7 +20,6 @@ extern crate heapsize;
 extern crate rustc_serialize as serialize;
 
 pub mod jsapi;
-pub mod linkhack;
 pub mod rust;
 pub mod glue;
 pub mod jsval;

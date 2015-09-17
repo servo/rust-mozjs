@@ -6,7 +6,6 @@ use std::env;
 use std::process::{Command, Stdio};
 
 fn main() {
-    let out_dir = env::var("OUT_DIR").unwrap();
     let result = Command::new("make")
         .args(&["-R", "-f", "makefile.cargo"])
         .stdout(Stdio::inherit())
@@ -14,5 +13,6 @@ fn main() {
         .status()
         .unwrap();
     assert!(result.success());
-    println!("cargo:rustc-flags=-L native={}", out_dir);
+    println!("cargo:rustc-link-search=native={}", env::var("OUT_DIR").unwrap());
+    println!("cargo:rustc-link-lib=static=jsglue");
 }
