@@ -18,6 +18,7 @@ extern crate log;
 #[macro_use]
 extern crate heapsize;
 extern crate rustc_serialize as serialize;
+extern crate mozjs_sys;
 
 pub mod jsapi;
 pub mod rust;
