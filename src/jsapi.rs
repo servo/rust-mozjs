@@ -4490,14 +4490,14 @@ extern "C" {
                                                                                              scopeChain:
                                                                                                  *mut AutoObjectVector)
      -> *mut JSObject;
-    fn _Z25JS_BufferIsCompilableUnitP9JSContextN2JS6HandleIP8JSObjectEEPKcj(cx:
+    fn _Z25JS_BufferIsCompilableUnitP9JSContextN2JS6HandleIP8JSObjectEEPKcm(cx:
                                                                                 *mut JSContext,
                                                                             obj:
                                                                                 Handle<*mut JSObject>,
                                                                             utf8:
                                                                                 *const i8,
                                                                             length:
-                                                                                u32)
+                                                                                u64)
      -> u8;
     fn _Z16JS_CompileScriptP9JSContextPKcjRKN2JS14CompileOptionsENS3_13MutableHandleIP8JSScriptEE(cx:
                                                                                                       *mut JSContext,
@@ -8713,8 +8713,8 @@ pub unsafe extern "C" fn CloneFunctionObject1(cx: *mut JSContext,
 pub unsafe extern "C" fn JS_BufferIsCompilableUnit(cx: *mut JSContext,
                                                    obj: Handle<*mut JSObject>,
                                                    utf8: *const i8,
-                                                   length: u32) -> u8 {
-    _Z25JS_BufferIsCompilableUnitP9JSContextN2JS6HandleIP8JSObjectEEPKcj(cx,
+                                                   length: u64) -> u8 {
+    _Z25JS_BufferIsCompilableUnitP9JSContextN2JS6HandleIP8JSObjectEEPKcm(cx,
                                                                          obj,
                                                                          utf8,
                                                                          length)
