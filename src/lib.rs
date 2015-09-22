@@ -9,6 +9,7 @@
 #![feature(link_args)]
 #![feature(str_utf16)]
 #![feature(unsafe_no_drop_flag)]
+#![feature(const_fn)]
 
 #![allow(non_upper_case_globals, non_camel_case_types, non_snake_case, improper_ctypes, raw_pointer_derive)]
 
@@ -20,7 +21,30 @@ extern crate heapsize;
 extern crate rustc_serialize as serialize;
 extern crate mozjs_sys;
 
-pub mod jsapi;
+#[cfg(target_os = "linux")]
+#[cfg(target_pointer_width = "64")]
+mod jsapi_linux_64;
+
+#[cfg(target_os = "macos")]
+#[cfg(target_pointer_width = "64")]
+mod jsapi_macos_64;
+
+#[cfg(target_pointer_width = "32")]
+mod jsapi_linux_32;
+
+pub mod jsapi {
+    #[cfg(target_os = "linux")]
+    #[cfg(target_pointer_width = "64")]
+    pub use jsapi_linux_64::*;
+
+    #[cfg(target_os = "macos")]
+    #[cfg(target_pointer_width = "64")]
+    pub use jsapi_macos_64::*;
+
+    #[cfg(target_pointer_width = "32")]
+    pub use jsapi_linux_32::*;
+}
+
 pub mod rust;
 pub mod glue;
 pub mod jsval;
@@ -72,9 +96,6 @@ pub const JSCLASS_IS_PROXY: u32 = 1 << (JSCLASS_HIGH_FLAGS_SHIFT+4);
 pub const JSSLOT_PROXY_PRIVATE: u32 = 1;
 
 pub const JS_DEFAULT_ZEAL_FREQ: u32 = 100;
-
-pub const JSTrue: u8 = 1;
-pub const JSFalse: u8 = 0;
 
 pub const JSITER_ENUMERATE: c_uint   = 0x1;
 pub const JSITER_FOREACH: c_uint     = 0x2;

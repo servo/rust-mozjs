@@ -10,7 +10,7 @@ use std::ptr;
 use std::str;
 
 use js::{JSCLASS_RESERVED_SLOTS_MASK,JSCLASS_RESERVED_SLOTS_SHIFT,JSCLASS_GLOBAL_SLOT_COUNT,JSCLASS_IS_GLOBAL};
-use js::jsapi::_Z24JS_GlobalObjectTraceHookP8JSTracerP8JSObject;
+use js::jsapi::JS_GlobalObjectTraceHook;
 use js::jsapi::{CallArgs,CompartmentOptions,OnNewGlobalHookOption,Rooted,Value};
 use js::jsapi::{JS_DefineFunction,JS_Init,JS_NewGlobalObject,JS_EncodeStringToUTF8,JS_ReportError};
 use js::jsapi::{JSAutoCompartment,JSAutoRequest,JSContext,JSClass};
@@ -31,7 +31,7 @@ static CLASS: &'static JSClass = &JSClass {
     call: None,
     hasInstance: None,
     construct: None,
-    trace: Some(_Z24JS_GlobalObjectTraceHookP8JSTracerP8JSObject),
+    trace: Some(JS_GlobalObjectTraceHook),
     reserved: [0 as *mut _; 25]
 };
 
@@ -56,12 +56,12 @@ fn main() {
     }
 }
 
-unsafe extern "C" fn puts(context: *mut JSContext, argc: u32, vp: *mut Value) -> u8 {
+unsafe extern "C" fn puts(context: *mut JSContext, argc: u32, vp: *mut Value) -> bool {
     let args = CallArgs::from_vp(vp, argc);
 
-    if args.argc_ != 1 {
+    if args._base.argc_ != 1 {
         JS_ReportError(context, b"puts() requires exactly 1 argument\0".as_ptr() as *const libc::c_char);
-        return 0;
+        return false;
     }
 
     let arg = args.get(0);
@@ -72,5 +72,5 @@ unsafe extern "C" fn puts(context: *mut JSContext, argc: u32, vp: *mut Value) ->
     println!("{}", str::from_utf8(message.to_bytes()).unwrap());
 
     args.rval().set(UndefinedValue());
-    return 1;
+    return true;
 }
