@@ -73,7 +73,7 @@ const JSVAL_PAYLOAD_MASK: u64 = 0x00007FFFFFFFFFFF;
 fn AsJSVal(val: u64) -> JSVal {
     JSVal {
         data: jsval_layout {
-            _bindgen_data_: [val]
+            _bindgen_data_: val
         }
     }
 }
@@ -193,7 +193,7 @@ pub fn PrivateValue(o: *const c_void) -> JSVal {
 
 impl JSVal {
     fn asBits(&self) -> u64 {
-        self.data._bindgen_data_[0]
+        self.data._bindgen_data_
     }
 
     #[cfg(target_pointer_width = "64")]

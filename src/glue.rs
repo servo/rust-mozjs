@@ -12,7 +12,7 @@ pub struct ProxyTraps {
     pub enter: ::std::option::Option<unsafe extern "C" fn
                                          (cx: *mut JSContext,
                                           proxy: HandleObject, id: HandleId,
-                                          action: Action, bp: *mut u8) -> u8>,
+                                          action: Action, bp: *mut bool) -> bool>,
     pub getOwnPropertyDescriptor: ::std::option::Option<unsafe extern "C" fn
                                                             (cx:
                                                                  *mut JSContext,
@@ -21,7 +21,7 @@ pub struct ProxyTraps {
                                                              id: HandleId,
                                                              desc:
                                                                  MutableHandle<JSPropertyDescriptor>)
-                                                            -> u8>,
+                                                            -> bool>,
     pub defineProperty: ::std::option::Option<unsafe extern "C" fn
                                                   (cx: *mut JSContext,
                                                    proxy: HandleObject,
@@ -30,66 +30,66 @@ pub struct ProxyTraps {
                                                        Handle<JSPropertyDescriptor>,
                                                    result:
                                                        *mut ObjectOpResult)
-                                                  -> u8>,
+                                                  -> bool>,
     pub ownPropertyKeys: ::std::option::Option<unsafe extern "C" fn
                                                    (cx: *mut JSContext,
                                                     proxy: HandleObject,
                                                     props: *mut AutoIdVector)
-                                                   -> u8>,
+                                                   -> bool>,
     pub delete_: ::std::option::Option<unsafe extern "C" fn
                                            (cx: *mut JSContext,
                                             proxy: HandleObject, id: HandleId,
                                             result: *mut ObjectOpResult)
-                                           -> u8>,
+                                           -> bool>,
     pub enumerate: ::std::option::Option<unsafe extern "C" fn
                                              (cx: *mut JSContext,
                                               proxy: HandleObject,
                                               objp: MutableHandleObject)
-                                             -> u8>,
+                                             -> bool>,
     pub preventExtensions: ::std::option::Option<unsafe extern "C" fn
                                                      (cx: *mut JSContext,
                                                       proxy: HandleObject,
                                                       result:
                                                           *mut ObjectOpResult)
-                                                     -> u8>,
+                                                     -> bool>,
     pub isExtensible: ::std::option::Option<unsafe extern "C" fn
                                                 (cx: *mut JSContext,
                                                  proxy: HandleObject,
-                                                 succeeded: *mut u8) -> u8>,
+                                                 succeeded: *mut bool) -> bool>,
     pub has: ::std::option::Option<unsafe extern "C" fn
                                        (cx: *mut JSContext,
                                         proxy: HandleObject, id: HandleId,
-                                        bp: *mut u8) -> u8>,
+                                        bp: *mut bool) -> bool>,
     pub get: ::std::option::Option<unsafe extern "C" fn
                                        (cx: *mut JSContext,
                                         proxy: HandleObject,
                                         receiver: HandleObject, id: HandleId,
-                                        vp: MutableHandleValue) -> u8>,
+                                        vp: MutableHandleValue) -> bool>,
     pub set: ::std::option::Option<unsafe extern "C" fn
                                        (cx: *mut JSContext,
                                         proxy: HandleObject,
                                         receiver: HandleObject, id: HandleId,
                                         vp: MutableHandleValue,
-                                        result: *mut ObjectOpResult) -> u8>,
+                                        result: *mut ObjectOpResult) -> bool>,
     pub call: ::std::option::Option<unsafe extern "C" fn
                                         (cx: *mut JSContext,
                                          proxy: HandleObject,
-                                         args: *const CallArgs) -> u8>,
+                                         args: *const CallArgs) -> bool>,
     pub construct: ::std::option::Option<unsafe extern "C" fn
                                              (cx: *mut JSContext,
                                               proxy: HandleObject,
-                                              args: *const CallArgs) -> u8>,
+                                              args: *const CallArgs) -> bool>,
     pub getPropertyDescriptor: ::std::option::Option<unsafe extern "C" fn
                                                          (cx: *mut JSContext,
                                                           proxy: HandleObject,
                                                           id: HandleId,
                                                           desc:
                                                               MutableHandle<JSPropertyDescriptor>)
-                                                         -> u8>,
+                                                         -> bool>,
     pub hasOwn: ::std::option::Option<unsafe extern "C" fn
                                           (cx: *mut JSContext,
                                            proxy: HandleObject, id: HandleId,
-                                           bp: *mut u8) -> u8>,
+                                           bp: *mut bool) -> bool>,
     pub getOwnEnumerablePropertyKeys: ::std::option::Option<unsafe extern "C" fn
                                                                 (cx:
                                                                      *mut JSContext,
@@ -97,21 +97,21 @@ pub struct ProxyTraps {
                                                                      HandleObject,
                                                                  props:
                                                                      *mut AutoIdVector)
-                                                                -> u8>,
+                                                                -> bool>,
     pub nativeCall: ::std::option::Option<unsafe extern "C" fn
                                               (cx: *mut JSContext,
                                                test: IsAcceptableThis,
                                                _impl: NativeImpl,
-                                               args: CallArgs) -> u8>,
+                                               args: CallArgs) -> bool>,
     pub hasInstance: ::std::option::Option<unsafe extern "C" fn
                                                (cx: *mut JSContext,
                                                 proxy: HandleObject,
                                                 v: MutableHandleValue,
-                                                bp: *mut u8) -> u8>,
+                                                bp: *mut bool) -> bool>,
     pub objectClassIs: ::std::option::Option<unsafe extern "C" fn
                                                  (obj: HandleObject,
                                                   classValue: ESClassValue,
-                                                  cx: *mut JSContext) -> u8>,
+                                                  cx: *mut JSContext) -> bool>,
     pub className: ::std::option::Option<unsafe extern "C" fn
                                              (cx: *mut JSContext,
                                               proxy: HandleObject)
@@ -125,13 +125,13 @@ pub struct ProxyTraps {
                                                     (cx: *mut JSContext,
                                                      proxy: HandleObject,
                                                      vp: MutableHandleValue)
-                                                    -> u8>,
+                                                    -> bool>,
     pub defaultValue: ::std::option::Option<unsafe extern "C" fn
                                                 (cx: *mut JSContext,
                                                  obj: HandleObject,
                                                  hint: JSType,
                                                  vp: MutableHandleValue)
-                                                -> u8>,
+                                                -> bool>,
     pub trace: ::std::option::Option<unsafe extern "C" fn
                                          (trc: *mut JSTracer,
                                           proxy: *mut JSObject)>,
@@ -142,9 +142,9 @@ pub struct ProxyTraps {
                                                (proxy: *mut JSObject,
                                                 old: *const JSObject)>,
     pub isCallable: ::std::option::Option<unsafe extern "C" fn
-                                              (obj: *mut JSObject) -> u8>,
+                                              (obj: *mut JSObject) -> bool>,
     pub isConstructor: ::std::option::Option<unsafe extern "C" fn
-                                                 (obj: *mut JSObject) -> u8>,
+                                                 (obj: *mut JSObject) -> bool>,
 }
 impl ::std::default::Default for ProxyTraps {
     fn default() -> ProxyTraps { unsafe { ::std::mem::zeroed() } }
@@ -172,21 +172,21 @@ extern "C" {
                                           proxy: HandleObject, id: HandleId,
                                           desc:
                                               MutableHandle<JSPropertyDescriptor>)
-     -> u8;
+     -> bool;
     pub fn RUST_JS_NumberValue(d: f64) -> Value;
     pub fn RUST_FUNCTION_VALUE_TO_JITINFO(v: Value) -> *const JSJitInfo;
     pub fn CallJitGetterOp(info: *const JSJitInfo, cx: *mut JSContext,
                            thisObj: HandleObject,
                            specializedThis: *mut ::libc::c_void, argc: u32,
-                           vp: *mut Value) -> u8;
+                           vp: *mut Value) -> bool;
     pub fn CallJitSetterOp(info: *const JSJitInfo, cx: *mut JSContext,
                            thisObj: HandleObject,
                            specializedThis: *mut ::libc::c_void, argc: u32,
-                           vp: *mut Value) -> u8;
+                           vp: *mut Value) -> bool;
     pub fn CallJitMethodOp(info: *const JSJitInfo, cx: *mut JSContext,
                            thisObj: HandleObject,
                            specializedThis: *mut ::libc::c_void, argc: u32,
-                           vp: *mut Value) -> u8;
+                           vp: *mut Value) -> bool;
     pub fn CreateProxyHandler(aTraps: *const ProxyTraps,
                               aExtra: *const ::libc::c_void)
      -> *const ::libc::c_void;
@@ -208,10 +208,10 @@ extern "C" {
     pub fn GetProxyExtra(obj: *mut JSObject, slot: u32) -> Value;
     pub fn GetProxyPrivate(obj: *mut JSObject) -> Value;
     pub fn SetProxyExtra(obj: *mut JSObject, slot: u32, val: Value);
-    pub fn RUST_JSID_IS_INT(id: HandleId) -> u8;
+    pub fn RUST_JSID_IS_INT(id: HandleId) -> bool;
     pub fn RUST_JSID_TO_INT(id: HandleId) -> i32;
     pub fn int_to_jsid(i: i32) -> jsid;
-    pub fn RUST_JSID_IS_STRING(id: HandleId) -> u8;
+    pub fn RUST_JSID_IS_STRING(id: HandleId) -> bool;
     pub fn RUST_JSID_TO_STRING(id: HandleId) -> *mut JSString;
     pub fn RUST_SET_JITINFO(func: *mut JSFunction, info: *const JSJitInfo);
     pub fn RUST_INTERNED_STRING_TO_JSID(cx: *mut JSContext,
@@ -223,13 +223,13 @@ extern "C" {
     pub fn GetProxyHandlerExtra(obj: *mut JSObject) -> *const ::libc::c_void;
     pub fn GetProxyHandler(obj: *mut JSObject) -> *const ::libc::c_void;
     pub fn ReportError(aCx: *mut JSContext, aError: *const i8);
-    pub fn IsWrapper(obj: *mut JSObject) -> u8;
+    pub fn IsWrapper(obj: *mut JSObject) -> bool;
     pub fn UnwrapObject(obj: *mut JSObject, stopAtOuter: u8) -> *mut JSObject;
-    pub fn AppendToAutoIdVector(v: *mut AutoIdVector, id: jsid) -> u8;
+    pub fn AppendToAutoIdVector(v: *mut AutoIdVector, id: jsid) -> bool;
     pub fn CreateAutoObjectVector(aCx: *mut JSContext)
      -> *mut AutoObjectVector;
     pub fn AppendToAutoObjectVector(v: *mut AutoObjectVector,
-                                    obj: *mut JSObject) -> u8;
+                                    obj: *mut JSObject) -> bool;
     pub fn DeleteAutoObjectVector(v: *mut AutoObjectVector);
     pub fn CollectServoSizes(rt: *mut JSRuntime, sizes: *mut ServoSizes) -> bool;
 }
