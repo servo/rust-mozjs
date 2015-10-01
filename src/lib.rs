@@ -29,6 +29,11 @@ mod jsapi_linux_64;
 #[cfg(target_pointer_width = "64")]
 mod jsapi_macos_64;
 
+#[cfg(target_os = "windows")]
+#[cfg(target_pointer_width = "64")]
+mod jsapi_windows_gcc_64;
+
+#[cfg(not(target_os = "windows"))]
 #[cfg(target_pointer_width = "32")]
 mod jsapi_linux_32;
 
@@ -41,6 +46,11 @@ pub mod jsapi {
     #[cfg(target_pointer_width = "64")]
     pub use jsapi_macos_64::*;
 
+    #[cfg(target_os = "windows")]
+    #[cfg(target_pointer_width = "64")]
+    pub use jsapi_windows_gcc_64::*;
+
+    #[cfg(not(target_os = "windows"))]
     #[cfg(target_pointer_width = "32")]
     pub use jsapi_linux_32::*;
 }
