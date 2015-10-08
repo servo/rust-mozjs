@@ -1,15 +1,7 @@
 language: rust
-sudo: required
+sudo: 9000
 rust:
   - nightly
-
-before_install:
-  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-  - sudo apt-get update -qq
-
-install:
-  - sudo apt-get install -qq g++-4.9
-  - export CXX="g++-4.9"
 
 script:
   - cargo build --verbose
