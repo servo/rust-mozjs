@@ -50,7 +50,9 @@ fn main() {
         let global_root = Rooted::new(context, global);
         let global = global_root.handle();
         let _ac = JSAutoCompartment::new(context, global.get());
-        JS_DefineFunction(context, global, b"puts\0".as_ptr() as *const libc::c_char, Some(puts), 1, 0);
+        let function = JS_DefineFunction(context, global, b"puts\0".as_ptr() as *const libc::c_char,
+                                         Some(puts), 1, 0);
+        assert!(!function.is_null());
         let javascript = "puts('Test Iñtërnâtiônàlizætiøn ┬─┬ノ( º _ ºノ) ');".to_string();
         let _ = runtime.evaluate_script(global, javascript, "test.js".to_string(), 0);
     }
