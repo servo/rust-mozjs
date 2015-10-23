@@ -34,11 +34,25 @@ use jsapi::{JSJitMethodCallArgs, JSJitGetterCallArgs, JSJitSetterCallArgs, CallA
 use jsapi::{NullHandleValue, UndefinedHandleValue, JSID_VOID};
 use jsapi::{CallArgsBase, CallReceiverBase, IncludeUsedRval, UsedRvalBase};
 use jsapi::CompartmentOptions;
+use jsapi::JS_DefineFunctions;
+use jsapi::JS_DefineProperties;
+use jsapi::JSFunctionSpec;
+use jsapi::JSNativeWrapper;
+use jsapi::JSPropertySpec;
+use jsapi::PropertyDefinitionBehavior;
 use jsval::UndefinedValue;
 use glue::{CreateAutoObjectVector, AppendToAutoObjectVector, DeleteAutoObjectVector};
 use glue::{NewCompileOptions, DeleteCompileOptions};
 use default_stacksize;
 use default_heapsize;
+
+fn ok(b: bool) -> Result<(), ()> {
+    if b {
+        Ok(())
+    } else {
+        Err(())
+    }
+}
 
 // ___________________________________________________________________________
 // friendly Rustic API to runtimes
@@ -761,6 +775,75 @@ pub unsafe extern fn reportError(_cx: *mut JSContext, msg: *const c_char, report
     let c_str = ffi::CStr::from_ptr(msg);
     let msg = str::from_utf8(c_str.to_bytes()).ok().unwrap().to_string();
     error!("Error at {}:{}:{}: {}\n", fname, lineno, column, msg);
+}
+
+impl JSNativeWrapper {
+    fn is_zeroed(&self) -> bool {
+        let JSNativeWrapper { op, info } = *self;
+        op.is_none() && info.is_null()
+    }
+}
+
+/// Defines methods on `obj`. The last entry of `methods` must contain zeroed
+/// memory.
+///
+/// # Failures
+///
+/// Returns `Err` on JSAPI failure.
+///
+/// # Panics
+///
+/// Panics if the last entry of `methods` does not contain zeroed memory.
+///
+/// # Safety
+///
+/// - `cx` must be valid.
+/// - This function calls into unaudited C++ code.
+pub unsafe fn define_methods(cx: *mut JSContext, obj: HandleObject,
+                             methods: &'static [JSFunctionSpec])
+                             -> Result<(), ()> {
+    assert!({
+        match methods.last() {
+            Some(&JSFunctionSpec { name, call, nargs, flags, selfHostedName }) => {
+                name.is_null() && call.is_zeroed() && nargs == 0 && flags == 0 &&
+                selfHostedName.is_null()
+            },
+            None => false,
+        }
+    });
+
+    ok(JS_DefineFunctions(cx, obj, methods.as_ptr(),
+                          PropertyDefinitionBehavior::DefineAllProperties))
+}
+
+/// Defines attributes on `obj`. The last entry of `properties` must contain
+/// zeroed memory.
+///
+/// # Failures
+///
+/// Returns `Err` on JSAPI failure.
+///
+/// # Panics
+///
+/// Panics if the last entry of `properties` does not contain zeroed memory.
+///
+/// # Safety
+///
+/// - `cx` must be valid.
+/// - This function calls into unaudited C++ code.
+pub unsafe fn define_properties(cx: *mut JSContext, obj: HandleObject,
+                                properties: &'static [JSPropertySpec])
+                                -> Result<(), ()> {
+    assert!({
+        match properties.last() {
+            Some(&JSPropertySpec { name, flags, getter, setter }) => {
+                name.is_null() && flags == 0 && getter.is_zeroed() && setter.is_zeroed()
+            },
+            None => false,
+        }
+    });
+
+    ok(JS_DefineProperties(cx, obj, properties.as_ptr()))
 }
 
 #[cfg(test)]
