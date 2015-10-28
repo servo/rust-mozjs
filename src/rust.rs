@@ -662,8 +662,8 @@ impl Drop for CompileOptionsWrapper {
 // Fast inline converters
 
 #[inline]
-pub fn ToBoolean(v: HandleValue) -> bool {
-    let val = unsafe { *v.ptr };
+pub unsafe fn ToBoolean(v: HandleValue) -> bool {
+    let val = *v.ptr;
 
     if val.is_boolean() {
         return val.to_boolean();
@@ -686,86 +686,80 @@ pub fn ToBoolean(v: HandleValue) -> bool {
         return true;
     }
 
-    unsafe { ToBooleanSlow(v) }
+    ToBooleanSlow(v)
 }
 
 #[inline]
-pub fn ToNumber(cx: *mut JSContext, v: HandleValue) -> Result<f64, ()> {
-    let val = unsafe { *v.ptr };
+pub unsafe fn ToNumber(cx: *mut JSContext, v: HandleValue) -> Result<f64, ()> {
+    let val = *v.ptr;
     if val.is_number() {
         return Ok(val.to_number());
     }
 
     let mut out = Default::default();
-    unsafe {
-        if ToNumberSlow(cx, val, &mut out) {
-            Ok(out)
-        } else {
-            Err(())
-        }
+    if ToNumberSlow(cx, val, &mut out) {
+        Ok(out)
+    } else {
+        Err(())
     }
 }
 
 #[inline]
-fn convert_from_int32<T: Default + Copy>(
+unsafe fn convert_from_int32<T: Default + Copy>(
     cx: *mut JSContext,
     v: HandleValue,
     conv_fn: unsafe extern "C" fn(*mut JSContext, HandleValue, *mut T) -> bool)
         -> Result<T, ()> {
 
-    let val = unsafe { *v.ptr };
+    let val = *v.ptr;
     if val.is_int32() {
         let intval: i64 = val.to_int32() as i64;
         // TODO: do something better here that works on big endian
-        let intval = unsafe { *(&intval as *const i64 as *const T) };
+        let intval = *(&intval as *const i64 as *const T);
         return Ok(intval);
     }
 
     let mut out = Default::default();
-    unsafe {
-        if conv_fn(cx, v, &mut out) {
-            Ok(out)
-        } else {
-            Err(())
-        }
+    if conv_fn(cx, v, &mut out) {
+        Ok(out)
+    } else {
+        Err(())
     }
 }
 
 #[inline]
-pub fn ToInt32(cx: *mut JSContext, v: HandleValue) -> Result<i32, ()> {
+pub unsafe fn ToInt32(cx: *mut JSContext, v: HandleValue) -> Result<i32, ()> {
     convert_from_int32::<i32>(cx, v, ToInt32Slow)
 }
 
 #[inline]
-pub fn ToUint32(cx: *mut JSContext, v: HandleValue) -> Result<u32, ()> {
+pub unsafe fn ToUint32(cx: *mut JSContext, v: HandleValue) -> Result<u32, ()> {
     convert_from_int32::<u32>(cx, v, ToUint32Slow)
 }
 
 #[inline]
-pub fn ToUint16(cx: *mut JSContext, v: HandleValue) -> Result<u16, ()> {
+pub unsafe fn ToUint16(cx: *mut JSContext, v: HandleValue) -> Result<u16, ()> {
     convert_from_int32::<u16>(cx, v, ToUint16Slow)
 }
 
 #[inline]
-pub fn ToInt64(cx: *mut JSContext, v: HandleValue) -> Result<i64, ()> {
+pub unsafe fn ToInt64(cx: *mut JSContext, v: HandleValue) -> Result<i64, ()> {
     convert_from_int32::<i64>(cx, v, ToInt64Slow)
 }
 
 #[inline]
-pub fn ToUint64(cx: *mut JSContext, v: HandleValue) -> Result<u64, ()> {
+pub unsafe fn ToUint64(cx: *mut JSContext, v: HandleValue) -> Result<u64, ()> {
     convert_from_int32::<u64>(cx, v, ToUint64Slow)
 }
 
 #[inline]
-pub fn ToString(cx: *mut JSContext, v: HandleValue) -> *mut JSString {
-    let val = unsafe { *v.ptr };
+pub unsafe fn ToString(cx: *mut JSContext, v: HandleValue) -> *mut JSString {
+    let val = *v.ptr;
     if val.is_string() {
         return val.to_string();
     }
 
-    unsafe {
-        ToStringSlow(cx, v)
-    }
+    ToStringSlow(cx, v)
 }
 
 pub unsafe extern fn reportError(_cx: *mut JSContext, msg: *const c_char, report: *mut JSErrorReport) {
