@@ -6,8 +6,8 @@
 
 use libc::types::os::arch::c95::{size_t, c_uint};
 use libc::c_char;
+use std::char;
 use std::ffi;
-use std::str;
 use std::ptr;
 use std::mem;
 use std::u32;
@@ -763,17 +763,21 @@ pub unsafe fn ToString(cx: *mut JSContext, v: HandleValue) -> *mut JSString {
 }
 
 pub unsafe extern fn reportError(_cx: *mut JSContext, msg: *const c_char, report: *mut JSErrorReport) {
+    fn latin1_to_string(bytes: &[u8]) -> String {
+        bytes.iter().map(|c| char::from_u32(*c as u32).unwrap()).collect()
+    }
+
     let fnptr = (*report).filename;
     let fname = if !fnptr.is_null() {
         let c_str = ffi::CStr::from_ptr(fnptr);
-        str::from_utf8(c_str.to_bytes()).ok().unwrap().to_string()
+        latin1_to_string(c_str.to_bytes())
     } else {
         "none".to_string()
     };
     let lineno = (*report).lineno;
     let column = (*report).column;
     let c_str = ffi::CStr::from_ptr(msg);
-    let msg = str::from_utf8(c_str.to_bytes()).ok().unwrap().to_string();
+    let msg = latin1_to_string(c_str.to_bytes());
     error!("Error at {}:{}:{}: {}\n", fname, lineno, column, msg);
 }
 
