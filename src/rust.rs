@@ -9,6 +9,7 @@ use libc::c_char;
 use std::char;
 use std::ffi;
 use std::ptr;
+use std::slice;
 use std::mem;
 use std::u32;
 use std::default::Default;
@@ -762,7 +763,7 @@ pub unsafe fn ToString(cx: *mut JSContext, v: HandleValue) -> *mut JSString {
     ToStringSlow(cx, v)
 }
 
-pub unsafe extern fn reportError(_cx: *mut JSContext, msg: *const c_char, report: *mut JSErrorReport) {
+pub unsafe extern fn reportError(_cx: *mut JSContext, _: *const c_char, report: *mut JSErrorReport) {
     fn latin1_to_string(bytes: &[u8]) -> String {
         bytes.iter().map(|c| char::from_u32(*c as u32).unwrap()).collect()
     }
@@ -774,10 +775,15 @@ pub unsafe extern fn reportError(_cx: *mut JSContext, msg: *const c_char, report
     } else {
         "none".to_string()
     };
+
     let lineno = (*report).lineno;
     let column = (*report).column;
-    let c_str = ffi::CStr::from_ptr(msg);
-    let msg = latin1_to_string(c_str.to_bytes());
+
+    let msg_ptr = (*report).ucmessage;
+    let msg_len = (0usize..).find(|&i| *msg_ptr.offset(i as isize) == 0).unwrap();
+    let msg_slice = slice::from_raw_parts(msg_ptr, msg_len);
+    let msg = String::from_utf16_lossy(msg_slice);
+
     error!("Error at {}:{}:{}: {}\n", fname, lineno, column, msg);
 }
 
