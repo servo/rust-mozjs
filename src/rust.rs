@@ -98,6 +98,7 @@ impl Runtime {
             (*runtimeopts).set_varObjFix_(true);
             (*runtimeopts).set_baseline_(true);
             (*runtimeopts).set_ion_(true);
+            (*runtimeopts).set_nativeRegExp_(true);
 
             (*contextopts).set_dontReportUncaught_(true);
             (*contextopts).set_autoJSAPIOwnsErrorReporting_(true);
