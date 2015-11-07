@@ -5108,13 +5108,6 @@ extern "C" {
     pub fn JS_NewObjectForConstructor(cx: *mut JSContext,
                                       clasp: *const JSClass,
                                       args: *const CallArgs) -> *mut JSObject;
-    #[link_name = "_Z12JS_GetGCZealP9JSContextPhPjS2_"]
-    pub fn JS_GetGCZeal(cx: *mut JSContext, zeal: *mut u8,
-                        frequency: *mut u32, nextScheduled: *mut u32);
-    #[link_name = "_Z12JS_SetGCZealP9JSContexthj"]
-    pub fn JS_SetGCZeal(cx: *mut JSContext, zeal: u8, frequency: u32);
-    #[link_name = "_Z13JS_ScheduleGCP9JSContextj"]
-    pub fn JS_ScheduleGC(cx: *mut JSContext, count: u32);
     #[link_name = "_Z28JS_SetParallelParsingEnabledP9JSRuntimeb"]
     pub fn JS_SetParallelParsingEnabled(rt: *mut JSRuntime, enabled: bool);
     #[link_name = "_Z36JS_SetOffthreadIonCompilationEnabledP9JSRuntimeb"]
