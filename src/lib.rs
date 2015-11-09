@@ -56,6 +56,7 @@ pub mod jsapi {
 }
 
 mod consts;
+pub mod error;
 pub mod glue;
 pub mod jsval;
 pub mod rust;
