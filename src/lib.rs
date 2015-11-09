@@ -13,13 +13,13 @@
 
 #![allow(non_upper_case_globals, non_camel_case_types, non_snake_case, improper_ctypes, raw_pointer_derive)]
 
+#[macro_use]
+extern crate heapsize;
 extern crate libc;
 #[macro_use]
 extern crate log;
-#[macro_use]
-extern crate heapsize;
-extern crate rustc_serialize as serialize;
 extern crate mozjs_sys;
+extern crate rustc_serialize as serialize;
 
 #[cfg(target_os = "linux")]
 #[cfg(target_pointer_width = "64")]
@@ -55,17 +55,15 @@ pub mod jsapi {
     pub use jsapi_linux_32::*;
 }
 
-pub mod rust;
 pub mod glue;
 pub mod jsval;
-
-use jsapi::{JSContext, JSProtoKey, Heap};
-use jsval::JSVal;
-use rust::GCMethods;
-
-use libc::c_uint;
+pub mod rust;
 
 use heapsize::HeapSizeOf;
+use jsapi::{JSContext, JSProtoKey, Heap};
+use jsval::JSVal;
+use libc::c_uint;
+use rust::GCMethods;
 
 pub const default_heapsize: u32 = 32_u32 * 1024_u32 * 1024_u32;
 pub const default_stacksize: usize = 8192;
