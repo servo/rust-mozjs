@@ -4,8 +4,7 @@
 
 //! Rust wrappers around the raw JS apis
 
-use libc::types::os::arch::c95::{size_t, c_uint};
-use libc::c_char;
+use libc::{size_t, c_uint, c_char};
 use std::char;
 use std::ffi;
 use std::ptr;
