@@ -27,13 +27,15 @@
 
 #![deny(missing_docs)]
 
+use JSPROP_ENUMERATE;
 use error::throw_type_error;
 use glue::RUST_JS_NumberValue;
 use jsapi::{JSContext, JSObject, JSString, HandleValue, HandleObject, MutableHandleValue};
 use jsapi::{JS_NewUCStringCopyN, JS_StringHasLatin1Chars, JS_WrapValue};
 use jsapi::{JS_GetLatin1StringCharsAndLength, JS_GetTwoByteStringCharsAndLength};
+use jsapi::{JS_NewArrayObject1, JS_DefineElement, RootedValue, RootedObject};
 use jsval::{BooleanValue, Int32Value, NullValue, UInt32Value, UndefinedValue};
-use jsval::{JSVal, ObjectOrNullValue, StringValue};
+use jsval::{JSVal, ObjectValue, ObjectOrNullValue, StringValue};
 use rust::{ToBoolean, ToNumber, ToUint16, ToInt32, ToUint32, ToInt64, ToUint64, ToString};
 use libc;
 use num::Float;
@@ -465,6 +467,24 @@ impl<T: FromJSValConvertible> FromJSValConvertible for Option<T> {
             let result: Result<T, ()> = FromJSValConvertible::from_jsval(cx, value, option);
             result.map(Some)
         }
+    }
+}
+
+// https://heycam.github.io/webidl/#es-sequence
+impl<T: ToJSValConvertible> ToJSValConvertible for Vec<T> {
+    unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
+        let js_array = RootedObject::new(cx, JS_NewArrayObject1(cx, self.len() as libc::size_t));
+        assert!(!js_array.handle().is_null());
+
+        let mut val = RootedValue::new(cx, UndefinedValue());
+        for (index, obj) in self.iter().enumerate() {
+            obj.to_jsval(cx, val.handle_mut());
+
+            assert!(JS_DefineElement(cx, js_array.handle(),
+                                     index as u32, val.handle(), JSPROP_ENUMERATE, None, None));
+        }
+
+        rval.set(ObjectValue(&*js_array.handle().get()));
     }
 }
 
