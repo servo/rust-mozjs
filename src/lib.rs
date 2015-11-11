@@ -56,7 +56,7 @@ pub mod jsapi {
     pub use jsapi_linux_32::*;
 }
 
-mod consts;
+pub mod consts;
 pub mod conversions;
 pub mod error;
 pub mod glue;
