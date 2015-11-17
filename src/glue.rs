@@ -173,6 +173,9 @@ extern "C" {
                                           desc:
                                               MutableHandle<JSPropertyDescriptor>)
      -> bool;
+    pub fn InvokeHasOwn(handler: *const ::libc::c_void,
+                        cx: *mut JSContext, proxy: HandleObject,
+                        id: HandleId, bp: *mut bool) -> bool;
     pub fn RUST_JS_NumberValue(d: f64) -> Value;
     pub fn RUST_FUNCTION_VALUE_TO_JITINFO(v: Value) -> *const JSJitInfo;
     pub fn CallJitGetterOp(info: *const JSJitInfo, cx: *mut JSContext,
