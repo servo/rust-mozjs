@@ -425,6 +425,16 @@ InvokeGetOwnPropertyDescriptor(
         getOwnPropertyDescriptor(cx, proxy, id, desc);
 }
 
+bool
+InvokeHasOwn(
+       const void *handler,
+       JSContext *cx, JS::HandleObject proxy,
+       JS::HandleId id, bool *bp)
+{
+    return static_cast<const js::BaseProxyHandler*>(handler)->
+        hasOwn(cx, proxy, id, bp);
+}
+
 jsval
 RUST_JS_NumberValue(double d)
 {
