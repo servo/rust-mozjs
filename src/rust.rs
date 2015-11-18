@@ -586,6 +586,16 @@ impl CallArgs {
         }
     }
 
+    pub fn get(&self, i: u32) -> HandleValue {
+        unsafe {
+            if i < self._base.argc_ {
+                HandleValue::from_marked_location(self._base._base.argv_.offset(i as isize))
+            } else {
+                UndefinedHandleValue
+            }
+        }
+    }
+
     pub fn rval(&self) -> MutableHandleValue {
         unsafe {
             MutableHandleValue::from_marked_location(self._base._base.argv_.offset(-2))
