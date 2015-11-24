@@ -13,7 +13,7 @@ debugmozjs = ['mozjs_sys/debugmozjs']
 git = "https://github.com/servo/mozjs"
 
 [dependencies]
-libc = "0.1"
+libc = "0.2"
 rustc-serialize = "0.3"
 log = "0.3"
 heapsize = "0.1.1"
