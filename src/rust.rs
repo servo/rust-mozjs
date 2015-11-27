@@ -572,17 +572,27 @@ impl CallArgs {
         }
     }
 
-    pub fn get(&self, i: u32) -> HandleValue {
+    pub fn index(&self, i: u32) -> HandleValue {
         assert!(i < self._base.argc_);
         unsafe {
             HandleValue::from_marked_location(self._base._base.argv_.offset(i as isize))
         }
     }
 
-    pub fn get_mut(&self, i: u32) -> MutableHandleValue {
+    pub fn index_mut(&self, i: u32) -> MutableHandleValue {
         assert!(i < self._base.argc_);
         unsafe {
             MutableHandleValue::from_marked_location(self._base._base.argv_.offset(i as isize))
+        }
+    }
+
+    pub fn get(&self, i: u32) -> HandleValue {
+        unsafe {
+            if i < self._base.argc_ {
+                HandleValue::from_marked_location(self._base._base.argv_.offset(i as isize))
+            } else {
+                UndefinedHandleValue
+            }
         }
     }
 
