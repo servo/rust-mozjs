@@ -4,7 +4,7 @@
 
 //! Rust wrappers around the raw JS apis
 
-use libc::{size_t, c_uint, c_char};
+use libc::{size_t, c_uint, c_char, ptrdiff_t};
 use std::char;
 use std::ffi;
 use std::ptr;
@@ -23,6 +23,7 @@ use jsapi::{JS_SetErrorReporter, Evaluate3, JSErrorReport};
 use jsapi::{JS_SetGCParameter, JSGCParamKey};
 use jsapi::{Heap, Cell, HeapCellPostBarrier, HeapCellRelocate, HeapValuePostBarrier, HeapValueRelocate};
 use jsapi::{ThingRootKind, ContextFriendFields};
+use jsapi::{CustomAutoRooter, AutoGCRooter, _vftable_CustomAutoRooter, AutoGCRooter_enum0};
 use jsapi::{Rooted, RootedValue, Handle, MutableHandle, MutableHandleBase, RootedBase};
 use jsapi::{MutableHandleValue, HandleValue, HandleObject, HandleBase};
 use jsapi::AutoObjectVector;
@@ -332,6 +333,42 @@ impl<T> Drop for Rooted<T> {
         unsafe {
             assert!(*self.stack == mem::transmute(&*self));
             *self.stack = self.prev;
+        }
+    }
+}
+
+impl CustomAutoRooter {
+    pub fn new(cx: *mut JSContext, vftable: &'static _vftable_CustomAutoRooter)
+        -> CustomAutoRooter {
+        CustomAutoRooter::new_with_addr(cx, vftable, unsafe { return_address() })
+    }
+
+    pub fn new_with_addr(cx: *mut JSContext, vftable: &'static _vftable_CustomAutoRooter, addr: *const u8) -> CustomAutoRooter {
+        let ctxfriend: &mut ContextFriendFields = unsafe {
+            &mut *(cx as *mut ContextFriendFields)
+        };
+
+        let rooter = CustomAutoRooter {
+            _vftable: vftable as *const _,
+            _base: AutoGCRooter {
+                down: ctxfriend.autoGCRooters,
+                tag_: AutoGCRooter_enum0::CUSTOM as ptrdiff_t,
+                stackTop: &mut ctxfriend.autoGCRooters as *mut _,
+            }
+        };
+
+        ctxfriend.autoGCRooters = unsafe {
+            (addr as *const *const u8).offset(1) as *const AutoGCRooter as *mut _
+        };
+        rooter
+    }
+}
+
+impl Drop for CustomAutoRooter {
+    fn drop(&mut self) {
+        unsafe {
+            assert!(*self._base.stackTop == mem::transmute(&self._base));
+            *self._base.stackTop = self._base.down;
         }
     }
 }
