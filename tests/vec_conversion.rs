@@ -10,6 +10,7 @@ use js::conversions::ToJSValConvertible;
 use js::jsapi::CompartmentOptions;
 use js::jsapi::JSAutoCompartment;
 use js::jsapi::JS_Init;
+use js::jsapi::JS_InitStandardClasses;
 use js::jsapi::JS_NewGlobalObject;
 use js::jsapi::OnNewGlobalHookOption;
 use js::jsapi::Rooted;
@@ -35,6 +36,7 @@ fn vec_conversion() {
         let global = global_root.handle();
 
         let _ac = JSAutoCompartment::new(cx, global.get());
+        assert!(JS_InitStandardClasses(cx, global));
 
         let mut rval = RootedValue::new(cx, UndefinedValue());
 
@@ -48,6 +50,14 @@ fn vec_conversion() {
         orig_vec.to_jsval(cx, rval.handle_mut());
         let converted = Vec::<i32>::from_jsval(cx, rval.handle(),
                                                ConversionBehavior::Default).unwrap();
+
+        assert_eq!(orig_vec, converted);
+
+        rt.evaluate_script(global, "new Set([1, 2, 3])",
+                           "test", 1, rval.handle_mut()).unwrap();
+        let converted =
+          Vec::<i32>::from_jsval(cx, rval.handle(),
+                                 ConversionBehavior::Default).unwrap();
 
         assert_eq!(orig_vec, converted);
     }
