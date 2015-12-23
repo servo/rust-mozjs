@@ -34,7 +34,7 @@ use jsapi::{JSContext, JSObject, JSString, HandleValue, MutableHandleValue};
 use jsapi::{JS_NewUCStringCopyN, JS_StringHasLatin1Chars, JS_WrapValue};
 use jsapi::{JS_GetLatin1StringCharsAndLength, JS_GetTwoByteStringCharsAndLength};
 use jsapi::{JS_NewArrayObject1, JS_DefineElement, RootedValue, RootedObject};
-use jsapi::{JS_GetArrayLength, JS_GetElement};
+use jsapi::{ForOfIterator, NonIterableBehavior};
 use jsval::{BooleanValue, Int32Value, NullValue, UInt32Value, UndefinedValue};
 use jsval::{JSVal, ObjectValue, ObjectOrNullValue, StringValue};
 use rust::{ToBoolean, ToNumber, ToUint16, ToInt32, ToUint32, ToInt64, ToUint64, ToString};
@@ -495,30 +495,34 @@ impl<C: Clone, T: FromJSValConvertible<Config=C>> FromJSValConvertible for Vec<T
                          value: HandleValue,
                          option: C)
                          -> Result<Vec<T>, ()> {
-        let mut length = 0;
+        let mut iterator = ForOfIterator {
+            cx_: cx,
+            iterator: RootedObject::new(cx, ptr::null_mut()),
+            index: ::std::u32::MAX, // NOT_ARRAY
+        };
 
-        if !value.is_object() {
-            throw_type_error(cx, "Non objects cannot be converted to sequence");
+        if !iterator.init(value, NonIterableBehavior::AllowNonIterable) {
+            throw_type_error(cx, "Value is not iterable");
             return Err(())
         }
 
-        let obj = RootedObject::new(cx, value.to_object());
-        if JS_GetArrayLength(cx, obj.handle(), &mut length) {
-            let mut ret = Vec::with_capacity(length as usize);
+        let mut ret = vec![];
 
-            for i in 0..length {
-                let mut val = RootedValue::new(cx, UndefinedValue());
-                if !JS_GetElement(cx, obj.handle(), i, val.handle_mut()) {
-                    // On JS Exception return Err
-                    return Err(());
-                }
-                ret.push(try!(T::from_jsval(cx, val.handle(), option.clone())));
+        loop {
+            let mut done = false;
+            let mut val = RootedValue::new(cx, UndefinedValue());
+            if !iterator.next(val.handle_mut(), &mut done) {
+                return Err(())
             }
 
-            Ok(ret)
-        } else {
-            Err(())
+            if done {
+                break;
+            }
+
+            ret.push(try!(T::from_jsval(cx, val.handle(), option)));
         }
+
+        Ok(ret)
     }
 }
 
