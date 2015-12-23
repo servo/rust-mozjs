@@ -328,6 +328,7 @@ impl<T: Copy> MutableHandle<T> {
     }
 }
 
+/*
 impl<T> Drop for Rooted<T> {
     fn drop(&mut self) {
         unsafe {
@@ -336,6 +337,7 @@ impl<T> Drop for Rooted<T> {
         }
     }
 }
+*/
 
 impl CustomAutoRooter {
     pub fn new(cx: *mut JSContext, vftable: &'static _vftable_CustomAutoRooter)
