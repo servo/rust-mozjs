@@ -11,7 +11,7 @@
 #![feature(unsafe_no_drop_flag)]
 #![feature(const_fn)]
 
-#![allow(non_upper_case_globals, non_camel_case_types, non_snake_case, improper_ctypes, raw_pointer_derive)]
+#![allow(non_upper_case_globals, non_camel_case_types, non_snake_case, improper_ctypes)]
 
 #[macro_use]
 extern crate heapsize;
