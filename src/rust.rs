@@ -370,10 +370,14 @@ impl CustomAutoRooter {
 
 impl Drop for CustomAutoRooter {
     fn drop(&mut self) {
+        if self._base.stackTop.is_null() {
+            return;
+        }
         unsafe {
             assert!(*self._base.stackTop == mem::transmute(&self._base));
             *self._base.stackTop = self._base.down;
         }
+        self._base.stackTop = ptr::null_mut();
     }
 }
 
