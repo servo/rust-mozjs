@@ -659,6 +659,7 @@ pub struct InternalHandle<T> {
     pub _phantom0: PhantomData<T>,
 }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct Rooted<T> {
     pub _base: RootedBase<T>,
     pub stack: *mut *mut Rooted<*mut ::libc::c_void>,
