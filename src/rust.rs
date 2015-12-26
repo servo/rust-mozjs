@@ -561,7 +561,11 @@ impl JSAutoRequest {
 
 impl Drop for JSAutoRequest {
     fn drop(&mut self) {
+        if self.mContext.is_null() {
+            return;
+        }
         unsafe { JS_EndRequest(self.mContext); }
+        self.mContext = ptr::null_mut();
     }
 }
 

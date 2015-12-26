@@ -1452,6 +1452,7 @@ pub type JS_ICUFreeFn =
     ::std::option::Option<unsafe extern "C" fn(arg1: *const ::libc::c_void,
                                                p: *mut ::libc::c_void)>;
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct JSAutoRequest {
     pub mContext: *mut JSContext,
 }
