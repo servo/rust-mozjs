@@ -580,7 +580,11 @@ impl JSAutoCompartment {
 
 impl Drop for JSAutoCompartment {
     fn drop(&mut self) {
+        if self.cx_.is_null() {
+            return;
+        }
         unsafe { JS_LeaveCompartment(self.cx_, self.oldCompartment_); }
+        self.cx_ = ptr::null_mut();
     }
 }
 
