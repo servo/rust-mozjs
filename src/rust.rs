@@ -330,10 +330,14 @@ impl<T: Copy> MutableHandle<T> {
 
 impl<T> Drop for Rooted<T> {
     fn drop(&mut self) {
+        if self.stack.is_null() {
+            return;
+        }
         unsafe {
             assert!(*self.stack == mem::transmute(&*self));
             *self.stack = self.prev;
         }
+        self.stack = ptr::null_mut();
     }
 }
 
