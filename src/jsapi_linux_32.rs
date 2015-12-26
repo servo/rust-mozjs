@@ -1558,6 +1558,7 @@ pub struct AutoSaveContextOptions {
     pub oldOptions_: ContextOptions,
 }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct JSAutoCompartment {
     pub cx_: *mut JSContext,
     pub oldCompartment_: *mut JSCompartment,
