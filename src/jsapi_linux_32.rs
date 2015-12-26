@@ -1292,6 +1292,7 @@ pub struct AutoFunctionVector;
 #[derive(Copy, Clone)]
 pub struct AutoScriptVector;
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct CustomAutoRooter {
     pub _vftable: *const _vftable_CustomAutoRooter,
     pub _base: AutoGCRooter,
