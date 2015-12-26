@@ -328,16 +328,23 @@ impl<T: Copy> MutableHandle<T> {
     }
 }
 
-/*
 impl<T> Drop for Rooted<T> {
     fn drop(&mut self) {
         unsafe {
+            // Since we use no drop flags, we must check for a dropped value
+            // manually.
+            //
+            // see: https://github.com/rust-lang/rust/blob/master/src/libcore/mem.rs
+            if self.stack == mem::dropped::<*mut _>() &&
+               self.prev == mem::dropped::<*mut _> () {
+                return
+            }
+
             assert!(*self.stack == mem::transmute(&*self));
             *self.stack = self.prev;
         }
     }
 }
-*/
 
 impl CustomAutoRooter {
     pub fn new(cx: *mut JSContext, vftable: &'static _vftable_CustomAutoRooter)
