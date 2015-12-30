@@ -30,10 +30,11 @@
 use JSPROP_ENUMERATE;
 use error::throw_type_error;
 use glue::RUST_JS_NumberValue;
-use jsapi::{JSContext, JSObject, JSString, HandleValue, MutableHandleValue};
+use jsapi::{JSContext, JSObject, JSString, Handle, HandleValue, MutableHandleValue};
 use jsapi::{JS_NewUCStringCopyN, JS_StringHasLatin1Chars, JS_WrapValue};
 use jsapi::{JS_GetLatin1StringCharsAndLength, JS_GetTwoByteStringCharsAndLength};
 use jsapi::{JS_NewArrayObject1, JS_DefineElement, RootedValue, RootedObject};
+use jsapi::{JS_GetArrayLength, JS_GetElement};
 use jsval::{BooleanValue, Int32Value, NullValue, UInt32Value, UndefinedValue};
 use jsval::{JSVal, ObjectValue, ObjectOrNullValue, StringValue};
 use rust::{ToBoolean, ToNumber, ToUint16, ToInt32, ToUint32, ToInt64, ToUint64, ToString};
@@ -485,6 +486,37 @@ impl<T: ToJSValConvertible> ToJSValConvertible for Vec<T> {
         }
 
         rval.set(ObjectValue(&*js_array.handle().get()));
+    }
+}
+
+impl<T: FromJSValConvertible<Config=()>> FromJSValConvertible for Vec<T> {
+    type Config = ();
+
+    unsafe fn from_jsval(cx: *mut JSContext,
+                         value: HandleValue,
+                         option: ())
+                         -> Result<Vec<T>, ()> {
+        let mut length = 0;
+
+        if !value.is_object() {
+            return Err(())
+        }
+
+        // HandleValue -> HandleObject
+        let handle_obj = Handle::from_marked_location(&value.to_object());
+        if JS_GetArrayLength(cx, handle_obj, &mut length) {
+            let mut ret = Vec::with_capacity(length as usize);
+
+            for i in 0..length {
+                let mut val = RootedValue::new(cx, UndefinedValue());
+                assert!(JS_GetElement(cx, handle_obj, i, val.handle_mut()));
+                ret.push(try!(T::from_jsval(cx, val.handle(), option)));
+            }
+
+            Ok(ret)
+        } else {
+            Err(())
+        }
     }
 }
 
