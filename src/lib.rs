@@ -63,6 +63,9 @@ pub mod glue;
 pub mod jsval;
 pub mod rust;
 
+#[cfg(test)]
+mod tests;
+
 pub use consts::*;
 
 use heapsize::HeapSizeOf;
