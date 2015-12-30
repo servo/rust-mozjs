@@ -10,6 +10,7 @@
 #![feature(str_utf16)]
 #![feature(unsafe_no_drop_flag)]
 #![feature(const_fn)]
+#![feature(filling_drop)]
 
 #![allow(non_upper_case_globals, non_camel_case_types, non_snake_case, improper_ctypes, raw_pointer_derive)]
 
