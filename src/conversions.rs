@@ -106,7 +106,7 @@ pub trait FromJSValConvertible: Sized {
 }
 
 /// Behavior for converting out-of-range integers.
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Clone)]
 pub enum ConversionBehavior {
     /// Wrap into the integer's range.
     Default,
@@ -489,12 +489,12 @@ impl<T: ToJSValConvertible> ToJSValConvertible for Vec<T> {
     }
 }
 
-impl<T: FromJSValConvertible<Config=()>> FromJSValConvertible for Vec<T> {
-    type Config = ();
+impl<C: Clone, T: FromJSValConvertible<Config=C>> FromJSValConvertible for Vec<T> {
+    type Config = C;
 
     unsafe fn from_jsval(cx: *mut JSContext,
                          value: HandleValue,
-                         option: ())
+                         option: C)
                          -> Result<Vec<T>, ()> {
         let mut length = 0;
 
@@ -510,7 +510,7 @@ impl<T: FromJSValConvertible<Config=()>> FromJSValConvertible for Vec<T> {
             for i in 0..length {
                 let mut val = RootedValue::new(cx, UndefinedValue());
                 assert!(JS_GetElement(cx, handle_obj, i, val.handle_mut()));
-                ret.push(try!(T::from_jsval(cx, val.handle(), option)));
+                ret.push(try!(T::from_jsval(cx, val.handle(), option.clone())));
             }
 
             Ok(ret)
