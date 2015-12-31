@@ -49,12 +49,20 @@ fn test_vec_conversion() {
 
     let _ac = JSAutoCompartment::new(cx, global.get());
 
-    let orig_vec: Vec<f32> = vec![1.0, 2.9, 3.0];
     let mut rval = RootedValue::new(cx, UndefinedValue());
 
+    let orig_vec: Vec<f32> = vec![1.0, 2.9, 3.0];
     let converted = unsafe {
         orig_vec.to_jsval(cx, rval.handle_mut());
         Vec::<f32>::from_jsval(cx, rval.handle(), ()).unwrap()
+    };
+
+    assert_eq!(orig_vec, converted);
+
+    let orig_vec: Vec<i32> = vec![1, 2, 3];
+    let converted = unsafe {
+        orig_vec.to_jsval(cx, rval.handle_mut());
+        Vec::<i32>::from_jsval(cx, rval.handle(), ConversionBehavior::Default).unwrap()
     };
 
     assert_eq!(orig_vec, converted);
