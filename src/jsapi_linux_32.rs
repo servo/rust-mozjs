@@ -1026,6 +1026,11 @@ pub type JSNewEnumerateOp =
                                                obj: HandleObject,
                                                properties: *mut AutoIdVector)
                               -> bool>;
+pub type JSFunToStringOp =
+    ::std::option::Option<unsafe extern "C" fn(cx: *mut JSContext,
+                                               obj: HandleObject,
+                                               indent: u32)
+                              -> *mut JSString>;
 pub type JSEnumerateOp =
     ::std::option::Option<unsafe extern "C" fn(cx: *mut JSContext,
                                                obj: HandleObject) -> bool>;
@@ -1217,6 +1222,7 @@ pub struct ObjectOps {
     pub getElements: GetElementsOp,
     pub enumerate: JSNewEnumerateOp,
     pub thisObject: ObjectOp,
+    pub funToString: JSFunToStringOp,
 }
 pub type JSClassInternal = ::std::option::Option<unsafe extern "C" fn()>;
 #[repr(C)]
@@ -1236,7 +1242,7 @@ pub struct JSClass {
     pub hasInstance: JSHasInstanceOp,
     pub construct: JSNative,
     pub trace: JSTraceOp,
-    pub reserved: [*mut ::libc::c_void; 25usize],
+    pub reserved: [*mut ::libc::c_void; 26usize],
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
