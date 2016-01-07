@@ -70,17 +70,6 @@ use jsapi::{JSContext, Heap};
 use jsval::JSVal;
 use rust::GCMethods;
 
-#[link(name = "jsglue")]
-extern { }
-
-#[cfg(target_os = "android")]
-#[link(name = "stdc++")]
-extern { }
-
-#[cfg(target_os = "android")]
-#[link(name = "gcc")]
-extern { }
-
 #[inline(always)]
 pub unsafe fn JS_ARGV(_cx: *mut JSContext, vp: *mut JSVal) -> *mut JSVal {
     vp.offset(2)
