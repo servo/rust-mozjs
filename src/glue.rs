@@ -228,6 +228,7 @@ extern "C" {
     pub fn ReportError(aCx: *mut JSContext, aError: *const i8);
     pub fn IsWrapper(obj: *mut JSObject) -> bool;
     pub fn UnwrapObject(obj: *mut JSObject, stopAtOuter: u8) -> *mut JSObject;
+    pub fn UncheckedUnwrapObject(obj: *mut JSObject, stopAtOuter: u8) -> *mut JSObject;
     pub fn AppendToAutoIdVector(v: *mut AutoIdVector, id: jsid) -> bool;
     pub fn CreateAutoObjectVector(aCx: *mut JSContext)
      -> *mut AutoObjectVector;
