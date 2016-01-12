@@ -638,6 +638,12 @@ UnwrapObject(JSObject* obj, bool stopAtOuter)
     return js::CheckedUnwrap(obj, stopAtOuter);
 }
 
+JSObject*
+UncheckedUnwrapObject(JSObject* obj, bool stopAtOuter)
+{
+    return js::UncheckedUnwrap(obj, stopAtOuter);
+}
+
 bool
 AppendToAutoIdVector(JS::AutoIdVector* v, jsid id)
 {

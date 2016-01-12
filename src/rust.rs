@@ -949,7 +949,7 @@ pub mod test {
             construct: None,
             trace: Some(JS_GlobalObjectTraceHook),
 
-            reserved: [0 as *mut libc::c_void; 25]
+            reserved: [0 as *mut libc::c_void; 26]
         };
 
         unsafe { assert!(JS_Init()); }
