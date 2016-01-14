@@ -396,12 +396,6 @@ extern "C" {
                                                                     *mut JSTracer,
                                                                 traceCallback:
                                                                     JSTraceCallback);
-    fn _ZN8JSTracer18setTracingLocationEPv(this: *mut JSTracer,
-                                           location: *mut ::libc::c_void);
-    fn _ZN8JSTracer20unsetTracingLocationEv(this: *mut JSTracer);
-    fn _ZN8JSTracer15tracingLocationEPPv(this: *mut JSTracer,
-                                         thingp: *mut *mut ::libc::c_void)
-     -> *mut *mut ::libc::c_void;
 }
 impl JSTracer {
     #[inline]
@@ -436,20 +430,6 @@ impl JSTracer {
                                    traceCallback: JSTraceCallback) {
         _ZN8JSTracer16setTraceCallbackEPFvPS_PPv13JSGCTraceKindE(&mut *self,
                                                                  traceCallback)
-    }
-    #[inline]
-    pub unsafe fn setTracingLocation(&mut self,
-                                     location: *mut ::libc::c_void) {
-        _ZN8JSTracer18setTracingLocationEPv(&mut *self, location)
-    }
-    #[inline]
-    pub unsafe fn unsetTracingLocation(&mut self) {
-        _ZN8JSTracer20unsetTracingLocationEv(&mut *self)
-    }
-    #[inline]
-    pub unsafe fn tracingLocation(&mut self, thingp: *mut *mut ::libc::c_void)
-     -> *mut *mut ::libc::c_void {
-        _ZN8JSTracer15tracingLocationEPPv(&mut *self, thingp)
     }
 }
 pub enum Cell { }
