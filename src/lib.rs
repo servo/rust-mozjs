@@ -24,19 +24,19 @@ extern crate rustc_serialize as serialize;
 
 #[cfg(target_os = "linux")]
 #[cfg(target_pointer_width = "64")]
-mod jsapi_linux_64;
+pub mod jsapi_linux_64;
 
 #[cfg(target_os = "macos")]
 #[cfg(target_pointer_width = "64")]
-mod jsapi_macos_64;
+pub mod jsapi_macos_64;
 
 #[cfg(target_os = "windows")]
 #[cfg(target_pointer_width = "64")]
-mod jsapi_windows_gcc_64;
+pub mod jsapi_windows_gcc_64;
 
 #[cfg(not(target_os = "windows"))]
 #[cfg(target_pointer_width = "32")]
-mod jsapi_linux_32;
+pub mod jsapi_linux_32;
 
 pub mod jsapi {
     #[cfg(target_os = "linux")]
