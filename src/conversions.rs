@@ -502,14 +502,13 @@ impl<C: Clone, T: FromJSValConvertible<Config=C>> FromJSValConvertible for Vec<T
             return Err(())
         }
 
-        // HandleValue -> HandleObject
-        let handle_obj = Handle::from_marked_location(&value.to_object());
-        if JS_GetArrayLength(cx, handle_obj, &mut length) {
+        let obj = RootedObject::new(cx, value.to_object());
+        if JS_GetArrayLength(cx, obj.handle(), &mut length) {
             let mut ret = Vec::with_capacity(length as usize);
 
             for i in 0..length {
                 let mut val = RootedValue::new(cx, UndefinedValue());
-                assert!(JS_GetElement(cx, handle_obj, i, val.handle_mut()));
+                assert!(JS_GetElement(cx, obj.handle(), i, val.handle_mut()));
                 ret.push(try!(T::from_jsval(cx, val.handle(), option.clone())));
             }
 
