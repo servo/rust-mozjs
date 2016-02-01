@@ -499,6 +499,7 @@ impl<C: Clone, T: FromJSValConvertible<Config=C>> FromJSValConvertible for Vec<T
         let mut length = 0;
 
         if !value.is_object() {
+            throw_type_error(cx, "Non objects cannot be converted to sequence");
             return Err(())
         }
 
@@ -508,7 +509,10 @@ impl<C: Clone, T: FromJSValConvertible<Config=C>> FromJSValConvertible for Vec<T
 
             for i in 0..length {
                 let mut val = RootedValue::new(cx, UndefinedValue());
-                assert!(JS_GetElement(cx, obj.handle(), i, val.handle_mut()));
+                if !JS_GetElement(cx, obj.handle(), i, val.handle_mut()) {
+                    // On JS exception or error exit loop
+                    break;
+                }
                 ret.push(try!(T::from_jsval(cx, val.handle(), option.clone())));
             }
 
