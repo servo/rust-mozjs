@@ -529,6 +529,28 @@ WrapperNew(JSContext* aCx, JS::HandleObject aObj, const void* aHandler,
     return js::Wrapper::New(aCx, aObj, (const js::Wrapper*)aHandler, options);
 }
 
+void WindowProxyObjectMoved(JSObject*, const JSObject*)
+{
+    abort();
+}
+
+const js::Class WindowProxyClass =
+    PROXY_CLASS_WITH_EXT(
+        "Proxy",
+        0, /* additional class flags */
+        PROXY_MAKE_EXT(
+            nullptr, /* outerObject */
+            js::proxy_innerObject,
+            false,   /* isWrappedNative */
+            WindowProxyObjectMoved
+        ));
+
+JSObject*
+NewWindowProxy(JSContext* aCx, JS::HandleObject aObj, const void* aHandler)
+{
+    return WrapperNew(aCx, aObj, aHandler, Jsvalify(&WindowProxyClass), true);
+}
+
 jsval
 GetProxyExtra(JSObject* obj, uint32_t slot)
 {

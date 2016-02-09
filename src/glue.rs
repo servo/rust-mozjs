@@ -208,6 +208,9 @@ extern "C" {
                       aHandler: *const ::libc::c_void, aClass: *const JSClass,
                       aSingleton: bool)
      -> *mut JSObject;
+    pub fn NewWindowProxy(aCx: *mut JSContext, aObj: HandleObject,
+                          aHandler: *const ::libc::c_void)
+     -> *mut JSObject;
     pub fn GetProxyExtra(obj: *mut JSObject, slot: u32) -> Value;
     pub fn GetProxyPrivate(obj: *mut JSObject) -> Value;
     pub fn SetProxyExtra(obj: *mut JSObject, slot: u32, val: Value);
