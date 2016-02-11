@@ -11,12 +11,21 @@ env:
   - FEATURES=""
   - FEATURES="--features debugmozjs"
 
+# Seems to be installed by default, however we can't count on that
+# for non-C languages
+#before_install:
+#  - sudo apt-get install ccache
+
 script:
-  - travis_wait cargo build --verbose $FEATURES
-  - cargo test --verbose $FEATURES
+  - ccache -z
+  - CCACHE=$(which ccache) travis_wait cargo build --verbose $FEATURES
+  - CCACHE=$(which ccache) cargo test --verbose $FEATURES
+  - ccache -s
 
 branches:
   except:
     - master
 notifications:
   webhooks: http://build.servo.org:54856/travis
+
+cache: ccache
