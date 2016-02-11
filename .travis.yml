@@ -6,8 +6,8 @@ rust:
 
 # Seems to be installed by default, however we can't count on that
 # for non-C languages
-before_install:
-  - sudo apt-get install ccache
+#before_install:
+#  - sudo apt-get install ccache
 
 script:
   - ccache -z
@@ -21,6 +21,4 @@ branches:
 notifications:
   webhooks: http://build.servo.org:54856/travis
 
-cache:
-  directories:
-    - $HOME/.ccache
+cache: ccache
