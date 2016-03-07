@@ -124,7 +124,7 @@ impl Runtime {
 
     pub fn evaluate_script(&self, glob: HandleObject, script: String, filename: String, line_num: u32)
                     -> Result<(),()> {
-        let script_utf16: Vec<u16> = script.utf16_units().collect();
+        let script_utf16: Vec<u16> = script.encode_utf16().collect();
         let filename_cstr = ffi::CString::new(filename.as_bytes()).unwrap();
         debug!("Evaluating script from {} with content {}", filename, script);
         // SpiderMonkey does not approve of null pointers.
@@ -171,7 +171,7 @@ impl Drop for Runtime {
 // ___________________________________________________________________________
 // Rooting API for standard JS things
 
-trait RootKind {
+pub trait RootKind {
     fn rootKind() -> ThingRootKind;
 }
 
