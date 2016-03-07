@@ -7,7 +7,6 @@
 
 #![feature(core_intrinsics)]
 #![feature(link_args)]
-#![feature(str_utf16)]
 #![feature(unsafe_no_drop_flag)]
 #![feature(const_fn)]
 

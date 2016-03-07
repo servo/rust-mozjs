@@ -402,7 +402,7 @@ pub unsafe fn latin1_to_string(cx: *mut JSContext, s: *mut JSString) -> String {
 impl ToJSValConvertible for str {
     unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
         let mut string_utf16: Vec<u16> = Vec::with_capacity(self.len());
-        string_utf16.extend(self.utf16_units());
+        string_utf16.extend(self.encode_utf16());
         let jsstr = JS_NewUCStringCopyN(cx,
                                         string_utf16.as_ptr(),
                                         string_utf16.len() as libc::size_t);
