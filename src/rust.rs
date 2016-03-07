@@ -171,7 +171,7 @@ impl Drop for Runtime {
 // ___________________________________________________________________________
 // Rooting API for standard JS things
 
-trait RootKind {
+pub trait RootKind {
     fn rootKind() -> ThingRootKind;
 }
 
