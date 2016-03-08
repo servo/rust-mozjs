@@ -5,7 +5,7 @@ use conversions::*;
 use jsval::*;
 use rust::*;
 use jsapi::{CallArgs,CompartmentOptions,OnNewGlobalHookOption,Rooted,Value, JS_NewGlobalObject};
-use jsapi::{RootedValue, RootedObject, JSAutoRequest, JSAutoCompartment, JS_Init, JSClass};
+use jsapi::{RootedValue, RootedObject, JSAutoRequest, JSAutoCompartment, JSClass};
 use std::ptr;
 
 static CLASS: &'static JSClass = &JSClass {
@@ -29,10 +29,7 @@ static CLASS: &'static JSClass = &JSClass {
 
 #[test]
 fn test_vec_conversion() {
-    unsafe{
-        assert!(JS_Init());
-    }
-
+    SpiderMonkey::init();
     let rt = Runtime::new();
     let cx = rt.cx();
 
