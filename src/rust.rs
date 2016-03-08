@@ -938,6 +938,7 @@ pub mod test {
     use jsapi::{JS_NewGlobalObject, JS_PropertyStub, JS_StrictPropertyStub};
     use jsapi::{RootedObject, CompartmentOptions, OnNewGlobalHookOption};
     use jsapi::JS_GlobalObjectTraceHook;
+    use jsapi::JSAutoRequest;
 
     use libc;
 
@@ -969,6 +970,7 @@ pub mod test {
 
         SpiderMonkey::init();
         let rt = Runtime::new();
+        let _ar = JSAutoRequest::new(rt.cx());
         let global = RootedObject::new(rt.cx(), unsafe {
             JS_NewGlobalObject(rt.cx(), &CLASS, ptr::null_mut(),
                                OnNewGlobalHookOption::FireOnNewGlobalHook,
