@@ -4,9 +4,6 @@ dist: trusty
 rust:
   - nightly
 
-script:
-  - cargo build --verbose
-  - cargo test --verbose
 branches:
   except:
     - master
