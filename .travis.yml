@@ -4,6 +4,14 @@ dist: trusty
 rust:
   - nightly
 
+env:
+  - FEATURES=""
+  - FEATURES="debugmozjs"
+
+script:
+  - cargo build --verbose --features "$FEATURES"
+  - cargo test --verbose --features "$FEATURES"
+
 branches:
   except:
     - master

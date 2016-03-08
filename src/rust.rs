@@ -9,6 +9,7 @@ use std::char;
 use std::ffi;
 use std::ptr;
 use std::slice;
+use std::sync::Once;
 use std::mem;
 use std::u32;
 use std::default::Default;
@@ -37,6 +38,7 @@ use jsapi::{CallArgsBase, CallReceiverBase, IncludeUsedRval, UsedRvalBase};
 use jsapi::CompartmentOptions;
 use jsapi::JS_DefineFunctions;
 use jsapi::JS_DefineProperties;
+use jsapi::JS_Init;
 use jsapi::JSFunctionSpec;
 use jsapi::JSNativeWrapper;
 use jsapi::JSPropertySpec;
@@ -46,6 +48,20 @@ use glue::{CreateAutoObjectVector, AppendToAutoObjectVector, DeleteAutoObjectVec
 use glue::{NewCompileOptions, DeleteCompileOptions};
 use default_stacksize;
 use default_heapsize;
+
+static INIT: Once = Once::new();
+
+pub struct SpiderMonkey;
+
+impl SpiderMonkey {
+    pub fn init() {
+        INIT.call_once(|| {
+            unsafe {
+                assert!(JS_Init());
+            }
+        });
+    }
+}
 
 trait ToResult {
     fn to_result(self) -> Result<(), ()>;
@@ -917,12 +933,12 @@ pub unsafe fn define_properties(cx: *mut JSContext, obj: HandleObject,
 pub mod test {
     use {JSCLASS_IS_GLOBAL, JSCLASS_GLOBAL_SLOT_COUNT};
     use {JSCLASS_RESERVED_SLOTS_MASK, JSCLASS_RESERVED_SLOTS_SHIFT};
-    use super::Runtime;
-    use jsapi::JS_Init;
+    use super::{SpiderMonkey, Runtime};
     use jsapi::JSClass;
     use jsapi::{JS_NewGlobalObject, JS_PropertyStub, JS_StrictPropertyStub};
     use jsapi::{RootedObject, CompartmentOptions, OnNewGlobalHookOption};
     use jsapi::JS_GlobalObjectTraceHook;
+    use jsapi::JSAutoRequest;
 
     use libc;
 
@@ -952,8 +968,9 @@ pub mod test {
             reserved: [0 as *mut libc::c_void; 26]
         };
 
-        unsafe { assert!(JS_Init()); }
+        SpiderMonkey::init();
         let rt = Runtime::new();
+        let _ar = JSAutoRequest::new(rt.cx());
         let global = RootedObject::new(rt.cx(), unsafe {
             JS_NewGlobalObject(rt.cx(), &CLASS, ptr::null_mut(),
                                OnNewGlobalHookOption::FireOnNewGlobalHook,
