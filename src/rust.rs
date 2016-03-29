@@ -5,6 +5,7 @@
 //! Rust wrappers around the raw JS apis
 
 use libc::{size_t, c_uint, c_char, ptrdiff_t};
+use heapsize::HeapSizeOf;
 use std::char;
 use std::ffi;
 use std::ptr;
@@ -165,6 +166,13 @@ impl Drop for Runtime {
             JS_DestroyContext(self.cx);
             JS_DestroyRuntime(self.rt);
         }
+    }
+}
+
+// This is measured through `glue::CollectServoSizes`.
+impl HeapSizeOf for Runtime {
+    fn heap_size_of_children(&self) -> usize {
+        0
     }
 }
 
