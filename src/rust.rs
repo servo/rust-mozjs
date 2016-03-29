@@ -41,11 +41,47 @@ use jsapi::JSFunctionSpec;
 use jsapi::JSNativeWrapper;
 use jsapi::JSPropertySpec;
 use jsapi::PropertyDefinitionBehavior;
+use jsapi::JS_SetNativeStackQuota;
 use jsval::UndefinedValue;
 use glue::{CreateAutoObjectVector, AppendToAutoObjectVector, DeleteAutoObjectVector};
 use glue::{NewCompileOptions, DeleteCompileOptions};
 use default_stacksize;
 use default_heapsize;
+
+// From Gecko:
+// Our "default" stack is what we use in configurations where we don't have a compelling reason to
+// do things differently. This is effectively 1MB on 64-bit platforms.
+const STACK_QUOTA: usize = 128 * 8 * 1024;
+
+// From Gecko:
+// The JS engine permits us to set different stack limits for system code,
+// trusted script, and untrusted script. We have tests that ensure that
+// we can always execute 10 "heavy" (eval+with) stack frames deeper in
+// privileged code. Our stack sizes vary greatly in different configurations,
+// so satisfying those tests requires some care. Manual measurements of the
+// number of heavy stack frames achievable gives us the following rough data,
+// ordered by the effective categories in which they are grouped in the
+// JS_SetNativeStackQuota call (which predates this analysis).
+//
+// (NB: These numbers may have drifted recently - see bug 938429)
+// OSX 64-bit Debug: 7MB stack, 636 stack frames => ~11.3k per stack frame
+// OSX64 Opt: 7MB stack, 2440 stack frames => ~3k per stack frame
+//
+// Linux 32-bit Debug: 2MB stack, 426 stack frames => ~4.8k per stack frame
+// Linux 64-bit Debug: 4MB stack, 455 stack frames => ~9.0k per stack frame
+//
+// Windows (Opt+Debug): 900K stack, 235 stack frames => ~3.4k per stack frame
+//
+// Linux 32-bit Opt: 1MB stack, 272 stack frames => ~3.8k per stack frame
+// Linux 64-bit Opt: 2MB stack, 316 stack frames => ~6.5k per stack frame
+//
+// We tune the trusted/untrusted quotas for each configuration to achieve our
+// invariants while attempting to minimize overhead. In contrast, our buffer
+// between system code and trusted script is a very unscientific 10k.
+const SYSTEM_CODE_BUFFER: usize = 10 * 1024;
+
+// Gecko's value on 64-bit.
+const TRUSTED_SCRIPT_BUFFER: usize = 8 * 12800;
 
 trait ToResult {
     fn to_result(self) -> Result<(), ()>;
@@ -85,6 +121,13 @@ impl Runtime {
         // last-ditch GCs from within the GC's allocator.
         unsafe {
             JS_SetGCParameter(js_runtime, JSGCParamKey::JSGC_MAX_BYTES, u32::MAX);
+        }
+
+        unsafe {
+            JS_SetNativeStackQuota(js_runtime,
+                                   STACK_QUOTA,
+                                   STACK_QUOTA - SYSTEM_CODE_BUFFER,
+                                   STACK_QUOTA - SYSTEM_CODE_BUFFER - TRUSTED_SCRIPT_BUFFER);
         }
 
         let js_context = unsafe {
