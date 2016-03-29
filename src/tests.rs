@@ -67,3 +67,27 @@ fn test_vec_conversion() {
 
     assert_eq!(orig_vec, converted);
 }
+
+#[test]
+fn stack_limit() {
+    unsafe {
+        assert!(JS_Init());
+    }
+
+    let rt = Runtime::new();
+    let cx = rt.cx();
+
+    let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
+    let c_option = CompartmentOptions::default();
+    let global = unsafe {
+        JS_NewGlobalObject(cx, CLASS, ptr::null_mut(), h_option, &c_option)
+    };
+    let global_root = Rooted::new(cx, global);
+    let global = global_root.handle();
+
+    assert!(rt.evaluate_script(global,
+                               "function f() { f.apply() } f()".to_string(),
+                               "test".to_string(),
+                               1).is_err());
+}
+
