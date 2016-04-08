@@ -22,38 +22,36 @@ extern crate mozjs_sys;
 extern crate num;
 extern crate rustc_serialize as serialize;
 
-#[cfg(target_os = "linux")]
-#[cfg(target_pointer_width = "64")]
-mod jsapi_linux_64;
-
-#[cfg(target_os = "macos")]
-#[cfg(target_pointer_width = "64")]
-mod jsapi_macos_64;
-
-#[cfg(target_os = "windows")]
-#[cfg(target_pointer_width = "64")]
-mod jsapi_windows_gcc_64;
-
-#[cfg(not(target_os = "windows"))]
-#[cfg(target_pointer_width = "32")]
-mod jsapi_linux_32;
-
 pub mod jsapi {
+    use libc::FILE;
+
+    pub struct Heap<T: ::rust::GCMethods<T> + Copy> {
+        pub ptr: ::std::cell::UnsafeCell<T>,
+    }
+
+    unsafe impl Sync for JSClass {}
+
     #[cfg(target_os = "linux")]
     #[cfg(target_pointer_width = "64")]
-    pub use jsapi_linux_64::*;
+    include!("jsapi_linux_64.rs");
 
     #[cfg(target_os = "macos")]
     #[cfg(target_pointer_width = "64")]
-    pub use jsapi_macos_64::*;
+    #[cfg(not(feature = "debugmozjs"))]
+    include!("jsapi_macos_64.rs");
+
+    #[cfg(target_os = "macos")]
+    #[cfg(target_pointer_width = "64")]
+    #[cfg(feature = "debugmozjs")]
+    include!("jsapi_macos_64_debug.rs");
 
     #[cfg(target_os = "windows")]
     #[cfg(target_pointer_width = "64")]
-    pub use jsapi_windows_gcc_64::*;
+    include!("jsapi_windows_gcc_64.rs");
 
     #[cfg(not(target_os = "windows"))]
     #[cfg(target_pointer_width = "32")]
-    pub use jsapi_linux_32::*;
+    include!("jsapi_linux_32.rs");
 }
 
 mod consts;

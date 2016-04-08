@@ -2,8 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use jsapi::{JSObject, JSString, JSGCTraceKind};
-use jsapi::JSGCTraceKind::{JSTRACE_OBJECT, JSTRACE_STRING};
+use jsapi::{__BindgenUnionField, JSObject, JSString, TraceKind};
 use jsapi::Value;
 use jsapi::jsval_layout;
 use jsapi::JSValueType;
@@ -73,6 +72,13 @@ const JSVAL_PAYLOAD_MASK: u64 = 0x00007FFFFFFFFFFF;
 fn AsJSVal(val: u64) -> JSVal {
     JSVal {
         data: jsval_layout {
+            asBits: __BindgenUnionField::new(),
+            debugView: __BindgenUnionField::new(),
+            s: __BindgenUnionField::new(),
+            asDouble: __BindgenUnionField::new(),
+            asPtr: __BindgenUnionField::new(),
+            asWord: __BindgenUnionField::new(),
+            asUIntPtr: __BindgenUnionField::new(),
             _bindgen_data_: val
         }
     }
@@ -427,12 +433,12 @@ impl JSVal {
         self.is_gcthing() && !self.is_null()
     }
 
-    pub fn trace_kind(&self) -> JSGCTraceKind {
+    pub fn trace_kind(&self) -> TraceKind {
         assert!(self.is_markable());
         if self.is_object() {
-            JSTRACE_OBJECT
+            TraceKind::Object
         } else {
-            JSTRACE_STRING
+            TraceKind::String
         }
 
     }
