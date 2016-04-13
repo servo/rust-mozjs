@@ -20,6 +20,7 @@ debugmozjs = ['mozjs_sys/debugmozjs']
 
 [dependencies.mozjs_sys]
 git = "https://github.com/servo/mozjs"
+branch = "smup"
 
 [dependencies]
 libc = "0.2"
