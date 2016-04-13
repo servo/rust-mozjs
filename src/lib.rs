@@ -33,7 +33,13 @@ pub mod jsapi {
 
     #[cfg(target_os = "linux")]
     #[cfg(target_pointer_width = "64")]
+    #[cfg(not(feature = "debugmozjs"))]
     include!("jsapi_linux_64.rs");
+
+    #[cfg(target_os = "linux")]
+    #[cfg(target_pointer_width = "64")]
+    #[cfg(feature = "debugmozjs")]
+    include!("jsapi_linux_64_debug.rs");
 
     #[cfg(target_os = "macos")]
     #[cfg(target_pointer_width = "64")]
