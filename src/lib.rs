@@ -6,6 +6,7 @@
 #![crate_type = "rlib"]
 
 #![feature(core_intrinsics)]
+#![feature(filling_drop)]
 #![feature(link_args)]
 #![feature(unsafe_no_drop_flag)]
 #![feature(const_fn)]
@@ -25,6 +26,7 @@ extern crate rustc_serialize as serialize;
 pub mod jsapi {
     use libc::FILE;
 
+    #[unsafe_no_drop_flag]
     pub struct Heap<T: ::rust::GCMethods<T> + Copy> {
         pub ptr: ::std::cell::UnsafeCell<T>,
     }

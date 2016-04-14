@@ -372,6 +372,9 @@ impl<T: Copy> MutableHandle<T> {
 impl<T> Drop for Rooted<T> {
     fn drop(&mut self) {
         unsafe {
+            if self.stack as usize == mem::POST_DROP_USIZE {
+                return;
+            }
             assert!(*self.stack == mem::transmute(&*self));
             *self.stack = self.prev;
         }
@@ -407,6 +410,9 @@ impl CustomAutoRooter {
 
 impl Drop for CustomAutoRooter {
     fn drop(&mut self) {
+        if self._base.stackTop as usize == mem::POST_DROP_USIZE {
+            return;
+        }
         unsafe {
             assert!(*self._base.stackTop == mem::transmute(&self._base));
             *self._base.stackTop = self._base.down;
@@ -546,6 +552,9 @@ impl Default for Heap<Value> {
 
 impl<T: GCMethods<T> + Copy> Drop for Heap<T> {
     fn drop(&mut self) {
+        if self.ptr.get() as usize == mem::POST_DROP_USIZE {
+            return;
+        }
         unsafe {
             T::post_barrier(self.ptr.get(), *self.ptr.get(), T::initial());
         }
@@ -567,6 +576,9 @@ impl JSAutoRequest {
 
 impl Drop for JSAutoRequest {
     fn drop(&mut self) {
+        if self.mContext as usize == mem::POST_DROP_USIZE {
+            return;
+        }
         unsafe { JS_EndRequest(self.mContext); }
     }
 }
@@ -582,6 +594,9 @@ impl JSAutoCompartment {
 
 impl Drop for JSAutoCompartment {
     fn drop(&mut self) {
+        if self.cx_ as usize == mem::POST_DROP_USIZE {
+            return;
+        }
         unsafe { JS_LeaveCompartment(self.cx_, self.oldCompartment_); }
     }
 }
@@ -622,20 +637,6 @@ impl JSJitMethodCallArgs {
 //     to duplicate so much code here
 impl CallArgs {
     pub unsafe fn from_vp(vp: *mut Value, argc: u32) -> CallArgs {
-        // CallArgs {
-        //     _base: CallArgsBase {
-        //         _base: CallReceiverBase {
-        //             _base: IncludeUsedRval {
-        //                 _base: UsedRvalBase,
-        //             },
-        //             argv_: vp.offset(2),
-        //         },
-        //         argc_: argc,
-        //         constructing_:
-        //             (&mut *vp.offset(1)).isMagic1(JSWhyMagic::JS_IS_CONSTRUCTING),
-        //         _phantom0: PhantomData,
-        //     }
-        // }
         CreateCallArgsFromVp(argc, vp)
     }
 

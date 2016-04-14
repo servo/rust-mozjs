@@ -72,13 +72,13 @@ const JSVAL_PAYLOAD_MASK: u64 = 0x00007FFFFFFFFFFF;
 fn AsJSVal(val: u64) -> JSVal {
     JSVal {
         data: jsval_layout {
-            asBits: __BindgenUnionField::new(),
-            debugView: __BindgenUnionField::new(),
-            s: __BindgenUnionField::new(),
-            asDouble: __BindgenUnionField::new(),
-            asPtr: __BindgenUnionField::new(),
-            asWord: __BindgenUnionField::new(),
-            asUIntPtr: __BindgenUnionField::new(),
+            // asBits: __BindgenUnionField::new(),
+            // debugView: __BindgenUnionField::new(),
+            // s: __BindgenUnionField::new(),
+            // asDouble: __BindgenUnionField::new(),
+            // asPtr: __BindgenUnionField::new(),
+            // asWord: __BindgenUnionField::new(),
+            // asUIntPtr: __BindgenUnionField::new(),
             _bindgen_data_: val
         }
     }
