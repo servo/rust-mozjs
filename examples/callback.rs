@@ -13,7 +13,7 @@ use js::{JSCLASS_GLOBAL_SLOT_COUNT, JSCLASS_IS_GLOBAL, JSCLASS_RESERVED_SLOTS_MA
 use js::jsapi::JSCLASS_RESERVED_SLOTS_SHIFT;
 use js::jsapi::JS_GlobalObjectTraceHook;
 use js::jsapi::{CallArgs,CompartmentOptions,OnNewGlobalHookOption,Rooted,Value};
-use js::jsapi::{JS_DefineFunction,JS_Init,JS_NewGlobalObject,JS_EncodeStringToUTF8,JS_ReportError};
+use js::jsapi::{JS_DefineFunction,JS_NewGlobalObject,JS_EncodeStringToUTF8,JS_ReportError};
 use js::jsapi::{JSAutoCompartment,JSAutoRequest,JSContext,JSClass};
 use js::jsval::UndefinedValue;
 use js::rust::Runtime;
@@ -37,9 +37,6 @@ static CLASS: &'static JSClass = &JSClass {
 };
 
 fn main() {
-    unsafe {
-        JS_Init();
-    }
     let runtime = Runtime::new();
     let context = runtime.cx();
 

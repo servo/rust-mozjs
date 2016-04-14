@@ -16,6 +16,7 @@ use std::intrinsics::return_address;
 use std::ops::{Deref, DerefMut};
 use std::cell::UnsafeCell;
 use std::marker::PhantomData;
+use std::sync::Once;
 use jsapi;
 use jsapi::{JS_NewContext, JS_DestroyContext, JS_NewRuntime, JS_DestroyRuntime};
 use jsapi::{JSContext, JSRuntime, JSObject, JSFlatString, JSFunction, JSString, Symbol, JSScript, jsid, Value};
@@ -31,7 +32,7 @@ use jsapi::AutoObjectVector;
 use jsapi::{ToBooleanSlow, ToNumberSlow, ToStringSlow};
 use jsapi::{ToInt32Slow, ToUint32Slow, ToUint16Slow, ToInt64Slow, ToUint64Slow};
 use jsapi::{JSAutoRequest, JS_BeginRequest, JS_EndRequest};
-use jsapi::{JSAutoCompartment, JS_EnterCompartment, JS_LeaveCompartment};
+use jsapi::{JSAutoCompartment, JS_EnterCompartment, JS_Init, JS_LeaveCompartment};
 use jsapi::{JSJitMethodCallArgs, JSJitGetterCallArgs, JSJitSetterCallArgs, CallArgs};
 use jsapi::{NullHandleValue, UndefinedHandleValue, JSID_VOID};
 use jsapi::CompartmentOptions;
@@ -109,6 +110,9 @@ impl Runtime {
     /// Creates a new `JSRuntime` and `JSContext`.
     pub fn new() -> Runtime {
         unsafe {
+            static INIT: Once = Once::new();
+            INIT.call_once(|| assert!(JS_Init()));
+
             let js_runtime = JS_NewRuntime(default_heapsize, ChunkSize as u32, ptr::null_mut());
             assert!(!js_runtime.is_null());
 
@@ -962,7 +966,6 @@ pub mod test {
             reserved: [0 as *mut _; 23]
         };
 
-        unsafe { assert!(JS_Init()); }
         let rt = Runtime::new();
         let cx = rt.cx();
         let c_option = CompartmentOptions::default();
