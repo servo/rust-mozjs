@@ -76,12 +76,12 @@ pub type MozMallocSizeOf =
                                                    *const ::std::os::raw::c_void)
                               -> usize>;
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct RangedPtr<T> {
     pub mPtr: *mut T,
 }
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Range<T> {
     pub mStart: RangedPtr<T>,
     pub mEnd: RangedPtr<T>,
@@ -193,6 +193,7 @@ impl TempAllocPolicy {
     }
 }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct LinkedListElement<T> {
     pub mNext: *mut LinkedListElement<T>,
     pub mPrev: *mut LinkedListElement<T>,
@@ -205,16 +206,18 @@ pub const NODE_KIND_SENTINEL: LinkedListElement_NodeKind =
 #[derive(Debug, Copy, Clone)]
 pub enum LinkedListElement_NodeKind { NODE_KIND_NORMAL = 0, }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct LinkedList<T> {
     pub sentinel: LinkedListElement<T>,
     pub _phantom0: ::std::marker::PhantomData<T>,
 }
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct LinkedList_Iterator<T> {
     pub mCurrent: *mut T,
 }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct AutoCleanLinkedList<T> {
     pub _base: LinkedList<T>,
     pub _phantom0: ::std::marker::PhantomData<T>,
@@ -236,7 +239,7 @@ pub enum TraceKind {
     LazyScript = 47,
 }
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct MapTypeToTraceKind<T> {
     pub _phantom0: ::std::marker::PhantomData<T>,
 }
@@ -258,7 +261,7 @@ pub enum RootKind {
     Limit = 12,
 }
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct MapTypeToRootKind<T> {
     pub _phantom0: ::std::marker::PhantomData<T>,
 }
@@ -439,6 +442,7 @@ impl Runtime {
     }
 }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct AutoGCRooter {
     pub down: *mut AutoGCRooter,
     pub tag_: isize,
@@ -506,6 +510,7 @@ pub enum StackKind {
     StackKindCount = 3,
 }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct RootLists {
     pub stackRoots_: [u64; 12usize],
     pub autoGCRooters_: *mut AutoGCRooter,
@@ -543,6 +548,7 @@ impl RootLists {
     }
 }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct ContextFriendFields {
     pub runtime_: *mut JSRuntime,
     pub compartment_: *mut JSCompartment,
@@ -572,6 +578,7 @@ impl ContextFriendFields {
 }
 pub enum PerThreadData { }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct PerThreadDataFriendFields {
     pub roots: RootLists,
     pub nativeStackLimit: [usize; 3usize],
@@ -931,6 +938,7 @@ pub type GCNurseryCollectionCallback =
                                                reason: Reason)>;
 /** Ensure that generational GC is disabled within some scope. */
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct AutoDisableGenerationalGC {
     pub gc: *mut GCRuntime,
 }
@@ -944,6 +952,7 @@ fn bindgen_test_layout_AutoDisableGenerationalGC() {
  * the static rooting hazard analysis.
  */
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct AutoAssertOnGC;
 extern "C" {
     fn _ZN2JS14AutoAssertOnGC16VerifyIsSafeToGCEP9JSRuntime(rt:
@@ -960,6 +969,7 @@ impl AutoAssertOnGC {
  * class does not disable the static rooting hazard analysis.
  */
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct AutoAssertNoAlloc {
     pub gc: *mut GCRuntime,
 }
@@ -995,6 +1005,7 @@ impl AutoAssertNoAlloc {
  *       on this class.
  */
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct AutoSuppressGCAnalysis {
     pub _base: AutoAssertNoAlloc,
 }
@@ -1012,6 +1023,7 @@ fn bindgen_test_layout_AutoSuppressGCAnalysis() {
  * callbacks.
  */
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct AutoAssertGCCallback {
     pub _base: AutoSuppressGCAnalysis,
 }
@@ -1031,6 +1043,7 @@ fn bindgen_test_layout_AutoAssertGCCallback() {
  * heap.
  */
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct AutoCheckCannotGC {
     pub _base: AutoAssertOnGC,
 }
@@ -1040,7 +1053,7 @@ pub struct AutoCheckCannotGC {
  * exact values.
  */
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Opaque<T> {
     pub mValue: T,
 }
@@ -1066,7 +1079,7 @@ pub type Generation = Opaque<::std::os::raw::c_ulong>;
  * <div rustbindgen opaque></div>
  */
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct HashMap<Key, Value, HashPolicy, AllocPolicy> {
     pub _phantom0: ::std::marker::PhantomData<Key>,
     pub _phantom1: ::std::marker::PhantomData<Value>,
@@ -1093,7 +1106,7 @@ pub struct HashMap<Key, Value, HashPolicy, AllocPolicy> {
  * <div rustbindgen opaque></div>
  */
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct HashSet<T, HashPolicy, AllocPolicy> {
     pub _phantom0: ::std::marker::PhantomData<T>,
     pub _phantom1: ::std::marker::PhantomData<HashPolicy>,
@@ -1145,13 +1158,14 @@ impl CStringHasher {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct HashMapEntry<Key, Value> {
     pub key_: Key,
     pub value_: Value,
 }
 /** <div rustbindgen opaque></div> */
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct HashTable<T, HashPolicy, AllocPolicy> {
     pub _phantom0: ::std::marker::PhantomData<T>,
     pub _phantom1: ::std::marker::PhantomData<HashPolicy>,
@@ -1389,6 +1403,7 @@ impl CallbackTracer {
     }
 }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct AutoTracingName {
     pub trc_: *mut CallbackTracer,
     pub prior_: *const ::std::os::raw::c_char,
@@ -1399,6 +1414,7 @@ fn bindgen_test_layout_AutoTracingName() {
     assert_eq!(::std::mem::align_of::<AutoTracingName>() , 8usize);
 }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct AutoTracingIndex {
     pub trc_: *mut CallbackTracer,
 }
@@ -1408,6 +1424,7 @@ fn bindgen_test_layout_AutoTracingIndex() {
     assert_eq!(::std::mem::align_of::<AutoTracingIndex>() , 8usize);
 }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct AutoTracingDetails {
     pub trc_: *mut CallbackTracer,
 }
@@ -1418,53 +1435,53 @@ fn bindgen_test_layout_AutoTracingDetails() {
 }
 pub enum JSAtom { }
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct StructGCPolicy<T> {
     pub _phantom0: ::std::marker::PhantomData<T>,
 }
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct GCPolicy<T> {
     pub _base: StructGCPolicy<T>,
     pub _phantom0: ::std::marker::PhantomData<T>,
 }
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct IgnoreGCPolicy<T> {
     pub _phantom0: ::std::marker::PhantomData<T>,
 }
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct GCPointerPolicy<T> {
     pub _phantom0: ::std::marker::PhantomData<T>,
 }
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct BarrierMethods<T> {
     pub _phantom0: ::std::marker::PhantomData<T>,
 }
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct RootedBase<T> {
     pub _phantom0: ::std::marker::PhantomData<T>,
 }
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct HandleBase<T> {
     pub _phantom0: ::std::marker::PhantomData<T>,
 }
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct MutableHandleBase<T> {
     pub _phantom0: ::std::marker::PhantomData<T>,
 }
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct HeapBase<T> {
     pub _phantom0: ::std::marker::PhantomData<T>,
 }
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct PersistentRootedBase<T> {
     pub _phantom0: ::std::marker::PhantomData<T>,
 }
@@ -1499,7 +1516,7 @@ pub enum PersistentRootedMarker { }
  *  - It is not possible to store flag bits in a Heap<T>.
  */
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct TenuredHeap<T> {
     pub _base: HeapBase<T>,
     pub bits: usize,
@@ -1519,7 +1536,7 @@ pub enum TenuredHeap_RootingAPI_h_unnamed_3 { maskBits = 0, }
  * specialization, define a HandleBase<T> specialization containing them.
  */
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Handle<T> {
     pub _base: HandleBase<T>,
     pub ptr: *const T,
@@ -1541,18 +1558,18 @@ pub enum Handle_CallerIdentity {
  * them.
  */
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct MutableHandle<T> {
     pub _base: MutableHandleBase<T>,
     pub ptr: *mut T,
 }
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct MovableCellHasher<T> {
     pub _phantom0: ::std::marker::PhantomData<T>,
 }
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct DispatchWrapper<T> {
     pub tracer: ::std::option::Option<unsafe extern "C" fn()>,
     pub storage: T,
@@ -1566,6 +1583,7 @@ pub struct DispatchWrapper<T> {
  * specialization, define a RootedBase<T> specialization containing them.
  */
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct Rooted<T> {
     pub _base: RootedBase<T>,
     pub stack: *mut *mut Rooted<*mut ::std::os::raw::c_void>,
@@ -1574,14 +1592,14 @@ pub struct Rooted<T> {
 }
 /** Interface substitute for Rooted<T> which does not root the variable's memory. */
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct FakeRooted<T> {
     pub _base: RootedBase<T>,
     pub ptr: T,
 }
 /** Interface substitute for MutableHandle<T> which is not required to point to rooted memory. */
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct FakeMutableHandle<T> {
     pub _base: MutableHandleBase<T>,
     pub ptr: *mut T,
@@ -1633,12 +1651,14 @@ pub enum AllowGC { NoGC = 0, CanGC = 1, }
  * marked when the object itself is marked.
  */
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct PersistentRooted<T> {
     pub _base: PersistentRootedBase<T>,
     pub _base1: LinkedListElement<T>,
     pub ptr: T,
 }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct ObjectPtr {
     pub value: Heap<*mut JSObject>,
 }
@@ -1752,49 +1772,13 @@ pub enum JSWhyMagic {
     JS_GENERIC_MAGIC = 17,
     JS_WHY_MAGIC_COUNT = 18,
 }
+/** <div rustbindgen opaque></div> */
 #[repr(C)]
-#[derive(Copy, Debug)]
+#[derive(Debug, Copy)]
 pub struct jsval_layout {
-    pub asBits: __BindgenUnionField<u64>,
-    pub debugView: __BindgenUnionField<jsval_layout_Value_h_unnamed_4>,
-    pub s: __BindgenUnionField<jsval_layout_Value_h_unnamed_5>,
-    pub asDouble: __BindgenUnionField<f64>,
-    pub asPtr: __BindgenUnionField<*mut ::std::os::raw::c_void>,
-    pub asWord: __BindgenUnionField<usize>,
-    pub asUIntPtr: __BindgenUnionField<usize>,
     pub _bindgen_data_: u64,
 }
-impl jsval_layout {
-    pub unsafe fn asBits(&mut self) -> *mut u64 {
-        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
-        ::std::mem::transmute(raw.offset(0))
-    }
-    pub unsafe fn debugView(&mut self)
-     -> *mut jsval_layout_Value_h_unnamed_4 {
-        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
-        ::std::mem::transmute(raw.offset(0))
-    }
-    pub unsafe fn s(&mut self) -> *mut jsval_layout_Value_h_unnamed_5 {
-        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
-        ::std::mem::transmute(raw.offset(0))
-    }
-    pub unsafe fn asDouble(&mut self) -> *mut f64 {
-        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
-        ::std::mem::transmute(raw.offset(0))
-    }
-    pub unsafe fn asPtr(&mut self) -> *mut *mut ::std::os::raw::c_void {
-        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
-        ::std::mem::transmute(raw.offset(0))
-    }
-    pub unsafe fn asWord(&mut self) -> *mut usize {
-        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
-        ::std::mem::transmute(raw.offset(0))
-    }
-    pub unsafe fn asUIntPtr(&mut self) -> *mut usize {
-        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
-        ::std::mem::transmute(raw.offset(0))
-    }
-}
+impl jsval_layout { }
 impl ::std::clone::Clone for jsval_layout {
     fn clone(&self) -> Self { *self }
 }
@@ -1802,86 +1786,6 @@ impl ::std::clone::Clone for jsval_layout {
 fn bindgen_test_layout_jsval_layout() {
     assert_eq!(::std::mem::size_of::<jsval_layout>() , 8usize);
     assert_eq!(::std::mem::align_of::<jsval_layout>() , 8usize);
-}
-#[repr(C)]
-#[derive(Debug, Copy)]
-pub struct jsval_layout_Value_h_unnamed_4 {
-    pub _bitfield_1: u64,
-    pub _bitfield_2: u32,
-}
-impl jsval_layout_Value_h_unnamed_4 {
-    pub fn set_payload47(&mut self, val: u32) {
-        self._bitfield_1 &= !(((1 << (47u32 as u64)) - 1) << 0usize);
-        self._bitfield_1 |= (val as u64) << 0usize;
-    }
-    pub const fn new_bitfield_1(payload47: u32) -> u64 {
-        0 | ((payload47 as u64) << 0u32)
-    }
-    pub fn set_tag(&mut self, val: u32) {
-        self._bitfield_2 &= !(((1 << (17u32 as u32)) - 1) << 0usize);
-        self._bitfield_2 |= (val as u32) << 0usize;
-    }
-    pub const fn new_bitfield_2(tag: u32) -> u32 {
-        0 | ((tag as u32) << 0u32)
-    }
-}
-impl ::std::clone::Clone for jsval_layout_Value_h_unnamed_4 {
-    fn clone(&self) -> Self { *self }
-}
-#[test]
-fn bindgen_test_layout_jsval_layout_Value_h_unnamed_4() {
-    assert_eq!(::std::mem::size_of::<jsval_layout_Value_h_unnamed_4>() ,
-               8usize);
-    assert_eq!(::std::mem::align_of::<jsval_layout_Value_h_unnamed_4>() ,
-               8usize);
-}
-#[repr(C)]
-#[derive(Debug, Copy)]
-pub struct jsval_layout_Value_h_unnamed_5 {
-    pub payload: jsval_layout_Value_h_unnamed_5_Value_h_unnamed_6,
-}
-#[repr(C)]
-#[derive(Copy, Debug)]
-pub struct jsval_layout_Value_h_unnamed_5_Value_h_unnamed_6 {
-    pub i32: __BindgenUnionField<i32>,
-    pub u32: __BindgenUnionField<u32>,
-    pub why: __BindgenUnionField<JSWhyMagic>,
-    pub _bindgen_data_: u32,
-}
-impl jsval_layout_Value_h_unnamed_5_Value_h_unnamed_6 {
-    pub unsafe fn i32(&mut self) -> *mut i32 {
-        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
-        ::std::mem::transmute(raw.offset(0))
-    }
-    pub unsafe fn u32(&mut self) -> *mut u32 {
-        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
-        ::std::mem::transmute(raw.offset(0))
-    }
-    pub unsafe fn why(&mut self) -> *mut JSWhyMagic {
-        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
-        ::std::mem::transmute(raw.offset(0))
-    }
-}
-impl ::std::clone::Clone for jsval_layout_Value_h_unnamed_5_Value_h_unnamed_6
- {
-    fn clone(&self) -> Self { *self }
-}
-#[test]
-fn bindgen_test_layout_jsval_layout_Value_h_unnamed_5_Value_h_unnamed_6() {
-    assert_eq!(::std::mem::size_of::<jsval_layout_Value_h_unnamed_5_Value_h_unnamed_6>()
-               , 4usize);
-    assert_eq!(::std::mem::align_of::<jsval_layout_Value_h_unnamed_5_Value_h_unnamed_6>()
-               , 4usize);
-}
-impl ::std::clone::Clone for jsval_layout_Value_h_unnamed_5 {
-    fn clone(&self) -> Self { *self }
-}
-#[test]
-fn bindgen_test_layout_jsval_layout_Value_h_unnamed_5() {
-    assert_eq!(::std::mem::size_of::<jsval_layout_Value_h_unnamed_5>() ,
-               4usize);
-    assert_eq!(::std::mem::align_of::<jsval_layout_Value_h_unnamed_5>() ,
-               4usize);
 }
 /**
  * JS::Value is the interface for a single JavaScript Engine value.  A few
@@ -2247,7 +2151,7 @@ impl Value {
  * reference to the Value abstracted by Outer.
  */
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct ValueOperations<Outer> {
     pub _phantom0: ::std::marker::PhantomData<Outer>,
 }
@@ -2258,18 +2162,18 @@ pub struct ValueOperations<Outer> {
  * non-const references to the Value abstracted by Outer.
  */
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct MutableValueOperations<Outer> {
     pub _base: ValueOperations<Outer>,
     pub _phantom0: ::std::marker::PhantomData<Outer>,
 }
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct VoidDefaultAdaptor<S> {
     pub _phantom0: ::std::marker::PhantomData<S>,
 }
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct IdentityDefaultAdaptor<S> {
     pub _phantom0: ::std::marker::PhantomData<S>,
 }
@@ -2365,13 +2269,13 @@ impl ::std::clone::Clone for NoUsedRval {
     fn clone(&self) -> Self { *self }
 }
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct CallReceiverBase<WantUsedRval> {
     pub _base: WantUsedRval,
     pub argv_: *mut Value,
 }
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct CallArgsBase<WantUsedRval> {
     pub _base: CallReceiverBase<WantUsedRval>,
     pub argc_: ::std::os::raw::c_uint,
@@ -2379,6 +2283,7 @@ pub struct CallArgsBase<WantUsedRval> {
     pub _phantom0: ::std::marker::PhantomData<WantUsedRval>,
 }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct CallArgs {
     pub _base: CallArgsBase<IncludeUsedRval>,
 }
@@ -2959,6 +2864,7 @@ pub type UnwatchOp =
                                                obj: HandleObject,
                                                id: HandleId) -> bool>;
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct ElementAdder {
     pub resObj_: RootedObject,
     pub vp_: *mut Value,
@@ -3450,6 +3356,7 @@ fn bindgen_test_layout_JSStructuredCloneCallbacks() {
 }
 /** RAII sugar for JS_WriteStructuredClone. */
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct JSAutoStructuredCloneBuffer {
     pub data_: *mut u64,
     pub nbytes_: usize,
@@ -3668,6 +3575,7 @@ impl JSAutoStructuredCloneBuffer {
     }
 }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct JSPrincipals {
     pub _vftable: *const _vftable_JSPrincipals,
     pub refcount: u32,
@@ -3730,6 +3638,7 @@ pub type JSReadPrincipalsOp =
                               -> bool>;
 pub enum TwoByteChars { }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct AutoCheckRequestDepth {
     pub cx: *mut JSContext,
 }
@@ -3739,11 +3648,13 @@ fn bindgen_test_layout_AutoCheckRequestDepth() {
     assert_eq!(::std::mem::align_of::<AutoCheckRequestDepth>() , 8usize);
 }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct AutoVectorRooterBase<T> {
     pub _base: AutoGCRooter,
     pub _phantom0: ::std::marker::PhantomData<T>,
 }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct AutoVectorRooter<T> {
     pub _base: AutoVectorRooterBase<T>,
     pub _phantom0: ::std::marker::PhantomData<T>,
@@ -3757,6 +3668,7 @@ pub type ScriptVector = ::std::os::raw::c_void;
  * Custom rooting behavior for internal and external clients.
  */
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct CustomAutoRooter {
     pub _vftable: *const _vftable_CustomAutoRooter,
     pub _base: AutoGCRooter,
@@ -4070,6 +3982,7 @@ pub type JSCompartmentNameCallback =
  *    JS::Compile(cx, options, srcBuf);
  */
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct SourceBufferHolder {
     pub data_: *const ::std::os::raw::c_ushort,
     pub length_: usize,
@@ -4114,6 +4027,7 @@ impl SourceBufferHolder {
 pub type JS_CurrentEmbedderTimeFunction =
     ::std::option::Option<unsafe extern "C" fn() -> f64>;
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct JSAutoRequest {
     pub mContext: *mut JSContext,
 }
@@ -4573,6 +4487,7 @@ impl ContextOptions {
     }
 }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct AutoSaveContextOptions {
     pub cx_: *mut JSContext,
     pub oldOptions_: ContextOptions,
@@ -4583,6 +4498,7 @@ fn bindgen_test_layout_AutoSaveContextOptions() {
     assert_eq!(::std::mem::align_of::<AutoSaveContextOptions>() , 8usize);
 }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct JSAutoCompartment {
     pub cx_: *mut JSContext,
     pub oldCompartment_: *mut JSCompartment,
@@ -4593,6 +4509,7 @@ fn bindgen_test_layout_JSAutoCompartment() {
     assert_eq!(::std::mem::align_of::<JSAutoCompartment>() , 8usize);
 }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct JSAutoNullableCompartment {
     pub cx_: *mut JSContext,
     pub oldCompartment_: *mut JSCompartment,
@@ -4635,7 +4552,7 @@ pub enum JSGCParamKey {
     JSGC_COMPACTING_ENABLED = 23,
 }
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct JSConstScalarSpec<T> {
     pub name: *const ::std::os::raw::c_char,
     pub val: T,
@@ -4753,7 +4670,7 @@ pub struct CompartmentCreationOptions {
     pub sharedMemoryAndAtomics_: bool,
 }
 #[repr(C)]
-#[derive(Copy, Debug)]
+#[derive(Debug, Copy)]
 pub struct CompartmentCreationOptions_jsapi_h_unnamed_8 {
     pub spec: __BindgenUnionField<ZoneSpecifier>,
     pub pointer: __BindgenUnionField<*mut ::std::os::raw::c_void>,
@@ -5252,7 +5169,7 @@ impl PropertyDescriptor {
     }
 }
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct PropertyDescriptorOperations<Outer> {
     pub _phantom0: ::std::marker::PhantomData<Outer>,
 }
@@ -5260,7 +5177,7 @@ pub struct PropertyDescriptorOperations<Outer> {
 #[derive(Debug, Copy, Clone)]
 pub enum PropertyDescriptorOperations_jsapi_h_unnamed_9 { SHADOWABLE = 0, }
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct MutablePropertyDescriptorOperations<Outer> {
     pub _base: PropertyDescriptorOperations<Outer>,
     pub _phantom0: ::std::marker::PhantomData<Outer>,
@@ -5449,6 +5366,7 @@ impl ReadOnlyCompileOptions {
  * anything else it entrains, will never be freed.
  */
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct OwningCompileOptions {
     pub _base: ReadOnlyCompileOptions,
     pub runtime: *mut JSRuntime,
@@ -5716,6 +5634,7 @@ impl OwningCompileOptions {
  * everything you store in it will outlive it.
  */
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct CompileOptions {
     pub _base: ReadOnlyCompileOptions,
     pub elementRoot: RootedObject,
@@ -5947,6 +5866,7 @@ pub enum PromiseState { Pending = 0, Fulfilled = 1, Rejected = 2, }
  * stack frames.
  */
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct AutoSetAsyncStackForNewCalls {
     pub cx: *mut JSContext,
     pub oldAsyncStack: RootedObject,
@@ -5967,6 +5887,7 @@ fn bindgen_test_layout_AutoSetAsyncStackForNewCalls() {
                8usize);
 }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct JSAutoByteString {
     pub mBytes: *mut ::std::os::raw::c_char,
 }
@@ -6153,6 +6074,7 @@ impl JSErrorReport {
  *     return ok;
  */
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct AutoSaveExceptionState {
     pub context: *mut JSContext,
     pub wasPropagatingForcedReturn: bool,
@@ -6196,6 +6118,7 @@ pub enum JSJitCompilerOption {
     JSJITCOMPILER_NOT_AN_OPTION = 9,
 }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct AutoFilename {
     pub ss_: *mut ::std::os::raw::c_void,
     pub filename_: [u64; 2usize],
@@ -6246,6 +6169,7 @@ impl AutoFilename {
     }
 }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct AutoHideScriptedCaller {
     pub mContext: *mut JSContext,
 }
@@ -6343,6 +6267,7 @@ fn bindgen_test_layout_AsmJSCacheOps() {
  *     }
  */
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct ForOfIterator {
     pub cx_: *mut JSContext,
     pub iterator: RootedObject,
@@ -6696,6 +6621,7 @@ fn bindgen_test_layout_JSFunctionSpecWithHelp() {
  * find the source.
  */
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct SourceHook {
     pub _vftable: *const _vftable_SourceHook,
 }
@@ -6857,7 +6783,7 @@ pub struct String {
     pub String_jsfriendapi_h_unnamed_13: String_jsfriendapi_h_unnamed_13,
 }
 #[repr(C)]
-#[derive(Copy, Debug)]
+#[derive(Debug, Copy)]
 pub struct String_jsfriendapi_h_unnamed_13 {
     pub nonInlineCharsLatin1: __BindgenUnionField<*const Latin1Char>,
     pub nonInlineCharsTwoByte: __BindgenUnionField<*const ::std::os::raw::c_ushort>,
@@ -7024,6 +6950,7 @@ fn bindgen_test_layout_CompartmentsWithPrincipals() {
     assert_eq!(::std::mem::align_of::<CompartmentsWithPrincipals>() , 8usize);
 }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct ExpandoAndGeneration {
     pub expando: Heap<Value>,
     pub generation: u64,
@@ -7512,6 +7439,7 @@ pub enum JSErrNum {
  * instead of char pointers are used in parts of the code that can GC.
  */
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct AutoStableStringChars {
     pub s_: RootedString,
     pub AutoStableStringChars_jsfriendapi_h_unnamed_14: AutoStableStringChars_jsfriendapi_h_unnamed_14,
@@ -7519,7 +7447,7 @@ pub struct AutoStableStringChars {
     pub ownsChars_: bool,
 }
 #[repr(C)]
-#[derive(Copy, Debug)]
+#[derive(Debug, Copy)]
 pub struct AutoStableStringChars_jsfriendapi_h_unnamed_14 {
     pub twoByteChars_: __BindgenUnionField<*const ::std::os::raw::c_ushort>,
     pub latin1Chars_: __BindgenUnionField<*const Latin1Char>,
@@ -7632,6 +7560,7 @@ impl AutoStableStringChars {
     }
 }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct ErrorReport {
     pub reportp: *mut JSErrorReport,
     pub message_: *const ::std::os::raw::c_char,
@@ -7711,6 +7640,7 @@ pub enum InlinableNative { _BindgenOpaqueEnum = 0, }
  * JSJitGetterOp.
  */
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct JSJitGetterCallArgs {
     pub _base: MutableHandleValue,
 }
@@ -7729,6 +7659,7 @@ impl JSJitGetterCallArgs {
  * JSJitSetterOp.
  */
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct JSJitSetterCallArgs {
     pub _base: MutableHandleValue,
 }
@@ -7747,6 +7678,7 @@ impl JSJitSetterCallArgs {
  * for a JSJitMethodOp.
  */
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct JSJitMethodCallArgs {
     pub _base: CallArgsBase<NoUsedRval>,
 }
@@ -8027,6 +7959,7 @@ pub type CTypesActivityCallback =
     ::std::option::Option<unsafe extern "C" fn(cx: *mut JSContext,
                                                type_: CTypesActivityType)>;
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct AutoCTypesActivityCallback {
     pub cx: *mut JSContext,
     pub callback: CTypesActivityCallback,
@@ -8052,6 +7985,7 @@ pub type ObjectMetadataCallback =
                                                obj: HandleObject)
                               -> *mut JSObject>;
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct NativeProfiler {
     pub _vftable: *const _vftable_NativeProfiler,
 }
@@ -8070,6 +8004,7 @@ fn bindgen_test_layout_NativeProfiler() {
     assert_eq!(::std::mem::align_of::<NativeProfiler>() , 8usize);
 }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct GCHeapProfiler {
     pub _vftable: *const _vftable_GCHeapProfiler,
 }
@@ -8438,6 +8373,7 @@ impl ClassInfo {
  * holds a copy of the filename.
  */
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct NotableClassInfo {
     pub _base: ClassInfo,
     pub className_: *mut ::std::os::raw::c_char,
@@ -8589,6 +8525,7 @@ impl StringInfo {
  * NotableStringInfo holds a copy of some or all of the string's chars.
  */
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct NotableStringInfo {
     pub _base: StringInfo,
     pub buffer: *mut ::std::os::raw::c_char,
@@ -8660,6 +8597,7 @@ impl ScriptSourceInfo {
  * class holds a copy of the filename.
  */
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct NotableScriptSourceInfo {
     pub _base: ScriptSourceInfo,
     pub filename_: *mut ::std::os::raw::c_char,
@@ -8674,6 +8612,7 @@ fn bindgen_test_layout_NotableScriptSourceInfo() {
  * compartments within it.
  */
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct RuntimeSizes {
     pub object: usize,
     pub atomsTable: usize,
@@ -8778,6 +8717,7 @@ impl UnusedGCThingSizes {
     }
 }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct ZoneStats {
     pub symbolsGCHeap: usize,
     pub gcHeapArenaAdmin: usize,
@@ -8840,6 +8780,7 @@ impl ZoneStats {
     }
 }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct CompartmentStats {
     pub objectsPrivate: usize,
     pub scriptsGCHeap: usize,
@@ -8921,6 +8862,7 @@ impl CompartmentStats {
 pub type CompartmentStatsVector = ::std::os::raw::c_void;
 pub type ZoneStatsVector = ::std::os::raw::c_void;
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct RuntimeStats {
     pub _vftable: *const _vftable_RuntimeStats,
     pub gcHeapChunkTotal: usize,
