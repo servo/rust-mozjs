@@ -33,7 +33,7 @@ use jsapi::AutoObjectVector;
 use jsapi::{ToBooleanSlow, ToNumberSlow, ToStringSlow};
 use jsapi::{ToInt32Slow, ToUint32Slow, ToUint16Slow, ToInt64Slow, ToUint64Slow};
 use jsapi::{JSAutoRequest, JS_BeginRequest, JS_EndRequest};
-use jsapi::{JSAutoCompartment, JS_EnterCompartment, JS_LeaveCompartment};
+use jsapi::{JSAutoCompartment, JS_EnterCompartment, JS_Init, JS_LeaveCompartment};
 use jsapi::{JSJitMethodCallArgs, JSJitGetterCallArgs, JSJitSetterCallArgs, CallArgs};
 use jsapi::{NullHandleValue, UndefinedHandleValue, JSID_VOID};
 use jsapi::CompartmentOptions;
