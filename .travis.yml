@@ -3,6 +3,9 @@ sudo: 9000
 dist: trusty
 rust:
   - nightly
+os:
+  - linux
+  - osx
 
 env:
   - FEATURES=""
