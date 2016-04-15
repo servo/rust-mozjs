@@ -6,6 +6,9 @@ authors = ["The Servo Project Developers"]
 
 build = "build.rs"
 
+[lib]
+doctest = false
+
 [features]
 debugmozjs = ['mozjs_sys/debugmozjs']
 
