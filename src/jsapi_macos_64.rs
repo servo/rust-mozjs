@@ -1006,21 +1006,9 @@ pub struct AutoSuppressGCAnalysis {
 impl ::std::clone::Clone for AutoSuppressGCAnalysis {
     fn clone(&self) -> Self { *self }
 }
-/**
- * Assert that code is only ever called from a GC callback, disable the static
- * rooting hazard analysis and assert if any allocation that could potentially
- * trigger a GC occurs while this guard object is live.
- *
- * This is useful to make the static analysis ignore code that runs in GC
- * callbacks.
- */
 #[repr(C)]
-#[derive(Debug, Copy)]
 pub struct AutoAssertGCCallback {
-    pub _base: AutoSuppressGCAnalysis,
-}
-impl ::std::clone::Clone for AutoAssertGCCallback {
-    fn clone(&self) -> Self { *self }
+    pub _bindgen_opaque_blob: u8,
 }
 #[test]
 fn bindgen_test_layout_AutoAssertGCCallback() {
