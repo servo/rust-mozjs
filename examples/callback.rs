@@ -9,7 +9,8 @@ use std::ffi::CStr;
 use std::ptr;
 use std::str;
 
-use js::{JSCLASS_RESERVED_SLOTS_MASK,JSCLASS_RESERVED_SLOTS_SHIFT,JSCLASS_GLOBAL_SLOT_COUNT,JSCLASS_IS_GLOBAL};
+use js::{JSCLASS_GLOBAL_SLOT_COUNT, JSCLASS_IS_GLOBAL, JSCLASS_RESERVED_SLOTS_MASK};
+use js::jsapi::JSCLASS_RESERVED_SLOTS_SHIFT;
 use js::jsapi::JS_GlobalObjectTraceHook;
 use js::jsapi::{CallArgs,CompartmentOptions,OnNewGlobalHookOption,Rooted,Value};
 use js::jsapi::{JS_DefineFunction,JS_Init,JS_NewGlobalObject,JS_EncodeStringToUTF8,JS_ReportError};
@@ -26,13 +27,13 @@ static CLASS: &'static JSClass = &JSClass {
     setProperty: None,
     enumerate: None,
     resolve: None,
-    convert: None,
+    mayResolve: None,
     finalize: None,
     call: None,
     hasInstance: None,
     construct: None,
     trace: Some(JS_GlobalObjectTraceHook),
-    reserved: [0 as *mut _; 26]
+    reserved: [0 as *mut _; 23]
 };
 
 fn main() {
