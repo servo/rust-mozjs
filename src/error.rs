@@ -9,7 +9,7 @@
 use jsapi::{JSContext, JSErrorFormatString, JSExnType, JS_ReportErrorNumber};
 use libc;
 use std::ffi::CString;
-use std::{mem, ptr};
+use std::{mem, os, ptr};
 
 /// Format string used to throw javascript errors.
 static ERROR_FORMAT_STRING_STRING: [libc::c_char; 4] = [
@@ -21,6 +21,7 @@ static ERROR_FORMAT_STRING_STRING: [libc::c_char; 4] = [
 
 /// Format string struct used to throw `TypeError`s.
 static mut TYPE_ERROR_FORMAT_STRING: JSErrorFormatString = JSErrorFormatString {
+    name: b"TYPE_ERROR" as *const _ as *const libc::c_char,
     format: &ERROR_FORMAT_STRING_STRING as *const libc::c_char,
     argCount: 1,
     exnType: JSExnType::JSEXN_TYPEERR as i16,
@@ -28,6 +29,7 @@ static mut TYPE_ERROR_FORMAT_STRING: JSErrorFormatString = JSErrorFormatString {
 
 /// Format string struct used to throw `RangeError`s.
 static mut RANGE_ERROR_FORMAT_STRING: JSErrorFormatString = JSErrorFormatString {
+    name: b"RANGE_ERROR" as *const _ as *const libc::c_char,
     format: &ERROR_FORMAT_STRING_STRING as *const libc::c_char,
     argCount: 1,
     exnType: JSExnType::JSEXN_RANGEERR as i16,
@@ -35,7 +37,7 @@ static mut RANGE_ERROR_FORMAT_STRING: JSErrorFormatString = JSErrorFormatString 
 
 /// Callback used to throw javascript errors.
 /// See throw_js_error for info about error_number.
-unsafe extern "C" fn get_error_message(_user_ref: *mut libc::c_void,
+unsafe extern "C" fn get_error_message(_user_ref: *mut os::raw::c_void,
                                        error_number: libc::c_uint)
                                        -> *const JSErrorFormatString {
     let num: JSExnType = mem::transmute(error_number);

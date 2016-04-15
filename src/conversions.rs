@@ -27,9 +27,9 @@
 
 #![deny(missing_docs)]
 
-use JSPROP_ENUMERATE;
 use error::throw_type_error;
 use glue::RUST_JS_NumberValue;
+use jsapi::JSPROP_ENUMERATE;
 use jsapi::{JSContext, JSObject, JSString, HandleValue, MutableHandleValue};
 use jsapi::{JS_NewUCStringCopyN, JS_StringHasLatin1Chars, JS_WrapValue};
 use jsapi::{JS_GetLatin1StringCharsAndLength, JS_GetTwoByteStringCharsAndLength};
