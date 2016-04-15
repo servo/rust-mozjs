@@ -8796,52 +8796,13 @@ impl CompartmentStats {
 pub type CompartmentStatsVector = ::std::os::raw::c_void;
 pub type ZoneStatsVector = ::std::os::raw::c_void;
 #[repr(C)]
-#[unsafe_no_drop_flag]
 pub struct RuntimeStats {
-    pub _vftable: *const _vftable_RuntimeStats,
-    pub gcHeapChunkTotal: usize,
-    pub gcHeapDecommittedArenas: usize,
-    pub gcHeapUnusedChunks: usize,
-    pub gcHeapUnusedArenas: usize,
-    pub gcHeapChunkAdmin: usize,
-    pub gcHeapGCThings: usize,
-    pub runtime: RuntimeSizes,
-    pub cTotals: CompartmentStats,
-    pub zTotals: ZoneStats,
-    pub compartmentStatsVector: CompartmentStatsVector,
-    pub zoneStatsVector: ZoneStatsVector,
-    pub currZoneStats: *mut ZoneStats,
-    pub mallocSizeOf_: MallocSizeOf,
-}
-#[repr(C)]
-pub struct _vftable_RuntimeStats {
-    pub initExtraCompartmentStats: unsafe extern "C" fn(this:
-                                                            *mut ::std::os::raw::c_void,
-                                                        c: *mut JSCompartment,
-                                                        cstats:
-                                                            *mut CompartmentStats),
-    pub initExtraZoneStats: unsafe extern "C" fn(this:
-                                                     *mut ::std::os::raw::c_void,
-                                                 zone: *mut Zone,
-                                                 zstats: *mut ZoneStats),
+    pub _bindgen_opaque_blob: [u64; 127usize],
 }
 #[test]
 fn bindgen_test_layout_RuntimeStats() {
     assert_eq!(::std::mem::size_of::<RuntimeStats>() , 1016usize);
     assert_eq!(::std::mem::align_of::<RuntimeStats>() , 8usize);
-}
-extern "C" {
-    fn _ZNK2JS12RuntimeStats15addToServoSizesEPNS_10ServoSizesE(this:
-                                                                    *mut RuntimeStats,
-                                                                sizes:
-                                                                    *mut ServoSizes);
-}
-impl RuntimeStats {
-    #[inline]
-    pub unsafe fn addToServoSizes(&mut self, sizes: *mut ServoSizes) {
-        _ZNK2JS12RuntimeStats15addToServoSizesEPNS_10ServoSizesE(&mut *self,
-                                                                 sizes)
-    }
 }
 #[repr(C)]
 #[derive(Debug, Copy)]
