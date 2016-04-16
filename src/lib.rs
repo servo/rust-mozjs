@@ -26,7 +26,9 @@ extern crate rustc_serialize as serialize;
 pub mod jsapi {
     use libc::FILE;
 
+    #[repr(C)]
     #[unsafe_no_drop_flag]
+    #[derive(Debug)]
     pub struct Heap<T: ::rust::GCMethods<T> + Copy> {
         pub ptr: ::std::cell::UnsafeCell<T>,
     }
