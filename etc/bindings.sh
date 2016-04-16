@@ -1,65 +1,70 @@
+cd "$(dirname "$0")"
+
 ../../rust-bindgen/target/debug/bindgen \
--no-type-renaming \
--opaque-type RuntimeStats \
--opaque-type AutoAssertGCCallback \
--opaque-type CompileOptions \
--opaque-type OwningCompileOptions \
--opaque-type ReadOnlyCompileOptions \
--allow-unknown-types -x c++ --std=c++11 \
--I ../target/debug/build/mozjs_sys-*/out/dist/include \
-wrapper.h \
--DRUST_BINDGEN=1 \
--o src/out.rs \
--match wrapper.h \
--match jsapi.h \
--match jsfriendapi.h \
--match jsalloc.h \
--match jsbytecode.h \
--match jspubtd.h \
--match AllocPolicy.h \
--match CallArgs.h \
--match CallNonGenericMethod.h \
--match CharacterEncoding.h \
--match Class.h \
--match Conversions.h \
--match Date.h \
--match Debug.h \
--match EnumeratedArray.h \
--match GCAPI.h \
--match GCAnnotations.h \
--match GCPolicyAPI.h \
--match GCVariant.h \
--match GCVector.h \
--match HashTable.h \
--match HeapAPI.h \
--match Id.h \
--match Initialization.h \
--match LinkedList.h \
--match LegacyIntTypes.h \
--match MemoryMetrics.h \
--match MemoryReporting.h \
--match Opaque.h \
--match Principals.h \
--match ProfilingFrameIterator.h \
--match ProfilingStack.h \
--match Promise.h \
--match Proxy.h \
--match Range.h \
--match RangedPtr.h \
--match RequiredDefines.h \
--match RootingAPI.h \
--match SliceBudget.h \
--match StructuredClone.h \
--match TraceKind.h \
--match TracingAPI.h \
--match TrackedOptimizationInfo.h \
--match TypeDecls.h \
--match UbiNode.h \
--match UbiNodeBreadthFirst.h \
--match UbiNodeCensus.h \
--match UbiNodeDominatorTree.h \
--match UbiNodePostOrder.h \
--match UbiNodeShortestPaths.h \
--match Value.h \
--match Vector.h \
--match WeakMapPtr.h
+  -no-type-renaming \
+  -dtor-attr unsafe_no_drop_flag \
+  -opaque-type RuntimeStats \
+  -opaque-type EnumeratedArray \
+  -opaque-type HashMap \
+  -opaque-type AutoAssertGCCallback \
+  -opaque-type CompileOptions \
+  -opaque-type OwningCompileOptions \
+  -opaque-type ReadOnlyCompileOptions \
+  -allow-unknown-types -x c++ --std=c++11 \
+  -I ../target/debug/build/mozjs_sys-*/out/dist/include \
+  wrapper.h \
+  -DRUST_BINDGEN=1 \
+  -o ../out.rs \
+  -match wrapper.h \
+  -match jsapi.h \
+  -match jsfriendapi.h \
+  -match jsalloc.h \
+  -match jsbytecode.h \
+  -match jspubtd.h \
+  -match AllocPolicy.h \
+  -match CallArgs.h \
+  -match CallNonGenericMethod.h \
+  -match CharacterEncoding.h \
+  -match Class.h \
+  -match Conversions.h \
+  -match Date.h \
+  -match Debug.h \
+  -match EnumeratedArray.h \
+  -match GCAPI.h \
+  -match GCAnnotations.h \
+  -match GCPolicyAPI.h \
+  -match GCVariant.h \
+  -match GCVector.h \
+  -match HashTable.h \
+  -match HeapAPI.h \
+  -match Id.h \
+  -match Initialization.h \
+  -match LinkedList.h \
+  -match LegacyIntTypes.h \
+  -match MemoryMetrics.h \
+  -match MemoryReporting.h \
+  -match Opaque.h \
+  -match Principals.h \
+  -match ProfilingFrameIterator.h \
+  -match ProfilingStack.h \
+  -match Promise.h \
+  -match Proxy.h \
+  -match Range.h \
+  -match RangedPtr.h \
+  -match RequiredDefines.h \
+  -match RootingAPI.h \
+  -match SliceBudget.h \
+  -match StructuredClone.h \
+  -match TraceKind.h \
+  -match TracingAPI.h \
+  -match TrackedOptimizationInfo.h \
+  -match TypeDecls.h \
+  -match UbiNode.h \
+  -match UbiNodeBreadthFirst.h \
+  -match UbiNodeCensus.h \
+  -match UbiNodeDominatorTree.h \
+  -match UbiNodePostOrder.h \
+  -match UbiNodeShortestPaths.h \
+  -match Value.h \
+  -match Vector.h \
+  -match WeakMapPtr.h
