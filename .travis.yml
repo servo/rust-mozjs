@@ -9,11 +9,11 @@ os:
 
 env:
   - FEATURES=""
-  - FEATURES="debugmozjs"
+  - FEATURES="--features debugmozjs"
 
 script:
-  - cargo build --verbose --features "$FEATURES"
-  - cargo test --verbose --features "$FEATURES"
+  - travis_wait cargo build --verbose $FEATURES
+  - cargo test --verbose $FEATURES
 
 branches:
   except:
