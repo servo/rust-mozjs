@@ -24,9 +24,6 @@ branches:
 notifications:
   webhooks: http://build.servo.org:54856/travis
 
-script: |
-  set -e
-  export RUST_TEST_THREADS=1
-  travis_wait cargo build --verbose $FEATURES
-  cargo test --verbose $FEATURES
-  cargo run --example callback $FEATURES
+script:
+  - cargo build --verbose $FEATURES
+  - cargo test --verbose $FEATURES
