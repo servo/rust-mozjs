@@ -16,6 +16,8 @@ use std::intrinsics::return_address;
 use std::ops::{Deref, DerefMut};
 use std::cell::UnsafeCell;
 use std::marker::PhantomData;
+use consts::{JSCLASS_RESERVED_SLOTS_MASK, JSCLASS_RESERVED_SLOTS_SHIFT};
+use consts::{JSCLASS_GLOBAL_SLOT_COUNT, JSCLASS_IS_GLOBAL};
 use jsapi::{JS_NewContext, JS_DestroyContext, JS_NewRuntime, JS_DestroyRuntime};
 use jsapi::{JSContext, JSRuntime, JSObject, JSFlatString, JSFunction, JSString, Symbol, JSScript, jsid, Value};
 use jsapi::{RuntimeOptionsRef, ContextOptionsRef, ReadOnlyCompileOptions};
@@ -42,6 +44,8 @@ use jsapi::JSNativeWrapper;
 use jsapi::JSPropertySpec;
 use jsapi::PropertyDefinitionBehavior;
 use jsapi::JS_SetNativeStackQuota;
+use jsapi::JSClass;
+use jsapi::JS_GlobalObjectTraceHook;
 use jsval::UndefinedValue;
 use glue::{CreateAutoObjectVector, AppendToAutoObjectVector, DeleteAutoObjectVector};
 use glue::{NewCompileOptions, DeleteCompileOptions};
@@ -948,54 +952,21 @@ pub unsafe fn define_properties(cx: *mut JSContext, obj: HandleObject,
     JS_DefineProperties(cx, obj, properties.as_ptr()).to_result()
 }
 
-#[cfg(test)]
-pub mod test {
-    use {JSCLASS_IS_GLOBAL, JSCLASS_GLOBAL_SLOT_COUNT};
-    use {JSCLASS_RESERVED_SLOTS_MASK, JSCLASS_RESERVED_SLOTS_SHIFT};
-    use super::Runtime;
-    use jsapi::JS_Init;
-    use jsapi::JSClass;
-    use jsapi::{JS_NewGlobalObject, JS_PropertyStub, JS_StrictPropertyStub};
-    use jsapi::{RootedObject, CompartmentOptions, OnNewGlobalHookOption};
-    use jsapi::JS_GlobalObjectTraceHook;
-
-    use libc;
-
-    use std::ptr;
-
-    #[test]
-    pub fn dummy() {
-        static CLASS: JSClass = JSClass {
-            name: b"Global\0" as *const u8 as *const libc::c_char,
-            flags: JSCLASS_IS_GLOBAL |
-                ((JSCLASS_GLOBAL_SLOT_COUNT & JSCLASS_RESERVED_SLOTS_MASK) <<
-                 JSCLASS_RESERVED_SLOTS_SHIFT),
-                // JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT),
-            addProperty: None,
-            delProperty: None,
-            getProperty: None,
-            setProperty: None,
-            enumerate: None,
-            resolve: None,
-            convert: None,
-            finalize: None,
-            call: None,
-            hasInstance: None,
-            construct: None,
-            trace: Some(JS_GlobalObjectTraceHook),
-
-            reserved: [0 as *mut libc::c_void; 26]
-        };
-
-        unsafe { assert!(JS_Init()); }
-        let rt = Runtime::new();
-        let global = RootedObject::new(rt.cx(), unsafe {
-            JS_NewGlobalObject(rt.cx(), &CLASS, ptr::null_mut(),
-                               OnNewGlobalHookOption::FireOnNewGlobalHook,
-                               &CompartmentOptions::default())
-        });
-        assert!(rt.evaluate_script(global.handle(), "1 + 1".to_owned(),
-                                   "test".to_owned(), 1).is_ok());
-    }
-
-}
+/// This is a simple `JSClass` for global objects, primarily intended for tests.
+pub static SIMPLE_GLOBAL_CLASS: JSClass = JSClass {
+    name: b"Global\0" as *const u8 as *const _,
+    flags: JSCLASS_IS_GLOBAL | ((JSCLASS_GLOBAL_SLOT_COUNT & JSCLASS_RESERVED_SLOTS_MASK) << JSCLASS_RESERVED_SLOTS_SHIFT),
+    addProperty: None,
+    delProperty: None,
+    getProperty: None,
+    setProperty: None,
+    enumerate: None,
+    resolve: None,
+    convert: None,
+    finalize: None,
+    call: None,
+    hasInstance: None,
+    construct: None,
+    trace: Some(JS_GlobalObjectTraceHook),
+    reserved: [0 as *mut _; 26]
+};
