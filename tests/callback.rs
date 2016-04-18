@@ -29,11 +29,10 @@ use std::str;
 fn callback() {
     unsafe {
         JS_Init();
-    }
-    let runtime = Runtime::new();
-    let context = runtime.cx();
 
-    unsafe {
+        let runtime = Runtime::new();
+        let context = runtime.cx();
+
         let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
         let c_option = CompartmentOptions::default();
         let _ar = JSAutoRequest::new(context);

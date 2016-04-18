@@ -17,16 +17,18 @@ use std::ptr;
 
 #[test]
 fn evaluate() {
-    unsafe { assert!(JS_Init()); }
-    let rt = Runtime::new();
-    let cx = rt.cx();
-    let _ar = JSAutoRequest::new(cx);
+    unsafe {
+        assert!(JS_Init());
+        let rt = Runtime::new();
+        let cx = rt.cx();
+        let _ar = JSAutoRequest::new(cx);
 
-    let global = RootedObject::new(cx, unsafe {
-        JS_NewGlobalObject(cx, &SIMPLE_GLOBAL_CLASS, ptr::null_mut(),
-                           OnNewGlobalHookOption::FireOnNewGlobalHook,
-                           &CompartmentOptions::default())
-    });
-    assert!(rt.evaluate_script(global.handle(), "1 + 1".to_owned(),
-                               "test".to_owned(), 1).is_ok());
+        let global = RootedObject::new(cx,
+            JS_NewGlobalObject(cx, &SIMPLE_GLOBAL_CLASS, ptr::null_mut(),
+                               OnNewGlobalHookOption::FireOnNewGlobalHook,
+                               &CompartmentOptions::default())
+        );
+        assert!(rt.evaluate_script(global.handle(), "1 + 1".to_owned(),
+                                   "test".to_owned(), 1).is_ok());
+    }
 }

@@ -18,22 +18,21 @@ use std::ptr;
 fn stack_limit() {
     unsafe {
         assert!(JS_Init());
+
+        let rt = Runtime::new();
+        let cx = rt.cx();
+        let _ar = JSAutoRequest::new(cx);
+
+        let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
+        let c_option = CompartmentOptions::default();
+        let global = JS_NewGlobalObject(cx, &SIMPLE_GLOBAL_CLASS,
+                                        ptr::null_mut(), h_option, &c_option);
+        let global_root = Rooted::new(cx, global);
+        let global = global_root.handle();
+
+        assert!(rt.evaluate_script(global,
+                                   "function f() { f.apply() } f()".to_string(),
+                                   "test".to_string(),
+                                   1).is_err());
     }
-
-    let rt = Runtime::new();
-    let cx = rt.cx();
-    let _ar = JSAutoRequest::new(cx);
-
-    let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
-    let c_option = CompartmentOptions::default();
-    let global = unsafe {
-        JS_NewGlobalObject(cx, &SIMPLE_GLOBAL_CLASS, ptr::null_mut(), h_option, &c_option)
-    };
-    let global_root = Rooted::new(cx, global);
-    let global = global_root.handle();
-
-    assert!(rt.evaluate_script(global,
-                               "function f() { f.apply() } f()".to_string(),
-                               "test".to_string(),
-                               1).is_err());
 }
