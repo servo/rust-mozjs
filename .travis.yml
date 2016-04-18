@@ -6,9 +6,6 @@ rust:
 os:
   - linux
   - osx
-env:
-  - FEATURES=""
-  - FEATURES="--features debugmozjs"
 
 env:
   - FEATURES=""
@@ -23,7 +20,3 @@ branches:
     - master
 notifications:
   webhooks: http://build.servo.org:54856/travis
-
-script:
-  - cargo build --verbose $FEATURES
-  - cargo test --verbose $FEATURES
