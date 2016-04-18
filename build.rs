@@ -15,4 +15,5 @@ fn main() {
     assert!(result.success());
     println!("cargo:rustc-link-search=native={}", env::var("OUT_DIR").unwrap());
     println!("cargo:rustc-link-lib=static=jsglue");
+    println!("cargo:rustc-link-lib=static=mozglue");
 }
