@@ -112,42 +112,45 @@ pub struct Runtime {
 
 impl Runtime {
     /// Creates a new `JSRuntime` and `JSContext`.
-    pub fn new() -> Runtime {
-        unsafe {
-            let js_runtime = JS_NewRuntime(default_heapsize, ChunkSize as u32, ptr::null_mut());
-            assert!(!js_runtime.is_null());
+    ///
+    /// # Safety
+    ///
+    /// Calling this function concurrently can cause segfaults inside
+    /// SpiderMonkey
+    pub unsafe fn new() -> Runtime {
+        let js_runtime = JS_NewRuntime(default_heapsize, ChunkSize as u32, ptr::null_mut());
+        assert!(!js_runtime.is_null());
 
-            // Unconstrain the runtime's threshold on nominal heap size, to avoid
-            // triggering GC too often if operating continuously near an arbitrary
-            // finite threshold. This leaves the maximum-JS_malloc-bytes threshold
-            // still in effect to cause periodical, and we hope hygienic,
-            // last-ditch GCs from within the GC's allocator.
-            JS_SetGCParameter(js_runtime, JSGCParamKey::JSGC_MAX_BYTES, u32::MAX);
+        // Unconstrain the runtime's threshold on nominal heap size, to avoid
+        // triggering GC too often if operating continuously near an arbitrary
+        // finite threshold. This leaves the maximum-JS_malloc-bytes threshold
+        // still in effect to cause periodical, and we hope hygienic,
+        // last-ditch GCs from within the GC's allocator.
+        JS_SetGCParameter(js_runtime, JSGCParamKey::JSGC_MAX_BYTES, u32::MAX);
 
-            JS_SetNativeStackQuota(js_runtime,
-                                   STACK_QUOTA,
-                                   STACK_QUOTA - SYSTEM_CODE_BUFFER,
-                                   STACK_QUOTA - SYSTEM_CODE_BUFFER - TRUSTED_SCRIPT_BUFFER);
+        JS_SetNativeStackQuota(js_runtime,
+                               STACK_QUOTA,
+                               STACK_QUOTA - SYSTEM_CODE_BUFFER,
+                               STACK_QUOTA - SYSTEM_CODE_BUFFER - TRUSTED_SCRIPT_BUFFER);
 
-            let js_context = JS_NewContext(js_runtime, default_stacksize as size_t);
-            assert!(!js_context.is_null());
+        let js_context = JS_NewContext(js_runtime, default_stacksize as size_t);
+        assert!(!js_context.is_null());
 
-            let runtimeopts = RuntimeOptionsRef(js_runtime);
-            let contextopts = ContextOptionsRef(js_context);
+        let runtimeopts = RuntimeOptionsRef(js_runtime);
+        let contextopts = ContextOptionsRef(js_context);
 
-            (*runtimeopts).set_varObjFix_(true);
-            (*runtimeopts).set_baseline_(true);
-            (*runtimeopts).set_ion_(true);
-            (*runtimeopts).set_nativeRegExp_(true);
+        (*runtimeopts).set_varObjFix_(true);
+        (*runtimeopts).set_baseline_(true);
+        (*runtimeopts).set_ion_(true);
+        (*runtimeopts).set_nativeRegExp_(true);
 
-            (*contextopts).set_dontReportUncaught_(true);
-            (*contextopts).set_autoJSAPIOwnsErrorReporting_(true);
-            JS_SetErrorReporter(js_runtime, Some(reportError));
+        (*contextopts).set_dontReportUncaught_(true);
+        (*contextopts).set_autoJSAPIOwnsErrorReporting_(true);
+        JS_SetErrorReporter(js_runtime, Some(reportError));
 
-            Runtime {
-                rt: js_runtime,
-                cx: js_context,
-            }
+        Runtime {
+            rt: js_runtime,
+            cx: js_context,
         }
     }
 
