@@ -5,37 +5,28 @@
 extern crate js;
 extern crate libc;
 
+use js::jsapi::CallArgs;
+use js::jsapi::CompartmentOptions;
+use js::jsapi::JSAutoCompartment;
+use js::jsapi::JSAutoRequest;
+use js::jsapi::JSContext;
+use js::jsapi::JS_DefineFunction;
+use js::jsapi::JS_EncodeStringToUTF8;
+use js::jsapi::JS_Init;
+use js::jsapi::JS_NewGlobalObject;
+use js::jsapi::JS_ReportError;
+use js::jsapi::OnNewGlobalHookOption;
+use js::jsapi::Rooted;
+use js::jsapi::Value;
+use js::jsval::UndefinedValue;
+use js::rust::{Runtime, SIMPLE_GLOBAL_CLASS};
+
 use std::ffi::CStr;
 use std::ptr;
 use std::str;
 
-use js::{JSCLASS_RESERVED_SLOTS_MASK,JSCLASS_RESERVED_SLOTS_SHIFT,JSCLASS_GLOBAL_SLOT_COUNT,JSCLASS_IS_GLOBAL};
-use js::jsapi::JS_GlobalObjectTraceHook;
-use js::jsapi::{CallArgs,CompartmentOptions,OnNewGlobalHookOption,Rooted,Value};
-use js::jsapi::{JS_DefineFunction,JS_Init,JS_NewGlobalObject,JS_EncodeStringToUTF8,JS_ReportError};
-use js::jsapi::{JSAutoCompartment,JSAutoRequest,JSContext,JSClass};
-use js::jsval::UndefinedValue;
-use js::rust::Runtime;
-
-static CLASS: &'static JSClass = &JSClass {
-    name: b"test\0" as *const u8 as *const libc::c_char,
-    flags: JSCLASS_IS_GLOBAL | ((JSCLASS_GLOBAL_SLOT_COUNT & JSCLASS_RESERVED_SLOTS_MASK) << JSCLASS_RESERVED_SLOTS_SHIFT),
-    addProperty: None,
-    delProperty: None,
-    getProperty: None,
-    setProperty: None,
-    enumerate: None,
-    resolve: None,
-    convert: None,
-    finalize: None,
-    call: None,
-    hasInstance: None,
-    construct: None,
-    trace: Some(JS_GlobalObjectTraceHook),
-    reserved: [0 as *mut _; 26]
-};
-
-fn main() {
+#[test]
+fn callback() {
     unsafe {
         JS_Init();
     }
@@ -46,7 +37,7 @@ fn main() {
         let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
         let c_option = CompartmentOptions::default();
         let _ar = JSAutoRequest::new(context);
-        let global = JS_NewGlobalObject(context, CLASS, ptr::null_mut(), h_option, &c_option);
+        let global = JS_NewGlobalObject(context, &SIMPLE_GLOBAL_CLASS, ptr::null_mut(), h_option, &c_option);
         let global_root = Rooted::new(context, global);
         let global = global_root.handle();
         let _ac = JSAutoCompartment::new(context, global.get());

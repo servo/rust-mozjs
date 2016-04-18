@@ -6,6 +6,15 @@ authors = ["The Servo Project Developers"]
 
 build = "build.rs"
 
+[[test]]
+name = "callback"
+[[test]]
+name = "evaluate"
+[[test]]
+name = "stack_limit"
+[[test]]
+name = "vec_conversion"
+
 [features]
 debugmozjs = ['mozjs_sys/debugmozjs']
 
