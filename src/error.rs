@@ -1,6 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 //! Functions to throw JavaScript exceptions from Rust.
 
@@ -12,12 +12,10 @@ use std::ffi::CString;
 use std::{mem, ptr};
 
 /// Format string used to throw javascript errors.
-static ERROR_FORMAT_STRING_STRING: [libc::c_char; 4] = [
-    '{' as libc::c_char,
-    '0' as libc::c_char,
-    '}' as libc::c_char,
-    0 as libc::c_char,
-];
+static ERROR_FORMAT_STRING_STRING: [libc::c_char; 4] = ['{' as libc::c_char,
+                                                        '0' as libc::c_char,
+                                                        '}' as libc::c_char,
+                                                        0 as libc::c_char];
 
 /// Format string struct used to throw `TypeError`s.
 static mut TYPE_ERROR_FORMAT_STRING: JSErrorFormatString = JSErrorFormatString {
@@ -42,8 +40,10 @@ unsafe extern "C" fn get_error_message(_user_ref: *mut libc::c_void,
     match num {
         JSExnType::JSEXN_TYPEERR => &TYPE_ERROR_FORMAT_STRING as *const JSErrorFormatString,
         JSExnType::JSEXN_RANGEERR => &RANGE_ERROR_FORMAT_STRING as *const JSErrorFormatString,
-        _ => panic!("Bad js error number given to get_error_message: {}",
-                    error_number),
+        _ => {
+            panic!("Bad js error number given to get_error_message: {}",
+                   error_number)
+        }
     }
 }
 
