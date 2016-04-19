@@ -1,6 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this file,
+// You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #![crate_name = "js"]
 #![crate_type = "rlib"]
@@ -87,4 +87,3 @@ impl<T: Copy + GCMethods<T>> HeapSizeOf for Heap<T> {
     }
 }
 known_heap_size!(0, JSVal);
-

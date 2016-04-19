@@ -1,6 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 //! Conversions of Rust values to and from `JSVal`.
 //!
@@ -31,16 +31,16 @@ use JSPROP_ENUMERATE;
 use error::throw_type_error;
 use glue::RUST_JS_NumberValue;
 use jsapi::{JSContext, JSObject, JSString, HandleValue, MutableHandleValue};
-use jsapi::{JS_NewUCStringCopyN, JS_StringHasLatin1Chars, JS_WrapValue};
+use jsapi::{JS_GetArrayLength, JS_GetElement};
 use jsapi::{JS_GetLatin1StringCharsAndLength, JS_GetTwoByteStringCharsAndLength};
 use jsapi::{JS_NewArrayObject1, JS_DefineElement, RootedValue, RootedObject};
-use jsapi::{JS_GetArrayLength, JS_GetElement};
+use jsapi::{JS_NewUCStringCopyN, JS_StringHasLatin1Chars, JS_WrapValue};
 use jsval::{BooleanValue, Int32Value, NullValue, UInt32Value, UndefinedValue};
 use jsval::{JSVal, ObjectValue, ObjectOrNullValue, StringValue};
-use rust::{ToBoolean, ToNumber, ToUint16, ToInt32, ToUint32, ToInt64, ToUint64, ToString};
 use libc;
 use num::Float;
 use num::traits::{Bounded, Zero};
+use rust::{ToBoolean, ToNumber, ToUint16, ToInt32, ToUint32, ToInt64, ToUint64, ToString};
 use std::rc::Rc;
 use std::{ptr, slice};
 
@@ -180,9 +180,11 @@ impl ToJSValConvertible for HandleValue {
 }
 
 #[inline]
-unsafe fn convert_int_from_jsval<T, M>(cx: *mut JSContext, value: HandleValue,
+unsafe fn convert_int_from_jsval<T, M>(cx: *mut JSContext,
+                                       value: HandleValue,
                                        option: ConversionBehavior,
-                                       convert_fn: unsafe fn(*mut JSContext, HandleValue) -> Result<M, ()>)
+                                       convert_fn: unsafe fn(*mut JSContext, HandleValue)
+                                                             -> Result<M, ()>)
                                        -> Result<T, ()>
     where T: Bounded + Zero + As<f64>,
           M: Zero + As<T>,
@@ -481,26 +483,28 @@ impl<T: ToJSValConvertible> ToJSValConvertible for Vec<T> {
         for (index, obj) in self.iter().enumerate() {
             obj.to_jsval(cx, val.handle_mut());
 
-            assert!(JS_DefineElement(cx, js_array.handle(),
-                                     index as u32, val.handle(), JSPROP_ENUMERATE, None, None));
+            assert!(JS_DefineElement(cx,
+                                     js_array.handle(),
+                                     index as u32,
+                                     val.handle(),
+                                     JSPROP_ENUMERATE,
+                                     None,
+                                     None));
         }
 
         rval.set(ObjectValue(&*js_array.handle().get()));
     }
 }
 
-impl<C: Clone, T: FromJSValConvertible<Config=C>> FromJSValConvertible for Vec<T> {
+impl<C: Clone, T: FromJSValConvertible<Config = C>> FromJSValConvertible for Vec<T> {
     type Config = C;
 
-    unsafe fn from_jsval(cx: *mut JSContext,
-                         value: HandleValue,
-                         option: C)
-                         -> Result<Vec<T>, ()> {
+    unsafe fn from_jsval(cx: *mut JSContext, value: HandleValue, option: C) -> Result<Vec<T>, ()> {
         let mut length = 0;
 
         if !value.is_object() {
             throw_type_error(cx, "Non objects cannot be converted to sequence");
-            return Err(())
+            return Err(());
         }
 
         let obj = RootedObject::new(cx, value.to_object());

@@ -1,56 +1,56 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this file,
+// You can obtain one at http://mozilla.org/MPL/2.0/.
 
 //! Rust wrappers around the raw JS apis
 
-use libc::{size_t, c_uint, c_char, ptrdiff_t};
-use std::char;
-use std::ffi;
-use std::ptr;
-use std::slice;
-use std::mem;
-use std::u32;
-use std::default::Default;
-use std::intrinsics::return_address;
-use std::ops::{Deref, DerefMut};
-use std::cell::UnsafeCell;
-use std::marker::PhantomData;
-use consts::{JSCLASS_RESERVED_SLOTS_MASK, JSCLASS_RESERVED_SLOTS_SHIFT};
 use consts::{JSCLASS_GLOBAL_SLOT_COUNT, JSCLASS_IS_GLOBAL};
-use jsapi::{JS_NewContext, JS_DestroyContext, JS_NewRuntime, JS_DestroyRuntime};
-use jsapi::{JSContext, JSRuntime, JSObject, JSFlatString, JSFunction, JSString, Symbol, JSScript, jsid, Value};
-use jsapi::{RuntimeOptionsRef, ContextOptionsRef, ReadOnlyCompileOptions};
-use jsapi::{JS_SetErrorReporter, Evaluate3, JSErrorReport};
-use jsapi::{JS_SetGCParameter, JSGCParamKey};
-use jsapi::{Heap, Cell, HeapCellPostBarrier, HeapCellRelocate, HeapValuePostBarrier, HeapValueRelocate};
-use jsapi::{ThingRootKind, ContextFriendFields};
-use jsapi::{CustomAutoRooter, AutoGCRooter, _vftable_CustomAutoRooter, AutoGCRooter_enum0};
-use jsapi::{Rooted, RootedValue, Handle, MutableHandle, MutableHandleBase, RootedBase};
-use jsapi::{MutableHandleValue, HandleValue, HandleObject, HandleBase};
+use consts::{JSCLASS_RESERVED_SLOTS_MASK, JSCLASS_RESERVED_SLOTS_SHIFT};
+use default_heapsize;
+use default_stacksize;
+use glue::{CreateAutoObjectVector, AppendToAutoObjectVector, DeleteAutoObjectVector};
+use glue::{NewCompileOptions, DeleteCompileOptions};
 use jsapi::AutoObjectVector;
-use jsapi::{ToBooleanSlow, ToNumberSlow, ToStringSlow};
-use jsapi::{ToInt32Slow, ToUint32Slow, ToUint16Slow, ToInt64Slow, ToUint64Slow};
-use jsapi::{JSAutoRequest, JS_BeginRequest, JS_EndRequest};
-use jsapi::{JSAutoCompartment, JS_EnterCompartment, JS_LeaveCompartment};
-use jsapi::{JSJitMethodCallArgs, JSJitGetterCallArgs, JSJitSetterCallArgs, CallArgs};
-use jsapi::{NullHandleValue, UndefinedHandleValue, JSID_VOID};
-use jsapi::{CallArgsBase, CallReceiverBase, IncludeUsedRval, UsedRvalBase};
 use jsapi::CompartmentOptions;
-use jsapi::JS_DefineFunctions;
-use jsapi::JS_DefineProperties;
+use jsapi::JSClass;
 use jsapi::JSFunctionSpec;
 use jsapi::JSNativeWrapper;
 use jsapi::JSPropertySpec;
-use jsapi::PropertyDefinitionBehavior;
-use jsapi::JS_SetNativeStackQuota;
-use jsapi::JSClass;
+use jsapi::JS_DefineFunctions;
+use jsapi::JS_DefineProperties;
 use jsapi::JS_GlobalObjectTraceHook;
+use jsapi::JS_SetNativeStackQuota;
+use jsapi::PropertyDefinitionBehavior;
+use jsapi::{CallArgsBase, CallReceiverBase, IncludeUsedRval, UsedRvalBase};
+use jsapi::{CustomAutoRooter, AutoGCRooter, _vftable_CustomAutoRooter, AutoGCRooter_enum0};
+use jsapi::{Heap, Cell, HeapCellPostBarrier, HeapCellRelocate, HeapValuePostBarrier, HeapValueRelocate};
+use jsapi::{JSAutoCompartment, JS_EnterCompartment, JS_LeaveCompartment};
+use jsapi::{JSAutoRequest, JS_BeginRequest, JS_EndRequest};
+use jsapi::{JSContext, JSRuntime, JSObject, JSFlatString, JSFunction, JSString, Symbol, JSScript, jsid, Value};
+use jsapi::{JSJitMethodCallArgs, JSJitGetterCallArgs, JSJitSetterCallArgs, CallArgs};
+use jsapi::{JS_NewContext, JS_DestroyContext, JS_NewRuntime, JS_DestroyRuntime};
+use jsapi::{JS_SetErrorReporter, Evaluate3, JSErrorReport};
+use jsapi::{JS_SetGCParameter, JSGCParamKey};
+use jsapi::{MutableHandleValue, HandleValue, HandleObject, HandleBase};
+use jsapi::{NullHandleValue, UndefinedHandleValue, JSID_VOID};
+use jsapi::{Rooted, RootedValue, Handle, MutableHandle, MutableHandleBase, RootedBase};
+use jsapi::{RuntimeOptionsRef, ContextOptionsRef, ReadOnlyCompileOptions};
+use jsapi::{ThingRootKind, ContextFriendFields};
+use jsapi::{ToBooleanSlow, ToNumberSlow, ToStringSlow};
+use jsapi::{ToInt32Slow, ToUint32Slow, ToUint16Slow, ToInt64Slow, ToUint64Slow};
 use jsval::UndefinedValue;
-use glue::{CreateAutoObjectVector, AppendToAutoObjectVector, DeleteAutoObjectVector};
-use glue::{NewCompileOptions, DeleteCompileOptions};
-use default_stacksize;
-use default_heapsize;
+use libc::{size_t, c_uint, c_char, ptrdiff_t};
+use std::cell::UnsafeCell;
+use std::char;
+use std::default::Default;
+use std::ffi;
+use std::intrinsics::return_address;
+use std::marker::PhantomData;
+use std::mem;
+use std::ops::{Deref, DerefMut};
+use std::ptr;
+use std::slice;
+use std::u32;
 
 // From Gecko:
 // Our "default" stack is what we use in configurations where we don't have a compelling reason to
@@ -164,11 +164,17 @@ impl Runtime {
         self.cx
     }
 
-    pub fn evaluate_script(&self, glob: HandleObject, script: String, filename: String, line_num: u32)
-                    -> Result<(),()> {
+    pub fn evaluate_script(&self,
+                           glob: HandleObject,
+                           script: String,
+                           filename: String,
+                           line_num: u32)
+                           -> Result<(), ()> {
         let script_utf16: Vec<u16> = script.encode_utf16().collect();
         let filename_cstr = ffi::CString::new(filename.as_bytes()).unwrap();
-        debug!("Evaluating script from {} with content {}", filename, script);
+        debug!("Evaluating script from {} with content {}",
+               filename,
+               script);
         // SpiderMonkey does not approve of null pointers.
         let (ptr, len) = if script_utf16.len() == 0 {
             static empty: &'static [u16] = &[];
@@ -186,8 +192,11 @@ impl Runtime {
         let mut rval = RootedValue::new(self.cx(), UndefinedValue());
 
         unsafe {
-            if !Evaluate3(self.cx(), scopechain.ptr, options.ptr,
-                          ptr as *const u16, len as size_t,
+            if !Evaluate3(self.cx(),
+                          scopechain.ptr,
+                          options.ptr,
+                          ptr as *const u16,
+                          len as size_t,
                           rval.handle_mut()) {
                 debug!("...err!");
                 Err(())
@@ -218,42 +227,56 @@ pub trait RootKind {
 }
 
 impl RootKind for *mut JSObject {
-    fn rootKind() -> ThingRootKind { ThingRootKind::THING_ROOT_OBJECT }
+    fn rootKind() -> ThingRootKind {
+        ThingRootKind::THING_ROOT_OBJECT
+    }
 }
 
 impl RootKind for *mut JSFlatString {
-    fn rootKind() -> ThingRootKind { ThingRootKind::THING_ROOT_STRING }
+    fn rootKind() -> ThingRootKind {
+        ThingRootKind::THING_ROOT_STRING
+    }
 }
 
 impl RootKind for *mut JSFunction {
-    fn rootKind() -> ThingRootKind { ThingRootKind::THING_ROOT_OBJECT }
+    fn rootKind() -> ThingRootKind {
+        ThingRootKind::THING_ROOT_OBJECT
+    }
 }
 
 impl RootKind for *mut JSString {
-    fn rootKind() -> ThingRootKind { ThingRootKind::THING_ROOT_STRING }
+    fn rootKind() -> ThingRootKind {
+        ThingRootKind::THING_ROOT_STRING
+    }
 }
 
 impl RootKind for *mut Symbol {
-    fn rootKind() -> ThingRootKind { ThingRootKind::THING_ROOT_OBJECT }
+    fn rootKind() -> ThingRootKind {
+        ThingRootKind::THING_ROOT_OBJECT
+    }
 }
 
 impl RootKind for *mut JSScript {
-    fn rootKind() -> ThingRootKind { ThingRootKind::THING_ROOT_SCRIPT }
+    fn rootKind() -> ThingRootKind {
+        ThingRootKind::THING_ROOT_SCRIPT
+    }
 }
 
 impl RootKind for jsid {
-    fn rootKind() -> ThingRootKind { ThingRootKind::THING_ROOT_ID }
+    fn rootKind() -> ThingRootKind {
+        ThingRootKind::THING_ROOT_ID
+    }
 }
 
 impl RootKind for Value {
-    fn rootKind() -> ThingRootKind { ThingRootKind::THING_ROOT_VALUE }
+    fn rootKind() -> ThingRootKind {
+        ThingRootKind::THING_ROOT_VALUE
+    }
 }
 
 impl<T: RootKind + Copy> Rooted<T> {
     pub fn new_with_addr(cx: *mut JSContext, initial: T, addr: *const u8) -> Rooted<T> {
-        let ctxfriend: &mut ContextFriendFields = unsafe {
-            mem::transmute(cx)
-        };
+        let ctxfriend: &mut ContextFriendFields = unsafe { mem::transmute(cx) };
 
         let kind = T::rootKind() as usize;
         let root = Rooted::<T> {
@@ -272,15 +295,11 @@ impl<T: RootKind + Copy> Rooted<T> {
     }
 
     pub fn handle(&self) -> Handle<T> {
-        unsafe {
-            Handle::from_marked_location(&self.ptr)
-        }
+        unsafe { Handle::from_marked_location(&self.ptr) }
     }
 
     pub fn handle_mut(&mut self) -> MutableHandle<T> {
-        unsafe {
-            MutableHandle::from_marked_location(&mut self.ptr)
-        }
+        unsafe { MutableHandle::from_marked_location(&mut self.ptr) }
     }
 }
 
@@ -314,9 +333,7 @@ impl<T: Copy> MutableHandle<T> {
     }
 
     pub fn to_handle(&self) -> Handle<T> {
-        unsafe {
-            Handle::from_marked_location(self.ptr as *const _)
-        }
+        unsafe { Handle::from_marked_location(self.ptr as *const _) }
     }
 }
 
@@ -348,9 +365,7 @@ const ConstNullValue: *mut JSObject = 0 as *mut JSObject;
 
 impl HandleObject {
     pub fn null() -> HandleObject {
-        unsafe {
-            HandleObject::from_marked_location(&ConstNullValue)
-        }
+        unsafe { HandleObject::from_marked_location(&ConstNullValue) }
     }
 }
 
@@ -364,9 +379,7 @@ impl<T: Copy> MutableHandle<T> {
     }
 
     pub fn handle(&self) -> Handle<T> {
-        unsafe {
-            Handle::from_marked_location(&*self.ptr)
-        }
+        unsafe { Handle::from_marked_location(&*self.ptr) }
     }
 }
 
@@ -380,15 +393,17 @@ impl<T> Drop for Rooted<T> {
 }
 
 impl CustomAutoRooter {
-    pub fn new(cx: *mut JSContext, vftable: &'static _vftable_CustomAutoRooter)
-        -> CustomAutoRooter {
+    pub fn new(cx: *mut JSContext,
+               vftable: &'static _vftable_CustomAutoRooter)
+               -> CustomAutoRooter {
         CustomAutoRooter::new_with_addr(cx, vftable, unsafe { return_address() })
     }
 
-    pub fn new_with_addr(cx: *mut JSContext, vftable: &'static _vftable_CustomAutoRooter, addr: *const u8) -> CustomAutoRooter {
-        let ctxfriend: &mut ContextFriendFields = unsafe {
-            &mut *(cx as *mut ContextFriendFields)
-        };
+    pub fn new_with_addr(cx: *mut JSContext,
+                         vftable: &'static _vftable_CustomAutoRooter,
+                         addr: *const u8)
+                         -> CustomAutoRooter {
+        let ctxfriend: &mut ContextFriendFields = unsafe { &mut *(cx as *mut ContextFriendFields) };
 
         let rooter = CustomAutoRooter {
             _vftable: vftable as *const _,
@@ -396,7 +411,7 @@ impl CustomAutoRooter {
                 down: ctxfriend.autoGCRooters,
                 tag_: AutoGCRooter_enum0::CUSTOM as ptrdiff_t,
                 stackTop: &mut ctxfriend.autoGCRooters as *mut _,
-            }
+            },
         };
 
         ctxfriend.autoGCRooters = unsafe {
@@ -416,15 +431,21 @@ impl Drop for CustomAutoRooter {
 }
 
 impl Default for jsid {
-    fn default() -> jsid { JSID_VOID }
+    fn default() -> jsid {
+        JSID_VOID
+    }
 }
 
 impl Default for Value {
-    fn default() -> Value { UndefinedValue() }
+    fn default() -> Value {
+        UndefinedValue()
+    }
 }
 
 impl Default for CompartmentOptions {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 
 const ChunkShift: usize = 20;
@@ -460,9 +481,15 @@ pub trait GCMethods<T> {
 }
 
 impl GCMethods<jsid> for jsid {
-    fn needs_post_barrier(_: jsid) -> bool { return false; }
-    unsafe fn post_barrier(_: *mut jsid) { unreachable!() }
-    unsafe fn relocate(_: *mut jsid) { unreachable!() }
+    fn needs_post_barrier(_: jsid) -> bool {
+        return false;
+    }
+    unsafe fn post_barrier(_: *mut jsid) {
+        unreachable!()
+    }
+    unsafe fn relocate(_: *mut jsid) {
+        unreachable!()
+    }
 }
 
 impl GCMethods<*mut JSObject> for *mut JSObject {
@@ -515,8 +542,7 @@ impl GCMethods<*mut JSFunction> for *mut JSFunction {
 
 impl GCMethods<Value> for Value {
     fn needs_post_barrier(v: Value) -> bool {
-        return v.is_object() &&
-               unsafe { IsInsideNursery(mem::transmute(v.to_object())) };
+        return v.is_object() && unsafe { IsInsideNursery(mem::transmute(v.to_object())) };
     }
     unsafe fn post_barrier(v: *mut Value) {
         HeapValuePostBarrier(v);
@@ -550,25 +576,19 @@ impl<T: GCMethods<T> + Copy> Heap<T> {
     }
 
     pub fn handle(&self) -> Handle<T> {
-        unsafe {
-            Handle::from_marked_location(self.ptr.get() as *const _)
-        }
+        unsafe { Handle::from_marked_location(self.ptr.get() as *const _) }
     }
 }
 
 impl Default for Heap<*mut JSObject> {
     fn default() -> Heap<*mut JSObject> {
-        Heap {
-            ptr: UnsafeCell::new(ptr::null_mut())
-        }
+        Heap { ptr: UnsafeCell::new(ptr::null_mut()) }
     }
 }
 
 impl Default for Heap<Value> {
     fn default() -> Heap<Value> {
-        Heap {
-            ptr: UnsafeCell::new(Value::default())
-        }
+        Heap { ptr: UnsafeCell::new(Value::default()) }
     }
 }
 
@@ -586,16 +606,18 @@ impl<T: GCMethods<T> + Copy> Drop for Heap<T> {
 
 impl JSAutoRequest {
     pub fn new(cx: *mut JSContext) -> JSAutoRequest {
-        unsafe { JS_BeginRequest(cx); }
-        JSAutoRequest {
-            mContext: cx
+        unsafe {
+            JS_BeginRequest(cx);
         }
+        JSAutoRequest { mContext: cx }
     }
 }
 
 impl Drop for JSAutoRequest {
     fn drop(&mut self) {
-        unsafe { JS_EndRequest(self.mContext); }
+        unsafe {
+            JS_EndRequest(self.mContext);
+        }
     }
 }
 
@@ -603,14 +625,16 @@ impl JSAutoCompartment {
     pub fn new(cx: *mut JSContext, target: *mut JSObject) -> JSAutoCompartment {
         JSAutoCompartment {
             cx_: cx,
-            oldCompartment_: unsafe { JS_EnterCompartment(cx, target) }
+            oldCompartment_: unsafe { JS_EnterCompartment(cx, target) },
         }
     }
 }
 
 impl Drop for JSAutoCompartment {
     fn drop(&mut self) {
-        unsafe { JS_LeaveCompartment(self.cx_, self.oldCompartment_); }
+        unsafe {
+            JS_LeaveCompartment(self.cx_, self.oldCompartment_);
+        }
     }
 }
 
@@ -627,9 +651,7 @@ impl JSJitMethodCallArgs {
 
     pub fn index(&self, i: u32) -> HandleValue {
         assert!(i < self._base.argc_);
-        unsafe {
-            HandleValue::from_marked_location(self._base._base.argv_.offset(i as isize))
-        }
+        unsafe { HandleValue::from_marked_location(self._base._base.argv_.offset(i as isize)) }
     }
 
     pub fn index_mut(&self, i: u32) -> MutableHandleValue {
@@ -640,9 +662,7 @@ impl JSJitMethodCallArgs {
     }
 
     pub fn rval(&self) -> MutableHandleValue {
-        unsafe {
-            MutableHandleValue::from_marked_location(self._base._base.argv_.offset(-2))
-        }
+        unsafe { MutableHandleValue::from_marked_location(self._base._base.argv_.offset(-2)) }
     }
 }
 
@@ -657,15 +677,13 @@ impl CallArgs {
                     argv_: unsafe { vp.offset(2) },
                 },
                 argc_: argc,
-            }
+            },
         }
     }
 
     pub fn index(&self, i: u32) -> HandleValue {
         assert!(i < self._base.argc_);
-        unsafe {
-            HandleValue::from_marked_location(self._base._base.argv_.offset(i as isize))
-        }
+        unsafe { HandleValue::from_marked_location(self._base._base.argv_.offset(i as isize)) }
     }
 
     pub fn index_mut(&self, i: u32) -> MutableHandleValue {
@@ -686,15 +704,11 @@ impl CallArgs {
     }
 
     pub fn rval(&self) -> MutableHandleValue {
-        unsafe {
-            MutableHandleValue::from_marked_location(self._base._base.argv_.offset(-2))
-        }
+        unsafe { MutableHandleValue::from_marked_location(self._base._base.argv_.offset(-2)) }
     }
 
     pub fn thisv(&self) -> HandleValue {
-        unsafe {
-            HandleValue::from_marked_location(self._base._base.argv_.offset(-1))
-        }
+        unsafe { HandleValue::from_marked_location(self._base._base.argv_.offset(-1)) }
     }
 }
 
@@ -715,22 +729,16 @@ impl JSJitSetterCallArgs {
 // Wrappers around things in jsglue.cpp
 
 pub struct AutoObjectVectorWrapper {
-    pub ptr: *mut AutoObjectVector
+    pub ptr: *mut AutoObjectVector,
 }
 
 impl AutoObjectVectorWrapper {
     pub fn new(cx: *mut JSContext) -> AutoObjectVectorWrapper {
-        AutoObjectVectorWrapper {
-            ptr: unsafe {
-                 CreateAutoObjectVector(cx)
-            }
-        }
+        AutoObjectVectorWrapper { ptr: unsafe { CreateAutoObjectVector(cx) } }
     }
 
     pub fn append(&self, obj: *mut JSObject) -> bool {
-        unsafe {
-            AppendToAutoObjectVector(self.ptr, obj)
-        }
+        unsafe { AppendToAutoObjectVector(self.ptr, obj) }
     }
 }
 
@@ -741,14 +749,15 @@ impl Drop for AutoObjectVectorWrapper {
 }
 
 pub struct CompileOptionsWrapper {
-    pub ptr: *mut ReadOnlyCompileOptions
+    pub ptr: *mut ReadOnlyCompileOptions,
 }
 
 impl CompileOptionsWrapper {
-    pub fn new(cx: *mut JSContext, file: *const ::libc::c_char, line: c_uint) -> CompileOptionsWrapper {
-        CompileOptionsWrapper {
-            ptr: unsafe { NewCompileOptions(cx, file, line) }
-        }
+    pub fn new(cx: *mut JSContext,
+               file: *const ::libc::c_char,
+               line: c_uint)
+               -> CompileOptionsWrapper {
+        CompileOptionsWrapper { ptr: unsafe { NewCompileOptions(cx, file, line) } }
     }
 }
 
@@ -805,11 +814,13 @@ pub unsafe fn ToNumber(cx: *mut JSContext, v: HandleValue) -> Result<f64, ()> {
 }
 
 #[inline]
-unsafe fn convert_from_int32<T: Default + Copy>(
-    cx: *mut JSContext,
-    v: HandleValue,
-    conv_fn: unsafe extern "C" fn(*mut JSContext, HandleValue, *mut T) -> bool)
-        -> Result<T, ()> {
+unsafe fn convert_from_int32<T: Default + Copy>(cx: *mut JSContext,
+                                                v: HandleValue,
+                                                conv_fn: unsafe extern "C" fn(*mut JSContext,
+                                                                              HandleValue,
+                                                                              *mut T)
+                                                                              -> bool)
+                                                -> Result<T, ()> {
 
     let val = *v.ptr;
     if val.is_int32() {
@@ -862,7 +873,9 @@ pub unsafe fn ToString(cx: *mut JSContext, v: HandleValue) -> *mut JSString {
     ToStringSlow(cx, v)
 }
 
-pub unsafe extern fn reportError(_cx: *mut JSContext, _: *const c_char, report: *mut JSErrorReport) {
+pub unsafe extern "C" fn reportError(_cx: *mut JSContext,
+                                     _: *const c_char,
+                                     report: *mut JSErrorReport) {
     fn latin1_to_string(bytes: &[u8]) -> String {
         bytes.iter().map(|c| char::from_u32(*c as u32).unwrap()).collect()
     }
@@ -908,7 +921,8 @@ impl JSNativeWrapper {
 ///
 /// - `cx` must be valid.
 /// - This function calls into unaudited C++ code.
-pub unsafe fn define_methods(cx: *mut JSContext, obj: HandleObject,
+pub unsafe fn define_methods(cx: *mut JSContext,
+                             obj: HandleObject,
                              methods: &'static [JSFunctionSpec])
                              -> Result<(), ()> {
     assert!({
@@ -916,13 +930,16 @@ pub unsafe fn define_methods(cx: *mut JSContext, obj: HandleObject,
             Some(&JSFunctionSpec { name, call, nargs, flags, selfHostedName }) => {
                 name.is_null() && call.is_zeroed() && nargs == 0 && flags == 0 &&
                 selfHostedName.is_null()
-            },
+            }
             None => false,
         }
     });
 
-    JS_DefineFunctions(cx, obj, methods.as_ptr(),
-                       PropertyDefinitionBehavior::DefineAllProperties).to_result()
+    JS_DefineFunctions(cx,
+                       obj,
+                       methods.as_ptr(),
+                       PropertyDefinitionBehavior::DefineAllProperties)
+        .to_result()
 }
 
 /// Defines attributes on `obj`. The last entry of `properties` must contain
@@ -940,14 +957,15 @@ pub unsafe fn define_methods(cx: *mut JSContext, obj: HandleObject,
 ///
 /// - `cx` must be valid.
 /// - This function calls into unaudited C++ code.
-pub unsafe fn define_properties(cx: *mut JSContext, obj: HandleObject,
+pub unsafe fn define_properties(cx: *mut JSContext,
+                                obj: HandleObject,
                                 properties: &'static [JSPropertySpec])
                                 -> Result<(), ()> {
     assert!({
         match properties.last() {
             Some(&JSPropertySpec { name, flags, getter, setter }) => {
                 name.is_null() && flags == 0 && getter.is_zeroed() && setter.is_zeroed()
-            },
+            }
             None => false,
         }
     });
@@ -958,7 +976,9 @@ pub unsafe fn define_properties(cx: *mut JSContext, obj: HandleObject,
 /// This is a simple `JSClass` for global objects, primarily intended for tests.
 pub static SIMPLE_GLOBAL_CLASS: JSClass = JSClass {
     name: b"Global\0" as *const u8 as *const _,
-    flags: JSCLASS_IS_GLOBAL | ((JSCLASS_GLOBAL_SLOT_COUNT & JSCLASS_RESERVED_SLOTS_MASK) << JSCLASS_RESERVED_SLOTS_SHIFT),
+    flags: JSCLASS_IS_GLOBAL |
+           ((JSCLASS_GLOBAL_SLOT_COUNT & JSCLASS_RESERVED_SLOTS_MASK) <<
+            JSCLASS_RESERVED_SLOTS_SHIFT),
     addProperty: None,
     delProperty: None,
     getProperty: None,
@@ -971,5 +991,5 @@ pub static SIMPLE_GLOBAL_CLASS: JSClass = JSClass {
     hasInstance: None,
     construct: None,
     trace: Some(JS_GlobalObjectTraceHook),
-    reserved: [0 as *mut _; 26]
+    reserved: [0 as *mut _; 26],
 };

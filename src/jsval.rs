@@ -1,13 +1,12 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this file,
+// You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use jsapi::{JSObject, JSString, JSGCTraceKind};
 use jsapi::JSGCTraceKind::{JSTRACE_OBJECT, JSTRACE_STRING};
+use jsapi::JSValueType;
 use jsapi::Value;
 use jsapi::jsval_layout;
-use jsapi::JSValueType;
-
+use jsapi::{JSObject, JSString, JSGCTraceKind};
 use libc::c_void;
 use std::mem;
 
@@ -26,29 +25,29 @@ const JSVAL_TAG_CLEAR: u32 = 0xFFFFFF80;
 #[repr(u32)]
 #[allow(dead_code)]
 enum ValueTag {
-    INT32     = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_INT32 as u32),
+    INT32 = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_INT32 as u32),
     UNDEFINED = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_UNDEFINED as u32),
-    STRING    = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_STRING as u32),
-    SYMBOL    = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_SYMBOL as u32),
-    BOOLEAN   = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_BOOLEAN as u32),
-    MAGIC     = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_MAGIC as u32),
-    NULL      = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_NULL as u32),
-    OBJECT    = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_OBJECT as u32),
+    STRING = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_STRING as u32),
+    SYMBOL = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_SYMBOL as u32),
+    BOOLEAN = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_BOOLEAN as u32),
+    MAGIC = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_MAGIC as u32),
+    NULL = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_NULL as u32),
+    OBJECT = JSVAL_TAG_MAX_DOUBLE | (JSValueType::JSVAL_TYPE_OBJECT as u32),
 }
 
 #[cfg(target_pointer_width = "32")]
 #[repr(u32)]
 #[allow(dead_code)]
 enum ValueTag {
-    PRIVATE   = 0,
-    INT32     = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_INT32 as u32),
+    PRIVATE = 0,
+    INT32 = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_INT32 as u32),
     UNDEFINED = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_UNDEFINED as u32),
-    STRING    = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_STRING as u32),
-    SYMBOL    = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_SYMBOL as u32),
-    BOOLEAN   = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_BOOLEAN as u32),
-    MAGIC     = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_MAGIC as u32),
-    NULL      = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_NULL as u32),
-    OBJECT    = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_OBJECT as u32),
+    STRING = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_STRING as u32),
+    SYMBOL = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_SYMBOL as u32),
+    BOOLEAN = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_BOOLEAN as u32),
+    MAGIC = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_MAGIC as u32),
+    NULL = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_NULL as u32),
+    OBJECT = JSVAL_TAG_CLEAR as u32 | (JSValueType::JSVAL_TYPE_OBJECT as u32),
 }
 
 #[cfg(target_pointer_width = "64")]
@@ -56,14 +55,14 @@ enum ValueTag {
 #[allow(dead_code)]
 enum ValueShiftedTag {
     MAX_DOUBLE = (((JSVAL_TAG_MAX_DOUBLE as u64) << JSVAL_TAG_SHIFT) | 0xFFFFFFFFu64),
-    INT32      = ((ValueTag::INT32 as u64)      << JSVAL_TAG_SHIFT),
-    UNDEFINED  = ((ValueTag::UNDEFINED as u64)  << JSVAL_TAG_SHIFT),
-    STRING     = ((ValueTag::STRING as u64)     << JSVAL_TAG_SHIFT),
-    SYMBOL     = ((ValueTag::SYMBOL as u64)     << JSVAL_TAG_SHIFT),
-    BOOLEAN    = ((ValueTag::BOOLEAN as u64)    << JSVAL_TAG_SHIFT),
-    MAGIC      = ((ValueTag::MAGIC as u64)      << JSVAL_TAG_SHIFT),
-    NULL       = ((ValueTag::NULL as u64)       << JSVAL_TAG_SHIFT),
-    OBJECT     = ((ValueTag::OBJECT as u64)     << JSVAL_TAG_SHIFT),
+    INT32 = ((ValueTag::INT32 as u64)      << JSVAL_TAG_SHIFT),
+    UNDEFINED = ((ValueTag::UNDEFINED as u64)  << JSVAL_TAG_SHIFT),
+    STRING = ((ValueTag::STRING as u64)     << JSVAL_TAG_SHIFT),
+    SYMBOL = ((ValueTag::SYMBOL as u64)     << JSVAL_TAG_SHIFT),
+    BOOLEAN = ((ValueTag::BOOLEAN as u64)    << JSVAL_TAG_SHIFT),
+    MAGIC = ((ValueTag::MAGIC as u64)      << JSVAL_TAG_SHIFT),
+    NULL = ((ValueTag::NULL as u64)       << JSVAL_TAG_SHIFT),
+    OBJECT = ((ValueTag::OBJECT as u64)     << JSVAL_TAG_SHIFT),
 }
 
 
@@ -71,11 +70,7 @@ enum ValueShiftedTag {
 const JSVAL_PAYLOAD_MASK: u64 = 0x00007FFFFFFFFFFF;
 
 fn AsJSVal(val: u64) -> JSVal {
-    JSVal {
-        data: jsval_layout {
-            _bindgen_data_: val
-        }
-    }
+    JSVal { data: jsval_layout { _bindgen_data_: val } }
 }
 
 #[cfg(target_pointer_width = "64")]
