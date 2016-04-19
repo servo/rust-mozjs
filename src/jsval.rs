@@ -2,12 +2,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use jsapi::{JSObject, JSString, JSGCTraceKind};
 use jsapi::JSGCTraceKind::{JSTRACE_OBJECT, JSTRACE_STRING};
+use jsapi::JSValueType;
 use jsapi::Value;
 use jsapi::jsval_layout;
-use jsapi::JSValueType;
-
+use jsapi::{JSObject, JSString, JSGCTraceKind};
 use libc::c_void;
 use std::mem;
 

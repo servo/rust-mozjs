@@ -1,6 +1,6 @@
 use libc::{size_t, intptr_t, uintptr_t, ptrdiff_t, FILE};
-use std::marker::PhantomData;
 use std::cell::UnsafeCell;
+use std::marker::PhantomData;
 
 pub enum va_list { }
 pub enum JSPrincipals { }

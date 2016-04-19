@@ -4,55 +4,53 @@
 
 //! Rust wrappers around the raw JS apis
 
-use libc::{size_t, c_uint, c_char, ptrdiff_t};
-use std::char;
-use std::ffi;
-use std::ptr;
-use std::slice;
-use std::mem;
-use std::u32;
-use std::default::Default;
-use std::intrinsics::return_address;
-use std::ops::{Deref, DerefMut};
-use std::cell::UnsafeCell;
-use std::marker::PhantomData;
-use consts::{JSCLASS_RESERVED_SLOTS_MASK, JSCLASS_RESERVED_SLOTS_SHIFT};
 use consts::{JSCLASS_GLOBAL_SLOT_COUNT, JSCLASS_IS_GLOBAL};
-use jsapi::{JS_NewContext, JS_DestroyContext, JS_NewRuntime, JS_DestroyRuntime};
-use jsapi::{JSContext, JSRuntime, JSObject, JSFlatString, JSFunction, JSString, Symbol, JSScript,
-            jsid, Value};
-use jsapi::{RuntimeOptionsRef, ContextOptionsRef, ReadOnlyCompileOptions};
-use jsapi::{JS_SetErrorReporter, Evaluate3, JSErrorReport};
-use jsapi::{JS_SetGCParameter, JSGCParamKey};
-use jsapi::{Heap, Cell, HeapCellPostBarrier, HeapCellRelocate, HeapValuePostBarrier,
-            HeapValueRelocate};
-use jsapi::{ThingRootKind, ContextFriendFields};
-use jsapi::{CustomAutoRooter, AutoGCRooter, _vftable_CustomAutoRooter, AutoGCRooter_enum0};
-use jsapi::{Rooted, RootedValue, Handle, MutableHandle, MutableHandleBase, RootedBase};
-use jsapi::{MutableHandleValue, HandleValue, HandleObject, HandleBase};
+use consts::{JSCLASS_RESERVED_SLOTS_MASK, JSCLASS_RESERVED_SLOTS_SHIFT};
+use default_heapsize;
+use default_stacksize;
+use glue::{CreateAutoObjectVector, AppendToAutoObjectVector, DeleteAutoObjectVector};
+use glue::{NewCompileOptions, DeleteCompileOptions};
 use jsapi::AutoObjectVector;
-use jsapi::{ToBooleanSlow, ToNumberSlow, ToStringSlow};
-use jsapi::{ToInt32Slow, ToUint32Slow, ToUint16Slow, ToInt64Slow, ToUint64Slow};
-use jsapi::{JSAutoRequest, JS_BeginRequest, JS_EndRequest};
-use jsapi::{JSAutoCompartment, JS_EnterCompartment, JS_LeaveCompartment};
-use jsapi::{JSJitMethodCallArgs, JSJitGetterCallArgs, JSJitSetterCallArgs, CallArgs};
-use jsapi::{NullHandleValue, UndefinedHandleValue, JSID_VOID};
-use jsapi::{CallArgsBase, CallReceiverBase, IncludeUsedRval, UsedRvalBase};
 use jsapi::CompartmentOptions;
-use jsapi::JS_DefineFunctions;
-use jsapi::JS_DefineProperties;
+use jsapi::JSClass;
 use jsapi::JSFunctionSpec;
 use jsapi::JSNativeWrapper;
 use jsapi::JSPropertySpec;
-use jsapi::PropertyDefinitionBehavior;
-use jsapi::JS_SetNativeStackQuota;
-use jsapi::JSClass;
+use jsapi::JS_DefineFunctions;
+use jsapi::JS_DefineProperties;
 use jsapi::JS_GlobalObjectTraceHook;
+use jsapi::JS_SetNativeStackQuota;
+use jsapi::PropertyDefinitionBehavior;
+use jsapi::{CallArgsBase, CallReceiverBase, IncludeUsedRval, UsedRvalBase};
+use jsapi::{CustomAutoRooter, AutoGCRooter, _vftable_CustomAutoRooter, AutoGCRooter_enum0};
+use jsapi::{Heap, Cell, HeapCellPostBarrier, HeapCellRelocate, HeapValuePostBarrier, HeapValueRelocate};
+use jsapi::{JSAutoCompartment, JS_EnterCompartment, JS_LeaveCompartment};
+use jsapi::{JSAutoRequest, JS_BeginRequest, JS_EndRequest};
+use jsapi::{JSContext, JSRuntime, JSObject, JSFlatString, JSFunction, JSString, Symbol, JSScript, jsid, Value};
+use jsapi::{JSJitMethodCallArgs, JSJitGetterCallArgs, JSJitSetterCallArgs, CallArgs};
+use jsapi::{JS_NewContext, JS_DestroyContext, JS_NewRuntime, JS_DestroyRuntime};
+use jsapi::{JS_SetErrorReporter, Evaluate3, JSErrorReport};
+use jsapi::{JS_SetGCParameter, JSGCParamKey};
+use jsapi::{MutableHandleValue, HandleValue, HandleObject, HandleBase};
+use jsapi::{NullHandleValue, UndefinedHandleValue, JSID_VOID};
+use jsapi::{Rooted, RootedValue, Handle, MutableHandle, MutableHandleBase, RootedBase};
+use jsapi::{RuntimeOptionsRef, ContextOptionsRef, ReadOnlyCompileOptions};
+use jsapi::{ThingRootKind, ContextFriendFields};
+use jsapi::{ToBooleanSlow, ToNumberSlow, ToStringSlow};
+use jsapi::{ToInt32Slow, ToUint32Slow, ToUint16Slow, ToInt64Slow, ToUint64Slow};
 use jsval::UndefinedValue;
-use glue::{CreateAutoObjectVector, AppendToAutoObjectVector, DeleteAutoObjectVector};
-use glue::{NewCompileOptions, DeleteCompileOptions};
-use default_stacksize;
-use default_heapsize;
+use libc::{size_t, c_uint, c_char, ptrdiff_t};
+use std::cell::UnsafeCell;
+use std::char;
+use std::default::Default;
+use std::ffi;
+use std::intrinsics::return_address;
+use std::marker::PhantomData;
+use std::mem;
+use std::ops::{Deref, DerefMut};
+use std::ptr;
+use std::slice;
+use std::u32;
 
 // From Gecko:
 // Our "default" stack is what we use in configurations where we don't have a compelling reason to

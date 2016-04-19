@@ -2,29 +2,30 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import argparse, subprocess;
+import subprocess
 
-bindgen = "bindgen";
+bindgen = "bindgen"
 
 jsapi = "../mozjs/js/src/jsapi.h"
 includes = [
     "-I", "../mozjs/js/src/dist/include",
-    ]
+]
 sysincludes = [
     "-isystem", "/usr/lib/x86_64-linux-gnu/gcc/x86_64-linux-gnu/4.5/include",
     "-isystem", "/usr/lib/gcc/x86_64-redhat-linux/4.7.0/include",
-    ]
+]
 
 args = [
     bindgen,
     "-l", "mozjs",
     "-o", "jsapi.rs",
-    "-match" ,"js",
-    jsapi]
+    "-match", "js",
+    jsapi
+]
 args += includes + sysincludes
 
 subprocess.call(args)
-        
+
 # To generate jsglue:
 # DYLD_LIBRARY_PATH=~/versioned/rust-mozilla/build/llvm/x86_64-apple-darwin/Release+Asserts/lib/ ~/versioned/rust-bindgen/bindgen ./jsglue.c -I ../../build/src/mozjs/dist/include/ -match glue > glue.rs
 

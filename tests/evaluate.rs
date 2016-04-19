@@ -12,7 +12,6 @@ use js::jsapi::JS_NewGlobalObject;
 use js::jsapi::OnNewGlobalHookOption;
 use js::jsapi::RootedObject;
 use js::rust::{Runtime, SIMPLE_GLOBAL_CLASS};
-
 use std::ptr;
 
 #[test]

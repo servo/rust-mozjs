@@ -20,7 +20,6 @@ use js::jsapi::Rooted;
 use js::jsapi::Value;
 use js::jsval::UndefinedValue;
 use js::rust::{Runtime, SIMPLE_GLOBAL_CLASS};
-
 use std::ffi::CStr;
 use std::ptr;
 use std::str;
