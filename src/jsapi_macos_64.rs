@@ -639,6 +639,7 @@ pub struct InternalHandle<T> {
     pub _phantom0: PhantomData<T>,
 }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct Rooted<T> {
     pub _base: RootedBase<T>,
     pub stack: *mut *mut Rooted<*mut ::libc::c_void>,
@@ -1291,6 +1292,7 @@ pub struct AutoFunctionVector;
 #[derive(Copy, Clone)]
 pub struct AutoScriptVector;
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct CustomAutoRooter {
     pub _vftable: *const _vftable_CustomAutoRooter,
     pub _base: AutoGCRooter,
@@ -1450,6 +1452,7 @@ pub type JS_ICUFreeFn =
     ::std::option::Option<unsafe extern "C" fn(arg1: *const ::libc::c_void,
                                                p: *mut ::libc::c_void)>;
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct JSAutoRequest {
     pub mContext: *mut JSContext,
 }
@@ -1541,6 +1544,7 @@ pub struct AutoSaveContextOptions {
     pub oldOptions_: ContextOptions,
 }
 #[repr(C)]
+#[unsafe_no_drop_flag]
 pub struct JSAutoCompartment {
     pub cx_: *mut JSContext,
     pub oldCompartment_: *mut JSCompartment,
