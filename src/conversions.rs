@@ -39,8 +39,7 @@ use jsval::{BooleanValue, Int32Value, NullValue, UInt32Value, UndefinedValue};
 use jsval::{JSVal, ObjectValue, ObjectOrNullValue, StringValue};
 use rust::{ToBoolean, ToNumber, ToUint16, ToInt32, ToUint32, ToInt64, ToUint64, ToString};
 use libc;
-use num::Float;
-use num::traits::{Bounded, Zero};
+use num_traits::{Bounded, Float, Zero};
 use std::rc::Rc;
 use std::{ptr, slice};
 

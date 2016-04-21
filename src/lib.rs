@@ -19,7 +19,7 @@ extern crate libc;
 #[macro_use]
 extern crate log;
 extern crate mozjs_sys;
-extern crate num;
+extern crate num_traits;
 extern crate rustc_serialize as serialize;
 
 #[cfg(target_os = "linux")]
