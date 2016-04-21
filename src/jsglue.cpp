@@ -723,4 +723,70 @@ CollectServoSizes(JSRuntime *rt, JS::ServoSizes *sizes)
                               /* ObjectPrivateVisitor = */ nullptr, sizes);
 }
 
+void
+GetUint8ClampedArrayLengthAndData(JSObject* obj, uint32_t* length, uint8_t** data)
+{
+  js::GetUint8ClampedArrayLengthAndData(obj, length, data);
+}
+
+void
+GetUint8ArrayLengthAndData(JSObject* obj, uint32_t* length, uint8_t** data)
+{
+  js::GetUint8ArrayLengthAndData(obj, length, data);
+}
+
+void
+GetUint16ArrayLengthAndData(JSObject* obj, uint32_t* length, uint16_t** data)
+{
+  js::GetUint16ArrayLengthAndData(obj, length, data);
+}
+
+void
+GetUint32ArrayLengthAndData(JSObject* obj, uint32_t* length, uint32_t** data)
+{
+  js::GetUint32ArrayLengthAndData(obj, length, data);
+}
+
+void
+GetInt8ArrayLengthAndData(JSObject* obj, uint32_t* length, int8_t** data)
+{
+  js::GetInt8ArrayLengthAndData(obj, length, data);
+}
+
+void
+GetInt16ArrayLengthAndData(JSObject* obj, uint32_t* length, int16_t** data)
+{
+  js::GetInt16ArrayLengthAndData(obj, length, data);
+}
+
+void
+GetInt32ArrayLengthAndData(JSObject* obj, uint32_t* length, int32_t** data)
+{
+  js::GetInt32ArrayLengthAndData(obj, length, data);
+}
+
+void
+GetFloat32ArrayLengthAndData(JSObject* obj, uint32_t* length, float** data)
+{
+  js::GetFloat32ArrayLengthAndData(obj, length, data);
+}
+
+void
+GetFloat64ArrayLengthAndData(JSObject* obj, uint32_t* length, double** data)
+{
+  js::GetFloat64ArrayLengthAndData(obj, length, data);
+}
+
+void
+GetArrayBufferLengthAndData(JSObject* obj, uint32_t* length, uint8_t** data)
+{
+  js::GetArrayBufferLengthAndData(obj, length, data);
+}
+
+void
+GetArrayBufferViewLengthAndData(JSObject* obj, uint32_t* length, uint8_t** data)
+{
+  js::GetArrayBufferViewLengthAndData(obj, length, data);
+}
+
 } // extern "C"

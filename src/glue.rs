@@ -1,4 +1,8 @@
-use jsapi::*;
+use jsapi::{JSContext, JSObject, HandleObject, HandleValue, HandleId, JSString, jsid, JSJitInfo};
+use jsapi::{JSRuntime, JSFunction, JSErrorFormatString, AutoObjectVector, Value, MutableHandle};
+use jsapi::{ReadOnlyCompileOptions, JSPropertyDescriptor, FreeOp, JSType, ESClassValue};
+use jsapi::{CallArgs, AutoIdVector, ObjectOpResult, MutableHandleObject, Handle, MutableHandleValue};
+use jsapi::{JSTracer, ServoSizes, IsAcceptableThis, NativeImpl};
 
 pub const JS_STRUCTURED_CLONE_VERSION: u32 = 5;
 
@@ -239,4 +243,37 @@ extern "C" {
                                     obj: *mut JSObject) -> bool;
     pub fn DeleteAutoObjectVector(v: *mut AutoObjectVector);
     pub fn CollectServoSizes(rt: *mut JSRuntime, sizes: *mut ServoSizes) -> bool;
+    pub fn GetUint8ArrayLengthAndData(obj: *mut JSObject,
+                                      length: *mut u32,
+                                      data: *mut *mut u8);
+    pub fn GetUint16ArrayLengthAndData(obj: *mut JSObject,
+                                       length: *mut u32,
+                                       data: *mut *mut u16);
+    pub fn GetUint32ArrayLengthAndData(obj: *mut JSObject,
+                                       length: *mut u32,
+                                       data: *mut *mut u32);
+    pub fn GetInt8ArrayLengthAndData(obj: *mut JSObject,
+                                     length: *mut u32,
+                                     data: *mut *mut i8);
+    pub fn GetInt16ArrayLengthAndData(obj: *mut JSObject,
+                                      length: *mut u32,
+                                      data: *mut *mut i16);
+    pub fn GetInt32ArrayLengthAndData(obj: *mut JSObject,
+                                      length: *mut u32,
+                                      data: *mut *mut i32);
+    pub fn GetUint8ClampedArrayLengthAndData(obj: *mut JSObject,
+                                             length: *mut u32,
+                                             data: *mut *mut u8);
+    pub fn GetFloat32ArrayLengthAndData(obj: *mut JSObject,
+                                        length: *mut u32,
+                                        data: *mut *mut f32);
+    pub fn GetFloat64ArrayLengthAndData(obj: *mut JSObject,
+                                        length: *mut u32,
+                                        data: *mut *mut f64);
+    pub fn GetArrayBufferLengthAndData(obj: *mut JSObject,
+                                       length: *mut u32,
+                                       data: *mut *mut u8);
+    pub fn GetArrayBufferViewLengthAndData(obj: *mut JSObject,
+                                           length: *mut u32,
+                                           data: *mut *mut u8);
 }
