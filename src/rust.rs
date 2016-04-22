@@ -178,7 +178,6 @@ impl Runtime {
             (script_utf16.as_ptr(), script_utf16.len() as c_uint)
         };
         assert!(!ptr.is_null());
-        let _ar = JSAutoRequest::new(self.cx());
         let _ac = JSAutoCompartment::new(self.cx(), glob.get());
         let options = CompileOptionsWrapper::new(self.cx(), filename_cstr.as_ptr(), line_num);
 
