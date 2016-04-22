@@ -17,6 +17,7 @@ use js::jsapi::JS_NewGlobalObject;
 use js::jsapi::JS_ReportError;
 use js::jsapi::OnNewGlobalHookOption;
 use js::jsapi::Rooted;
+use js::jsapi::RootedValue;
 use js::jsapi::Value;
 use js::jsval::UndefinedValue;
 use js::rust::{Runtime, SIMPLE_GLOBAL_CLASS};
@@ -43,8 +44,9 @@ fn callback() {
         let function = JS_DefineFunction(context, global, b"puts\0".as_ptr() as *const libc::c_char,
                                          Some(puts), 1, 0);
         assert!(!function.is_null());
-        let javascript = "puts('Test Iñtërnâtiônàlizætiøn ┬─┬ノ( º _ ºノ) ');".to_string();
-        let _ = runtime.evaluate_script(global, javascript, "test.js".to_string(), 0);
+        let javascript = "puts('Test Iñtërnâtiônàlizætiøn ┬─┬ノ( º _ ºノ) ');";
+        let mut rval = RootedValue::new(runtime.cx(), UndefinedValue());
+        let _ = runtime.evaluate_script(global, javascript, "test.js", 0, rval.handle_mut());
     }
 }
 
