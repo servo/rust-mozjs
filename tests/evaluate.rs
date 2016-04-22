@@ -11,6 +11,8 @@ use js::jsapi::JS_Init;
 use js::jsapi::JS_NewGlobalObject;
 use js::jsapi::OnNewGlobalHookOption;
 use js::jsapi::RootedObject;
+use js::jsapi::RootedValue;
+use js::jsval::UndefinedValue;
 use js::rust::{Runtime, SIMPLE_GLOBAL_CLASS};
 
 use std::ptr;
@@ -28,7 +30,8 @@ fn evaluate() {
                                OnNewGlobalHookOption::FireOnNewGlobalHook,
                                &CompartmentOptions::default())
         );
-        assert!(rt.evaluate_script(global.handle(), "1 + 1".to_owned(),
-                                   "test".to_owned(), 1).is_ok());
+        let mut rval = RootedValue::new(cx, UndefinedValue());
+        assert!(rt.evaluate_script(global.handle(), "1 + 1",
+                                   "test", 1, rval.handle_mut()).is_ok());
     }
 }
