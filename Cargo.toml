@@ -15,6 +15,9 @@ name = "stack_limit"
 [[test]]
 name = "vec_conversion"
 
+[lib]
+doctest = false
+
 [features]
 debugmozjs = ['mozjs_sys/debugmozjs']
 

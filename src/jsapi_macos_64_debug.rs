@@ -58,6 +58,7 @@ pub const JSREPORT_WARNING: ::std::os::raw::c_uint = 1;
 pub const JSREPORT_EXCEPTION: ::std::os::raw::c_uint = 2;
 pub const JSREPORT_STRICT: ::std::os::raw::c_uint = 4;
 pub const JSREPORT_STRICT_MODE_ERROR: ::std::os::raw::c_uint = 8;
+pub const JS_DEFAULT_ZEAL_FREQ: ::std::os::raw::c_uint = 100;
 pub const JSITER_ENUMERATE: ::std::os::raw::c_uint = 1;
 pub const JSITER_FOREACH: ::std::os::raw::c_uint = 2;
 pub const JSITER_KEYVALUE: ::std::os::raw::c_uint = 4;
@@ -482,6 +483,7 @@ pub struct PerThreadDataFriendFields_RuntimeDummy {
 pub struct PerThreadDataFriendFields_RuntimeDummy_PerThreadDummy {
     pub field1: *mut ::std::os::raw::c_void,
     pub field2: usize,
+    pub field3: u64,
 }
 impl ::std::clone::Clone for
  PerThreadDataFriendFields_RuntimeDummy_PerThreadDummy {
@@ -490,7 +492,7 @@ impl ::std::clone::Clone for
 #[test]
 fn bindgen_test_layout_PerThreadDataFriendFields_RuntimeDummy_PerThreadDummy() {
     assert_eq!(::std::mem::size_of::<PerThreadDataFriendFields_RuntimeDummy_PerThreadDummy>()
-               , 16usize);
+               , 24usize);
     assert_eq!(::std::mem::align_of::<PerThreadDataFriendFields_RuntimeDummy_PerThreadDummy>()
                , 8usize);
 }
@@ -500,7 +502,7 @@ impl ::std::clone::Clone for PerThreadDataFriendFields_RuntimeDummy {
 #[test]
 fn bindgen_test_layout_PerThreadDataFriendFields_RuntimeDummy() {
     assert_eq!(::std::mem::size_of::<PerThreadDataFriendFields_RuntimeDummy>()
-               , 32usize);
+               , 40usize);
     assert_eq!(::std::mem::align_of::<PerThreadDataFriendFields_RuntimeDummy>()
                , 8usize);
 }
@@ -743,10 +745,27 @@ pub struct AutoAssertOnGC;
  * class does not disable the static rooting hazard analysis.
  */
 #[repr(C)]
-#[derive(Debug, Copy)]
-pub struct AutoAssertNoAlloc;
-impl ::std::clone::Clone for AutoAssertNoAlloc {
-    fn clone(&self) -> Self { *self }
+#[unsafe_no_drop_flag]
+#[derive(Debug)]
+pub struct AutoAssertNoAlloc {
+    pub gc: *mut GCRuntime,
+}
+#[test]
+fn bindgen_test_layout_AutoAssertNoAlloc() {
+    assert_eq!(::std::mem::size_of::<AutoAssertNoAlloc>() , 8usize);
+    assert_eq!(::std::mem::align_of::<AutoAssertNoAlloc>() , 8usize);
+}
+extern "C" {
+    fn _ZN2JS17AutoAssertNoAlloc13disallowAllocEP9JSRuntime(this:
+                                                                *mut AutoAssertNoAlloc,
+                                                            rt:
+                                                                *mut JSRuntime);
+}
+impl AutoAssertNoAlloc {
+    #[inline]
+    pub unsafe fn disallowAlloc(&mut self, rt: *mut JSRuntime) {
+        _ZN2JS17AutoAssertNoAlloc13disallowAllocEP9JSRuntime(&mut *self, rt)
+    }
 }
 /**
  * Disable the static rooting hazard analysis in the live region and assert if
@@ -763,21 +782,24 @@ impl ::std::clone::Clone for AutoAssertNoAlloc {
  *       on this class.
  */
 #[repr(C)]
-#[derive(Debug, Copy)]
+#[unsafe_no_drop_flag]
+#[derive(Debug)]
 pub struct AutoSuppressGCAnalysis {
     pub _base: AutoAssertNoAlloc,
 }
-impl ::std::clone::Clone for AutoSuppressGCAnalysis {
-    fn clone(&self) -> Self { *self }
+#[test]
+fn bindgen_test_layout_AutoSuppressGCAnalysis() {
+    assert_eq!(::std::mem::size_of::<AutoSuppressGCAnalysis>() , 8usize);
+    assert_eq!(::std::mem::align_of::<AutoSuppressGCAnalysis>() , 8usize);
 }
 #[repr(C)]
 pub struct AutoAssertGCCallback {
-    pub _bindgen_opaque_blob: u8,
+    pub _bindgen_opaque_blob: u64,
 }
 #[test]
 fn bindgen_test_layout_AutoAssertGCCallback() {
-    assert_eq!(::std::mem::size_of::<AutoAssertGCCallback>() , 1usize);
-    assert_eq!(::std::mem::align_of::<AutoAssertGCCallback>() , 1usize);
+    assert_eq!(::std::mem::size_of::<AutoAssertGCCallback>() , 8usize);
+    assert_eq!(::std::mem::align_of::<AutoAssertGCCallback>() , 8usize);
 }
 /**
  * Place AutoCheckCannotGC in scopes that you believe can never GC. These
@@ -880,7 +902,7 @@ fn bindgen_test_layout_CallbackTracer() {
     assert_eq!(::std::mem::align_of::<CallbackTracer>() , 8usize);
 }
 extern "C" {
-    fn _ZN2JS14CallbackTracer18getTracingEdgeNameEPcy(this:
+    fn _ZN2JS14CallbackTracer18getTracingEdgeNameEPcm(this:
                                                           *mut CallbackTracer,
                                                       buffer:
                                                           *mut ::std::os::raw::c_char,
@@ -891,7 +913,7 @@ impl CallbackTracer {
     pub unsafe fn getTracingEdgeName(&mut self,
                                      buffer: *mut ::std::os::raw::c_char,
                                      bufferSize: usize) {
-        _ZN2JS14CallbackTracer18getTracingEdgeNameEPcy(&mut *self, buffer,
+        _ZN2JS14CallbackTracer18getTracingEdgeNameEPcm(&mut *self, buffer,
                                                        bufferSize)
     }
 }
@@ -1407,6 +1429,34 @@ pub struct VoidDefaultAdaptor<S> {
 pub struct IdentityDefaultAdaptor<S> {
     pub _phantom0: ::std::marker::PhantomData<S>,
 }
+#[repr(C)]
+#[derive(Debug, Copy)]
+pub struct ValueAlignmentTester {
+    pub c: ::std::os::raw::c_char,
+    pub v: Value,
+}
+impl ::std::clone::Clone for ValueAlignmentTester {
+    fn clone(&self) -> Self { *self }
+}
+#[test]
+fn bindgen_test_layout_ValueAlignmentTester() {
+    assert_eq!(::std::mem::size_of::<ValueAlignmentTester>() , 16usize);
+    assert_eq!(::std::mem::align_of::<ValueAlignmentTester>() , 8usize);
+}
+#[repr(C)]
+#[derive(Debug, Copy)]
+pub struct LayoutAlignmentTester {
+    pub c: ::std::os::raw::c_char,
+    pub l: jsval_layout,
+}
+impl ::std::clone::Clone for LayoutAlignmentTester {
+    fn clone(&self) -> Self { *self }
+}
+#[test]
+fn bindgen_test_layout_LayoutAlignmentTester() {
+    assert_eq!(::std::mem::size_of::<LayoutAlignmentTester>() , 16usize);
+    assert_eq!(::std::mem::align_of::<LayoutAlignmentTester>() , 8usize);
+}
 pub type JSNative =
     ::std::option::Option<unsafe extern "C" fn(cx: *mut JSContext,
                                                argc: ::std::os::raw::c_uint,
@@ -1422,9 +1472,15 @@ impl ::std::clone::Clone for UsedRvalBase {
 #[derive(Debug, Copy)]
 pub struct IncludeUsedRval {
     pub _base: UsedRvalBase,
+    pub usedRval_: bool,
 }
 impl ::std::clone::Clone for IncludeUsedRval {
     fn clone(&self) -> Self { *self }
+}
+#[test]
+fn bindgen_test_layout_IncludeUsedRval() {
+    assert_eq!(::std::mem::size_of::<IncludeUsedRval>() , 1usize);
+    assert_eq!(::std::mem::align_of::<IncludeUsedRval>() , 1usize);
 }
 #[repr(C)]
 #[derive(Debug, Copy)]
@@ -2303,7 +2359,7 @@ extern "C" {
                                                                                    *const JSStructuredCloneCallbacks,
                                                                                closure:
                                                                                    *mut ::std::os::raw::c_void);
-    fn _ZN27JSAutoStructuredCloneBuffer4copyEPKyyjPK26JSStructuredCloneCallbacksPv(this:
+    fn _ZN27JSAutoStructuredCloneBuffer4copyEPKymjPK26JSStructuredCloneCallbacksPv(this:
                                                                                        *mut JSAutoStructuredCloneBuffer,
                                                                                    data:
                                                                                        *const u64,
@@ -2316,7 +2372,7 @@ extern "C" {
                                                                                    closure:
                                                                                        *mut ::std::os::raw::c_void)
      -> bool;
-    fn _ZN27JSAutoStructuredCloneBuffer5adoptEPyyjPK26JSStructuredCloneCallbacksPv(this:
+    fn _ZN27JSAutoStructuredCloneBuffer5adoptEPymjPK26JSStructuredCloneCallbacksPv(this:
                                                                                        *mut JSAutoStructuredCloneBuffer,
                                                                                    data:
                                                                                        *mut u64,
@@ -2328,18 +2384,18 @@ extern "C" {
                                                                                        *const JSStructuredCloneCallbacks,
                                                                                    closure:
                                                                                        *mut ::std::os::raw::c_void);
-    fn _ZN27JSAutoStructuredCloneBuffer5stealEPPyS0_PjPPK26JSStructuredCloneCallbacksPPv(this:
-                                                                                             *mut JSAutoStructuredCloneBuffer,
-                                                                                         datap:
-                                                                                             *mut *mut u64,
-                                                                                         nbytesp:
-                                                                                             *mut usize,
-                                                                                         versionp:
-                                                                                             *mut u32,
-                                                                                         callbacks:
-                                                                                             *mut *const JSStructuredCloneCallbacks,
-                                                                                         closure:
-                                                                                             *mut *mut ::std::os::raw::c_void);
+    fn _ZN27JSAutoStructuredCloneBuffer5stealEPPyPmPjPPK26JSStructuredCloneCallbacksPPv(this:
+                                                                                            *mut JSAutoStructuredCloneBuffer,
+                                                                                        datap:
+                                                                                            *mut *mut u64,
+                                                                                        nbytesp:
+                                                                                            *mut usize,
+                                                                                        versionp:
+                                                                                            *mut u32,
+                                                                                        callbacks:
+                                                                                            *mut *const JSStructuredCloneCallbacks,
+                                                                                        closure:
+                                                                                            *mut *mut ::std::os::raw::c_void);
     fn _ZN27JSAutoStructuredCloneBuffer4readEP9JSContextN2JS13MutableHandleINS2_5ValueEEEPK26JSStructuredCloneCallbacksPv(this:
                                                                                                                               *mut JSAutoStructuredCloneBuffer,
                                                                                                                           cx:
@@ -2391,7 +2447,7 @@ impl JSAutoStructuredCloneBuffer {
                        version: u32,
                        callbacks: *const JSStructuredCloneCallbacks,
                        closure: *mut ::std::os::raw::c_void) -> bool {
-        _ZN27JSAutoStructuredCloneBuffer4copyEPKyyjPK26JSStructuredCloneCallbacksPv(&mut *self,
+        _ZN27JSAutoStructuredCloneBuffer4copyEPKymjPK26JSStructuredCloneCallbacksPv(&mut *self,
                                                                                     data,
                                                                                     nbytes,
                                                                                     version,
@@ -2408,7 +2464,7 @@ impl JSAutoStructuredCloneBuffer {
                         version: u32,
                         callbacks: *const JSStructuredCloneCallbacks,
                         closure: *mut ::std::os::raw::c_void) {
-        _ZN27JSAutoStructuredCloneBuffer5adoptEPyyjPK26JSStructuredCloneCallbacksPv(&mut *self,
+        _ZN27JSAutoStructuredCloneBuffer5adoptEPymjPK26JSStructuredCloneCallbacksPv(&mut *self,
                                                                                     data,
                                                                                     nbytes,
                                                                                     version,
@@ -2425,12 +2481,12 @@ impl JSAutoStructuredCloneBuffer {
                         versionp: *mut u32,
                         callbacks: *mut *const JSStructuredCloneCallbacks,
                         closure: *mut *mut ::std::os::raw::c_void) {
-        _ZN27JSAutoStructuredCloneBuffer5stealEPPyS0_PjPPK26JSStructuredCloneCallbacksPPv(&mut *self,
-                                                                                          datap,
-                                                                                          nbytesp,
-                                                                                          versionp,
-                                                                                          callbacks,
-                                                                                          closure)
+        _ZN27JSAutoStructuredCloneBuffer5stealEPPyPmPjPPK26JSStructuredCloneCallbacksPPv(&mut *self,
+                                                                                         datap,
+                                                                                         nbytesp,
+                                                                                         versionp,
+                                                                                         callbacks,
+                                                                                         closure)
     }
     #[inline]
     pub unsafe fn read(&mut self, cx: *mut JSContext, vp: MutableHandleValue,
@@ -2471,6 +2527,7 @@ impl JSAutoStructuredCloneBuffer {
 pub struct JSPrincipals {
     pub _vftable: *const _vftable_JSPrincipals,
     pub refcount: u32,
+    pub debugToken: u32,
 }
 #[repr(C)]
 pub struct _vftable_JSPrincipals {
@@ -2515,6 +2572,17 @@ pub type JSReadPrincipalsOp =
                                                    *mut *mut JSPrincipals)
                               -> bool>;
 pub enum TwoByteChars { }
+#[repr(C)]
+#[unsafe_no_drop_flag]
+#[derive(Debug)]
+pub struct AutoCheckRequestDepth {
+    pub cx: *mut JSContext,
+}
+#[test]
+fn bindgen_test_layout_AutoCheckRequestDepth() {
+    assert_eq!(::std::mem::size_of::<AutoCheckRequestDepth>() , 8usize);
+    assert_eq!(::std::mem::align_of::<AutoCheckRequestDepth>() , 8usize);
+}
 #[repr(C)]
 #[unsafe_no_drop_flag]
 #[derive(Debug)]
@@ -3602,7 +3670,7 @@ fn bindgen_test_layout_JSErrorReport() {
     assert_eq!(::std::mem::align_of::<JSErrorReport>() , 8usize);
 }
 extern "C" {
-    fn _ZN13JSErrorReport11initLinebufEPKDsyy(this: *mut JSErrorReport,
+    fn _ZN13JSErrorReport11initLinebufEPKDsmm(this: *mut JSErrorReport,
                                               linebuf:
                                                   *const ::std::os::raw::c_ushort,
                                               linebufLength: usize,
@@ -3613,7 +3681,7 @@ impl JSErrorReport {
     pub unsafe fn initLinebuf(&mut self,
                               linebuf: *const ::std::os::raw::c_ushort,
                               linebufLength: usize, tokenOffset: usize) {
-        _ZN13JSErrorReport11initLinebufEPKDsyy(&mut *self, linebuf,
+        _ZN13JSErrorReport11initLinebufEPKDsmm(&mut *self, linebuf,
                                                linebufLength, tokenOffset)
     }
 }
@@ -5932,6 +6000,9 @@ extern "C" {
     pub fn CurrentThreadCanAccessRuntime(rt: *mut JSRuntime) -> bool;
     #[link_name = "_ZN2js26CurrentThreadCanAccessZoneEPN2JS4ZoneE"]
     pub fn CurrentThreadCanAccessZone(zone: *mut Zone) -> bool;
+    #[link_name =
+          "_ZN2js2gc20AssertGCThingHasTypeEPNS0_4CellEN2JS9TraceKindE"]
+    pub fn AssertGCThingHasType(cell: *mut Cell, kind: TraceKind);
     #[link_name = "_ZN2JS13GetObjectZoneEP8JSObject"]
     pub fn GetObjectZone(obj: *mut JSObject) -> *mut Zone;
     /**
@@ -6129,7 +6200,7 @@ extern "C" {
                      name: *const ::std::os::raw::c_char);
     #[link_name = "_ZN2JS13TraceChildrenEP8JSTracerNS_9GCCellPtrE"]
     pub fn TraceChildren(trc: *mut JSTracer, thing: GCCellPtr);
-    #[link_name = "_Z20JS_GetTraceThingInfoPcyP8JSTracerPvN2JS9TraceKindEb"]
+    #[link_name = "_Z20JS_GetTraceThingInfoPcmP8JSTracerPvN2JS9TraceKindEb"]
     pub fn JS_GetTraceThingInfo(buf: *mut ::std::os::raw::c_char,
                                 bufsize: usize, trc: *mut JSTracer,
                                 thing: *mut ::std::os::raw::c_void,
@@ -6139,6 +6210,14 @@ extern "C" {
     #[link_name = "_ZN2JS21HeapObjectPostBarrierEPP8JSObjectS1_S1_"]
     pub fn HeapObjectPostBarrier(objp: *mut *mut JSObject,
                                  prev: *mut JSObject, next: *mut JSObject);
+    /**
+ * For generational GC, assert that an object is in the tenured generation as
+ * opposed to being in the nursery.
+ */
+    #[link_name = "_ZN2JS26AssertGCThingMustBeTenuredEP8JSObject"]
+    pub fn AssertGCThingMustBeTenured(obj: *mut JSObject);
+    #[link_name = "_ZN2JS34AssertGCThingIsNotAnObjectSubclassEPN2js2gc4CellE"]
+    pub fn AssertGCThingIsNotAnObjectSubclass(cell: *mut Cell);
     #[link_name = "_ZN2JS20HeapValuePostBarrierEPNS_5ValueERKS0_S3_"]
     pub fn HeapValuePostBarrier(valuep: *mut Value, prev: *const Value,
                                 next: *const Value);
@@ -6148,6 +6227,8 @@ extern "C" {
     pub fn CallReceiverFromArgv(argv: *mut Value) -> CallReceiver;
     #[link_name = "_ZN2JS18CallReceiverFromVpEPNS_5ValueE"]
     pub fn CallReceiverFromVp(vp: *mut Value) -> CallReceiver;
+    #[link_name = "_ZN2JS6detail25CheckIsValidConstructibleENS_5ValueE"]
+    pub fn CheckIsValidConstructible(v: Value);
     /**
  * Only JSStrings that have been interned via the JSAPI can be turned into
  * jsids by API clients.
@@ -6187,7 +6268,7 @@ extern "C" {
                     answer: *mut IsArrayAnswer) -> bool;
     /** Note: if the *data contains transferable objects, it can be read only once. */
     #[link_name =
-          "_Z22JS_ReadStructuredCloneP9JSContextPyyjN2JS13MutableHandleINS2_5ValueEEEPK26JSStructuredCloneCallbacksPv"]
+          "_Z22JS_ReadStructuredCloneP9JSContextPymjN2JS13MutableHandleINS2_5ValueEEEPK26JSStructuredCloneCallbacksPv"]
     pub fn JS_ReadStructuredClone(cx: *mut JSContext, data: *mut u64,
                                   nbytes: usize, version: u32,
                                   vp: MutableHandleValue,
@@ -6200,7 +6281,7 @@ extern "C" {
  * JS_ClearStructuredClone(*datap, nbytes, optionalCallbacks, closure).
  */
     #[link_name =
-          "_Z23JS_WriteStructuredCloneP9JSContextN2JS6HandleINS1_5ValueEEEPPyS5_PK26JSStructuredCloneCallbacksPvS4_"]
+          "_Z23JS_WriteStructuredCloneP9JSContextN2JS6HandleINS1_5ValueEEEPPyPmPK26JSStructuredCloneCallbacksPvS4_"]
     pub fn JS_WriteStructuredClone(cx: *mut JSContext, v: HandleValue,
                                    datap: *mut *mut u64, nbytesp: *mut usize,
                                    optionalCallbacks:
@@ -6208,13 +6289,13 @@ extern "C" {
                                    closure: *mut ::std::os::raw::c_void,
                                    transferable: HandleValue) -> bool;
     #[link_name =
-          "_Z23JS_ClearStructuredClonePyyPK26JSStructuredCloneCallbacksPvb"]
+          "_Z23JS_ClearStructuredClonePymPK26JSStructuredCloneCallbacksPvb"]
     pub fn JS_ClearStructuredClone(data: *mut u64, nbytes: usize,
                                    optionalCallbacks:
                                        *const JSStructuredCloneCallbacks,
                                    closure: *mut ::std::os::raw::c_void,
                                    freeData: bool) -> bool;
-    #[link_name = "_Z34JS_StructuredCloneHasTransferablesPKyyPb"]
+    #[link_name = "_Z34JS_StructuredCloneHasTransferablesPKymPb"]
     pub fn JS_StructuredCloneHasTransferables(data: *const u64, nbytes: usize,
                                               hasTransferable: *mut bool)
      -> bool;
@@ -6228,7 +6309,7 @@ extern "C" {
     #[link_name = "_Z17JS_ReadUint32PairP23JSStructuredCloneReaderPjS1_"]
     pub fn JS_ReadUint32Pair(r: *mut JSStructuredCloneReader, p1: *mut u32,
                              p2: *mut u32) -> bool;
-    #[link_name = "_Z12JS_ReadBytesP23JSStructuredCloneReaderPvy"]
+    #[link_name = "_Z12JS_ReadBytesP23JSStructuredCloneReaderPvm"]
     pub fn JS_ReadBytes(r: *mut JSStructuredCloneReader,
                         p: *mut ::std::os::raw::c_void, len: usize) -> bool;
     #[link_name =
@@ -6238,7 +6319,7 @@ extern "C" {
     #[link_name = "_Z18JS_WriteUint32PairP23JSStructuredCloneWriterjj"]
     pub fn JS_WriteUint32Pair(w: *mut JSStructuredCloneWriter, tag: u32,
                               data: u32) -> bool;
-    #[link_name = "_Z13JS_WriteBytesP23JSStructuredCloneWriterPKvy"]
+    #[link_name = "_Z13JS_WriteBytesP23JSStructuredCloneWriterPKvm"]
     pub fn JS_WriteBytes(w: *mut JSStructuredCloneWriter,
                          p: *const ::std::os::raw::c_void, len: usize)
      -> bool;
@@ -6385,7 +6466,7 @@ extern "C" {
     pub fn JS_SetContextCallback(rt: *mut JSRuntime,
                                  cxCallback: JSContextCallback,
                                  data: *mut ::std::os::raw::c_void);
-    #[link_name = "_Z13JS_NewContextP9JSRuntimey"]
+    #[link_name = "_Z13JS_NewContextP9JSRuntimem"]
     pub fn JS_NewContext(rt: *mut JSRuntime, stackChunkSize: usize)
      -> *mut JSContext;
     #[link_name = "_Z17JS_DestroyContextP9JSContext"]
@@ -6440,7 +6521,7 @@ extern "C" {
                                             callback:
                                                 JSDestroyCompartmentCallback);
     #[link_name =
-          "_Z44JS_SetSizeOfIncludingThisCompartmentCallbackP9JSRuntimePFyPFyPKvEP13JSCompartmentE"]
+          "_Z44JS_SetSizeOfIncludingThisCompartmentCallbackP9JSRuntimePFmPFmPKvEP13JSCompartmentE"]
     pub fn JS_SetSizeOfIncludingThisCompartmentCallback(rt: *mut JSRuntime,
                                                         callback:
                                                             JSSizeOfIncludingThisCompartmentCallback);
@@ -6451,7 +6532,7 @@ extern "C" {
     pub fn JS_SetSweepZoneCallback(rt: *mut JSRuntime,
                                    callback: JSZoneCallback);
     #[link_name =
-          "_Z29JS_SetCompartmentNameCallbackP9JSRuntimePFvS0_P13JSCompartmentPcyE"]
+          "_Z29JS_SetCompartmentNameCallbackP9JSRuntimePFvS0_P13JSCompartmentPcmE"]
     pub fn JS_SetCompartmentNameCallback(rt: *mut JSRuntime,
                                          callback: JSCompartmentNameCallback);
     #[link_name =
@@ -6640,10 +6721,10 @@ extern "C" {
           "_Z23JS_DefineDebuggerObjectP9JSContextN2JS6HandleIP8JSObjectEE"]
     pub fn JS_DefineDebuggerObject(cx: *mut JSContext, obj: HandleObject)
      -> bool;
-    #[link_name = "_Z9JS_mallocP9JSContexty"]
+    #[link_name = "_Z9JS_mallocP9JSContextm"]
     pub fn JS_malloc(cx: *mut JSContext, nbytes: usize)
      -> *mut ::std::os::raw::c_void;
-    #[link_name = "_Z10JS_reallocP9JSContextPvyy"]
+    #[link_name = "_Z10JS_reallocP9JSContextPvmm"]
     pub fn JS_realloc(cx: *mut JSContext, p: *mut ::std::os::raw::c_void,
                       oldBytes: usize, newBytes: usize)
      -> *mut ::std::os::raw::c_void;
@@ -6662,7 +6743,7 @@ extern "C" {
     pub fn JS_freeop(fop: *mut JSFreeOp, p: *mut ::std::os::raw::c_void);
     #[link_name = "_Z19JS_GetDefaultFreeOpP9JSRuntime"]
     pub fn JS_GetDefaultFreeOp(rt: *mut JSRuntime) -> *mut JSFreeOp;
-    #[link_name = "_Z22JS_updateMallocCounterP9JSContexty"]
+    #[link_name = "_Z22JS_updateMallocCounterP9JSContextm"]
     pub fn JS_updateMallocCounter(cx: *mut JSContext, nbytes: usize);
     #[link_name = "_Z9JS_strdupP9JSContextPKc"]
     pub fn JS_strdup(cx: *mut JSContext, s: *const ::std::os::raw::c_char)
@@ -6752,7 +6833,7 @@ extern "C" {
  * memory requiring application-specific finalization.
  */
     #[link_name =
-          "_Z20JS_NewExternalStringP9JSContextPKDsyPK17JSStringFinalizer"]
+          "_Z20JS_NewExternalStringP9JSContextPKDsmPK17JSStringFinalizer"]
     pub fn JS_NewExternalString(cx: *mut JSContext,
                                 chars: *const ::std::os::raw::c_ushort,
                                 length: usize, fin: *const JSStringFinalizer)
@@ -6787,7 +6868,7 @@ extern "C" {
  * This function may only be called immediately after the runtime is initialized
  * and before any code is executed and/or interrupts requested.
  */
-    #[link_name = "_Z22JS_SetNativeStackQuotaP9JSRuntimeyyy"]
+    #[link_name = "_Z22JS_SetNativeStackQuotaP9JSRuntimemmm"]
     pub fn JS_SetNativeStackQuota(cx: *mut JSRuntime,
                                   systemCodeStackSize: usize,
                                   trustedScriptStackSize: usize,
@@ -7173,55 +7254,55 @@ extern "C" {
                               attrs: ::std::os::raw::c_uint, getter: JSNative,
                               setter: JSNative) -> bool;
     #[link_name =
-          "_Z19JS_DefineUCPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKDsyNS2_INS1_18PropertyDescriptorEEERNS1_14ObjectOpResultE"]
+          "_Z19JS_DefineUCPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKDsmNS2_INS1_18PropertyDescriptorEEERNS1_14ObjectOpResultE"]
     pub fn JS_DefineUCProperty(cx: *mut JSContext, obj: HandleObject,
                                name: *const ::std::os::raw::c_ushort,
                                namelen: usize,
                                desc: Handle<PropertyDescriptor>,
                                result: *mut ObjectOpResult) -> bool;
     #[link_name =
-          "_Z19JS_DefineUCPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKDsyNS2_INS1_18PropertyDescriptorEEE"]
+          "_Z19JS_DefineUCPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKDsmNS2_INS1_18PropertyDescriptorEEE"]
     pub fn JS_DefineUCProperty1(cx: *mut JSContext, obj: HandleObject,
                                 name: *const ::std::os::raw::c_ushort,
                                 namelen: usize,
                                 desc: Handle<PropertyDescriptor>) -> bool;
     #[link_name =
-          "_Z19JS_DefineUCPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKDsyNS2_INS1_5ValueEEEjPFbS0_jPS8_ESC_"]
+          "_Z19JS_DefineUCPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKDsmNS2_INS1_5ValueEEEjPFbS0_jPS8_ESC_"]
     pub fn JS_DefineUCProperty2(cx: *mut JSContext, obj: HandleObject,
                                 name: *const ::std::os::raw::c_ushort,
                                 namelen: usize, value: HandleValue,
                                 attrs: ::std::os::raw::c_uint,
                                 getter: JSNative, setter: JSNative) -> bool;
     #[link_name =
-          "_Z19JS_DefineUCPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKDsyS5_jPFbS0_jPNS1_5ValueEESB_"]
+          "_Z19JS_DefineUCPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKDsmS5_jPFbS0_jPNS1_5ValueEESB_"]
     pub fn JS_DefineUCProperty3(cx: *mut JSContext, obj: HandleObject,
                                 name: *const ::std::os::raw::c_ushort,
                                 namelen: usize, value: HandleObject,
                                 attrs: ::std::os::raw::c_uint,
                                 getter: JSNative, setter: JSNative) -> bool;
     #[link_name =
-          "_Z19JS_DefineUCPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKDsyNS2_IP8JSStringEEjPFbS0_jPNS1_5ValueEESE_"]
+          "_Z19JS_DefineUCPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKDsmNS2_IP8JSStringEEjPFbS0_jPNS1_5ValueEESE_"]
     pub fn JS_DefineUCProperty4(cx: *mut JSContext, obj: HandleObject,
                                 name: *const ::std::os::raw::c_ushort,
                                 namelen: usize, value: HandleString,
                                 attrs: ::std::os::raw::c_uint,
                                 getter: JSNative, setter: JSNative) -> bool;
     #[link_name =
-          "_Z19JS_DefineUCPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKDsyijPFbS0_jPNS1_5ValueEESB_"]
+          "_Z19JS_DefineUCPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKDsmijPFbS0_jPNS1_5ValueEESB_"]
     pub fn JS_DefineUCProperty5(cx: *mut JSContext, obj: HandleObject,
                                 name: *const ::std::os::raw::c_ushort,
                                 namelen: usize, value: i32,
                                 attrs: ::std::os::raw::c_uint,
                                 getter: JSNative, setter: JSNative) -> bool;
     #[link_name =
-          "_Z19JS_DefineUCPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKDsyjjPFbS0_jPNS1_5ValueEESB_"]
+          "_Z19JS_DefineUCPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKDsmjjPFbS0_jPNS1_5ValueEESB_"]
     pub fn JS_DefineUCProperty6(cx: *mut JSContext, obj: HandleObject,
                                 name: *const ::std::os::raw::c_ushort,
                                 namelen: usize, value: u32,
                                 attrs: ::std::os::raw::c_uint,
                                 getter: JSNative, setter: JSNative) -> bool;
     #[link_name =
-          "_Z19JS_DefineUCPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKDsydjPFbS0_jPNS1_5ValueEESB_"]
+          "_Z19JS_DefineUCPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKDsmdjPFbS0_jPNS1_5ValueEESB_"]
     pub fn JS_DefineUCProperty7(cx: *mut JSContext, obj: HandleObject,
                                 name: *const ::std::os::raw::c_ushort,
                                 namelen: usize, value: f64,
@@ -7281,7 +7362,7 @@ extern "C" {
                           name: *const ::std::os::raw::c_char,
                           foundp: *mut bool) -> bool;
     #[link_name =
-          "_Z16JS_HasUCPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKDsyPb"]
+          "_Z16JS_HasUCPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKDsmPb"]
     pub fn JS_HasUCProperty(cx: *mut JSContext, obj: HandleObject,
                             name: *const ::std::os::raw::c_ushort,
                             namelen: usize, vp: *mut bool) -> bool;
@@ -7339,7 +7420,7 @@ extern "C" {
                           name: *const ::std::os::raw::c_char,
                           vp: MutableHandleValue) -> bool;
     #[link_name =
-          "_Z16JS_GetUCPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKDsyNS1_13MutableHandleINS1_5ValueEEE"]
+          "_Z16JS_GetUCPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKDsmNS1_13MutableHandleINS1_5ValueEEE"]
     pub fn JS_GetUCProperty(cx: *mut JSContext, obj: HandleObject,
                             name: *const ::std::os::raw::c_ushort,
                             namelen: usize, vp: MutableHandleValue) -> bool;
@@ -7377,7 +7458,7 @@ extern "C" {
                           name: *const ::std::os::raw::c_char, v: HandleValue)
      -> bool;
     #[link_name =
-          "_Z16JS_SetUCPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKDsyNS2_INS1_5ValueEEE"]
+          "_Z16JS_SetUCPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKDsmNS2_INS1_5ValueEEE"]
     pub fn JS_SetUCProperty(cx: *mut JSContext, obj: HandleObject,
                             name: *const ::std::os::raw::c_ushort,
                             namelen: usize, v: HandleValue) -> bool;
@@ -7423,7 +7504,7 @@ extern "C" {
                              name: *const ::std::os::raw::c_char,
                              result: *mut ObjectOpResult) -> bool;
     #[link_name =
-          "_Z19JS_DeleteUCPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKDsyRNS1_14ObjectOpResultE"]
+          "_Z19JS_DeleteUCPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKDsmRNS1_14ObjectOpResultE"]
     pub fn JS_DeleteUCProperty(cx: *mut JSContext, obj: HandleObject,
                                name: *const ::std::os::raw::c_ushort,
                                namelen: usize, result: *mut ObjectOpResult)
@@ -7570,7 +7651,7 @@ extern "C" {
                                     name: *const ::std::os::raw::c_char,
                                     foundp: *mut bool) -> bool;
     #[link_name =
-          "_Z26JS_AlreadyHasOwnUCPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKDsyPb"]
+          "_Z26JS_AlreadyHasOwnUCPropertyP9JSContextN2JS6HandleIP8JSObjectEEPKDsmPb"]
     pub fn JS_AlreadyHasOwnUCProperty(cx: *mut JSContext, obj: HandleObject,
                                       name: *const ::std::os::raw::c_ushort,
                                       namelen: usize, foundp: *mut bool)
@@ -7583,7 +7664,7 @@ extern "C" {
     pub fn JS_NewArrayObject(cx: *mut JSContext,
                              contents: *const HandleValueArray)
      -> *mut JSObject;
-    #[link_name = "_Z17JS_NewArrayObjectP9JSContexty"]
+    #[link_name = "_Z17JS_NewArrayObjectP9JSContextm"]
     pub fn JS_NewArrayObject1(cx: *mut JSContext, length: usize)
      -> *mut JSObject;
     /**
@@ -7627,7 +7708,7 @@ extern "C" {
  * these contents to free(). On success, the ownership is transferred to the
  * new array buffer.
  */
-    #[link_name = "_Z29JS_NewArrayBufferWithContentsP9JSContextyPv"]
+    #[link_name = "_Z29JS_NewArrayBufferWithContentsP9JSContextmPv"]
     pub fn JS_NewArrayBufferWithContents(cx: *mut JSContext, nbytes: usize,
                                          contents:
                                              *mut ::std::os::raw::c_void)
@@ -7647,7 +7728,7 @@ extern "C" {
  * must be legal to free the contents pointer by unmapping it. On success,
  * ownership is transferred to the new mapped array buffer.
  */
-    #[link_name = "_Z35JS_NewMappedArrayBufferWithContentsP9JSContextyPv"]
+    #[link_name = "_Z35JS_NewMappedArrayBufferWithContentsP9JSContextmPv"]
     pub fn JS_NewMappedArrayBufferWithContents(cx: *mut JSContext,
                                                nbytes: usize,
                                                contents:
@@ -7657,7 +7738,7 @@ extern "C" {
  * Create memory mapped array buffer contents.
  * Caller must take care of closing fd after calling this function.
  */
-    #[link_name = "_Z34JS_CreateMappedArrayBufferContentsiyy"]
+    #[link_name = "_Z34JS_CreateMappedArrayBufferContentsimm"]
     pub fn JS_CreateMappedArrayBufferContents(fd: ::std::os::raw::c_int,
                                               offset: usize, length: usize)
      -> *mut ::std::os::raw::c_void;
@@ -7668,7 +7749,7 @@ extern "C" {
  * with this content, then JS_DetachArrayBuffer() should be used instead to
  * release the resource used by the object.
  */
-    #[link_name = "_Z35JS_ReleaseMappedArrayBufferContentsPvy"]
+    #[link_name = "_Z35JS_ReleaseMappedArrayBufferContentsPvm"]
     pub fn JS_ReleaseMappedArrayBufferContents(contents:
                                                    *mut ::std::os::raw::c_void,
                                                length: usize);
@@ -7750,7 +7831,7 @@ extern "C" {
                              attrs: ::std::os::raw::c_uint)
      -> *mut JSFunction;
     #[link_name =
-          "_Z19JS_DefineUCFunctionP9JSContextN2JS6HandleIP8JSObjectEEPKDsyPFbS0_jPNS1_5ValueEEjj"]
+          "_Z19JS_DefineUCFunctionP9JSContextN2JS6HandleIP8JSObjectEEPKDsmPFbS0_jPNS1_5ValueEEjj"]
     pub fn JS_DefineUCFunction(cx: *mut JSContext, obj: Handle<*mut JSObject>,
                                name: *const ::std::os::raw::c_ushort,
                                namelen: usize, call: JSNative,
@@ -7791,7 +7872,7 @@ extern "C" {
  * the compiler.
  */
     #[link_name =
-          "_Z25JS_BufferIsCompilableUnitP9JSContextN2JS6HandleIP8JSObjectEEPKcy"]
+          "_Z25JS_BufferIsCompilableUnitP9JSContextN2JS6HandleIP8JSObjectEEPKcm"]
     pub fn JS_BufferIsCompilableUnit(cx: *mut JSContext,
                                      obj: Handle<*mut JSObject>,
                                      utf8: *const ::std::os::raw::c_char,
@@ -7800,7 +7881,7 @@ extern "C" {
  * |script| will always be set. On failure, it will be set to nullptr.
  */
     #[link_name =
-          "_Z16JS_CompileScriptP9JSContextPKcyRKN2JS14CompileOptionsENS3_13MutableHandleIP8JSScriptEE"]
+          "_Z16JS_CompileScriptP9JSContextPKcmRKN2JS14CompileOptionsENS3_13MutableHandleIP8JSScriptEE"]
     pub fn JS_CompileScript(cx: *mut JSContext,
                             ascii: *const ::std::os::raw::c_char,
                             length: usize, options: *const CompileOptions,
@@ -7809,7 +7890,7 @@ extern "C" {
  * |script| will always be set. On failure, it will be set to nullptr.
  */
     #[link_name =
-          "_Z18JS_CompileUCScriptP9JSContextPKDsyRKN2JS14CompileOptionsENS3_13MutableHandleIP8JSScriptEE"]
+          "_Z18JS_CompileUCScriptP9JSContextPKDsmRKN2JS14CompileOptionsENS3_13MutableHandleIP8JSScriptEE"]
     pub fn JS_CompileUCScript(cx: *mut JSContext,
                               chars: *const ::std::os::raw::c_ushort,
                               length: usize, options: *const CompileOptions,
@@ -7836,19 +7917,19 @@ extern "C" {
                    srcBuf: *mut SourceBufferHolder,
                    script: MutableHandleScript) -> bool;
     #[link_name =
-          "_ZN2JS7CompileEP9JSContextRKNS_22ReadOnlyCompileOptionsEPKcyNS_13MutableHandleIP8JSScriptEE"]
+          "_ZN2JS7CompileEP9JSContextRKNS_22ReadOnlyCompileOptionsEPKcmNS_13MutableHandleIP8JSScriptEE"]
     pub fn Compile1(cx: *mut JSContext,
                     options: *const ReadOnlyCompileOptions,
                     bytes: *const ::std::os::raw::c_char, length: usize,
                     script: MutableHandleScript) -> bool;
     #[link_name =
-          "_ZN2JS7CompileEP9JSContextRKNS_22ReadOnlyCompileOptionsEPKDsyNS_13MutableHandleIP8JSScriptEE"]
+          "_ZN2JS7CompileEP9JSContextRKNS_22ReadOnlyCompileOptionsEPKDsmNS_13MutableHandleIP8JSScriptEE"]
     pub fn Compile2(cx: *mut JSContext,
                     options: *const ReadOnlyCompileOptions,
                     chars: *const ::std::os::raw::c_ushort, length: usize,
                     script: MutableHandleScript) -> bool;
     #[link_name =
-          "_ZN2JS7CompileEP9JSContextRKNS_22ReadOnlyCompileOptionsEP6_iobufNS_13MutableHandleIP8JSScriptEE"]
+          "_ZN2JS7CompileEP9JSContextRKNS_22ReadOnlyCompileOptionsEP7__sFILENS_13MutableHandleIP8JSScriptEE"]
     pub fn Compile3(cx: *mut JSContext,
                     options: *const ReadOnlyCompileOptions, file: *mut FILE,
                     script: MutableHandleScript) -> bool;
@@ -7865,7 +7946,7 @@ extern "C" {
                                        srcBuf: *mut SourceBufferHolder,
                                        script: MutableHandleScript) -> bool;
     #[link_name =
-          "_ZN2JS27CompileForNonSyntacticScopeEP9JSContextRKNS_22ReadOnlyCompileOptionsEPKcyNS_13MutableHandleIP8JSScriptEE"]
+          "_ZN2JS27CompileForNonSyntacticScopeEP9JSContextRKNS_22ReadOnlyCompileOptionsEPKcmNS_13MutableHandleIP8JSScriptEE"]
     pub fn CompileForNonSyntacticScope1(cx: *mut JSContext,
                                         options:
                                             *const ReadOnlyCompileOptions,
@@ -7873,7 +7954,7 @@ extern "C" {
                                         length: usize,
                                         script: MutableHandleScript) -> bool;
     #[link_name =
-          "_ZN2JS27CompileForNonSyntacticScopeEP9JSContextRKNS_22ReadOnlyCompileOptionsEPKDsyNS_13MutableHandleIP8JSScriptEE"]
+          "_ZN2JS27CompileForNonSyntacticScopeEP9JSContextRKNS_22ReadOnlyCompileOptionsEPKDsmNS_13MutableHandleIP8JSScriptEE"]
     pub fn CompileForNonSyntacticScope2(cx: *mut JSContext,
                                         options:
                                             *const ReadOnlyCompileOptions,
@@ -7882,7 +7963,7 @@ extern "C" {
                                         length: usize,
                                         script: MutableHandleScript) -> bool;
     #[link_name =
-          "_ZN2JS27CompileForNonSyntacticScopeEP9JSContextRKNS_22ReadOnlyCompileOptionsEP6_iobufNS_13MutableHandleIP8JSScriptEE"]
+          "_ZN2JS27CompileForNonSyntacticScopeEP9JSContextRKNS_22ReadOnlyCompileOptionsEP7__sFILENS_13MutableHandleIP8JSScriptEE"]
     pub fn CompileForNonSyntacticScope3(cx: *mut JSContext,
                                         options:
                                             *const ReadOnlyCompileOptions,
@@ -7897,12 +7978,12 @@ extern "C" {
                                             *const ::std::os::raw::c_char,
                                         script: MutableHandleScript) -> bool;
     #[link_name =
-          "_ZN2JS19CanCompileOffThreadEP9JSContextRKNS_22ReadOnlyCompileOptionsEy"]
+          "_ZN2JS19CanCompileOffThreadEP9JSContextRKNS_22ReadOnlyCompileOptionsEm"]
     pub fn CanCompileOffThread(cx: *mut JSContext,
                                options: *const ReadOnlyCompileOptions,
                                length: usize) -> bool;
     #[link_name =
-          "_ZN2JS16CompileOffThreadEP9JSContextRKNS_22ReadOnlyCompileOptionsEPKDsyPFvPvS7_ES7_"]
+          "_ZN2JS16CompileOffThreadEP9JSContextRKNS_22ReadOnlyCompileOptionsEPKDsmPFvPvS7_ES7_"]
     pub fn CompileOffThread(cx: *mut JSContext,
                             options: *const ReadOnlyCompileOptions,
                             chars: *const ::std::os::raw::c_ushort,
@@ -7921,7 +8002,7 @@ extern "C" {
  * global must not be explicitly included in the scope chain.
  */
     #[link_name =
-          "_ZN2JS15CompileFunctionEP9JSContextRNS_16AutoVectorRooterIP8JSObjectEERKNS_22ReadOnlyCompileOptionsEPKcjPKSB_PKDsyNS_13MutableHandleIP10JSFunctionEE"]
+          "_ZN2JS15CompileFunctionEP9JSContextRNS_16AutoVectorRooterIP8JSObjectEERKNS_22ReadOnlyCompileOptionsEPKcjPKSB_PKDsmNS_13MutableHandleIP10JSFunctionEE"]
     pub fn CompileFunction(cx: *mut JSContext,
                            scopeChain: *mut AutoObjectVector,
                            options: *const ReadOnlyCompileOptions,
@@ -7947,7 +8028,7 @@ extern "C" {
  * Same as above, but taking a const char * for the function body.
  */
     #[link_name =
-          "_ZN2JS15CompileFunctionEP9JSContextRNS_16AutoVectorRooterIP8JSObjectEERKNS_22ReadOnlyCompileOptionsEPKcjPKSB_SB_yNS_13MutableHandleIP10JSFunctionEE"]
+          "_ZN2JS15CompileFunctionEP9JSContextRNS_16AutoVectorRooterIP8JSObjectEERKNS_22ReadOnlyCompileOptionsEPKcjPKSB_SB_mNS_13MutableHandleIP10JSFunctionEE"]
     pub fn CompileFunction2(cx: *mut JSContext,
                             scopeChain: *mut AutoObjectVector,
                             options: *const ReadOnlyCompileOptions,
@@ -8028,7 +8109,7 @@ extern "C" {
  * Evaluate the given character buffer in the scope of the current global of cx.
  */
     #[link_name =
-          "_ZN2JS8EvaluateEP9JSContextRKNS_22ReadOnlyCompileOptionsEPKDsyNS_13MutableHandleINS_5ValueEEE"]
+          "_ZN2JS8EvaluateEP9JSContextRKNS_22ReadOnlyCompileOptionsEPKDsmNS_13MutableHandleINS_5ValueEEE"]
     pub fn Evaluate2(cx: *mut JSContext,
                      options: *const ReadOnlyCompileOptions,
                      chars: *const ::std::os::raw::c_ushort, length: usize,
@@ -8039,7 +8120,7 @@ extern "C" {
  * objects that should end up on the script's scope chain.
  */
     #[link_name =
-          "_ZN2JS8EvaluateEP9JSContextRNS_16AutoVectorRooterIP8JSObjectEERKNS_22ReadOnlyCompileOptionsEPKDsyNS_13MutableHandleINS_5ValueEEE"]
+          "_ZN2JS8EvaluateEP9JSContextRNS_16AutoVectorRooterIP8JSObjectEERKNS_22ReadOnlyCompileOptionsEPKDsmNS_13MutableHandleINS_5ValueEEE"]
     pub fn Evaluate3(cx: *mut JSContext, scopeChain: *mut AutoObjectVector,
                      options: *const ReadOnlyCompileOptions,
                      chars: *const ::std::os::raw::c_ushort, length: usize,
@@ -8048,7 +8129,7 @@ extern "C" {
  * Evaluate the given byte buffer in the scope of the current global of cx.
  */
     #[link_name =
-          "_ZN2JS8EvaluateEP9JSContextRKNS_22ReadOnlyCompileOptionsEPKcyNS_13MutableHandleINS_5ValueEEE"]
+          "_ZN2JS8EvaluateEP9JSContextRKNS_22ReadOnlyCompileOptionsEPKcmNS_13MutableHandleINS_5ValueEEE"]
     pub fn Evaluate4(cx: *mut JSContext,
                      options: *const ReadOnlyCompileOptions,
                      bytes: *const ::std::os::raw::c_char, length: usize,
@@ -8224,7 +8305,7 @@ extern "C" {
     pub fn JS_SaveFrameChain(cx: *mut JSContext) -> bool;
     #[link_name = "_Z20JS_RestoreFrameChainP9JSContext"]
     pub fn JS_RestoreFrameChain(cx: *mut JSContext);
-    #[link_name = "_Z17JS_NewStringCopyNP9JSContextPKcy"]
+    #[link_name = "_Z17JS_NewStringCopyNP9JSContextPKcm"]
     pub fn JS_NewStringCopyN(cx: *mut JSContext,
                              s: *const ::std::os::raw::c_char, n: usize)
      -> *mut JSString;
@@ -8236,7 +8317,7 @@ extern "C" {
           "_Z24JS_AtomizeAndPinJSStringP9JSContextN2JS6HandleIP8JSStringEE"]
     pub fn JS_AtomizeAndPinJSString(cx: *mut JSContext, str: HandleString)
      -> *mut JSString;
-    #[link_name = "_Z17JS_AtomizeStringNP9JSContextPKcy"]
+    #[link_name = "_Z17JS_AtomizeStringNP9JSContextPKcm"]
     pub fn JS_AtomizeStringN(cx: *mut JSContext,
                              s: *const ::std::os::raw::c_char, length: usize)
      -> *mut JSString;
@@ -8244,7 +8325,7 @@ extern "C" {
     pub fn JS_AtomizeString(cx: *mut JSContext,
                             s: *const ::std::os::raw::c_char)
      -> *mut JSString;
-    #[link_name = "_Z23JS_AtomizeAndPinStringNP9JSContextPKcy"]
+    #[link_name = "_Z23JS_AtomizeAndPinStringNP9JSContextPKcm"]
     pub fn JS_AtomizeAndPinStringN(cx: *mut JSContext,
                                    s: *const ::std::os::raw::c_char,
                                    length: usize) -> *mut JSString;
@@ -8252,11 +8333,11 @@ extern "C" {
     pub fn JS_AtomizeAndPinString(cx: *mut JSContext,
                                   s: *const ::std::os::raw::c_char)
      -> *mut JSString;
-    #[link_name = "_Z14JS_NewUCStringP9JSContextPDsy"]
+    #[link_name = "_Z14JS_NewUCStringP9JSContextPDsm"]
     pub fn JS_NewUCString(cx: *mut JSContext,
                           chars: *mut ::std::os::raw::c_ushort, length: usize)
      -> *mut JSString;
-    #[link_name = "_Z19JS_NewUCStringCopyNP9JSContextPKDsy"]
+    #[link_name = "_Z19JS_NewUCStringCopyNP9JSContextPKDsm"]
     pub fn JS_NewUCStringCopyN(cx: *mut JSContext,
                                s: *const ::std::os::raw::c_ushort, n: usize)
      -> *mut JSString;
@@ -8264,7 +8345,7 @@ extern "C" {
     pub fn JS_NewUCStringCopyZ(cx: *mut JSContext,
                                s: *const ::std::os::raw::c_ushort)
      -> *mut JSString;
-    #[link_name = "_Z19JS_AtomizeUCStringNP9JSContextPKDsy"]
+    #[link_name = "_Z19JS_AtomizeUCStringNP9JSContextPKDsm"]
     pub fn JS_AtomizeUCStringN(cx: *mut JSContext,
                                s: *const ::std::os::raw::c_ushort,
                                length: usize) -> *mut JSString;
@@ -8272,7 +8353,7 @@ extern "C" {
     pub fn JS_AtomizeUCString(cx: *mut JSContext,
                               s: *const ::std::os::raw::c_ushort)
      -> *mut JSString;
-    #[link_name = "_Z25JS_AtomizeAndPinUCStringNP9JSContextPKDsy"]
+    #[link_name = "_Z25JS_AtomizeAndPinUCStringNP9JSContextPKDsm"]
     pub fn JS_AtomizeAndPinUCStringN(cx: *mut JSContext,
                                      s: *const ::std::os::raw::c_ushort,
                                      length: usize) -> *mut JSString;
@@ -8287,12 +8368,12 @@ extern "C" {
     pub fn JS_StringEqualsAscii(cx: *mut JSContext, str: *mut JSString,
                                 asciiBytes: *const ::std::os::raw::c_char,
                                 match_: *mut bool) -> bool;
-    #[link_name = "_Z19JS_PutEscapedStringP9JSContextPcyP8JSStringc"]
+    #[link_name = "_Z19JS_PutEscapedStringP9JSContextPcmP8JSStringc"]
     pub fn JS_PutEscapedString(cx: *mut JSContext,
                                buffer: *mut ::std::os::raw::c_char,
                                size: usize, str: *mut JSString,
                                quote: ::std::os::raw::c_char) -> usize;
-    #[link_name = "_Z20JS_FileEscapedStringP6_iobufP8JSStringc"]
+    #[link_name = "_Z20JS_FileEscapedStringP7__sFILEP8JSStringc"]
     pub fn JS_FileEscapedString(fp: *mut FILE, str: *mut JSString,
                                 quote: ::std::os::raw::c_char) -> bool;
     #[link_name = "_Z18JS_GetStringLengthP8JSString"]
@@ -8303,24 +8384,24 @@ extern "C" {
     #[link_name = "_Z23JS_StringHasLatin1CharsP8JSString"]
     pub fn JS_StringHasLatin1Chars(str: *mut JSString) -> bool;
     #[link_name =
-          "_Z32JS_GetLatin1StringCharsAndLengthP9JSContextRKN2JS17AutoCheckCannotGCEP8JSStringPy"]
+          "_Z32JS_GetLatin1StringCharsAndLengthP9JSContextRKN2JS17AutoCheckCannotGCEP8JSStringPm"]
     pub fn JS_GetLatin1StringCharsAndLength(cx: *mut JSContext,
                                             nogc: *const AutoCheckCannotGC,
                                             str: *mut JSString,
                                             length: *mut usize)
      -> *const Latin1Char;
     #[link_name =
-          "_Z33JS_GetTwoByteStringCharsAndLengthP9JSContextRKN2JS17AutoCheckCannotGCEP8JSStringPy"]
+          "_Z33JS_GetTwoByteStringCharsAndLengthP9JSContextRKN2JS17AutoCheckCannotGCEP8JSStringPm"]
     pub fn JS_GetTwoByteStringCharsAndLength(cx: *mut JSContext,
                                              nogc: *const AutoCheckCannotGC,
                                              str: *mut JSString,
                                              length: *mut usize)
      -> *const ::std::os::raw::c_ushort;
-    #[link_name = "_Z18JS_GetStringCharAtP9JSContextP8JSStringyPDs"]
+    #[link_name = "_Z18JS_GetStringCharAtP9JSContextP8JSStringmPDs"]
     pub fn JS_GetStringCharAt(cx: *mut JSContext, str: *mut JSString,
                               index: usize,
                               res: *mut ::std::os::raw::c_ushort) -> bool;
-    #[link_name = "_Z22JS_GetFlatStringCharAtP12JSFlatStringy"]
+    #[link_name = "_Z22JS_GetFlatStringCharAtP12JSFlatStringm"]
     pub fn JS_GetFlatStringCharAt(str: *mut JSFlatString, index: usize)
      -> ::std::os::raw::c_ushort;
     #[link_name = "_Z32JS_GetTwoByteExternalStringCharsP8JSString"]
@@ -8348,7 +8429,7 @@ extern "C" {
     pub fn JS_FlatStringEqualsAscii(str: *mut JSFlatString,
                                     asciiBytes: *const ::std::os::raw::c_char)
      -> bool;
-    #[link_name = "_Z23JS_PutEscapedFlatStringPcyP12JSFlatStringc"]
+    #[link_name = "_Z23JS_PutEscapedFlatStringPcmP12JSFlatStringc"]
     pub fn JS_PutEscapedFlatString(buffer: *mut ::std::os::raw::c_char,
                                    size: usize, str: *mut JSFlatString,
                                    quote: ::std::os::raw::c_char) -> usize;
@@ -8358,7 +8439,7 @@ extern "C" {
  * are mutable by definition, so the thread safety comments above apply.
  */
     #[link_name =
-          "_Z21JS_NewDependentStringP9JSContextN2JS6HandleIP8JSStringEEyy"]
+          "_Z21JS_NewDependentStringP9JSContextN2JS6HandleIP8JSStringEEmm"]
     pub fn JS_NewDependentString(cx: *mut JSContext, str: HandleString,
                                  start: usize, length: usize)
      -> *mut JSString;
@@ -8383,7 +8464,7 @@ extern "C" {
  * NB: This function does not store an additional zero byte or char16_t after the
  * transcoded string.
  */
-    #[link_name = "_Z14JS_DecodeBytesP9JSContextPKcyPDsPy"]
+    #[link_name = "_Z14JS_DecodeBytesP9JSContextPKcmPDsPm"]
     pub fn JS_DecodeBytes(cx: *mut JSContext,
                           src: *const ::std::os::raw::c_char, srclen: usize,
                           dst: *mut ::std::os::raw::c_ushort,
@@ -8418,7 +8499,7 @@ extern "C" {
  * length parameter, the string will be cut and only length bytes will be
  * written into the buffer.
  */
-    #[link_name = "_Z23JS_EncodeStringToBufferP9JSContextP8JSStringPcy"]
+    #[link_name = "_Z23JS_EncodeStringToBufferP9JSContextP8JSStringPcm"]
     pub fn JS_EncodeStringToBuffer(cx: *mut JSContext, str: *mut JSString,
                                    buffer: *mut ::std::os::raw::c_char,
                                    length: usize) -> usize;
@@ -8754,12 +8835,12 @@ extern "C" {
     #[link_name = "_Z15JS_ObjectIsDateP9JSContextN2JS6HandleIP8JSObjectEEPb"]
     pub fn JS_ObjectIsDate(cx: *mut JSContext, obj: HandleObject,
                            isDate: *mut bool) -> bool;
-    #[link_name = "_Z18JS_NewRegExpObjectP9JSContextPKcyj"]
+    #[link_name = "_Z18JS_NewRegExpObjectP9JSContextPKcmj"]
     pub fn JS_NewRegExpObject(cx: *mut JSContext,
                               bytes: *const ::std::os::raw::c_char,
                               length: usize, flags: ::std::os::raw::c_uint)
      -> *mut JSObject;
-    #[link_name = "_Z20JS_NewUCRegExpObjectP9JSContextPKDsyj"]
+    #[link_name = "_Z20JS_NewUCRegExpObjectP9JSContextPKDsmj"]
     pub fn JS_NewUCRegExpObject(cx: *mut JSContext,
                                 chars: *const ::std::os::raw::c_ushort,
                                 length: usize, flags: ::std::os::raw::c_uint)
@@ -8773,14 +8854,14 @@ extern "C" {
     pub fn JS_ClearRegExpStatics(cx: *mut JSContext, obj: HandleObject)
      -> bool;
     #[link_name =
-          "_Z16JS_ExecuteRegExpP9JSContextN2JS6HandleIP8JSObjectEES5_PDsyPybNS1_13MutableHandleINS1_5ValueEEE"]
+          "_Z16JS_ExecuteRegExpP9JSContextN2JS6HandleIP8JSObjectEES5_PDsmPmbNS1_13MutableHandleINS1_5ValueEEE"]
     pub fn JS_ExecuteRegExp(cx: *mut JSContext, obj: HandleObject,
                             reobj: HandleObject,
                             chars: *mut ::std::os::raw::c_ushort,
                             length: usize, indexp: *mut usize, test: bool,
                             rval: MutableHandleValue) -> bool;
     #[link_name =
-          "_Z25JS_ExecuteRegExpNoStaticsP9JSContextN2JS6HandleIP8JSObjectEEPDsyPybNS1_13MutableHandleINS1_5ValueEEE"]
+          "_Z25JS_ExecuteRegExpNoStaticsP9JSContextN2JS6HandleIP8JSObjectEEPDsmPmbNS1_13MutableHandleINS1_5ValueEEE"]
     pub fn JS_ExecuteRegExpNoStatics(cx: *mut JSContext, reobj: HandleObject,
                                      chars: *mut ::std::os::raw::c_ushort,
                                      length: usize, indexp: *mut usize,
@@ -8873,6 +8954,13 @@ extern "C" {
     pub fn JS_NewObjectForConstructor(cx: *mut JSContext,
                                       clasp: *const JSClass,
                                       args: *const CallArgs) -> *mut JSObject;
+    #[link_name = "_Z16JS_GetGCZealBitsP9JSContextPjS1_S1_"]
+    pub fn JS_GetGCZealBits(cx: *mut JSContext, zealBits: *mut u32,
+                            frequency: *mut u32, nextScheduled: *mut u32);
+    #[link_name = "_Z12JS_SetGCZealP9JSContexthj"]
+    pub fn JS_SetGCZeal(cx: *mut JSContext, zeal: u8, frequency: u32);
+    #[link_name = "_Z13JS_ScheduleGCP9JSContextj"]
+    pub fn JS_ScheduleGC(cx: *mut JSContext, count: u32);
     #[link_name = "_Z28JS_SetParallelParsingEnabledP9JSRuntimeb"]
     pub fn JS_SetParallelParsingEnabled(rt: *mut JSRuntime, enabled: bool);
     #[link_name = "_Z36JS_SetOffthreadIonCompilationEnabledP9JSRuntimeb"]
@@ -8914,7 +9002,7 @@ extern "C" {
  * This version is infallible, so just returns whether the chars are an
  * identifier.
  */
-    #[link_name = "_Z15JS_IsIdentifierPKDsy"]
+    #[link_name = "_Z15JS_IsIdentifierPKDsm"]
     pub fn JS_IsIdentifier1(chars: *const ::std::os::raw::c_ushort,
                             length: usize) -> bool;
     /**
@@ -8971,7 +9059,7 @@ extern "C" {
     pub fn SetAsmJSCacheOps(rt: *mut JSRuntime,
                             callbacks: *const AsmJSCacheOps);
     #[link_name =
-          "_ZN2JS12SetBuildIdOpEP9JSRuntimePFbPN7mozilla6VectorIcLy0EN2js17SystemAllocPolicyEEEE"]
+          "_ZN2JS12SetBuildIdOpEP9JSRuntimePFbPN7mozilla6VectorIcLm0EN2js17SystemAllocPolicyEEEE"]
     pub fn SetBuildIdOp(rt: *mut JSRuntime, buildIdOp: BuildIdOp);
     #[link_name =
           "_ZN2JS33SetLargeAllocationFailureCallbackEP9JSRuntimePFvPvES2_"]
@@ -9087,7 +9175,7 @@ extern "C" {
  * each line.
  */
     #[link_name =
-          "_ZN2JS16BuildStackStringEP9JSContextNS_6HandleIP8JSObjectEENS_13MutableHandleIP8JSStringEEy"]
+          "_ZN2JS16BuildStackStringEP9JSContextNS_6HandleIP8JSObjectEENS_13MutableHandleIP8JSStringEEm"]
     pub fn BuildStackString(cx: *mut JSContext, stack: HandleObject,
                             stringp: MutableHandleString, indent: usize)
      -> bool;
@@ -9281,6 +9369,26 @@ extern "C" {
     #[link_name = "_ZN2js21GetPropertyNameFromPCEP8JSScriptPh"]
     pub fn GetPropertyNameFromPC(script: *mut JSScript, pc: *mut jsbytecode)
      -> *mut JSAtom;
+    #[link_name = "_ZN2js10DumpStringEP8JSString"]
+    pub fn DumpString(str: *mut JSString);
+    #[link_name = "_ZN2js8DumpAtomEP6JSAtom"]
+    pub fn DumpAtom(atom: *mut JSAtom);
+    #[link_name = "_ZN2js10DumpObjectEP8JSObject"]
+    pub fn DumpObject(obj: *mut JSObject);
+    #[link_name = "_ZN2js9DumpCharsEPKDsm"]
+    pub fn DumpChars(s: *const ::std::os::raw::c_ushort, n: usize);
+    #[link_name = "_ZN2js9DumpValueERKN2JS5ValueE"]
+    pub fn DumpValue(val: *const Value);
+    #[link_name = "_ZN2js6DumpIdE4jsid"]
+    pub fn DumpId(id: jsid);
+    #[link_name =
+          "_ZN2js20DumpInterpreterFrameEP9JSContextPNS_16InterpreterFrameE"]
+    pub fn DumpInterpreterFrame(cx: *mut JSContext,
+                                start: *mut InterpreterFrame);
+    #[link_name = "_ZN2js6DumpPCEP9JSContext"]
+    pub fn DumpPC(cx: *mut JSContext) -> bool;
+    #[link_name = "_ZN2js10DumpScriptEP9JSContextP8JSScript"]
+    pub fn DumpScript(cx: *mut JSContext, scriptArg: *mut JSScript) -> bool;
     #[link_name = "_ZN2js13DumpBacktraceEP9JSContext"]
     pub fn DumpBacktrace(cx: *mut JSContext);
     /** Exposed for DumpJSStack */
@@ -9409,7 +9517,7 @@ extern "C" {
   * fp is the file for the dump output.
   */
     #[link_name =
-          "_ZN2js8DumpHeapEP9JSRuntimeP6_iobufNS_24DumpHeapNurseryBehaviourE"]
+          "_ZN2js8DumpHeapEP9JSRuntimeP7__sFILENS_24DumpHeapNurseryBehaviourE"]
     pub fn DumpHeap(rt: *mut JSRuntime, fp: *mut FILE,
                     nurseryBehaviour: DumpHeapNurseryBehaviour);
     #[link_name = "_ZN2js16obj_defineGetterEP9JSContextjPN2JS5ValueE"]
@@ -9460,6 +9568,8 @@ extern "C" {
     pub fn GetPrototypeNoProxy(obj: *mut JSObject) -> *mut JSObject;
     #[link_name = "_ZN2js21AssertSameCompartmentEP9JSContextP8JSObject"]
     pub fn AssertSameCompartment(cx: *mut JSContext, obj: *mut JSObject);
+    #[link_name = "_ZN2js21AssertSameCompartmentEP8JSObjectS1_"]
+    pub fn AssertSameCompartment1(objA: *mut JSObject, objB: *mut JSObject);
     #[link_name = "_ZN2js23NotifyAnimationActivityEP8JSObject"]
     pub fn NotifyAnimationActivity(obj: *mut JSObject);
     /**
@@ -9496,11 +9606,11 @@ extern "C" {
                                        nargs: ::std::os::raw::c_uint,
                                        flags: ::std::os::raw::c_uint,
                                        id: jsid) -> *mut JSFunction;
-    #[link_name = "_ZN2js25GetFunctionNativeReservedEP8JSObjecty"]
+    #[link_name = "_ZN2js25GetFunctionNativeReservedEP8JSObjectm"]
     pub fn GetFunctionNativeReserved(fun: *mut JSObject, which: usize)
      -> *const Value;
     #[link_name =
-          "_ZN2js25SetFunctionNativeReservedEP8JSObjectyRKN2JS5ValueE"]
+          "_ZN2js25SetFunctionNativeReservedEP8JSObjectmRKN2JS5ValueE"]
     pub fn SetFunctionNativeReserved(fun: *mut JSObject, which: usize,
                                      val: *const Value);
     #[link_name = "_ZN2js25FunctionHasNativeReservedEP8JSObject"]
@@ -9514,7 +9624,7 @@ extern "C" {
     pub fn GetOriginalEval(cx: *mut JSContext, scope: HandleObject,
                            eval: MutableHandleObject) -> bool;
     #[link_name =
-          "_ZN2js40SetReservedOrProxyPrivateSlotWithBarrierEP8JSObjectyRKN2JS5ValueE"]
+          "_ZN2js40SetReservedOrProxyPrivateSlotWithBarrierEP8JSObjectmRKN2JS5ValueE"]
     pub fn SetReservedOrProxyPrivateSlotWithBarrier(obj: *mut JSObject,
                                                     slot: usize,
                                                     value: *const Value);
@@ -9574,10 +9684,10 @@ extern "C" {
     pub fn PurgePCCounts(cx: *mut JSContext);
     #[link_name = "_ZN2js21GetPCCountScriptCountEP9JSContext"]
     pub fn GetPCCountScriptCount(cx: *mut JSContext) -> usize;
-    #[link_name = "_ZN2js23GetPCCountScriptSummaryEP9JSContexty"]
+    #[link_name = "_ZN2js23GetPCCountScriptSummaryEP9JSContextm"]
     pub fn GetPCCountScriptSummary(cx: *mut JSContext, script: usize)
      -> *mut JSString;
-    #[link_name = "_ZN2js24GetPCCountScriptContentsEP9JSContexty"]
+    #[link_name = "_ZN2js24GetPCCountScriptContentsEP9JSContextm"]
     pub fn GetPCCountScriptContents(cx: *mut JSContext, script: usize)
      -> *mut JSString;
     /**
@@ -9588,7 +9698,7 @@ extern "C" {
  * In case of out-of-memory, this function returns nullptr and does not set any
  * value to the length out-param.
  */
-    #[link_name = "_ZN2js22GetCodeCoverageSummaryEP9JSContextPy"]
+    #[link_name = "_ZN2js22GetCodeCoverageSummaryEP9JSContextPm"]
     pub fn GetCodeCoverageSummary(cx: *mut JSContext, length: *mut usize)
      -> *mut ::std::os::raw::c_char;
     #[link_name = "_ZN2js29ContextHasOutstandingRequestsEPK9JSContext"]
@@ -9615,6 +9725,9 @@ extern "C" {
     #[link_name = "_ZN2js16GetErrorTypeNameEP9JSRuntimes"]
     pub fn GetErrorTypeName(rt: *mut JSRuntime, exnType: i16)
      -> *mut JSFlatString;
+    #[link_name = "_ZN2js24GetEnterCompartmentDepthEP9JSContext"]
+    pub fn GetEnterCompartmentDepth(cx: *mut JSContext)
+     -> ::std::os::raw::c_uint;
     #[link_name =
           "_ZN2js23RegExpToSharedNonInlineEP9JSContextN2JS6HandleIP8JSObjectEEPNS_11RegExpGuardE"]
     pub fn RegExpToSharedNonInline(cx: *mut JSContext, regexp: HandleObject,
@@ -10390,6 +10503,14 @@ extern "C" {
     pub fn ToObjectSlow(cx: *mut JSContext, v: HandleValue,
                         reportScanStack: bool) -> *mut JSObject;
     /**
+ * Assert that we're not doing GC on cx, that we're in a request as
+ * needed, and that the compartments for cx and v are correct.
+ * Also check that GC would be safe at this point.
+ */
+    #[link_name =
+          "_ZN2JS6detail22AssertArgumentsAreSaneEP9JSContextNS_6HandleINS_5ValueEEE"]
+    pub fn AssertArgumentsAreSane(cx: *mut JSContext, v: HandleValue);
+    /**
  * ES6 draft 20141224, 7.1.1, second algorithm.
  *
  * Most users shouldn't call this -- use JS::ToBoolean, ToNumber, or ToString
@@ -10406,7 +10527,7 @@ extern "C" {
  * *must* be called before JS_Init.  Don't use it unless you know what you're
  * doing!
  */
-    #[link_name = "_Z24JS_SetICUMemoryFunctionsPFPvPKvyEPFS_S1_S_yEPFvS1_S_E"]
+    #[link_name = "_Z24JS_SetICUMemoryFunctionsPFPvPKvmEPFS_S1_S_mEPFvS1_S_E"]
     pub fn JS_SetICUMemoryFunctions(allocFn: JS_ICUAllocFn,
                                     reallocFn: JS_ICUReallocFn,
                                     freeFn: JS_ICUFreeFn) -> bool;
@@ -10467,13 +10588,13 @@ extern "C" {
     #[link_name = "_ZN2JS19PeakSizeOfTemporaryEPK9JSRuntime"]
     pub fn PeakSizeOfTemporary(rt: *const JSRuntime) -> usize;
     #[link_name =
-          "_ZN2JS12AddSizeOfTabEP9JSRuntimeNS_6HandleIP8JSObjectEEPFyPKvEPNS_20ObjectPrivateVisitorEPNS_8TabSizesE"]
+          "_ZN2JS12AddSizeOfTabEP9JSRuntimeNS_6HandleIP8JSObjectEEPFmPKvEPNS_20ObjectPrivateVisitorEPNS_8TabSizesE"]
     pub fn AddSizeOfTab(rt: *mut JSRuntime, obj: HandleObject,
                         mallocSizeOf: MallocSizeOf,
                         opv: *mut ObjectPrivateVisitor, sizes: *mut TabSizes)
      -> bool;
     #[link_name =
-          "_ZN2JS14AddServoSizeOfEP9JSRuntimePFyPKvEPNS_20ObjectPrivateVisitorEPNS_10ServoSizesE"]
+          "_ZN2JS14AddServoSizeOfEP9JSRuntimePFmPKvEPNS_20ObjectPrivateVisitorEPNS_10ServoSizesE"]
     pub fn AddServoSizeOf(rt: *mut JSRuntime, mallocSizeOf: MallocSizeOf,
                           opv: *mut ObjectPrivateVisitor,
                           sizes: *mut ServoSizes) -> bool;
