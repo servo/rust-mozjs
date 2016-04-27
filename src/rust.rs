@@ -511,9 +511,10 @@ impl GCMethods<Value> for Value {
 impl<T: GCMethods<T> + Copy> Heap<T> {
     pub fn set(&mut self, v: T) {
         unsafe {
-            let prev = *self.ptr.get();
-            *self.ptr.get() = v;
-            T::post_barrier(self.ptr.get(), prev, v);
+            let ptr = self.ptr.get();
+            let prev = *ptr;
+            *ptr = v;
+            T::post_barrier(ptr, prev, v);
         }
     }
 
@@ -551,8 +552,9 @@ impl Default for Heap<Value> {
 impl<T: GCMethods<T> + Copy> Drop for Heap<T> {
     fn drop(&mut self) {
         unsafe {
-            if !(*self.ptr.get()).is_dropped() {
-                T::post_barrier(self.ptr.get(), *self.ptr.get(), T::initial());
+            let ptr = self.ptr.get();
+            if !(*ptr).is_dropped() {
+                T::post_barrier(ptr, *ptr, T::initial());
             }
         }
     }
