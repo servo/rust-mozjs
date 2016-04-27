@@ -21,7 +21,7 @@ static ERROR_FORMAT_STRING_STRING: [libc::c_char; 4] = [
 
 /// Format string struct used to throw `TypeError`s.
 static mut TYPE_ERROR_FORMAT_STRING: JSErrorFormatString = JSErrorFormatString {
-    name: b"TYPE_ERROR" as *const _ as *const libc::c_char,
+    name: b"RUSTMSG_TYPE_ERROR\0" as *const _ as *const libc::c_char,
     format: &ERROR_FORMAT_STRING_STRING as *const libc::c_char,
     argCount: 1,
     exnType: JSExnType::JSEXN_TYPEERR as i16,
@@ -29,7 +29,7 @@ static mut TYPE_ERROR_FORMAT_STRING: JSErrorFormatString = JSErrorFormatString {
 
 /// Format string struct used to throw `RangeError`s.
 static mut RANGE_ERROR_FORMAT_STRING: JSErrorFormatString = JSErrorFormatString {
-    name: b"RANGE_ERROR" as *const _ as *const libc::c_char,
+    name: b"RUSTMSG_RANGE_ERROR\0" as *const _ as *const libc::c_char,
     format: &ERROR_FORMAT_STRING_STRING as *const libc::c_char,
     argCount: 1,
     exnType: JSExnType::JSEXN_RANGEERR as i16,
