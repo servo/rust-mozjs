@@ -21,7 +21,7 @@ use jsapi;
 use jsapi::{JS_NewContext, JS_DestroyContext, JS_NewRuntime, JS_DestroyRuntime};
 use jsapi::{JSContext, JSRuntime, JSObject, JSFlatString, JSFunction, JSString, Symbol, JSScript, jsid, Value};
 use jsapi::{RuntimeOptionsRef, ContextOptionsRef, ReadOnlyCompileOptions};
-use jsapi::{JS_SetErrorReporter, Evaluate3, JSErrorReport};
+use jsapi::{JS_SetErrorReporter, Evaluate2, JSErrorReport};
 use jsapi::{JS_SetGCParameter, JSGCParamKey};
 use jsapi::{JSWhyMagic, Heap, Cell, HeapObjectPostBarrier, HeapValuePostBarrier};
 use jsapi::{ContextFriendFields};
@@ -162,7 +162,8 @@ impl Runtime {
         self.cx
     }
 
-    pub fn evaluate_script(&self, glob: HandleObject, script: String, filename: String, line_num: u32)
+    pub fn evaluate_script(&self, glob: HandleObject, script: &str, filename: &str,
+                           line_num: u32, rval: MutableHandleValue)
                     -> Result<(),()> {
         let script_utf16: Vec<u16> = script.encode_utf16().collect();
         let filename_cstr = ffi::CString::new(filename.as_bytes()).unwrap();
@@ -179,14 +180,8 @@ impl Runtime {
         let _ac = JSAutoCompartment::new(self.cx(), glob.get());
         let options = CompileOptionsWrapper::new(self.cx(), filename_cstr.as_ptr(), line_num);
 
-        let scopechain = AutoObjectVectorWrapper::new(self.cx());
-
-        let mut rval = RootedValue::new(self.cx(), UndefinedValue());
-
         unsafe {
-            if !Evaluate3(self.cx(), scopechain.ptr, options.ptr,
-                          ptr as *const u16, len as size_t,
-                          rval.handle_mut()) {
+            if !Evaluate2(self.cx(), options.ptr, ptr as *const u16, len as size_t, rval) {
                 debug!("...err!");
                 Err(())
             } else {

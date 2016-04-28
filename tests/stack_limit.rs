@@ -10,6 +10,8 @@ use js::jsapi::JS_Init;
 use js::jsapi::JS_NewGlobalObject;
 use js::jsapi::OnNewGlobalHookOption;
 use js::jsapi::Rooted;
+use js::jsapi::RootedValue;
+use js::jsval::UndefinedValue;
 use js::rust::{Runtime, SIMPLE_GLOBAL_CLASS};
 
 use std::ptr;
@@ -29,10 +31,8 @@ fn stack_limit() {
                                         ptr::null_mut(), h_option, &c_option);
         let global_root = Rooted::new(cx, global);
         let global = global_root.handle();
-
-        assert!(rt.evaluate_script(global,
-                                   "function f() { f.apply() } f()".to_string(),
-                                   "test".to_string(),
-                                   1).is_err());
+        let mut rval = RootedValue::new(cx, UndefinedValue());
+        assert!(rt.evaluate_script(global, "function f() { f.apply() } f()",
+                                   "test", 1, rval.handle_mut()).is_err());
     }
 }
