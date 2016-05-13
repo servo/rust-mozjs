@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 extern crate js;
-extern crate libc;
 
 use js::jsapi::CompartmentOptions;
 use js::jsapi::JS_Init;
