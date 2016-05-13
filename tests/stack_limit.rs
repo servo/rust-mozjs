@@ -5,7 +5,6 @@
 extern crate js;
 
 use js::jsapi::CompartmentOptions;
-use js::jsapi::JSAutoRequest;
 use js::jsapi::JS_Init;
 use js::jsapi::JS_NewGlobalObject;
 use js::jsapi::OnNewGlobalHookOption;
@@ -23,7 +22,6 @@ fn stack_limit() {
 
         let rt = Runtime::new();
         let cx = rt.cx();
-        let _ar = JSAutoRequest::new(cx);
 
         let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
         let c_option = CompartmentOptions::default();
