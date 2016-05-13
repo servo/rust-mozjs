@@ -31,7 +31,7 @@ use jsapi::{MutableHandleValue, HandleValue, HandleObject, HandleBase};
 use jsapi::AutoObjectVector;
 use jsapi::{ToBooleanSlow, ToNumberSlow, ToStringSlow};
 use jsapi::{ToInt32Slow, ToUint32Slow, ToUint16Slow, ToInt64Slow, ToUint64Slow};
-use jsapi::{JSAutoRequest, JS_BeginRequest, JS_EndRequest};
+use jsapi::{JS_BeginRequest, JS_EndRequest};
 use jsapi::{JSAutoCompartment, JS_EnterCompartment, JS_LeaveCompartment};
 use jsapi::{JSJitMethodCallArgs, JSJitGetterCallArgs, JSJitSetterCallArgs, CallArgs};
 use jsapi::{NullHandleValue, UndefinedHandleValue, JSID_VOID};
@@ -146,6 +146,8 @@ impl Runtime {
         (*contextopts).set_autoJSAPIOwnsErrorReporting_(true);
         JS_SetErrorReporter(js_runtime, Some(reportError));
 
+        JS_BeginRequest(js_context);
+
         Runtime {
             rt: js_runtime,
             cx: js_context,
@@ -176,7 +178,6 @@ impl Runtime {
             (script_utf16.as_ptr(), script_utf16.len() as c_uint)
         };
         assert!(!ptr.is_null());
-        let _ar = JSAutoRequest::new(self.cx());
         let _ac = JSAutoCompartment::new(self.cx(), glob.get());
         let options = CompileOptionsWrapper::new(self.cx(), filename_cstr.as_ptr(), line_num);
 
@@ -197,6 +198,7 @@ impl Runtime {
 impl Drop for Runtime {
     fn drop(&mut self) {
         unsafe {
+            JS_EndRequest(self.cx);
             JS_DestroyContext(self.cx);
             JS_DestroyRuntime(self.rt);
         }
@@ -558,24 +560,6 @@ impl<T: GCMethods<T> + Copy> Drop for Heap<T> {
 
 // ___________________________________________________________________________
 // Implementations for various things in jsapi.rs
-
-impl JSAutoRequest {
-    pub fn new(cx: *mut JSContext) -> JSAutoRequest {
-        unsafe { JS_BeginRequest(cx); }
-        JSAutoRequest {
-            mContext: cx
-        }
-    }
-}
-
-impl Drop for JSAutoRequest {
-    fn drop(&mut self) {
-        if self.mContext as usize == mem::POST_DROP_USIZE {
-            return;
-        }
-        unsafe { JS_EndRequest(self.mContext); }
-    }
-}
 
 impl JSAutoCompartment {
     pub fn new(cx: *mut JSContext, target: *mut JSObject) -> JSAutoCompartment {

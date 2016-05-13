@@ -9,7 +9,6 @@ use js::conversions::FromJSValConvertible;
 use js::conversions::ToJSValConvertible;
 use js::jsapi::CompartmentOptions;
 use js::jsapi::JSAutoCompartment;
-use js::jsapi::JSAutoRequest;
 use js::jsapi::JS_Init;
 use js::jsapi::JS_NewGlobalObject;
 use js::jsapi::OnNewGlobalHookOption;
@@ -27,7 +26,6 @@ fn vec_conversion() {
 
         let rt = Runtime::new();
         let cx = rt.cx();
-        let _ar = JSAutoRequest::new(cx);
 
         let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
         let c_option = CompartmentOptions::default();

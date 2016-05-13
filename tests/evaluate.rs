@@ -6,7 +6,6 @@ extern crate js;
 extern crate libc;
 
 use js::jsapi::CompartmentOptions;
-use js::jsapi::JSAutoRequest;
 use js::jsapi::JS_Init;
 use js::jsapi::JS_NewGlobalObject;
 use js::jsapi::OnNewGlobalHookOption;
@@ -23,7 +22,6 @@ fn evaluate() {
         assert!(JS_Init());
         let rt = Runtime::new();
         let cx = rt.cx();
-        let _ar = JSAutoRequest::new(cx);
 
         let global = RootedObject::new(cx,
             JS_NewGlobalObject(cx, &SIMPLE_GLOBAL_CLASS, ptr::null_mut(),

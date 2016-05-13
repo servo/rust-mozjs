@@ -8,7 +8,6 @@ extern crate libc;
 use js::jsapi::CallArgs;
 use js::jsapi::CompartmentOptions;
 use js::jsapi::JSAutoCompartment;
-use js::jsapi::JSAutoRequest;
 use js::jsapi::JSContext;
 use js::jsapi::JS_DefineFunction;
 use js::jsapi::JS_EncodeStringToUTF8;
@@ -36,7 +35,6 @@ fn callback() {
 
         let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
         let c_option = CompartmentOptions::default();
-        let _ar = JSAutoRequest::new(context);
         let global = JS_NewGlobalObject(context, &SIMPLE_GLOBAL_CLASS, ptr::null_mut(), h_option, &c_option);
         let global_root = Rooted::new(context, global);
         let global = global_root.handle();
