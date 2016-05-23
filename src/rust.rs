@@ -116,8 +116,8 @@ impl Runtime {
     ///
     /// Calling this function concurrently can cause segfaults inside
     /// SpiderMonkey
-    pub unsafe fn new() -> Runtime {
-        let js_runtime = JS_NewRuntime(default_heapsize, ChunkSize as u32, ptr::null_mut());
+    pub unsafe fn new(parent_rt: *mut JSRuntime) -> Runtime {
+        let js_runtime = JS_NewRuntime(default_heapsize, ChunkSize as u32, parent_rt);
         assert!(!js_runtime.is_null());
 
         // Unconstrain the runtime's threshold on nominal heap size, to avoid

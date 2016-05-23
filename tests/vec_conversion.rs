@@ -25,7 +25,7 @@ fn vec_conversion() {
     unsafe {
         assert!(JS_Init());
 
-        let rt = Runtime::new();
+        let rt = Runtime::new(ptr::null_mut());
         let cx = rt.cx();
 
         let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;

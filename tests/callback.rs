@@ -30,7 +30,7 @@ fn callback() {
     unsafe {
         JS_Init();
 
-        let runtime = Runtime::new();
+        let runtime = Runtime::new(ptr::null_mut());
         let context = runtime.cx();
 
         let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
