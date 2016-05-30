@@ -5,7 +5,6 @@
 extern crate js;
 
 use js::jsapi::CompartmentOptions;
-use js::jsapi::JS_Init;
 use js::jsapi::JS_NewGlobalObject;
 use js::jsapi::OnNewGlobalHookOption;
 use js::jsapi::Rooted;
@@ -17,12 +16,10 @@ use std::ptr;
 
 #[test]
 fn stack_limit() {
+    let rt = Runtime::new();
+    let cx = rt.cx();
+
     unsafe {
-        assert!(JS_Init());
-
-        let rt = Runtime::new(ptr::null_mut());
-        let cx = rt.cx();
-
         let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
         let c_option = CompartmentOptions::default();
         let global = JS_NewGlobalObject(cx, &SIMPLE_GLOBAL_CLASS,

@@ -9,7 +9,6 @@ use js::conversions::FromJSValConvertible;
 use js::conversions::ToJSValConvertible;
 use js::jsapi::CompartmentOptions;
 use js::jsapi::JSAutoCompartment;
-use js::jsapi::JS_Init;
 use js::jsapi::JS_InitStandardClasses;
 use js::jsapi::JS_NewGlobalObject;
 use js::jsapi::OnNewGlobalHookOption;
@@ -22,14 +21,13 @@ use std::ptr;
 
 #[test]
 fn vec_conversion() {
+    let rt = Runtime::new();
+    let cx = rt.cx();
+
+    let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
+    let c_option = CompartmentOptions::default();
+
     unsafe {
-        assert!(JS_Init());
-
-        let rt = Runtime::new(ptr::null_mut());
-        let cx = rt.cx();
-
-        let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
-        let c_option = CompartmentOptions::default();
         let global = JS_NewGlobalObject(cx, &SIMPLE_GLOBAL_CLASS,
                                         ptr::null_mut(), h_option, &c_option);
         let global_root = Rooted::new(cx, global);

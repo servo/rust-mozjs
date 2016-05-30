@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-use jsapi::{__BindgenUnionField, JSObject, JSString, TraceKind};
+use jsapi::{JSObject, JSString, TraceKind};
 use jsapi::Value;
 use jsapi::jsval_layout;
 use jsapi::JSValueType;

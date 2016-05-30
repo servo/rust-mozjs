@@ -5,7 +5,6 @@
 extern crate js;
 
 use js::jsapi::CompartmentOptions;
-use js::jsapi::JS_Init;
 use js::jsapi::JS_NewGlobalObject;
 use js::jsapi::OnNewGlobalHookOption;
 use js::jsapi::RootedObject;
@@ -17,10 +16,10 @@ use std::ptr;
 
 #[test]
 fn evaluate() {
+    let rt = Runtime::new();
+    let cx = rt.cx();
+
     unsafe {
-        assert!(JS_Init());
-        let rt = Runtime::new(ptr::null_mut());
-        let cx = rt.cx();
 
         let global = RootedObject::new(cx,
             JS_NewGlobalObject(cx, &SIMPLE_GLOBAL_CLASS, ptr::null_mut(),
