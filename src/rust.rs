@@ -24,10 +24,10 @@ use jsapi::{JSContext, JSRuntime, JSObject, JSFlatString, JSFunction, JSString, 
 use jsapi::{RuntimeOptionsRef, ContextOptionsRef, ReadOnlyCompileOptions};
 use jsapi::{JS_SetErrorReporter, Evaluate2, JSErrorReport};
 use jsapi::{JS_SetGCParameter, JSGCParamKey};
-use jsapi::{JSWhyMagic, Heap, Cell, HeapObjectPostBarrier, HeapValuePostBarrier};
+use jsapi::{Heap, HeapObjectPostBarrier, HeapValuePostBarrier};
 use jsapi::{ContextFriendFields};
 use jsapi::{CustomAutoRooter, AutoGCRooter, _vftable_CustomAutoRooter, AutoGCRooter_jspubtd_h_unnamed_1};
-use jsapi::{Rooted, RootedValue, Handle, MutableHandle, MutableHandleBase, RootedBase};
+use jsapi::{Rooted, Handle, MutableHandle, MutableHandleBase, RootedBase};
 use jsapi::{MutableHandleValue, HandleValue, HandleObject, HandleBase};
 use jsapi::AutoObjectVector;
 use jsapi::{ToBooleanSlow, ToNumberSlow, ToStringSlow};
@@ -455,29 +455,9 @@ impl Default for CompartmentOptions {
 
 const ChunkShift: usize = 20;
 const ChunkSize: usize = 1 << ChunkShift;
-const ChunkMask: usize = ChunkSize - 1;
 
 #[cfg(target_pointer_width = "32")]
 const ChunkLocationOffset: usize = ChunkSize - 2 * 4 - 8;
-
-#[cfg(target_pointer_width = "64")]
-const ChunkLocationOffset: usize = ChunkSize - 2 * 8 - 8;
-
-const ChunkLocationBitNursery: usize = 1;
-
-fn IsInsideNursery(p: *mut Cell) -> bool {
-    if p.is_null() {
-        return false;
-    }
-
-    let mut addr: usize = unsafe { mem::transmute(p) };
-    addr = (addr & !ChunkMask) | ChunkLocationOffset;
-
-    let location: *const u32 = unsafe { mem::transmute(addr) };
-    let location = unsafe { *location };
-    assert!(location != 0);
-    (location & ChunkLocationBitNursery as u32) != 0
-}
 
 pub trait GCMethods<T> {
     unsafe fn initial() -> T;
