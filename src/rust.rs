@@ -19,7 +19,7 @@ use std::cell::UnsafeCell;
 use std::marker::PhantomData;
 use consts::{JSCLASS_RESERVED_SLOTS_MASK, JSCLASS_GLOBAL_SLOT_COUNT, JSCLASS_IS_GLOBAL};
 use jsapi;
-use jsapi::{JS_NewContext, JS_DestroyContext, JS_NewRuntime, JS_DestroyRuntime};
+use jsapi::{JS_Init, JS_NewContext, JS_DestroyContext, JS_NewRuntime, JS_DestroyRuntime};
 use jsapi::{JSContext, JSRuntime, JSObject, JSFlatString, JSFunction, JSString, Symbol, JSScript, jsid, Value};
 use jsapi::{RuntimeOptionsRef, ContextOptionsRef, ReadOnlyCompileOptions};
 use jsapi::{JS_SetErrorReporter, Evaluate2, JSErrorReport};
@@ -112,46 +112,64 @@ pub struct Runtime {
 
 impl Runtime {
     /// Creates a new `JSRuntime` and `JSContext`.
-    ///
-    /// # Safety
-    ///
-    /// Calling this function concurrently can cause segfaults inside
-    /// SpiderMonkey
-    pub unsafe fn new(parent_rt: *mut JSRuntime) -> Runtime {
-        let js_runtime = JS_NewRuntime(default_heapsize, ChunkSize as u32, parent_rt);
-        assert!(!js_runtime.is_null());
+    pub fn new() -> Runtime {
+        unsafe {
+            struct TopRuntime(*mut JSRuntime);
+            unsafe impl Sync for TopRuntime {}
 
-        // Unconstrain the runtime's threshold on nominal heap size, to avoid
-        // triggering GC too often if operating continuously near an arbitrary
-        // finite threshold. This leaves the maximum-JS_malloc-bytes threshold
-        // still in effect to cause periodical, and we hope hygienic,
-        // last-ditch GCs from within the GC's allocator.
-        JS_SetGCParameter(js_runtime, JSGCParamKey::JSGC_MAX_BYTES, u32::MAX);
+            lazy_static! {
+                static ref PARENT: TopRuntime = {
+                    unsafe {
+                        assert!(JS_Init());
+                        let runtime = JS_NewRuntime(
+                            default_heapsize, ChunkSize as u32, ptr::null_mut());
+                        assert!(!runtime.is_null());
+                        let context = JS_NewContext(
+                            runtime, default_stacksize as size_t);
+                        assert!(!context.is_null());
+                        TopRuntime(runtime)
+                    }
+                };
+            }
 
-        JS_SetNativeStackQuota(js_runtime,
-                               STACK_QUOTA,
-                               STACK_QUOTA - SYSTEM_CODE_BUFFER,
-                               STACK_QUOTA - SYSTEM_CODE_BUFFER - TRUSTED_SCRIPT_BUFFER);
+            let js_runtime =
+                JS_NewRuntime(default_heapsize, ChunkSize as u32, PARENT.0);
+            assert!(!js_runtime.is_null());
 
-        let js_context = JS_NewContext(js_runtime, default_stacksize as size_t);
-        assert!(!js_context.is_null());
+            // Unconstrain the runtime's threshold on nominal heap size, to avoid
+            // triggering GC too often if operating continuously near an arbitrary
+            // finite threshold. This leaves the maximum-JS_malloc-bytes threshold
+            // still in effect to cause periodical, and we hope hygienic,
+            // last-ditch GCs from within the GC's allocator.
+            JS_SetGCParameter(
+                js_runtime, JSGCParamKey::JSGC_MAX_BYTES, u32::MAX);
 
-        let runtimeopts = RuntimeOptionsRef(js_runtime);
-        let contextopts = ContextOptionsRef(js_context);
+            JS_SetNativeStackQuota(
+                js_runtime,
+                STACK_QUOTA,
+                STACK_QUOTA - SYSTEM_CODE_BUFFER,
+                STACK_QUOTA - SYSTEM_CODE_BUFFER - TRUSTED_SCRIPT_BUFFER);
 
-        (*runtimeopts).set_baseline_(true);
-        (*runtimeopts).set_ion_(true);
-        (*runtimeopts).set_nativeRegExp_(true);
+            let js_context = JS_NewContext(js_runtime, default_stacksize as size_t);
+            assert!(!js_context.is_null());
 
-        (*contextopts).set_dontReportUncaught_(true);
-        (*contextopts).set_autoJSAPIOwnsErrorReporting_(true);
-        JS_SetErrorReporter(js_runtime, Some(reportError));
+            let runtimeopts = RuntimeOptionsRef(js_runtime);
+            let contextopts = ContextOptionsRef(js_context);
 
-        JS_BeginRequest(js_context);
+            (*runtimeopts).set_baseline_(true);
+            (*runtimeopts).set_ion_(true);
+            (*runtimeopts).set_nativeRegExp_(true);
 
-        Runtime {
-            rt: js_runtime,
-            cx: js_context,
+            (*contextopts).set_dontReportUncaught_(true);
+            (*contextopts).set_autoJSAPIOwnsErrorReporting_(true);
+            JS_SetErrorReporter(js_runtime, Some(reportError));
+
+            JS_BeginRequest(js_context);
+
+            Runtime {
+                rt: js_runtime,
+                cx: js_context,
+            }
         }
     }
 

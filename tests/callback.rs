@@ -11,7 +11,6 @@ use js::jsapi::JSAutoCompartment;
 use js::jsapi::JSContext;
 use js::jsapi::JS_DefineFunction;
 use js::jsapi::JS_EncodeStringToUTF8;
-use js::jsapi::JS_Init;
 use js::jsapi::JS_NewGlobalObject;
 use js::jsapi::JS_ReportError;
 use js::jsapi::OnNewGlobalHookOption;
@@ -27,14 +26,12 @@ use std::str;
 
 #[test]
 fn callback() {
+    let runtime = Runtime::new();
+    let context = runtime.cx();
+    let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
+    let c_option = CompartmentOptions::default();
+
     unsafe {
-        JS_Init();
-
-        let runtime = Runtime::new(ptr::null_mut());
-        let context = runtime.cx();
-
-        let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
-        let c_option = CompartmentOptions::default();
         let global = JS_NewGlobalObject(context, &SIMPLE_GLOBAL_CLASS, ptr::null_mut(), h_option, &c_option);
         let global_root = Rooted::new(context, global);
         let global = global_root.handle();
