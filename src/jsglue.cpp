@@ -593,6 +593,12 @@ RUST_JSID_TO_STRING(JS::HandleId id)
     return JSID_TO_STRING(id);
 }
 
+jsid
+RUST_SYMBOL_TO_JSID(JS::Symbol* sym)
+{
+    return SYMBOL_TO_JSID(sym);
+}
+
 void
 RUST_SET_JITINFO(JSFunction* func, const JSJitInfo* info) {
     SET_JITINFO(func, info);
