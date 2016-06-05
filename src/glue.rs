@@ -219,6 +219,7 @@ extern "C" {
     pub fn int_to_jsid(i: i32) -> jsid;
     pub fn RUST_JSID_IS_STRING(id: HandleId) -> bool;
     pub fn RUST_JSID_TO_STRING(id: HandleId) -> *mut JSString;
+    pub fn RUST_SYMBOL_TO_JSID(sym: *mut Symbol) -> jsid;
     pub fn RUST_SET_JITINFO(func: *mut JSFunction, info: *const JSJitInfo);
     pub fn RUST_INTERNED_STRING_TO_JSID(cx: *mut JSContext,
                                         str: *mut JSString) -> jsid;
