@@ -1,3 +1,8 @@
+ifeq (,$(findstring msvc,$(TARGET)))
+#
+# non-MSVC build
+#
+
 ifneq ($(HOST),$(TARGET))
 
 CXX ?= $(TARGET)-g++
@@ -37,3 +42,35 @@ $(OUT_DIR)/libjsglue.a: $(OUT_DIR)/jsglue.o
 
 $(OUT_DIR)/jsglue.o: src/jsglue.cpp
 	$(CXX) $(CFLAGS) -fno-rtti $< -o $@ -c
+
+else
+#
+# MSVC
+#
+CXX ?= cl -NOLOGO
+AR ?= lib -NOLOGO
+
+CFLAGS += -I$(DEP_MOZJS_OUTDIR)/dist/include -FI$(DEP_MOZJS_OUTDIR)/js/src/js-confdefs.h -DWIN32
+CFLAGS += -Zi
+CFLAGS += -GR-
+CFLAGS += -MD
+
+ifneq (,$(CARGO_FEATURE_DEBUGMOZJS))
+	# Dynamic debug runtime
+	CFLAGS += -MDd
+	CFLAGS += -Od -DDEBUG -D_DEBUG
+else
+	# Dynamic non-debug runtime
+	CFLAGS += -MD
+endif
+
+.PHONY: all
+all: $(OUT_DIR)/jsglue.lib
+
+$(OUT_DIR)/jsglue.lib: $(OUT_DIR)/jsglue.obj
+	$(AR) -OUT:$@ $<
+
+$(OUT_DIR)/jsglue.obj: src/jsglue.cpp
+	$(CXX) $(CFLAGS) $< -Fo: $@ -c
+
+endif
