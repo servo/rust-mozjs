@@ -1,0 +1,2 @@
+For generating the bindings with MSVC, you must use MSVC 2013 -- 2015
+doesn't work with clang's MSVC support yet.  Run 'bindings.sh msvc'.

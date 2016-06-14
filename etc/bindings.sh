@@ -1,6 +1,21 @@
+#!/bin/bash
+
 cd "$(dirname "$0")"
 
+EXTRA_FLAGS=
+if [[ "$1" == "msvc12" || "$1" == "msvc14" ]] ; then
+    EXTRA_FLAGS="--target=x86_64-pc-win32 -DWIN32=1"
+    if [[ "$1" == "msvc12" ]] ; then
+        EXTRA_FLAGS="$EXTRA_FLAGS -include msvc-char16t.h"
+    else
+        EXTRA_FLAGS="$EXTRA_FLAGS -fms-compatibility-version=19.00"
+    fi
+    EXTRA_FLAGS="$EXTRA_FLAGS -DEXPORT_JS_API=1"
+    EXTRA_FLAGS="$EXTRA_FLAGS -fvisibility=hidden"
+fi
+
 ../../rust-bindgen/target/debug/bindgen \
+  ${EXTRA_FLAGS} \
   -no-type-renaming \
   -dtor-attr unsafe_no_drop_flag \
   -blacklist-type DefaultHasher \
@@ -12,6 +27,7 @@ cd "$(dirname "$0")"
   -blacklist-type HashSet \
   -blacklist-type HashTable \
   -blacklist-type HashTableEntry \
+  -blacklist-type MemProfiler \
   -opaque-type RuntimeStats \
   -opaque-type EnumeratedArray \
   -opaque-type HashMap \

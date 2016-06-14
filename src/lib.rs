@@ -37,6 +37,12 @@ pub mod jsapi {
 
     unsafe impl Sync for JSClass {}
 
+    // With MSVC 2013, char16_t isn't a native type,
+    // so it gets put in the bindings output.
+    #[cfg(target_os = "windows")]
+    #[cfg(target_env = "msvc")]
+    pub type char16_t = ::std::os::raw::c_ushort;
+
     #[cfg(target_os = "linux")]
     #[cfg(target_pointer_width = "64")]
     #[cfg(not(feature = "debugmozjs"))]
@@ -58,14 +64,28 @@ pub mod jsapi {
     include!("jsapi_macos_64_debug.rs");
 
     #[cfg(target_os = "windows")]
+    #[cfg(target_env = "gnu")]
     #[cfg(target_pointer_width = "64")]
     #[cfg(not(feature = "debugmozjs"))]
     include!("jsapi_windows_gcc_64.rs");
 
     #[cfg(target_os = "windows")]
+    #[cfg(target_env = "gnu")]
     #[cfg(target_pointer_width = "64")]
     #[cfg(feature = "debugmozjs")]
     include!("jsapi_windows_gcc_64_debug.rs");
+
+    #[cfg(target_os = "windows")]
+    #[cfg(target_env = "msvc")]
+    #[cfg(target_pointer_width = "64")]
+    #[cfg(not(feature = "debugmozjs"))]
+    include!("jsapi_windows_msvc14_64.rs");
+
+    #[cfg(target_os = "windows")]
+    #[cfg(target_env = "msvc")]
+    #[cfg(target_pointer_width = "64")]
+    #[cfg(feature = "debugmozjs")]
+    include!("jsapi_windows_msvc14_64_debug.rs");
 
     #[cfg(any(target_os = "linux", target_os = "android"))]
     #[cfg(target_pointer_width = "32")]

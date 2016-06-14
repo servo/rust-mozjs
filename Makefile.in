@@ -1,11 +1,35 @@
 VPATH=%VPATH%
 
+ifeq($(VSINSTALLDIR),)
+
 CXX ?= g++
-RUSTC ?= rustc
 AR ?= ar
-RUSTFLAGS ?=
 EXT_DEPS ?=
-CFLAGS += -fPIC
+CFLAGS += -fPIC -fno-rtti
+COUTFLAG = -o
+CCOMPILEFLAG = -c
+LIBSUFFIX = a
+
+libjsglue.a: jsglue.o
+	$(AR) rcs libjsglue.a jsglue.o
+
+else
+
+CXX ?= cl
+LIB ?= lib
+EXT_DEPS ?=
+CFLAGS +=
+COUTFLAG = -Fo:
+CCOMPILEFLAG = -c
+LIBSUFFIX = lib
+
+libjsglue.a: jsglue.o
+	$(LIB) -NOLOGO -OUT:libjsglue.lib jsglue.obj
+
+endif
+
+RUSTC ?= rustc
+RUSTFLAGS ?=
 RUSTDOC ?= rustdoc
 RUSTDOC_FLAGS ?=
 RUSTDOC_TARGET ?= doc
@@ -19,18 +43,15 @@ RUST_SRC = $(shell find $(VPATH)/src -type f -name '*.rs')
 .PHONY: all
 all: libjs.dummy
 
-libjs.dummy: src/lib.rs $(RUST_SRC) libjsglue.a $(EXT_DEPS)
+libjs.dummy: src/lib.rs $(RUST_SRC) libjsglue.$(LIBSUFFIX) $(EXT_DEPS)
 	$(RUSTC) $(RUSTFLAGS) $< --out-dir .
 	touch $@
 
-js-test: src/lib.rs $(RUST_SRC) libjsglue.a
+js-test: src/lib.rs $(RUST_SRC) libjsglue.$(LIBSUFFIX)
 	$(RUSTC) $(RUSTFLAGS) $< -o $@ --test
 
-libjsglue.a: jsglue.o
-	$(AR) rcs libjsglue.a jsglue.o
-
 jsglue.o: src/jsglue.cpp
-	$(CXX) $(CFLAGS) -fno-rtti $< -o $@ -c
+	$(CXX) $(CFLAGS) $< $(COUTFLAG) $@ $(CCOMPILEFLAG)
 
 .PHONY: doc
 doc: $(RUSTDOC_TARGET)/js/index.html
