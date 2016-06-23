@@ -1,6 +1,7 @@
 cd "$(dirname "$0")"
 
 ../../rust-bindgen/target/debug/bindgen \
+  -no-class-constants \
   -no-type-renaming \
   -dtor-attr unsafe_no_drop_flag \
   -blacklist-type DefaultHasher \
