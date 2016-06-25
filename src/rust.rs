@@ -4,7 +4,7 @@
 
 //! Rust wrappers around the raw JS apis
 
-use libc::{size_t, c_uint, c_char, ptrdiff_t};
+use libc::{size_t, c_uint, c_char};
 use heapsize::HeapSizeOf;
 use std::char;
 use std::ffi;
@@ -26,7 +26,6 @@ use jsapi::{JS_SetErrorReporter, Evaluate2, JSErrorReport};
 use jsapi::{JS_SetGCParameter, JSGCParamKey};
 use jsapi::{Heap, HeapObjectPostBarrier, HeapValuePostBarrier};
 use jsapi::{ContextFriendFields};
-use jsapi::{CustomAutoRooter, AutoGCRooter, _vftable_CustomAutoRooter, AutoGCRooter_jspubtd_h_unnamed_1};
 use jsapi::{Rooted, Handle, MutableHandle, MutableHandleBase, RootedBase};
 use jsapi::{MutableHandleValue, HandleValue, HandleObject, HandleBase};
 use jsapi::AutoObjectVector;
@@ -399,45 +398,6 @@ impl<T> Drop for Rooted<T> {
             }
             assert!(*self.stack == mem::transmute(&*self));
             *self.stack = self.prev;
-        }
-    }
-}
-
-impl CustomAutoRooter {
-    pub fn new(cx: *mut JSContext, vftable: &'static _vftable_CustomAutoRooter)
-        -> CustomAutoRooter {
-        CustomAutoRooter::new_with_addr(cx, vftable, unsafe { return_address() })
-    }
-
-    pub fn new_with_addr(cx: *mut JSContext, vftable: &'static _vftable_CustomAutoRooter, addr: *const u8) -> CustomAutoRooter {
-        let ctxfriend: &mut ContextFriendFields = unsafe {
-            &mut *(cx as *mut ContextFriendFields)
-        };
-
-        let rooter = CustomAutoRooter {
-            _vftable: vftable as *const _,
-            _base: AutoGCRooter {
-                down: ctxfriend.roots.autoGCRooters_,
-                tag_: AutoGCRooter_jspubtd_h_unnamed_1::CUSTOM as ptrdiff_t,
-                stackTop: &mut ctxfriend.roots.autoGCRooters_ as *mut _,
-            }
-        };
-
-        ctxfriend.roots.autoGCRooters_ = unsafe {
-            (addr as *const *const u8).offset(1) as *const AutoGCRooter as *mut _
-        };
-        rooter
-    }
-}
-
-impl Drop for CustomAutoRooter {
-    fn drop(&mut self) {
-        if self._base.stackTop as usize == mem::POST_DROP_USIZE {
-            return;
-        }
-        unsafe {
-            assert!(*self._base.stackTop == mem::transmute(&self._base));
-            *self._base.stackTop = self._base.down;
         }
     }
 }
