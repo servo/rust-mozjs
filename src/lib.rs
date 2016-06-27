@@ -5,7 +5,6 @@
 #![crate_name = "js"]
 #![crate_type = "rlib"]
 
-#![feature(core_intrinsics)]
 #![feature(filling_drop)]
 #![feature(link_args)]
 #![feature(unsafe_no_drop_flag)]
@@ -77,12 +76,15 @@ pub mod jsapi {
     include!("jsapi_linux_32_debug.rs");
 }
 
+#[macro_use]
+pub mod rust;
+
 mod consts;
 pub mod conversions;
 pub mod error;
 pub mod glue;
 pub mod jsval;
-pub mod rust;
+
 
 pub use consts::*;
 
