@@ -23,7 +23,6 @@ extern crate libc;
 extern crate log;
 extern crate mozjs_sys;
 extern crate num_traits;
-extern crate rustc_serialize as serialize;
 
 pub mod jsapi {
     use libc::FILE;
@@ -110,3 +109,10 @@ impl<T: Copy + GCMethods<T>> HeapSizeOf for Heap<T> {
 }
 known_heap_size!(0, JSVal);
 
+impl jsapi::ObjectOpResult {
+    /// Set this ObjectOpResult to true and return true.
+    pub fn succeed(&mut self) -> bool {
+        self.code_ = jsapi::ObjectOpResult_SpecialCodes::OkCode as usize;
+        true
+    }
+}
