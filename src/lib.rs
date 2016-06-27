@@ -110,3 +110,10 @@ impl<T: Copy + GCMethods<T>> HeapSizeOf for Heap<T> {
 }
 known_heap_size!(0, JSVal);
 
+impl jsapi::ObjectOpResult {
+    /// Set this ObjectOpResult to true and return true.
+    pub fn succeed(&mut self) -> bool {
+        self.code_ = jsapi::ObjectOpResult_SpecialCodes::OkCode as usize;
+        true
+    }
+}
