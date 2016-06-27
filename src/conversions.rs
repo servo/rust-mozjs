@@ -33,7 +33,7 @@ use jsapi::JSPROP_ENUMERATE;
 use jsapi::{JSContext, JSObject, JSString, HandleValue, MutableHandleValue};
 use jsapi::{JS_NewUCStringCopyN, JS_StringHasLatin1Chars, JS_WrapValue};
 use jsapi::{JS_GetLatin1StringCharsAndLength, JS_GetTwoByteStringCharsAndLength};
-use jsapi::{JS_NewArrayObject1, JS_DefineElement, RootedValue, RootedObject};
+use jsapi::{JS_NewArrayObject1, JS_DefineElement, RootedObject};
 use jsapi::{ForOfIterator, ForOfIterator_NonIterableBehavior};
 use jsval::{BooleanValue, Int32Value, NullValue, UInt32Value, UndefinedValue};
 use jsval::{JSVal, ObjectValue, ObjectOrNullValue, StringValue};
@@ -473,10 +473,10 @@ impl<T: FromJSValConvertible> FromJSValConvertible for Option<T> {
 // https://heycam.github.io/webidl/#es-sequence
 impl<T: ToJSValConvertible> ToJSValConvertible for Vec<T> {
     unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
-        let js_array = RootedObject::new(cx, JS_NewArrayObject1(cx, self.len() as libc::size_t));
+        rooted!(in(cx) let js_array = JS_NewArrayObject1(cx, self.len() as libc::size_t));
         assert!(!js_array.handle().is_null());
 
-        let mut val = RootedValue::new(cx, UndefinedValue());
+        rooted!(in(cx) let mut val = UndefinedValue());
         for (index, obj) in self.iter().enumerate() {
             obj.to_jsval(cx, val.handle_mut());
 
@@ -485,6 +485,33 @@ impl<T: ToJSValConvertible> ToJSValConvertible for Vec<T> {
         }
 
         rval.set(ObjectValue(&*js_array.handle().get()));
+    }
+}
+
+/// Rooting guard for the iterator field of ForOfIterator.
+/// Behaves like RootedGuard (roots on creation, unroots on drop),
+/// but borrows and allows access to the whole ForOfIterator, so
+/// that methods on ForOfIterator can still be used through it.
+struct ForOfIteratorGuard<'a> {
+    root: &'a mut ForOfIterator
+}
+
+impl<'a> ForOfIteratorGuard<'a> {
+    fn new(cx: *mut JSContext, root: &'a mut ForOfIterator) -> Self {
+        unsafe {
+            root.iterator.add_to_root_stack(cx);
+        }
+        ForOfIteratorGuard {
+            root: root
+        }
+    }
+}
+
+impl<'a> Drop for ForOfIteratorGuard<'a> {
+    fn drop(&mut self) {
+        unsafe {
+            self.root.iterator.remove_from_root_stack();
+        }
     }
 }
 
@@ -497,9 +524,11 @@ impl<C: Clone, T: FromJSValConvertible<Config=C>> FromJSValConvertible for Vec<T
                          -> Result<Vec<T>, ()> {
         let mut iterator = ForOfIterator {
             cx_: cx,
-            iterator: RootedObject::new(cx, ptr::null_mut()),
+            iterator: RootedObject::new_unrooted(ptr::null_mut()),
             index: ::std::u32::MAX, // NOT_ARRAY
         };
+        let mut iterator = ForOfIteratorGuard::new(cx, &mut iterator);
+        let iterator = &mut *iterator.root;
 
         if !iterator.init(value, ForOfIterator_NonIterableBehavior::ThrowOnNonIterable) {
             return Err(())
@@ -509,7 +538,7 @@ impl<C: Clone, T: FromJSValConvertible<Config=C>> FromJSValConvertible for Vec<T
 
         loop {
             let mut done = false;
-            let mut val = RootedValue::new(cx, UndefinedValue());
+            rooted!(in(cx) let mut val = UndefinedValue());
             if !iterator.next(val.handle_mut(), &mut done) {
                 return Err(())
             }

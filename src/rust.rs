@@ -13,7 +13,6 @@ use std::slice;
 use std::mem;
 use std::u32;
 use std::default::Default;
-use std::intrinsics::return_address;
 use std::ops::{Deref, DerefMut};
 use std::cell::UnsafeCell;
 use std::marker::PhantomData;
@@ -269,38 +268,100 @@ impl RootKind for Value {
     fn rootKind() -> jsapi::RootKind { jsapi::RootKind::Value }
 }
 
-impl<T: RootKind + Copy> Rooted<T> {
-    pub fn new_with_addr(cx: *mut JSContext, initial: T, addr: *const u8) -> Rooted<T> {
-        let ctxfriend: &mut ContextFriendFields = unsafe {
-            mem::transmute(cx)
-        };
+impl<T> Rooted<T> {
+    pub fn new_unrooted(initial: T) -> Rooted<T> {
+        Rooted {
+            _base: RootedBase { _phantom0: PhantomData },
+            stack: ptr::null_mut(),
+            prev: ptr::null_mut(),
+            ptr: initial,
+        }
+    }
+
+    pub unsafe fn add_to_root_stack(&mut self, cx: *mut JSContext) where T: RootKind {
+        let ctxfriend: &mut ContextFriendFields = mem::transmute(cx);
 
         let kind = T::rootKind() as usize;
-        let root = Rooted::<T> {
-            _base: RootedBase { _phantom0: PhantomData },
-            stack: &mut ctxfriend.roots.stackRoots_[kind] as *mut _ as *mut _,
-            prev: ctxfriend.roots.stackRoots_[kind] as *mut _,
-            ptr: initial,
-        };
+        self.stack = &mut ctxfriend.roots.stackRoots_[kind] as *mut _ as *mut _;
+        self.prev = ctxfriend.roots.stackRoots_[kind] as *mut _;
 
-        ctxfriend.roots.stackRoots_[kind] = unsafe { mem::transmute(addr) };
-        root
+        ctxfriend.roots.stackRoots_[kind] = self as *mut _ as usize as _;
     }
 
-    pub fn new(cx: *mut JSContext, initial: T) -> Rooted<T> {
-        Rooted::new_with_addr(cx, initial, unsafe { return_address() })
+    pub unsafe fn remove_from_root_stack(&mut self) {
+        assert!(*self.stack == mem::transmute(&*self));
+        *self.stack = self.prev;
     }
+}
 
-    pub fn handle(&self) -> Handle<T> {
+/// Rust API for keeping a Rooted value in the context's root stack.
+/// Example usage: `rooted!(in(cx) let x = UndefinedValue());`.
+/// `RootedGuard::new` also works, but the macro is preferred.
+pub struct RootedGuard<'a, T: 'a> {
+    root: &'a mut Rooted<T>
+}
+
+impl<'a, T> RootedGuard<'a, T> {
+    pub fn new(cx: *mut JSContext, root: &'a mut Rooted<T>) -> Self where T: RootKind {
         unsafe {
-            Handle::from_marked_location(&self.ptr)
+            root.add_to_root_stack(cx);
+        }
+        RootedGuard {
+            root: root
         }
     }
 
-    pub fn handle_mut(&mut self) -> MutableHandle<T> {
+    pub fn handle(&self) -> Handle<T> where T: Copy {
         unsafe {
-            MutableHandle::from_marked_location(&mut self.ptr)
+            Handle::from_marked_location(&self.root.ptr)
         }
+    }
+
+    pub fn handle_mut(&mut self) -> MutableHandle<T> where T: Copy {
+        unsafe {
+            MutableHandle::from_marked_location(&mut self.root.ptr)
+        }
+    }
+
+    pub fn get(&self) -> T where T: Copy {
+        self.root.ptr
+    }
+
+    pub fn set(&mut self, v: T) {
+        self.root.ptr = v;
+    }
+}
+
+impl<'a, T> Deref for RootedGuard<'a, T> {
+    type Target = T;
+    fn deref(&self) -> &T {
+        &self.root.ptr
+    }
+}
+
+impl<'a, T> DerefMut for RootedGuard<'a, T> {
+    fn deref_mut(&mut self) -> &mut T {
+        &mut self.root.ptr
+    }
+}
+
+impl<'a, T> Drop for RootedGuard<'a, T> {
+    fn drop(&mut self) {
+        unsafe {
+            self.root.remove_from_root_stack();
+        }
+    }
+}
+
+#[macro_export]
+macro_rules! rooted {
+    (in($cx:expr) let $name:ident = $init:expr) => {
+        let mut __root = $crate::jsapi::Rooted::new_unrooted($init);
+        let $name = $crate::rust::RootedGuard::new($cx, &mut __root);
+    };
+    (in($cx:expr) let mut $name:ident = $init:expr) => {
+        let mut __root = $crate::jsapi::Rooted::new_unrooted($init);
+        let mut $name = $crate::rust::RootedGuard::new($cx, &mut __root);
     }
 }
 
@@ -386,18 +447,6 @@ impl<T: Copy> MutableHandle<T> {
     pub fn handle(&self) -> Handle<T> {
         unsafe {
             Handle::from_marked_location(&*self.ptr)
-        }
-    }
-}
-
-impl<T> Drop for Rooted<T> {
-    fn drop(&mut self) {
-        unsafe {
-            if self.stack as usize == mem::POST_DROP_USIZE {
-                return;
-            }
-            assert!(*self.stack == mem::transmute(&*self));
-            *self.stack = self.prev;
         }
     }
 }
