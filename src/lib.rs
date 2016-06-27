@@ -23,7 +23,6 @@ extern crate libc;
 extern crate log;
 extern crate mozjs_sys;
 extern crate num_traits;
-extern crate rustc_serialize as serialize;
 
 pub mod jsapi {
     use libc::FILE;
