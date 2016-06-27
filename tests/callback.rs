@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#[macro_use]
 extern crate js;
 extern crate libc;
 
@@ -14,8 +15,6 @@ use js::jsapi::JS_EncodeStringToUTF8;
 use js::jsapi::JS_NewGlobalObject;
 use js::jsapi::JS_ReportError;
 use js::jsapi::OnNewGlobalHookOption;
-use js::jsapi::Rooted;
-use js::jsapi::RootedValue;
 use js::jsapi::Value;
 use js::jsval::UndefinedValue;
 use js::rust::{Runtime, SIMPLE_GLOBAL_CLASS};
@@ -33,14 +32,14 @@ fn callback() {
 
     unsafe {
         let global = JS_NewGlobalObject(context, &SIMPLE_GLOBAL_CLASS, ptr::null_mut(), h_option, &c_option);
-        let global_root = Rooted::new(context, global);
+        rooted!(in(context) let global_root = global);
         let global = global_root.handle();
         let _ac = JSAutoCompartment::new(context, global.get());
         let function = JS_DefineFunction(context, global, b"puts\0".as_ptr() as *const libc::c_char,
                                          Some(puts), 1, 0);
         assert!(!function.is_null());
         let javascript = "puts('Test Iñtërnâtiônàlizætiøn ┬─┬ノ( º _ ºノ) ');";
-        let mut rval = RootedValue::new(runtime.cx(), UndefinedValue());
+        rooted!(in(context) let mut rval = UndefinedValue());
         let _ = runtime.evaluate_script(global, javascript, "test.js", 0, rval.handle_mut());
     }
 }
@@ -55,7 +54,7 @@ unsafe extern "C" fn puts(context: *mut JSContext, argc: u32, vp: *mut Value) ->
 
     let arg = args.get(0);
     let js = js::rust::ToString(context, arg);
-    let message_root = Rooted::new(context, js);
+    rooted!(in(context) let message_root = js);
     let message = JS_EncodeStringToUTF8(context, message_root.handle());
     let message = CStr::from_ptr(message);
     println!("{}", str::from_utf8(message.to_bytes()).unwrap());

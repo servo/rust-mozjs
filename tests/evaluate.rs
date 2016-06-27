@@ -2,13 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#[macro_use]
 extern crate js;
 
 use js::jsapi::CompartmentOptions;
 use js::jsapi::JS_NewGlobalObject;
 use js::jsapi::OnNewGlobalHookOption;
-use js::jsapi::RootedObject;
-use js::jsapi::RootedValue;
 use js::jsval::UndefinedValue;
 use js::rust::{Runtime, SIMPLE_GLOBAL_CLASS};
 
@@ -21,12 +20,12 @@ fn evaluate() {
 
     unsafe {
 
-        let global = RootedObject::new(cx,
+        rooted!(in(cx) let global =
             JS_NewGlobalObject(cx, &SIMPLE_GLOBAL_CLASS, ptr::null_mut(),
                                OnNewGlobalHookOption::FireOnNewGlobalHook,
                                &CompartmentOptions::default())
         );
-        let mut rval = RootedValue::new(cx, UndefinedValue());
+        rooted!(in(cx) let mut rval = UndefinedValue());
         assert!(rt.evaluate_script(global.handle(), "1 + 1",
                                    "test", 1, rval.handle_mut()).is_ok());
     }
