@@ -393,12 +393,6 @@ impl<T: Copy> MutableHandle<T> {
             ptr: ptr,
         }
     }
-
-    pub fn to_handle(&self) -> Handle<T> {
-        unsafe {
-            Handle::from_marked_location(self.ptr as *const _)
-        }
-    }
 }
 
 impl<T: Copy> Deref for MutableHandle<T> {
@@ -679,7 +673,7 @@ impl JSJitGetterCallArgs {
 impl JSJitSetterCallArgs {
     pub fn get(&self, i: u32) -> HandleValue {
         assert!(i == 0);
-        self._base.to_handle()
+        self._base.handle()
     }
 }
 
