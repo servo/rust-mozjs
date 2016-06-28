@@ -311,13 +311,13 @@ impl<'a, T> RootedGuard<'a, T> {
         }
     }
 
-    pub fn handle(&self) -> Handle<T> where T: Copy {
+    pub fn handle(&self) -> Handle<T> {
         unsafe {
             Handle::from_marked_location(&self.root.ptr)
         }
     }
 
-    pub fn handle_mut(&mut self) -> MutableHandle<T> where T: Copy {
+    pub fn handle_mut(&mut self) -> MutableHandle<T> {
         unsafe {
             MutableHandle::from_marked_location(&mut self.root.ptr)
         }
@@ -365,8 +365,10 @@ macro_rules! rooted {
     }
 }
 
-impl<T: Copy> Handle<T> {
-    pub fn get(&self) -> T {
+impl<T> Handle<T> {
+    pub fn get(&self) -> T
+        where T: Copy
+    {
         unsafe { *self.ptr }
     }
 
@@ -378,7 +380,7 @@ impl<T: Copy> Handle<T> {
     }
 }
 
-impl<T: Copy> Deref for Handle<T> {
+impl<T> Deref for Handle<T> {
     type Target = T;
 
     fn deref<'a>(&'a self) -> &'a T {
@@ -386,7 +388,7 @@ impl<T: Copy> Deref for Handle<T> {
     }
 }
 
-impl<T: Copy> MutableHandle<T> {
+impl<T> MutableHandle<T> {
     pub unsafe fn from_marked_location(ptr: *mut T) -> MutableHandle<T> {
         MutableHandle {
             _base: MutableHandleBase { _phantom0: PhantomData },
@@ -394,14 +396,26 @@ impl<T: Copy> MutableHandle<T> {
         }
     }
 
-    pub fn to_handle(&self) -> Handle<T> {
+    pub fn handle(&self) -> Handle<T> {
         unsafe {
             Handle::from_marked_location(self.ptr as *const _)
         }
     }
+
+    pub fn get(&self) -> T
+        where T: Copy
+    {
+        unsafe { *self.ptr }
+    }
+
+    pub fn set(&self, v: T)
+        where T: Copy
+    {
+        unsafe { *self.ptr = v }
+    }
 }
 
-impl<T: Copy> Deref for MutableHandle<T> {
+impl<T> Deref for MutableHandle<T> {
     type Target = T;
 
     fn deref<'a>(&'a self) -> &'a T {
@@ -409,7 +423,7 @@ impl<T: Copy> Deref for MutableHandle<T> {
     }
 }
 
-impl<T: Copy> DerefMut for MutableHandle<T> {
+impl<T> DerefMut for MutableHandle<T> {
     fn deref_mut<'a>(&'a mut self) -> &'a mut T {
         unsafe { &mut *self.ptr }
     }
@@ -431,22 +445,6 @@ impl HandleObject {
     pub fn null() -> HandleObject {
         unsafe {
             HandleObject::from_marked_location(&ConstNullValue)
-        }
-    }
-}
-
-impl<T: Copy> MutableHandle<T> {
-    pub fn get(&self) -> T {
-        unsafe { *self.ptr }
-    }
-
-    pub fn set(&self, v: T) {
-        unsafe { *self.ptr = v }
-    }
-
-    pub fn handle(&self) -> Handle<T> {
-        unsafe {
-            Handle::from_marked_location(&*self.ptr)
         }
     }
 }
@@ -679,7 +677,7 @@ impl JSJitGetterCallArgs {
 impl JSJitSetterCallArgs {
     pub fn get(&self, i: u32) -> HandleValue {
         assert!(i == 0);
-        self._base.to_handle()
+        self._base.handle()
     }
 }
 
