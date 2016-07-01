@@ -40,6 +40,8 @@ struct ProxyTraps {
     bool (*enumerate)(JSContext *cx, JS::HandleObject proxy,
                       JS::MutableHandleObject objp);
 
+    bool (*getPrototypeIfOrdinary)(JSContext *cx, JS::HandleObject proxy,
+                                   bool *isOrdinary, JS::MutableHandleObject protop);
     // getPrototype
     // setPrototype
     // setImmutablePrototype
@@ -73,7 +75,7 @@ struct ProxyTraps {
                        JS::NativeImpl impl, JS::CallArgs args);
     bool (*hasInstance)(JSContext *cx, JS::HandleObject proxy,
                         JS::MutableHandleValue v, bool *bp);
-    bool (*objectClassIs)(JS::HandleObject obj, js::ESClassValue classValue,
+    bool (*objectClassIs)(JS::HandleObject obj, js::ESClass classValue,
                           JSContext *cx);
     const char *(*className)(JSContext *cx, JS::HandleObject proxy);
     JSString *(*fun_toString)(JSContext *cx, JS::HandleObject proxy,
@@ -376,6 +378,13 @@ class ForwardingProxyHandler : public js::BaseProxyHandler
         return mTraps.delete_(cx, proxy, id, result);
     }
 
+    virtual bool getPrototypeIfOrdinary(JSContext* cx, JS::HandleObject proxy,
+                                        bool* isOrdinary,
+                                        JS::MutableHandleObject protop) const override
+    {
+        return mTraps.getPrototypeIfOrdinary(cx, proxy, isOrdinary, protop);
+    }
+
     virtual bool preventExtensions(JSContext *cx, JS::HandleObject proxy,
                                    JS::ObjectOpResult &result) const override
     {
@@ -523,15 +532,14 @@ void WindowProxyObjectMoved(JSObject*, const JSObject*)
     abort();
 }
 
-const js::Class WindowProxyClass =
-    PROXY_CLASS_WITH_EXT(
-        "Proxy",
-        0, /* additional class flags */
-        PROXY_MAKE_EXT(
-            false,   /* isWrappedNative */
-            WindowProxyObjectMoved
-        ));
+static const js::ClassExtension WindowProxyClassExtension = PROXY_MAKE_EXT(
+    WindowProxyObjectMoved
+);
 
+const js::Class WindowProxyClass = PROXY_CLASS_WITH_EXT(
+    "Proxy",
+    0, /* additional class flags */
+    &WindowProxyClassExtension);
 
 const js::Class*
 GetWindowProxyClass()

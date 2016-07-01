@@ -44,6 +44,12 @@ pub struct ProxyTraps {
                                               proxy: HandleObject,
                                               objp: MutableHandleObject)
                                              -> bool>,
+    pub getPrototypeIfOrdinary: ::std::option::Option<unsafe extern "C" fn
+                                                          (cx: *mut JSContext,
+                                                           proxy: HandleObject,
+                                                           isOrdinary: *mut bool,
+                                                           protop: MutableHandleObject)
+                                                          -> bool>,
     pub preventExtensions: ::std::option::Option<unsafe extern "C" fn
                                                      (cx: *mut JSContext,
                                                       proxy: HandleObject,
@@ -108,7 +114,7 @@ pub struct ProxyTraps {
                                                 bp: *mut bool) -> bool>,
     pub objectClassIs: ::std::option::Option<unsafe extern "C" fn
                                                  (obj: HandleObject,
-                                                  classValue: ESClassValue,
+                                                  classValue: ESClass,
                                                   cx: *mut JSContext) -> bool>,
     pub className: ::std::option::Option<unsafe extern "C" fn
                                              (cx: *mut JSContext,
