@@ -593,6 +593,7 @@ impl Drop for JSAutoCompartment {
 }
 
 impl JSJitMethodCallArgs {
+    #[inline]
     pub fn get(&self, i: u32) -> HandleValue {
         unsafe {
             if i < self._base.argc_ {
@@ -603,6 +604,7 @@ impl JSJitMethodCallArgs {
         }
     }
 
+    #[inline]
     pub fn index(&self, i: u32) -> HandleValue {
         assert!(i < self._base.argc_);
         unsafe {
@@ -610,6 +612,7 @@ impl JSJitMethodCallArgs {
         }
     }
 
+    #[inline]
     pub fn index_mut(&self, i: u32) -> MutableHandleValue {
         assert!(i < self._base.argc_);
         unsafe {
@@ -617,6 +620,7 @@ impl JSJitMethodCallArgs {
         }
     }
 
+    #[inline]
     pub fn rval(&self) -> MutableHandleValue {
         unsafe {
             MutableHandleValue::from_marked_location(self._base._base.argv_.offset(-2))
@@ -627,10 +631,12 @@ impl JSJitMethodCallArgs {
 // XXX need to hack up bindgen to convert this better so we don't have
 //     to duplicate so much code here
 impl CallArgs {
+    #[inline]
     pub unsafe fn from_vp(vp: *mut Value, argc: u32) -> CallArgs {
         CreateCallArgsFromVp(argc, vp)
     }
 
+    #[inline]
     pub fn index(&self, i: u32) -> HandleValue {
         assert!(i < self._base.argc_);
         unsafe {
@@ -638,6 +644,7 @@ impl CallArgs {
         }
     }
 
+    #[inline]
     pub fn index_mut(&self, i: u32) -> MutableHandleValue {
         assert!(i < self._base.argc_);
         unsafe {
@@ -645,6 +652,7 @@ impl CallArgs {
         }
     }
 
+    #[inline]
     pub fn get(&self, i: u32) -> HandleValue {
         unsafe {
             if i < self._base.argc_ {
@@ -655,12 +663,14 @@ impl CallArgs {
         }
     }
 
+    #[inline]
     pub fn rval(&self) -> MutableHandleValue {
         unsafe {
             MutableHandleValue::from_marked_location(self._base._base.argv_.offset(-2))
         }
     }
 
+    #[inline]
     pub fn thisv(&self) -> HandleValue {
         unsafe {
             HandleValue::from_marked_location(self._base._base.argv_.offset(-1))
@@ -669,12 +679,14 @@ impl CallArgs {
 }
 
 impl JSJitGetterCallArgs {
+    #[inline]
     pub fn rval(&self) -> MutableHandleValue {
         self._base
     }
 }
 
 impl JSJitSetterCallArgs {
+    #[inline]
     pub fn get(&self, i: u32) -> HandleValue {
         assert!(i == 0);
         self._base.handle()
