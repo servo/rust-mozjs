@@ -71,6 +71,7 @@ enum ValueShiftedTag {
 #[cfg(target_pointer_width = "64")]
 const JSVAL_PAYLOAD_MASK: u64 = 0x00007FFFFFFFFFFF;
 
+#[inline(always)]
 fn AsJSVal(val: u64) -> JSVal {
     JSVal {
         data: jsval_layout {
