@@ -233,38 +233,47 @@ impl HeapSizeOf for Runtime {
 // Rooting API for standard JS things
 
 pub trait RootKind {
+    #[inline(always)]
     fn rootKind() -> jsapi::RootKind;
 }
 
 impl RootKind for *mut JSObject {
+    #[inline(always)]
     fn rootKind() -> jsapi::RootKind { jsapi::RootKind::Object }
 }
 
 impl RootKind for *mut JSFlatString {
+    #[inline(always)]
     fn rootKind() -> jsapi::RootKind { jsapi::RootKind::String }
 }
 
 impl RootKind for *mut JSFunction {
+    #[inline(always)]
     fn rootKind() -> jsapi::RootKind { jsapi::RootKind::Object }
 }
 
 impl RootKind for *mut JSString {
+    #[inline(always)]
     fn rootKind() -> jsapi::RootKind { jsapi::RootKind::String }
 }
 
 impl RootKind for *mut Symbol {
+    #[inline(always)]
     fn rootKind() -> jsapi::RootKind { jsapi::RootKind::Symbol }
 }
 
 impl RootKind for *mut JSScript {
+    #[inline(always)]
     fn rootKind() -> jsapi::RootKind { jsapi::RootKind::Script }
 }
 
 impl RootKind for jsid {
+    #[inline(always)]
     fn rootKind() -> jsapi::RootKind { jsapi::RootKind::Id }
 }
 
 impl RootKind for Value {
+    #[inline(always)]
     fn rootKind() -> jsapi::RootKind { jsapi::RootKind::Value }
 }
 
