@@ -409,7 +409,9 @@ pub unsafe fn latin1_to_string(cx: *mut JSContext, s: *mut JSString) -> String {
     assert!(!chars.is_null());
 
     let chars = slice::from_raw_parts(chars, length as usize);
-    chars.iter().map(|&c| c as char).collect()
+    let mut s = String::with_capacity(length as usize);
+    s.extend(chars.iter().map(|&c| c as char));
+    s
 }
 
 // https://heycam.github.io/webidl/#es-USVString
