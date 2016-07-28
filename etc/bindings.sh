@@ -13,6 +13,8 @@ cd "$(dirname "$0")"
   -blacklist-type HashSet \
   -blacklist-type HashTable \
   -blacklist-type HashTableEntry \
+  -blacklist-type AutoStableStringChars \
+  -blacklist-type ErrorReport \
   -opaque-type RuntimeStats \
   -opaque-type EnumeratedArray \
   -opaque-type HashMap \
