@@ -18,10 +18,10 @@ use std::cell::UnsafeCell;
 use std::marker::PhantomData;
 use consts::{JSCLASS_RESERVED_SLOTS_MASK, JSCLASS_GLOBAL_SLOT_COUNT, JSCLASS_IS_GLOBAL};
 use jsapi;
-use jsapi::{JS_Init, JS_NewContext, JS_DestroyContext, JS_NewRuntime, JS_DestroyRuntime};
+use jsapi::{JS_Init, JS_GetContext, JS_NewRuntime, JS_DestroyRuntime};
 use jsapi::{JSContext, JSRuntime, JSObject, JSFlatString, JSFunction, JSString, Symbol, JSScript, jsid, Value};
-use jsapi::{RuntimeOptionsRef, ContextOptionsRef, ReadOnlyCompileOptions};
-use jsapi::{JS_SetErrorReporter, Evaluate2, JSErrorReport};
+use jsapi::{RuntimeOptionsRef, ReadOnlyCompileOptions};
+use jsapi::{SetWarningReporter, Evaluate2, JSErrorReport};
 use jsapi::{JS_SetGCParameter, JSGCParamKey};
 use jsapi::{Heap, HeapObjectPostBarrier, HeapValuePostBarrier};
 use jsapi::{ContextFriendFields};
@@ -45,9 +45,10 @@ use jsapi::JSClass;
 use jsapi::JS_GlobalObjectTraceHook;
 use jsval::UndefinedValue;
 use jsapi::JSCLASS_RESERVED_SLOTS_SHIFT;
+use jsapi::JSClassOps;
+use jsapi::InitSelfHostedCode;
 use glue::{CreateAutoObjectVector, CreateCallArgsFromVp, AppendToAutoObjectVector, DeleteAutoObjectVector};
 use glue::{NewCompileOptions, DeleteCompileOptions};
-use default_stacksize;
 use default_heapsize;
 
 // From Gecko:
@@ -122,9 +123,9 @@ impl Runtime {
                         let runtime = JS_NewRuntime(
                             default_heapsize, ChunkSize as u32, ptr::null_mut());
                         assert!(!runtime.is_null());
-                        let context = JS_NewContext(
-                            runtime, default_stacksize as size_t);
+                        let context = JS_GetContext(runtime);
                         assert!(!context.is_null());
+                        InitSelfHostedCode(context);
                         TopRuntime(runtime)
                     }
                 };
@@ -148,19 +149,17 @@ impl Runtime {
                 STACK_QUOTA - SYSTEM_CODE_BUFFER,
                 STACK_QUOTA - SYSTEM_CODE_BUFFER - TRUSTED_SCRIPT_BUFFER);
 
-            let js_context = JS_NewContext(js_runtime, default_stacksize as size_t);
+            let js_context = JS_GetContext(js_runtime);
             assert!(!js_context.is_null());
 
-            let runtimeopts = RuntimeOptionsRef(js_runtime);
-            let contextopts = ContextOptionsRef(js_context);
+            InitSelfHostedCode(js_context);
 
+            let runtimeopts = RuntimeOptionsRef(js_runtime);
             (*runtimeopts).set_baseline_(true);
             (*runtimeopts).set_ion_(true);
             (*runtimeopts).set_nativeRegExp_(true);
 
-            (*contextopts).set_dontReportUncaught_(true);
-            (*contextopts).set_autoJSAPIOwnsErrorReporting_(true);
-            JS_SetErrorReporter(js_runtime, Some(reportError));
+            SetWarningReporter(js_runtime, Some(report_warning));
 
             JS_BeginRequest(js_context);
 
@@ -216,7 +215,6 @@ impl Drop for Runtime {
     fn drop(&mut self) {
         unsafe {
             JS_EndRequest(self.cx);
-            JS_DestroyContext(self.cx);
             JS_DestroyRuntime(self.rt);
         }
     }
@@ -606,7 +604,7 @@ impl JSJitMethodCallArgs {
     pub fn get(&self, i: u32) -> HandleValue {
         unsafe {
             if i < self._base.argc_ {
-                HandleValue::from_marked_location(self._base._base.argv_.offset(i as isize))
+                HandleValue::from_marked_location(self._base.argv_.offset(i as isize))
             } else {
                 UndefinedHandleValue
             }
@@ -617,7 +615,7 @@ impl JSJitMethodCallArgs {
     pub fn index(&self, i: u32) -> HandleValue {
         assert!(i < self._base.argc_);
         unsafe {
-            HandleValue::from_marked_location(self._base._base.argv_.offset(i as isize))
+            HandleValue::from_marked_location(self._base.argv_.offset(i as isize))
         }
     }
 
@@ -625,14 +623,14 @@ impl JSJitMethodCallArgs {
     pub fn index_mut(&self, i: u32) -> MutableHandleValue {
         assert!(i < self._base.argc_);
         unsafe {
-            MutableHandleValue::from_marked_location(self._base._base.argv_.offset(i as isize))
+            MutableHandleValue::from_marked_location(self._base.argv_.offset(i as isize))
         }
     }
 
     #[inline]
     pub fn rval(&self) -> MutableHandleValue {
         unsafe {
-            MutableHandleValue::from_marked_location(self._base._base.argv_.offset(-2))
+            MutableHandleValue::from_marked_location(self._base.argv_.offset(-2))
         }
     }
 }
@@ -649,7 +647,7 @@ impl CallArgs {
     pub fn index(&self, i: u32) -> HandleValue {
         assert!(i < self._base.argc_);
         unsafe {
-            HandleValue::from_marked_location(self._base._base.argv_.offset(i as isize))
+            HandleValue::from_marked_location(self._base.argv_.offset(i as isize))
         }
     }
 
@@ -657,7 +655,7 @@ impl CallArgs {
     pub fn index_mut(&self, i: u32) -> MutableHandleValue {
         assert!(i < self._base.argc_);
         unsafe {
-            MutableHandleValue::from_marked_location(self._base._base.argv_.offset(i as isize))
+            MutableHandleValue::from_marked_location(self._base.argv_.offset(i as isize))
         }
     }
 
@@ -665,7 +663,7 @@ impl CallArgs {
     pub fn get(&self, i: u32) -> HandleValue {
         unsafe {
             if i < self._base.argc_ {
-                HandleValue::from_marked_location(self._base._base.argv_.offset(i as isize))
+                HandleValue::from_marked_location(self._base.argv_.offset(i as isize))
             } else {
                 UndefinedHandleValue
             }
@@ -675,14 +673,14 @@ impl CallArgs {
     #[inline]
     pub fn rval(&self) -> MutableHandleValue {
         unsafe {
-            MutableHandleValue::from_marked_location(self._base._base.argv_.offset(-2))
+            MutableHandleValue::from_marked_location(self._base.argv_.offset(-2))
         }
     }
 
     #[inline]
     pub fn thisv(&self) -> HandleValue {
         unsafe {
-            HandleValue::from_marked_location(self._base._base.argv_.offset(-1))
+            HandleValue::from_marked_location(self._base.argv_.offset(-1))
         }
     }
 }
@@ -853,7 +851,7 @@ pub unsafe fn ToString(cx: *mut JSContext, v: HandleValue) -> *mut JSString {
     ToStringSlow(cx, v)
 }
 
-pub unsafe extern fn reportError(_cx: *mut JSContext, _: *const c_char, report: *mut JSErrorReport) {
+pub unsafe extern fn report_warning(_cx: *mut JSContext, _: *const c_char, report: *mut JSErrorReport) {
     fn latin1_to_string(bytes: &[u8]) -> String {
         bytes.iter().map(|c| char::from_u32(*c as u32).unwrap()).collect()
     }
@@ -874,7 +872,7 @@ pub unsafe extern fn reportError(_cx: *mut JSContext, _: *const c_char, report: 
     let msg_slice = slice::from_raw_parts(msg_ptr, msg_len);
     let msg = String::from_utf16_lossy(msg_slice);
 
-    error!("Error at {}:{}:{}: {}\n", fname, lineno, column, msg);
+    warn!("Warning at {}:{}:{}: {}\n", fname, lineno, column, msg);
 }
 
 impl JSNativeWrapper {
@@ -945,10 +943,7 @@ pub unsafe fn define_properties(cx: *mut JSContext, obj: HandleObject,
     JS_DefineProperties(cx, obj, properties.as_ptr()).to_result()
 }
 
-/// This is a simple `JSClass` for global objects, primarily intended for tests.
-pub static SIMPLE_GLOBAL_CLASS: JSClass = JSClass {
-    name: b"Global\0" as *const u8 as *const _,
-    flags: JSCLASS_IS_GLOBAL | ((JSCLASS_GLOBAL_SLOT_COUNT & JSCLASS_RESERVED_SLOTS_MASK) << JSCLASS_RESERVED_SLOTS_SHIFT),
+static SIMPLE_GLOBAL_CLASS_OPS: JSClassOps = JSClassOps {
     addProperty: None,
     delProperty: None,
     getProperty: None,
@@ -961,5 +956,12 @@ pub static SIMPLE_GLOBAL_CLASS: JSClass = JSClass {
     hasInstance: None,
     construct: None,
     trace: Some(JS_GlobalObjectTraceHook),
-    reserved: [0 as *mut _; 23]
+};
+
+/// This is a simple `JSClass` for global objects, primarily intended for tests.
+pub static SIMPLE_GLOBAL_CLASS: JSClass = JSClass {
+    name: b"Global\0" as *const u8 as *const _,
+    flags: JSCLASS_IS_GLOBAL | ((JSCLASS_GLOBAL_SLOT_COUNT & JSCLASS_RESERVED_SLOTS_MASK) << JSCLASS_RESERVED_SLOTS_SHIFT),
+    cOps: &SIMPLE_GLOBAL_CLASS_OPS as *const JSClassOps,
+    reserved: [0 as *mut _; 3]
 };

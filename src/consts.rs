@@ -7,7 +7,6 @@ use jsapi::{JSCLASS_RESERVED_SLOTS_WIDTH, JSProtoKey};
 use libc::c_uint;
 
 pub const default_heapsize: u32 = 32_u32 * 1024_u32 * 1024_u32;
-pub const default_stacksize: usize = 8192;
 
 pub const JSCLASS_IS_DOMJSCLASS: c_uint = 1 << 4;
 pub const JSCLASS_USERBIT1: c_uint = 1 << 7;

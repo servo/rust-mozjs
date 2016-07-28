@@ -13,7 +13,8 @@ endif
 CFLAGS += -std=c++11 -DJS_NO_JSVAL_JSID_STRUCT_TYPES
 
 ifneq ("$(MSYSTEM)","")
-OUT_DIR := $(shell cygpath "$(OUT_DIR)")
+OUT_DIR := $(shell cygpath -m "$(OUT_DIR)")
+DEP_MOZJS_OUTDIR := $(shell cygpath -m "$(DEP_MOZJS_OUTDIR)")
 else # not msys/mingw64
 CFLAGS += -fPIC
 endif
