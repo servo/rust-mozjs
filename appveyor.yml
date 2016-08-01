@@ -26,3 +26,4 @@ build_script:
       set MSYSTEM=MINGW64
 
       bash -lc "cd $APPVEYOR_BUILD_FOLDER; cargo build && cargo test"
+      bash -lc "cd $APPVEYOR_BUILD_FOLDER; cargo build --features debugmozjs && cargo test --features debugmozjs"
