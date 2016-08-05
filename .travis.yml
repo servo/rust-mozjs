@@ -6,8 +6,17 @@ rust:
 matrix:
   include:
     - os: linux
-      env: CC="gcc-4.8" CPP="gcc-4.8 -E" CXX="g++-4.8"
+      env:
+        global:
+          - CC="gcc-4.8" CPP="gcc-4.8 -E" CXX="g++-4.8"
+        matrix:
+          - FEATURES=""
+          - FEATURES="--features debugmozjs"
     - os: osx
+      env:
+        matrix:
+          - FEATURES=""
+          - FEATURES="--features debugmozjs"
 
 addons:
   apt:
@@ -16,11 +25,6 @@ addons:
     packages:
     - gcc-4.8
     - g++-4.8
-
-env:
-  matrix:
-    - FEATURES=""
-    - FEATURES="--features debugmozjs"
 
 before_install:
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ccache; fi
