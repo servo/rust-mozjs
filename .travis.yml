@@ -1,9 +1,13 @@
 language: rust
 rust:
   - nightly
-os:
-  - linux
-  - osx
+
+
+matrix:
+  include:
+    - os: linux
+      env: CC="gcc-4.8" CPP="gcc-4.8 -E" CXX="g++-4.8"
+    - os: osx
 
 addons:
   apt:
@@ -14,8 +18,6 @@ addons:
     - g++-4.8
 
 env:
-  global:
-    - CC="gcc-4.8" CPP="gcc-4.8 -E" CXX="g++-4.8"
   matrix:
     - FEATURES=""
     - FEATURES="--features debugmozjs"
