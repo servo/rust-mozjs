@@ -8,10 +8,14 @@ matrix:
     - os: linux
       env:
         - FEATURES="" CC="gcc-4.8" CPP="gcc-4.8 -E" CXX="g++-4.8"
+    - os: linux
+      env:
         - FEATURES="--features debugmozjs" CC="gcc-4.8" CPP="gcc-4.8 -E" CXX="g++-4.8"
     - os: osx
       env:
         - FEATURES=""
+    - os: osx
+      env:
         - FEATURES="--features debugmozjs"
 
 addons:
