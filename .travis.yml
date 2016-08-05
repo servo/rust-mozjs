@@ -7,16 +7,12 @@ matrix:
   include:
     - os: linux
       env:
-        global:
-          - CC="gcc-4.8" CPP="gcc-4.8 -E" CXX="g++-4.8"
-        matrix:
-          - FEATURES=""
-          - FEATURES="--features debugmozjs"
+        - FEATURES="" CC="gcc-4.8" CPP="gcc-4.8 -E" CXX="g++-4.8"
+        - FEATURES="--features debugmozjs" CC="gcc-4.8" CPP="gcc-4.8 -E" CXX="g++-4.8"
     - os: osx
       env:
-        matrix:
-          - FEATURES=""
-          - FEATURES="--features debugmozjs"
+        - FEATURES=""
+        - FEATURES="--features debugmozjs"
 
 addons:
   apt:
