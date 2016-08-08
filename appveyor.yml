@@ -6,7 +6,6 @@ environment:
   MSYS: 'winsymlinks=lnk'
   matrix:
   - TARGET: nightly-x86_64-pc-windows-msvc
-  - TARGET: nightly-x86_64-pc-windows-gnu
 
 install:
   - bash -lc "echo $MSYSTEM; pacman --needed --noconfirm -Sy pacman-mirrors"
@@ -25,3 +24,6 @@ build_script:
       set MSYSTEM=MINGW64
 
       bash -lc "cd $APPVEYOR_BUILD_FOLDER; cargo build && cargo test"
+
+on_finish:
+  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
