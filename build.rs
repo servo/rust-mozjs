@@ -2,17 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use std::env;
-use std::process::{Command, Stdio};
+extern crate cmake;
 
 fn main() {
-    let result = Command::new("make")
-        .args(&["-R", "-f", "makefile.cargo"])
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .status()
-        .unwrap();
-    assert!(result.success());
-    println!("cargo:rustc-link-search=native={}", env::var("OUT_DIR").unwrap());
+    let dst = cmake::Config::new(".").build();
+    println!("cargo:rustc-link-search=native={}/lib", dst.display());
     println!("cargo:rustc-link-lib=static=jsglue");
 }
