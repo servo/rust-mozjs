@@ -705,6 +705,8 @@ DeleteAutoObjectVector(JS::AutoObjectVector* v)
  #include <malloc/malloc.h>
 #elif defined(__MINGW32__) || defined(__MINGW64__)
  // nothing needed here
+#elif defined(_MSC_VER)
+ // nothing needed here
 #else
  #error "unsupported platform"
 #endif
@@ -717,6 +719,8 @@ static size_t MallocSizeOf(const void* aPtr)
 #elif defined(__APPLE__)
     return malloc_size((void*)aPtr);
 #elif defined(__MINGW32__) || defined(__MINGW64__)
+    return _msize((void*)aPtr);
+#elif defined(_MSC_VER)
     return _msize((void*)aPtr);
 #else
     #error "unsupported platform"

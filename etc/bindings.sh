@@ -1,6 +1,17 @@
+#!/bin/bash
+
 cd "$(dirname "$0")"
 
+EXTRA_FLAGS=
+if [[ "$1" == "msvc14" ]] ; then
+    EXTRA_FLAGS="-use-msvc-mangling --target=x86_64-pc-win32 -DWIN32=1"
+    EXTRA_FLAGS="$EXTRA_FLAGS -fms-compatibility-version=19.00"
+    EXTRA_FLAGS="$EXTRA_FLAGS -DEXPORT_JS_API=1 -D_CRT_USE_BUILTIN_OFFSETOF"
+    EXTRA_FLAGS="$EXTRA_FLAGS -fvisibility=hidden"
+fi
+
 ../../rust-bindgen/target/debug/bindgen \
+  ${EXTRA_FLAGS} \
   -no-class-constants \
   -no-type-renaming \
   -dtor-attr unsafe_no_drop_flag \
@@ -15,6 +26,7 @@ cd "$(dirname "$0")"
   -blacklist-type HashTableEntry \
   -blacklist-type AutoStableStringChars \
   -blacklist-type ErrorReport \
+  -blacklist-type MemProfiler \
   -opaque-type RuntimeStats \
   -opaque-type EnumeratedArray \
   -opaque-type HashMap \
