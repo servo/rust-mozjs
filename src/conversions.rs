@@ -172,6 +172,16 @@ impl ToJSValConvertible for JSVal {
     }
 }
 
+impl FromJSValConvertible for JSVal {
+    type Config = ();
+    unsafe fn from_jsval(_cx: *mut JSContext,
+                         value: HandleValue,
+                         _option: ())
+                         -> Result<JSVal, ()> {
+        Ok(value.get())
+    }
+}
+
 impl ToJSValConvertible for HandleValue {
     #[inline]
     unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
