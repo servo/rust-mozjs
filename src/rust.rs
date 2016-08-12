@@ -683,6 +683,18 @@ impl CallArgs {
             HandleValue::from_marked_location(self._base.argv_.offset(-1))
         }
     }
+
+    #[inline]
+    pub fn calleev(&self) -> HandleValue {
+        unsafe {
+            HandleValue::from_marked_location(self._base.argv_.offset(-2))
+        }
+    }
+
+    #[inline]
+    pub fn callee(&self) -> *mut JSObject {
+        self.calleev().to_object()
+    }
 }
 
 impl JSJitGetterCallArgs {
