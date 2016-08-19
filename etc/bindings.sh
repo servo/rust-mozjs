@@ -10,7 +10,15 @@ if [[ "$1" == "msvc14" ]] ; then
     EXTRA_FLAGS="$EXTRA_FLAGS -fvisibility=hidden"
 fi
 
-../../rust-bindgen/target/debug/bindgen \
+: ${BINDGEN:=../../rust-bindgen/target/debug/bindgen}
+
+if [[ ! -x "$BINDGEN" ]]; then
+    echo "error: BINDGEN does not exist or isn't executable!"
+    echo "error: with BINDGEN=$BINDGEN"
+    exit 1
+fi
+
+$BINDGEN \
   ${EXTRA_FLAGS} \
   -no-class-constants \
   -no-type-renaming \
