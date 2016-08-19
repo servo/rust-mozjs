@@ -41,14 +41,14 @@ fn vec_conversion() {
         orig_vec.to_jsval(cx, rval.handle_mut());
         let converted = Vec::<f32>::from_jsval(cx, rval.handle(), ()).unwrap();
 
-        assert_eq!(orig_vec, converted);
+        assert_eq!(&orig_vec, converted.get_success_value().unwrap());
 
         let orig_vec: Vec<i32> = vec![1, 2, 3];
         orig_vec.to_jsval(cx, rval.handle_mut());
         let converted = Vec::<i32>::from_jsval(cx, rval.handle(),
                                                ConversionBehavior::Default).unwrap();
 
-        assert_eq!(orig_vec, converted);
+        assert_eq!(&orig_vec, converted.get_success_value().unwrap());
 
         rt.evaluate_script(global, "new Set([1, 2, 3])",
                            "test", 1, rval.handle_mut()).unwrap();
@@ -56,6 +56,6 @@ fn vec_conversion() {
           Vec::<i32>::from_jsval(cx, rval.handle(),
                                  ConversionBehavior::Default).unwrap();
 
-        assert_eq!(orig_vec, converted);
+        assert_eq!(&orig_vec, converted.get_success_value().unwrap());
     }
 }
