@@ -863,9 +863,22 @@ pub struct _vftable_CallbackTracer {
 }
 #[repr(C)]
 #[derive(Debug, Copy)]
-pub struct CallbackTracer_ContextFunctor;
+pub struct CallbackTracer_ContextFunctor {
+    pub _vftable: *const _vftable_CallbackTracer_ContextFunctor,
+}
+#[repr(C)]
+pub struct _vftable_CallbackTracer_ContextFunctor {
+    pub _bindgen_empty_ctype_warning_fix: u64,
+}
 impl ::std::clone::Clone for CallbackTracer_ContextFunctor {
     fn clone(&self) -> Self { *self }
+}
+#[test]
+fn bindgen_test_layout_CallbackTracer_ContextFunctor() {
+    assert_eq!(::std::mem::size_of::<CallbackTracer_ContextFunctor>() ,
+               8usize);
+    assert_eq!(::std::mem::align_of::<CallbackTracer_ContextFunctor>() ,
+               8usize);
 }
 impl ::std::clone::Clone for CallbackTracer {
     fn clone(&self) -> Self { *self }
@@ -4430,6 +4443,10 @@ fn bindgen_test_layout_CompartmentFilter() {
 pub struct AllCompartments {
     pub _base: CompartmentFilter,
 }
+#[repr(C)]
+pub struct _vftable_AllCompartments {
+    pub _base: _vftable_CompartmentFilter,
+}
 impl ::std::clone::Clone for AllCompartments {
     fn clone(&self) -> Self { *self }
 }
@@ -4437,6 +4454,10 @@ impl ::std::clone::Clone for AllCompartments {
 #[derive(Debug, Copy)]
 pub struct ContentCompartmentsOnly {
     pub _base: CompartmentFilter,
+}
+#[repr(C)]
+pub struct _vftable_ContentCompartmentsOnly {
+    pub _base: _vftable_CompartmentFilter,
 }
 impl ::std::clone::Clone for ContentCompartmentsOnly {
     fn clone(&self) -> Self { *self }
@@ -4446,6 +4467,10 @@ impl ::std::clone::Clone for ContentCompartmentsOnly {
 pub struct ChromeCompartmentsOnly {
     pub _base: CompartmentFilter,
 }
+#[repr(C)]
+pub struct _vftable_ChromeCompartmentsOnly {
+    pub _base: _vftable_CompartmentFilter,
+}
 impl ::std::clone::Clone for ChromeCompartmentsOnly {
     fn clone(&self) -> Self { *self }
 }
@@ -4454,6 +4479,10 @@ impl ::std::clone::Clone for ChromeCompartmentsOnly {
 pub struct SingleCompartment {
     pub _base: CompartmentFilter,
     pub ours: *mut JSCompartment,
+}
+#[repr(C)]
+pub struct _vftable_SingleCompartment {
+    pub _base: _vftable_CompartmentFilter,
 }
 impl ::std::clone::Clone for SingleCompartment {
     fn clone(&self) -> Self { *self }
@@ -4468,6 +4497,10 @@ fn bindgen_test_layout_SingleCompartment() {
 pub struct CompartmentsWithPrincipals {
     pub _base: CompartmentFilter,
     pub principals: *mut JSPrincipals,
+}
+#[repr(C)]
+pub struct _vftable_CompartmentsWithPrincipals {
+    pub _base: _vftable_CompartmentFilter,
 }
 impl ::std::clone::Clone for CompartmentsWithPrincipals {
     fn clone(&self) -> Self { *self }
@@ -5251,9 +5284,22 @@ pub struct _vftable_ScriptEnvironmentPreparer {
 }
 #[repr(C)]
 #[derive(Debug, Copy)]
-pub struct ScriptEnvironmentPreparer_Closure;
+pub struct ScriptEnvironmentPreparer_Closure {
+    pub _vftable: *const _vftable_ScriptEnvironmentPreparer_Closure,
+}
+#[repr(C)]
+pub struct _vftable_ScriptEnvironmentPreparer_Closure {
+    pub _bindgen_empty_ctype_warning_fix: u64,
+}
 impl ::std::clone::Clone for ScriptEnvironmentPreparer_Closure {
     fn clone(&self) -> Self { *self }
+}
+#[test]
+fn bindgen_test_layout_ScriptEnvironmentPreparer_Closure() {
+    assert_eq!(::std::mem::size_of::<ScriptEnvironmentPreparer_Closure>() ,
+               8usize);
+    assert_eq!(::std::mem::align_of::<ScriptEnvironmentPreparer_Closure>() ,
+               8usize);
 }
 impl ::std::clone::Clone for ScriptEnvironmentPreparer {
     fn clone(&self) -> Self { *self }
@@ -5289,9 +5335,20 @@ fn bindgen_test_layout_AutoCTypesActivityCallback() {
 }
 #[repr(C)]
 #[derive(Debug, Copy)]
-pub struct AllocationMetadataBuilder;
+pub struct AllocationMetadataBuilder {
+    pub _vftable: *const _vftable_AllocationMetadataBuilder,
+}
+#[repr(C)]
+pub struct _vftable_AllocationMetadataBuilder {
+    pub _bindgen_empty_ctype_warning_fix: u64,
+}
 impl ::std::clone::Clone for AllocationMetadataBuilder {
     fn clone(&self) -> Self { *self }
+}
+#[test]
+fn bindgen_test_layout_AllocationMetadataBuilder() {
+    assert_eq!(::std::mem::size_of::<AllocationMetadataBuilder>() , 8usize);
+    assert_eq!(::std::mem::align_of::<AllocationMetadataBuilder>() , 8usize);
 }
 #[repr(C)]
 #[unsafe_no_drop_flag]
@@ -5345,41 +5402,6 @@ pub struct _vftable_GCHeapProfiler {
 fn bindgen_test_layout_GCHeapProfiler() {
     assert_eq!(::std::mem::size_of::<GCHeapProfiler>() , 8usize);
     assert_eq!(::std::mem::align_of::<GCHeapProfiler>() , 8usize);
-}
-#[repr(C)]
-#[derive(Debug, Copy)]
-pub struct MemProfiler {
-    pub mGCHeapProfiler: *mut GCHeapProfiler,
-    pub mRuntime: *mut JSRuntime,
-}
-impl ::std::clone::Clone for MemProfiler {
-    fn clone(&self) -> Self { *self }
-}
-#[test]
-fn bindgen_test_layout_MemProfiler() {
-    assert_eq!(::std::mem::size_of::<MemProfiler>() , 16usize);
-    assert_eq!(::std::mem::align_of::<MemProfiler>() , 8usize);
-}
-extern "C" {
-    fn _ZN11MemProfiler5startEP14GCHeapProfiler(this: *mut MemProfiler,
-                                                aGCHeapProfiler:
-                                                    *mut GCHeapProfiler);
-    fn _ZN11MemProfiler4stopEv(this: *mut MemProfiler);
-    fn _ZN11MemProfiler14GetMemProfilerEP9JSRuntime(runtime: *mut JSRuntime)
-     -> *mut MemProfiler;
-}
-impl MemProfiler {
-    #[inline]
-    pub unsafe fn start(&mut self, aGCHeapProfiler: *mut GCHeapProfiler) {
-        _ZN11MemProfiler5startEP14GCHeapProfiler(&mut *self, aGCHeapProfiler)
-    }
-    #[inline]
-    pub unsafe fn stop(&mut self) { _ZN11MemProfiler4stopEv(&mut *self) }
-    #[inline]
-    pub unsafe fn GetMemProfiler(runtime: *mut JSRuntime)
-     -> *mut MemProfiler {
-        _ZN11MemProfiler14GetMemProfilerEP9JSRuntime(runtime)
-    }
 }
 #[repr(i32)]
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
