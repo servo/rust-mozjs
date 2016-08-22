@@ -1,4 +1,5 @@
 use jsapi::*;
+use std::os::raw::c_void;
 
 pub enum Action { }
 unsafe impl Sync for ProxyTraps { }
@@ -265,4 +266,5 @@ extern "C" {
     pub fn CallUnbarrieredObjectTracer(trc: *mut JSTracer,
                                        objp: *mut *mut JSObject,
                                        name: *const ::libc::c_char);
+    pub fn GetProxyHandlerFamily() -> *const c_void;
 }

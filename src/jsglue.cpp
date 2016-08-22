@@ -630,6 +630,12 @@ IsProxyHandlerFamily(JSObject* obj)
 }
 
 const void*
+GetProxyHandlerFamily()
+{
+    return &HandlerFamily;
+}
+
+const void*
 GetProxyHandlerExtra(JSObject* obj)
 {
     const js::BaseProxyHandler* handler = js::GetProxyHandler(obj);
