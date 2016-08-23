@@ -26,6 +26,7 @@ promises = ['mozjs_sys/promises']
 
 [dependencies.mozjs_sys]
 git = "https://github.com/servo/mozjs"
+branch = "smup"
 
 [dependencies]
 lazy_static = "0.2.1"
