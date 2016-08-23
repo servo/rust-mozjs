@@ -22,6 +22,7 @@ doctest = false
 
 [features]
 debugmozjs = ['mozjs_sys/debugmozjs']
+promises = ['mozjs_sys/promises']
 
 [dependencies.mozjs_sys]
 git = "https://github.com/servo/mozjs"
