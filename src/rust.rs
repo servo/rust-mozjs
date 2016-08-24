@@ -18,9 +18,9 @@ use std::cell::UnsafeCell;
 use std::marker::PhantomData;
 use consts::{JSCLASS_RESERVED_SLOTS_MASK, JSCLASS_GLOBAL_SLOT_COUNT, JSCLASS_IS_GLOBAL};
 use jsapi;
-use jsapi::{JS_Init, JS_GetContext, JS_NewRuntime, JS_DestroyRuntime};
-use jsapi::{JSContext, JSRuntime, JSObject, JSFlatString, JSFunction, JSString, Symbol, JSScript, jsid, Value};
-use jsapi::{RuntimeOptionsRef, ReadOnlyCompileOptions};
+use jsapi::{InitWithFailureDiagnostic, JS_NewContext, JS_DestroyContext};
+use jsapi::{JSContext, JSObject, JSFlatString, JSFunction, JSString, Symbol, JSScript, jsid, Value};
+use jsapi::{ContextOptionsRef, ReadOnlyCompileOptions};
 use jsapi::{SetWarningReporter, Evaluate2, JSErrorReport};
 use jsapi::{JS_SetGCParameter, JSGCParamKey};
 use jsapi::{Heap, HeapObjectPostBarrier, HeapValuePostBarrier};
@@ -103,37 +103,43 @@ impl ToResult for bool {
 // ___________________________________________________________________________
 // friendly Rustic API to runtimes
 
-/// A wrapper for the `JSRuntime` and `JSContext` structures in SpiderMonkey.
+/// A wrapper for the `JSContext` structure in SpiderMonkey.
 pub struct Runtime {
-    rt: *mut JSRuntime,
     cx: *mut JSContext,
 }
 
 impl Runtime {
-    /// Creates a new `JSRuntime` and `JSContext`.
+    /// Creates a new `JSContext`.
     pub fn new() -> Runtime {
         unsafe {
-            struct TopRuntime(*mut JSRuntime);
-            unsafe impl Sync for TopRuntime {}
+            struct TopContext(*mut JSContext);
+            unsafe impl Sync for TopContext {}
 
             lazy_static! {
-                static ref PARENT: TopRuntime = {
+                static ref PARENT: TopContext = {
                     unsafe {
-                        assert!(JS_Init());
-                        let runtime = JS_NewRuntime(
+                        // Yes, this is asserting that this call returns *null*
+                        // (not non-null) on purpose. Unlike the rest of JSAPI,
+                        // this function returns non-null on failure and null on
+                        // success.
+                        assert!(InitWithFailureDiagnostic(if cfg!(feature = "debugmozjs") {
+                            true
+                        } else {
+                            false
+                        }).is_null());
+
+                        let context = JS_NewContext(
                             default_heapsize, ChunkSize as u32, ptr::null_mut());
-                        assert!(!runtime.is_null());
-                        let context = JS_GetContext(runtime);
                         assert!(!context.is_null());
                         InitSelfHostedCode(context);
-                        TopRuntime(runtime)
+                        TopContext(context)
                     }
                 };
             }
 
-            let js_runtime =
-                JS_NewRuntime(default_heapsize, ChunkSize as u32, PARENT.0);
-            assert!(!js_runtime.is_null());
+            let js_context =
+                JS_NewContext(default_heapsize, ChunkSize as u32, PARENT.0);
+            assert!(!js_context.is_null());
 
             // Unconstrain the runtime's threshold on nominal heap size, to avoid
             // triggering GC too often if operating continuously near an arbitrary
@@ -141,41 +147,32 @@ impl Runtime {
             // still in effect to cause periodical, and we hope hygienic,
             // last-ditch GCs from within the GC's allocator.
             JS_SetGCParameter(
-                js_runtime, JSGCParamKey::JSGC_MAX_BYTES, u32::MAX);
+                js_context, JSGCParamKey::JSGC_MAX_BYTES, u32::MAX);
 
             JS_SetNativeStackQuota(
-                js_runtime,
+                js_context,
                 STACK_QUOTA,
                 STACK_QUOTA - SYSTEM_CODE_BUFFER,
                 STACK_QUOTA - SYSTEM_CODE_BUFFER - TRUSTED_SCRIPT_BUFFER);
 
-            let js_context = JS_GetContext(js_runtime);
-            assert!(!js_context.is_null());
-
             InitSelfHostedCode(js_context);
 
-            let runtimeopts = RuntimeOptionsRef(js_runtime);
-            (*runtimeopts).set_baseline_(true);
-            (*runtimeopts).set_ion_(true);
-            (*runtimeopts).set_nativeRegExp_(true);
+            let opts = ContextOptionsRef(js_context);
+            (*opts).set_baseline_(true);
+            (*opts).set_ion_(true);
+            (*opts).set_nativeRegExp_(true);
 
-            SetWarningReporter(js_runtime, Some(report_warning));
+            SetWarningReporter(js_context, Some(report_warning));
 
             JS_BeginRequest(js_context);
 
             Runtime {
-                rt: js_runtime,
                 cx: js_context,
             }
         }
     }
 
-    /// Returns the `JSRuntime` object.
-    pub fn rt(&self) -> *mut JSRuntime {
-        self.rt
-    }
-
-    /// Returns the `JSContext` object.
+    /// Returns the underlying `JSContext` object.
     pub fn cx(&self) -> *mut JSContext {
         self.cx
     }
@@ -215,7 +212,7 @@ impl Drop for Runtime {
     fn drop(&mut self) {
         unsafe {
             JS_EndRequest(self.cx);
-            JS_DestroyRuntime(self.rt);
+            JS_DestroyContext(self.cx);
         }
     }
 }
@@ -285,14 +282,26 @@ impl<T> Rooted<T> {
         }
     }
 
+    unsafe fn get_root_stack(cx: &mut ContextFriendFields)
+                        -> *mut *mut Rooted<*mut ::std::os::raw::c_void>
+        where T: RootKind
+    {
+        let kind = T::rootKind() as usize;
+        if let Some(zone) = cx.zone_.as_mut() {
+            &mut zone.stackRoots_[kind] as *mut _ as *mut _
+        } else {
+            &mut cx._base.roots.stackRoots_[kind] as *mut _ as *mut _
+        }
+    }
+
     pub unsafe fn add_to_root_stack(&mut self, cx: *mut JSContext) where T: RootKind {
         let ctxfriend: &mut ContextFriendFields = mem::transmute(cx);
 
-        let kind = T::rootKind() as usize;
-        self.stack = &mut ctxfriend.roots.stackRoots_[kind] as *mut _ as *mut _;
-        self.prev = ctxfriend.roots.stackRoots_[kind] as *mut _;
+        self.stack = Self::get_root_stack(ctxfriend);
+        let stack = self.stack.as_mut().unwrap();
+        self.prev = *stack as *mut _;
 
-        ctxfriend.roots.stackRoots_[kind] = self as *mut _ as usize as _;
+        *stack = self as *mut _ as usize as _;
     }
 
     pub unsafe fn remove_from_root_stack(&mut self) {

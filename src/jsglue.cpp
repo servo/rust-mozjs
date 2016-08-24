@@ -734,10 +734,10 @@ static size_t MallocSizeOf(const void* aPtr)
 }
 
 bool
-CollectServoSizes(JSRuntime *rt, JS::ServoSizes *sizes)
+CollectServoSizes(JSContext* cx, JS::ServoSizes *sizes)
 {
     mozilla::PodZero(sizes);
-    return JS::AddServoSizeOf(rt, MallocSizeOf,
+    return JS::AddServoSizeOf(cx, MallocSizeOf,
                               /* ObjectPrivateVisitor = */ nullptr, sizes);
 }
 
