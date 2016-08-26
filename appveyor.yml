@@ -39,7 +39,7 @@ environment:
 install:
   - ps: Start-FileDownload "http://servo-rust.s3.amazonaws.com/build/MozillaBuildSetup-2.2.0.exe"
   - ps: .\MozillaBuildSetup-2.2.0.exe /S | Out-Null
-  - ps: Start-FileDownload "https://static.rust-lang.org/dist/2016-08-23/rust-${env:TARGET}.exe" -FileName "rust-install.exe"
+  - ps: Start-FileDownload "https://static.rust-lang.org/dist/rust-${env:TARGET}.exe" -FileName "rust-install.exe"
   - ps: .\rust-install.exe /VERYSILENT /NORESTART /DIR="C:\rust" | Out-Null
   - ps: $env:PATH="$env:PATH;C:\rust\bin"
 # I can't make this work with a multi-line script (e.g. via |+ etc.), so we copy the if before every command
