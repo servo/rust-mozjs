@@ -2,7 +2,7 @@ language: rust
 sudo: 9000
 dist: trusty
 rust:
-  - nightly
+  - nightly-2016-08-23
 os:
   - linux
   - osx
