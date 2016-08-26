@@ -140,7 +140,7 @@ pub struct ProxyTraps {
                                          (trc: *mut JSTracer,
                                           proxy: *mut JSObject)>,
     pub finalize: ::std::option::Option<unsafe extern "C" fn
-                                            (fop: *mut FreeOp,
+                                            (fop: *mut JSFreeOp,
                                              proxy: *mut JSObject)>,
     pub objectMoved: ::std::option::Option<unsafe extern "C" fn
                                                (proxy: *mut JSObject,
