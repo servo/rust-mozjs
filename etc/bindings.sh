@@ -22,7 +22,6 @@ $BINDGEN \
   ${EXTRA_FLAGS} \
   -no-class-constants \
   -no-type-renaming \
-  -dtor-attr unsafe_no_drop_flag \
   -blacklist-type DefaultHasher \
   -blacklist-type Heap \
   -blacklist-type AutoHashMapRooter \
