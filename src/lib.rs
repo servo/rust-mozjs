@@ -5,11 +5,9 @@
 #![crate_name = "js"]
 #![crate_type = "rlib"]
 
-#![feature(filling_drop)]
 #![feature(link_args)]
 #![feature(const_fn)]
 
-#![allow(drop_with_repr_extern)]
 #![allow(non_upper_case_globals, non_camel_case_types, non_snake_case, improper_ctypes)]
 
 #[macro_use]
