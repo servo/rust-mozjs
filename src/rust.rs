@@ -476,19 +476,16 @@ const ChunkLocationOffset: usize = ChunkSize - 2 * 4 - 8;
 
 pub trait GCMethods<T> {
     unsafe fn initial() -> T;
-    unsafe fn is_dropped(self) -> bool;
     unsafe fn post_barrier(v: *mut T, prev: T, next: T);
 }
 
 impl GCMethods<jsid> for jsid {
     unsafe fn initial() -> jsid { JSID_VOID }
-    unsafe fn is_dropped(self) -> bool { self.asBits == mem::POST_DROP_USIZE }
     unsafe fn post_barrier(_: *mut jsid, _: jsid, _: jsid) {}
 }
 
 impl GCMethods<*mut JSObject> for *mut JSObject {
     unsafe fn initial() -> *mut JSObject { ptr::null_mut() }
-    unsafe fn is_dropped(self) -> bool { self as usize == mem::POST_DROP_USIZE }
     unsafe fn post_barrier(v: *mut *mut JSObject,
                            prev: *mut JSObject, next: *mut JSObject) {
         HeapObjectPostBarrier(v, prev, next);
@@ -497,19 +494,16 @@ impl GCMethods<*mut JSObject> for *mut JSObject {
 
 impl GCMethods<*mut JSString> for *mut JSString {
     unsafe fn initial() -> *mut JSString { ptr::null_mut() }
-    unsafe fn is_dropped(self) -> bool { self as usize == mem::POST_DROP_USIZE }
     unsafe fn post_barrier(_: *mut *mut JSString, _: *mut JSString, _: *mut JSString) {}
 }
 
 impl GCMethods<*mut JSScript> for *mut JSScript {
     unsafe fn initial() -> *mut JSScript { ptr::null_mut() }
-    unsafe fn is_dropped(self) -> bool { self as usize == mem::POST_DROP_USIZE }
     unsafe fn post_barrier(_: *mut *mut JSScript, _: *mut JSScript, _: *mut JSScript) { }
 }
 
 impl GCMethods<*mut JSFunction> for *mut JSFunction {
     unsafe fn initial() -> *mut JSFunction { ptr::null_mut() }
-    unsafe fn is_dropped(self) -> bool { self as usize == mem::POST_DROP_USIZE }
     unsafe fn post_barrier(v: *mut *mut JSFunction,
                            prev: *mut JSFunction, next: *mut JSFunction) {
         HeapObjectPostBarrier(mem::transmute(v),
@@ -519,7 +513,6 @@ impl GCMethods<*mut JSFunction> for *mut JSFunction {
 
 impl GCMethods<Value> for Value {
     unsafe fn initial() -> Value { UndefinedValue() }
-    unsafe fn is_dropped(self) -> bool { self.data._bindgen_data_ == mem::POST_DROP_U64 }
     unsafe fn post_barrier(v: *mut Value, prev: Value, next: Value) {
         HeapValuePostBarrier(v, &prev, &next);
     }
@@ -570,9 +563,7 @@ impl<T: GCMethods<T> + Copy> Drop for Heap<T> {
     fn drop(&mut self) {
         unsafe {
             let ptr = self.ptr.get();
-            if !(*ptr).is_dropped() {
-                T::post_barrier(ptr, *ptr, T::initial());
-            }
+            T::post_barrier(ptr, *ptr, T::initial());
         }
     }
 }
@@ -592,9 +583,6 @@ impl JSAutoCompartment {
 
 impl Drop for JSAutoCompartment {
     fn drop(&mut self) {
-        if self.cx_ as usize == mem::POST_DROP_USIZE {
-            return;
-        }
         unsafe { JS_LeaveCompartment(self.cx_, self.oldCompartment_); }
     }
 }

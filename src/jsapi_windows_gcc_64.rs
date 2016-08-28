@@ -162,7 +162,6 @@ impl TempAllocPolicy {
     }
 }
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct LinkedListElement<T> {
     pub mNext: *mut LinkedListElement<T>,
@@ -175,7 +174,6 @@ pub const NODE_KIND_SENTINEL: LinkedListElement_NodeKind =
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum LinkedListElement_NodeKind { NODE_KIND_NORMAL = 0, }
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct LinkedList<T> {
     pub sentinel: LinkedListElement<T>,
@@ -186,7 +184,6 @@ pub struct LinkedList_Iterator<T> {
     pub mCurrent: *mut T,
 }
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct AutoCleanLinkedList<T> {
     pub _base: LinkedList<T>,
@@ -363,7 +360,6 @@ fn bindgen_test_layout_Runtime() {
     assert_eq!(::std::mem::align_of::<Runtime>() , 8usize);
 }
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct AutoGCRooter {
     pub down: *mut AutoGCRooter,
@@ -412,7 +408,6 @@ pub enum StackKind {
 }
 pub type RootedListHeads = ::std::os::raw::c_void;
 #[repr(C)]
-#[unsafe_no_drop_flag]
 pub struct RootLists {
     pub stackRoots_: [u64; 12usize],
     pub autoGCRooters_: *mut AutoGCRooter,
@@ -450,7 +445,6 @@ impl RootLists {
     }
 }
 #[repr(C)]
-#[unsafe_no_drop_flag]
 pub struct ContextFriendFields {
     pub runtime_: *mut JSRuntime,
     pub compartment_: *mut JSCompartment,
@@ -464,7 +458,6 @@ fn bindgen_test_layout_ContextFriendFields() {
 }
 pub enum PerThreadData { }
 #[repr(C)]
-#[unsafe_no_drop_flag]
 pub struct PerThreadDataFriendFields {
     pub roots: RootLists,
     pub nativeStackLimit: [usize; 3usize],
@@ -516,7 +509,6 @@ impl ::std::clone::Clone for MallocAllocPolicy {
 pub enum VectorTesting { }
 pub enum Cell { }
 #[repr(C)]
-#[unsafe_no_drop_flag]
 pub struct Zone {
     pub runtime_: *mut JSRuntime,
     pub barrierTracer_: *mut JSTracer,
@@ -716,7 +708,6 @@ pub type GCNurseryCollectionCallback =
                                                reason: Reason)>;
 /** Ensure that generational GC is disabled within some scope. */
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct AutoDisableGenerationalGC {
     pub gc: *mut GCRuntime,
@@ -731,7 +722,6 @@ fn bindgen_test_layout_AutoDisableGenerationalGC() {
  * the static rooting hazard analysis.
  */
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct AutoAssertOnGC;
 /**
@@ -786,7 +776,6 @@ fn bindgen_test_layout_AutoAssertGCCallback() {
  * heap.
  */
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct AutoCheckCannotGC {
     pub _base: AutoAssertOnGC,
@@ -905,7 +894,6 @@ impl CallbackTracer {
     }
 }
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct AutoTracingName {
     pub trc_: *mut CallbackTracer,
@@ -917,7 +905,6 @@ fn bindgen_test_layout_AutoTracingName() {
     assert_eq!(::std::mem::align_of::<AutoTracingName>() , 8usize);
 }
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct AutoTracingIndex {
     pub trc_: *mut CallbackTracer,
@@ -928,7 +915,6 @@ fn bindgen_test_layout_AutoTracingIndex() {
     assert_eq!(::std::mem::align_of::<AutoTracingIndex>() , 8usize);
 }
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct AutoTracingDetails {
     pub trc_: *mut CallbackTracer,
@@ -1090,7 +1076,6 @@ pub struct DispatchWrapper<T> {
  * specialization, define a RootedBase<T> specialization containing them.
  */
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct Rooted<T> {
     pub _base: RootedBase<T>,
@@ -1159,7 +1144,6 @@ pub enum AllowGC { NoGC = 0, CanGC = 1, }
  * marked when the object itself is marked.
  */
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct PersistentRooted<T> {
     pub _base: PersistentRootedBase<T>,
@@ -1167,7 +1151,6 @@ pub struct PersistentRooted<T> {
     pub ptr: T,
 }
 #[repr(C)]
-#[unsafe_no_drop_flag]
 pub struct ObjectPtr {
     pub value: Heap<*mut JSObject>,
 }
@@ -1905,7 +1888,6 @@ pub type UnwatchOp =
                                                obj: HandleObject,
                                                id: HandleId) -> bool>;
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct ElementAdder {
     pub resObj_: RootedObject,
@@ -2292,7 +2274,6 @@ fn bindgen_test_layout_JSStructuredCloneCallbacks() {
 }
 /** RAII sugar for JS_WriteStructuredClone. */
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct JSAutoStructuredCloneBuffer {
     pub data_: *mut u64,
@@ -2486,7 +2467,6 @@ impl JSAutoStructuredCloneBuffer {
     }
 }
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct JSPrincipals {
     pub _vftable: *const _vftable_JSPrincipals,
@@ -2536,14 +2516,12 @@ pub type JSReadPrincipalsOp =
                               -> bool>;
 pub enum TwoByteChars { }
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct AutoVectorRooterBase<T> {
     pub _base: AutoGCRooter,
     pub _phantom0: ::std::marker::PhantomData<T>,
 }
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct AutoVectorRooter<T> {
     pub _base: AutoVectorRooterBase<T>,
@@ -2558,7 +2536,6 @@ pub type StringVector = ::std::os::raw::c_void;
  * Custom rooting behavior for internal and external clients.
  */
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct CustomAutoRooter {
     pub _vftable: *const _vftable_CustomAutoRooter,
@@ -2812,7 +2789,6 @@ pub type JSCompartmentNameCallback =
  *    JS::Compile(cx, options, srcBuf);
  */
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct SourceBufferHolder {
     pub data_: *const ::std::os::raw::c_ushort,
@@ -2830,7 +2806,6 @@ fn bindgen_test_layout_SourceBufferHolder() {
 pub type JS_CurrentEmbedderTimeFunction =
     ::std::option::Option<unsafe extern "C" fn() -> f64>;
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct JSAutoRequest {
     pub mContext: *mut JSContext,
@@ -3003,7 +2978,6 @@ fn bindgen_test_layout_RuntimeOptions() {
     assert_eq!(::std::mem::align_of::<RuntimeOptions>() , 1usize);
 }
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct JSAutoCompartment {
     pub cx_: *mut JSContext,
@@ -3015,7 +2989,6 @@ fn bindgen_test_layout_JSAutoCompartment() {
     assert_eq!(::std::mem::align_of::<JSAutoCompartment>() , 8usize);
 }
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct JSAutoNullableCompartment {
     pub cx_: *mut JSContext,
@@ -3510,7 +3483,6 @@ pub enum PromiseState { Pending = 0, Fulfilled = 1, Rejected = 2, }
  * stack frames.
  */
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct AutoSetAsyncStackForNewCalls {
     pub cx: *mut JSContext,
@@ -3532,7 +3504,6 @@ fn bindgen_test_layout_AutoSetAsyncStackForNewCalls() {
                8usize);
 }
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct JSAutoByteString {
     pub mBytes: *mut ::std::os::raw::c_char,
@@ -3663,7 +3634,6 @@ pub type WarningReporter =
  *     return ok;
  */
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct AutoSaveExceptionState {
     pub context: *mut JSContext,
@@ -3704,7 +3674,6 @@ pub enum JSJitCompilerOption {
 }
 pub enum ScriptSource { }
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct AutoFilename {
     pub ss_: *mut ScriptSource,
@@ -3757,7 +3726,6 @@ impl AutoFilename {
     }
 }
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct AutoHideScriptedCaller {
     pub mContext: *mut JSContext,
@@ -3856,7 +3824,6 @@ fn bindgen_test_layout_AsmJSCacheOps() {
  *     }
  */
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct ForOfIterator {
     pub cx_: *mut JSContext,
@@ -4201,7 +4168,6 @@ fn bindgen_test_layout_JSFunctionSpecWithHelp() {
  * find the source.
  */
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct SourceHook {
     pub _vftable: *const _vftable_SourceHook,
@@ -4511,7 +4477,6 @@ fn bindgen_test_layout_CompartmentsWithPrincipals() {
     assert_eq!(::std::mem::align_of::<CompartmentsWithPrincipals>() , 8usize);
 }
 #[repr(C)]
-#[unsafe_no_drop_flag]
 pub struct ExpandoAndGeneration {
     pub expando: Heap<Value>,
     pub generation: u64,
@@ -5321,7 +5286,6 @@ pub type CTypesActivityCallback =
     ::std::option::Option<unsafe extern "C" fn(cx: *mut JSContext,
                                                type_: CTypesActivityType)>;
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct AutoCTypesActivityCallback {
     pub cx: *mut JSContext,
@@ -5351,7 +5315,6 @@ fn bindgen_test_layout_AllocationMetadataBuilder() {
     assert_eq!(::std::mem::align_of::<AllocationMetadataBuilder>() , 8usize);
 }
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct NativeProfiler {
     pub _vftable: *const _vftable_NativeProfiler,
@@ -5371,7 +5334,6 @@ fn bindgen_test_layout_NativeProfiler() {
     assert_eq!(::std::mem::align_of::<NativeProfiler>() , 8usize);
 }
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct GCHeapProfiler {
     pub _vftable: *const _vftable_GCHeapProfiler,
@@ -5605,7 +5567,6 @@ fn bindgen_test_layout_ClassInfo() {
  * holds a copy of the filename.
  */
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct NotableClassInfo {
     pub _base: ClassInfo,
@@ -5690,7 +5651,6 @@ fn bindgen_test_layout_StringInfo() {
  * NotableStringInfo holds a copy of some or all of the string's chars.
  */
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct NotableStringInfo {
     pub _base: StringInfo,
@@ -5729,7 +5689,6 @@ fn bindgen_test_layout_ScriptSourceInfo() {
  * class holds a copy of the filename.
  */
 #[repr(C)]
-#[unsafe_no_drop_flag]
 #[derive(Debug)]
 pub struct NotableScriptSourceInfo {
     pub _base: ScriptSourceInfo,
@@ -5745,7 +5704,6 @@ fn bindgen_test_layout_NotableScriptSourceInfo() {
  * compartments within it.
  */
 #[repr(C)]
-#[unsafe_no_drop_flag]
 pub struct RuntimeSizes {
     pub object: usize,
     pub atomsTable: usize,
@@ -5790,7 +5748,6 @@ fn bindgen_test_layout_UnusedGCThingSizes() {
     assert_eq!(::std::mem::align_of::<UnusedGCThingSizes>() , 8usize);
 }
 #[repr(C)]
-#[unsafe_no_drop_flag]
 pub struct ZoneStats {
     pub symbolsGCHeap: usize,
     pub gcHeapArenaAdmin: usize,
@@ -5825,7 +5782,6 @@ impl ZoneStats {
     }
 }
 #[repr(C)]
-#[unsafe_no_drop_flag]
 pub struct CompartmentStats {
     pub objectsPrivate: usize,
     pub scriptsGCHeap: usize,

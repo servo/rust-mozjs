@@ -7,7 +7,6 @@
 
 #![feature(filling_drop)]
 #![feature(link_args)]
-#![feature(unsafe_no_drop_flag)]
 #![feature(const_fn)]
 
 #![allow(drop_with_repr_extern)]
@@ -27,7 +26,6 @@ pub mod jsapi {
     use libc::FILE;
 
     #[repr(C)]
-    #[unsafe_no_drop_flag]
     #[derive(Debug)]
     pub struct Heap<T: ::rust::GCMethods<T> + Copy> {
         pub ptr: ::std::cell::UnsafeCell<T>,
