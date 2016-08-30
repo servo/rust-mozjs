@@ -27,6 +27,7 @@
 
 #![deny(missing_docs)]
 
+use core::nonzero::NonZero;
 use error::throw_type_error;
 use glue::RUST_JS_NumberValue;
 use jsapi::JSPROP_ENUMERATE;
@@ -616,6 +617,15 @@ impl ToJSValConvertible for *mut JSObject {
     #[inline]
     unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
         rval.set(ObjectOrNullValue(*self));
+        assert!(JS_WrapValue(cx, rval));
+    }
+}
+
+// https://heycam.github.io/webidl/#es-object
+impl ToJSValConvertible for NonZero<*mut JSObject> {
+    #[inline]
+    unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
+        rval.set(ObjectValue(&***self));
         assert!(JS_WrapValue(cx, rval));
     }
 }
