@@ -16,46 +16,31 @@ use std::default::Default;
 use std::ops::{Deref, DerefMut};
 use std::cell::UnsafeCell;
 use std::marker::PhantomData;
-use consts::{JSCLASS_RESERVED_SLOTS_MASK, JSCLASS_GLOBAL_SLOT_COUNT, JSCLASS_IS_GLOBAL};
+use consts::{JSCLASS_RESERVED_SLOTS_MASK, JSCLASS_GLOBAL_SLOT_COUNT};
+use consts::{JSCLASS_IS_DOMJSCLASS, JSCLASS_IS_GLOBAL};
 use jsapi;
-use jsapi::{JS_Init, JS_GetContext, JS_NewRuntime, JS_DestroyRuntime};
-use jsapi::{JSContext, JSRuntime, JSObject, JSFlatString, JSFunction, JSString, Symbol, JSScript, jsid, Value};
-use jsapi::{RuntimeOptionsRef, ReadOnlyCompileOptions};
-use jsapi::{SetWarningReporter, Evaluate2, JSErrorReport};
-use jsapi::{JS_SetGCParameter, JSGCParamKey};
-use jsapi::{Heap, HeapObjectPostBarrier, HeapValuePostBarrier};
-use jsapi::{ContextFriendFields};
-use jsapi::{Rooted, Handle, MutableHandle, MutableHandleBase, RootedBase};
-use jsapi::{MutableHandleValue, HandleValue, HandleObject, HandleBase};
-use jsapi::AutoObjectVector;
-use jsapi::{ToBooleanSlow, ToNumberSlow, ToStringSlow};
-use jsapi::{ToInt32Slow, ToUint32Slow, ToUint16Slow, ToInt64Slow, ToUint64Slow};
-use jsapi::{JS_BeginRequest, JS_EndRequest};
-use jsapi::{JSAutoCompartment, JS_EnterCompartment, JS_LeaveCompartment};
-use jsapi::{JSJitMethodCallArgs, JSJitGetterCallArgs, JSJitSetterCallArgs, CallArgs};
-use jsapi::{NullHandleValue, UndefinedHandleValue, JSID_VOID};
-use jsapi::CompartmentOptions;
-use jsapi::JS_DefineFunctions;
-use jsapi::JS_DefineProperties;
-use jsapi::JSFunctionSpec;
-use jsapi::JSNativeWrapper;
-use jsapi::JSPropertySpec;
-use jsapi::JS_SetNativeStackQuota;
-use jsapi::JSClass;
-use jsapi::JS_GlobalObjectTraceHook;
-use jsval::UndefinedValue;
-use jsapi::JSCLASS_RESERVED_SLOTS_SHIFT;
-use jsapi::JSClassOps;
-use jsapi::InitSelfHostedCode;
-use jsapi::AutoIdVector;
-use jsapi::JS_MayResolveStandardClass;
-use jsapi::JS_EnumerateStandardClasses;
-use jsapi::JS_ResolveStandardClass;
-use jsapi::JSTracer;
-use glue::{CallFunctionTracer, CallObjectTracer, CallScriptTracer, CallStringTracer, CallValueTracer, CallIdTracer};
-use glue::{CreateAutoIdVector, SliceAutoIdVector, DestroyAutoIdVector};
-use glue::{CreateAutoObjectVector, CreateCallArgsFromVp, AppendToAutoObjectVector, DeleteAutoObjectVector};
-use glue::{NewCompileOptions, DeleteCompileOptions};
+use jsapi::{AutoIdVector, AutoObjectVector, CallArgs, CompartmentOptions, ContextFriendFields};
+use jsapi::{Evaluate2, Handle, HandleBase, HandleObject, HandleValue, Heap, HeapObjectPostBarrier};
+use jsapi::{HeapValuePostBarrier, InitSelfHostedCode, IsWindowSlow, JS_BeginRequest};
+use jsapi::{JS_DefineFunctions, JS_DefineProperties, JS_DestroyRuntime, JS_EndRequest};
+use jsapi::{JS_EnterCompartment, JS_EnumerateStandardClasses, JS_GetContext, JS_GlobalObjectTraceHook};
+use jsapi::{JS_Init, JS_LeaveCompartment, JS_MayResolveStandardClass, JS_NewRuntime, JS_ResolveStandardClass};
+use jsapi::{JS_SetGCParameter, JS_SetNativeStackQuota, JS_WrapValue, JSAutoCompartment};
+use jsapi::{JSClass, JSCLASS_RESERVED_SLOTS_SHIFT, JSClassOps, JSCompartment, JSContext};
+use jsapi::{JSErrorReport, JSFlatString, JSFunction, JSFunctionSpec, JSGCParamKey};
+use jsapi::{JSID_VOID, JSJitGetterCallArgs, JSJitMethodCallArgs, JSJitSetterCallArgs};
+use jsapi::{JSNativeWrapper, JSObject, JSPropertySpec, JSRuntime, JSScript};
+use jsapi::{JSString, JSTracer, MutableHandle, MutableHandleBase, MutableHandleValue};
+use jsapi::{NullHandleValue, Object, ObjectGroup,ReadOnlyCompileOptions, Rooted};
+use jsapi::{RootedBase, RuntimeOptionsRef, SetWarningReporter, Symbol, ToBooleanSlow};
+use jsapi::{ToInt32Slow, ToInt64Slow, ToNumberSlow, ToStringSlow, ToUint16Slow};
+use jsapi::{ToUint32Slow, ToUint64Slow, ToWindowIfWindowProxy, UndefinedHandleValue};
+use jsapi::{Value, jsid};
+use jsval::{ObjectValue, UndefinedValue};
+use glue::{AppendToAutoObjectVector, CallFunctionTracer, CallIdTracer, CallObjectTracer};
+use glue::{CallScriptTracer, CallStringTracer, CallValueTracer, CreateAutoIdVector};
+use glue::{CreateAutoObjectVector, CreateCallArgsFromVp, DeleteAutoObjectVector};
+use glue::{DestroyAutoIdVector, DeleteCompileOptions, NewCompileOptions, SliceAutoIdVector};
 use panic::maybe_resume_unwind;
 use default_heapsize;
 
@@ -1090,3 +1075,81 @@ pub static SIMPLE_GLOBAL_CLASS: JSClass = JSClass {
     cOps: &SIMPLE_GLOBAL_CLASS_OPS as *const JSClassOps,
     reserved: [0 as *mut _; 3]
 };
+
+#[inline]
+unsafe fn get_object_group(obj: *mut JSObject) -> *mut ObjectGroup {
+    assert!(!obj.is_null());
+    let obj = obj as *mut Object;
+    (*obj).group
+}
+
+#[inline]
+pub unsafe fn get_object_class(obj: *mut JSObject) -> *const JSClass {
+    (*get_object_group(obj)).clasp as *const _
+}
+
+#[inline]
+pub unsafe fn get_object_compartment(obj: *mut JSObject) -> *mut JSCompartment {
+    (*get_object_group(obj)).compartment
+}
+
+#[inline]
+pub unsafe fn get_context_compartment(cx: *mut JSContext) -> *mut JSCompartment {
+    let cx = cx as *mut ContextFriendFields;
+    (*cx).compartment_
+}
+
+#[inline]
+pub fn is_dom_class(class: &JSClass) -> bool {
+    class.flags & JSCLASS_IS_DOMJSCLASS != 0
+}
+
+#[inline]
+pub unsafe fn is_dom_object(obj: *mut JSObject) -> bool {
+    is_dom_class(&*get_object_class(obj))
+}
+
+#[inline]
+pub unsafe fn is_window(obj: *mut JSObject) -> bool {
+    (*get_object_class(obj)).flags & JSCLASS_IS_GLOBAL != 0 && IsWindowSlow(obj)
+}
+
+#[inline]
+pub unsafe fn try_to_outerize(rval: MutableHandleValue) {
+    let obj = rval.to_object();
+    if is_window(obj) {
+        let obj = ToWindowIfWindowProxy(obj);
+        assert!(!obj.is_null());
+        rval.set(ObjectValue(&mut *obj));
+    }
+}
+
+#[inline]
+pub unsafe fn maybe_wrap_object_value(cx: *mut JSContext, rval: MutableHandleValue) {
+    assert!(rval.is_object());
+    let obj = rval.to_object();
+    if get_object_compartment(obj) != get_context_compartment(cx) {
+        assert!(JS_WrapValue(cx, rval));
+    } else if is_dom_object(obj) {
+        try_to_outerize(rval);
+    }
+}
+
+#[inline]
+pub unsafe fn maybe_wrap_object_or_null_value(
+        cx: *mut JSContext,
+        rval: MutableHandleValue) {
+    assert!(rval.is_object_or_null());
+    if !rval.is_null() {
+        maybe_wrap_object_value(cx, rval);
+    }
+}
+
+#[inline]
+pub unsafe fn maybe_wrap_value(cx: *mut JSContext, rval: MutableHandleValue) {
+    if rval.is_string() {
+        assert!(JS_WrapValue(cx, rval));
+    } else if rval.is_object() {
+        maybe_wrap_object_value(cx, rval);
+    }
+}
