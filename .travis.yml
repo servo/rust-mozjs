@@ -1,6 +1,7 @@
 language: rust
 sudo: 9000
 dist: trusty
+osx_image: xcode7
 rust:
   - nightly
 os:
