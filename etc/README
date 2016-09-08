@@ -1,16 +1,67 @@
 Building bindings requires rust-bindgen checked out and built in ../../rust-bindgen
 (it expects to find the binary in ../../rust-bindgen/target/debug/bindgen).
 
+Generally, the steps for any platform require a rust-bindgen binary in
+../rust-bindgen/target/debug/bindgen and an approprivate llvm/clang in the PATH.
+Then:
+
+cargo clean
+cargo build
+[ ignore errors in building js if bindings are out of date ]
+./etc/bindings.sh
+mv out.rs src/jsapi_your_platform_goes_here.rs
+cargo test
+
 === Windows ===
 
 rust-bindgen must be built using a rust for the pc-windows-gnu target, not msvc, even
 when generating msvc bindings.  Within a MINGW64 env, install mingw-w64-x86_64-clang
 then build rust-bindgen with 'LIBCLANG_PATH=c:/msys64/mingw64/bin cargo build' (replace
-c:/msys64 with the root of your msys2-64 install directory).
+c:/msys64 with the root of your msys2-64 install directory).  Alternatively, build
+LLVM/Clang from source and set LLVM_CONFIG_PATH to point to llvm-config.exe, LIBCLANG_PATH
+to the build/bin dir, and LIBCLANG_STATIC_PATH to the build/lib dir.
+
+Make sure your PATH has the MINGW64 LLVM/Clang bin dir in it at the start.  
+
+The build-windows-bindings.sh script automates the below steps.
+Prerequisites for running it:
+
+1. A built llvm/clang for the pc-windows-gnu default target in the PATH
+2. A rust-bindgen in ../rust-bindgen/target/debug/bindgen.exe built against
+   the above llvm/clang
+3. Visual Studio 2015 environment variables present (see below for moz_vs info)
+
+Running build-windows-bindings.sh and getting a cup of coffee *and drinking it*
+(or having lunch, depending on host speed) will update all 4 of the windows
+bindings files.  If you come back without finishing at least a cup of coffee,
+you'll be staring at cargo compiling lines.  Espresso drinkers, you've been
+warned. :)
+
+==== MINGW/GNU bindings ====
+
+Using a pc-windows-gnu rust:
+
+rustup default x86_64-pc-windows-gnu
+
+cargo clean
+cargo build
+[wait for everything to build; if bindings are out of date, it'll error out at the end -- that's okay]
+./etc/bindings.sh
+cp out.rs src/jsapi_windows_gcc_64.rs
+cargo test
+
+Then, do the same for debugmozjs:
+
+cargo clean
+cargo build --features debugmozjs
+[wait for everything to build; if bindings are out of date, it'll error out at the end -- that's okay]
+./etc/bindings.sh
+cp out.rs src/jsapi_windows_gcc_64_debug.rs
+cargo test --features debugmozjs # this will take forever; can just do a build
 
 ==== MSVC bindings ====
 
-Now, build rust-mozjs using a pc-windows-msvc rust.  Note that you'll need to be in an
+Now, Do the same with a pc-windows-msvc rust.  Note that you'll need to be in an
 environment that has the Visual C++ env vars already set up for your compiler -- the msys
 package http://people.mozilla.org/~vladimir/misc/moz-vs-0.1.2-any.pkg.tar.xz can help
 with this (install with pacman -U moz-vs-0.1.2-any.pkg.tar.xz).  After installation, running
@@ -20,25 +71,20 @@ a different compiler.
 
 To generate VC14 (VS2015) bindings, in rust-mozjs:
 
+rustup default x86_64-pc-windows-msvc
+
 moz_vs 2015
 cargo build
 [wait for everything to build; if bindings are out of date, it'll error out at the end -- that's okay]
 ./etc/bindings.sh msvc14
 cp out.rs src/jsapi_windows_msvc14_64.rs
-cargo build # make sure the build finishes
+cargo test
 
 The debug bindings:
 
 cargo clean
 cargo build --features debugmozjs
-[wait for everything to build]
+[wait for everything to build; if bindings are out of date, it'll error out at the end -- that's okay]
 ./etc/bindings.sh msvc14
 cp out.rs src/jsapi_windows_msvc14_64_debug.rs
-cargo build --features debugmozjs
-
-If you get errors about "static_assert expression is not an integral constant expression",
-additional static_assert(offsetof(...)) sites need to be #if 0'd out (this ends up being
-a non-constant-expression according to clang when built with the MSVC headers).
-
-For generating the bindings with MSVC, only MSVC 2013 and 2015 are
-supported (VC12 and 14).  Run 'bindings.sh msvc12' and/or 'bindings.sh msvc14'.
+cargo test --features debugmozjs # this will take forever; can just do a build
