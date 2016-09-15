@@ -47,6 +47,8 @@ use jsval::UndefinedValue;
 use jsapi::JSCLASS_RESERVED_SLOTS_SHIFT;
 use jsapi::JSClassOps;
 use jsapi::InitSelfHostedCode;
+use jsapi::AutoIdVector;
+use glue::{CreateAutoIdVector, AppendToAutoIdVector, SliceAutoIdVector, DestroyAutoIdVector};
 use glue::{CreateAutoObjectVector, CreateCallArgsFromVp, AppendToAutoObjectVector, DeleteAutoObjectVector};
 use glue::{NewCompileOptions, DeleteCompileOptions};
 use default_heapsize;
@@ -879,6 +881,48 @@ impl JSNativeWrapper {
     fn is_zeroed(&self) -> bool {
         let JSNativeWrapper { op, info } = *self;
         op.is_none() && info.is_null()
+    }
+}
+
+pub struct IdVector(*mut AutoIdVector);
+
+impl IdVector {
+    pub fn new(cx: *mut JSContext) -> IdVector {
+        unsafe {
+            let vector = CreateAutoIdVector(cx);
+            assert!(!vector.is_null());
+            IdVector(vector)
+        }
+    }
+
+    pub unsafe fn get(&self) -> *mut AutoIdVector {
+        self.0
+    }
+
+    pub fn append(&mut self, id: jsid) -> bool {
+        unsafe {
+            AppendToAutoIdVector(self.0, id)
+        }
+    }
+}
+
+impl Drop for IdVector {
+    fn drop(&mut self) {
+        unsafe {
+            DestroyAutoIdVector(self.0)
+        }
+    }
+}
+
+impl Deref for IdVector {
+    type Target = [jsid];
+
+    fn deref(&self) -> &[jsid] {
+        unsafe {
+            let mut length = 0;
+            let pointer = SliceAutoIdVector(self.0 as *const _, &mut length);
+            slice::from_raw_parts(pointer, length)
+        }
     }
 }
 
