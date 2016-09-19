@@ -585,8 +585,12 @@ impl<C: Clone, T: FromJSValConvertible<Config=C>> FromJSValConvertible for Vec<T
         let mut iterator = ForOfIteratorGuard::new(cx, &mut iterator);
         let iterator = &mut *iterator.root;
 
-        if !iterator.init(value, ForOfIterator_NonIterableBehavior::ThrowOnNonIterable) {
+        if !iterator.init(value, ForOfIterator_NonIterableBehavior::AllowNonIterable) {
             return Err(())
+        }
+
+        if iterator.iterator.ptr.is_null() {
+            return Ok(ConversionResult::Failure("Value is not iterable".into()));
         }
 
         let mut ret = vec![];
