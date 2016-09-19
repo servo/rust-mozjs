@@ -6,6 +6,7 @@
 extern crate js;
 
 use js::conversions::ConversionBehavior;
+use js::conversions::ConversionResult;
 use js::conversions::FromJSValConvertible;
 use js::conversions::ToJSValConvertible;
 use js::jsapi::CompartmentOptions;
@@ -57,5 +58,13 @@ fn vec_conversion() {
                                  ConversionBehavior::Default).unwrap();
 
         assert_eq!(&orig_vec, converted.get_success_value().unwrap());
+
+        rt.evaluate_script(global, "({})", "test", 1, rval.handle_mut()).unwrap();
+        let converted = Vec::<i32>::from_jsval(cx, rval.handle(),
+                                               ConversionBehavior::Default);
+        assert!(match converted {
+            Ok(ConversionResult::Failure(_)) => true,
+            _ => false,
+        });
     }
 }
