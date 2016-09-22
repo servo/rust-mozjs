@@ -440,11 +440,15 @@ impl<T> DerefMut for MutableHandle<T> {
 
 impl HandleValue {
     pub fn null() -> HandleValue {
-        NullHandleValue
+        unsafe {
+            NullHandleValue
+        }
     }
 
     pub fn undefined() -> HandleValue {
-        UndefinedHandleValue
+        unsafe {
+            UndefinedHandleValue
+        }
     }
 }
 
@@ -459,7 +463,11 @@ impl HandleObject {
 }
 
 impl Default for jsid {
-    fn default() -> jsid { JSID_VOID }
+    fn default() -> jsid {
+        unsafe {
+            JSID_VOID
+        }
+    }
 }
 
 impl Default for Value {
