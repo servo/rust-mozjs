@@ -48,6 +48,9 @@ use jsapi::JSCLASS_RESERVED_SLOTS_SHIFT;
 use jsapi::JSClassOps;
 use jsapi::InitSelfHostedCode;
 use jsapi::AutoIdVector;
+use jsapi::JS_MayResolveStandardClass;
+use jsapi::JS_EnumerateStandardClasses;
+use jsapi::JS_ResolveStandardClass;
 use glue::{CreateAutoIdVector, SliceAutoIdVector, DestroyAutoIdVector};
 use glue::{CreateAutoObjectVector, CreateCallArgsFromVp, AppendToAutoObjectVector, DeleteAutoObjectVector};
 use glue::{NewCompileOptions, DeleteCompileOptions};
@@ -984,9 +987,9 @@ static SIMPLE_GLOBAL_CLASS_OPS: JSClassOps = JSClassOps {
     delProperty: None,
     getProperty: None,
     setProperty: None,
-    enumerate: None,
-    resolve: None,
-    mayResolve: None,
+    enumerate: Some(JS_EnumerateStandardClasses),
+    resolve: Some(JS_ResolveStandardClass),
+    mayResolve: Some(JS_MayResolveStandardClass),
     finalize: None,
     call: None,
     hasInstance: None,
