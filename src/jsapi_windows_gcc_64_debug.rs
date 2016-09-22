@@ -31,7 +31,7 @@ pub const JSCLASS_RESERVED_SLOTS_SHIFT: ::std::os::raw::c_uint = 8;
 pub const JSCLASS_RESERVED_SLOTS_WIDTH: ::std::os::raw::c_uint = 8;
 pub const JSCLASS_GLOBAL_APPLICATION_SLOTS: ::std::os::raw::c_uint = 5;
 pub const JSCLASS_NO_OPTIONAL_MEMBERS: ::std::os::raw::c_uint = 0;
-pub const JS_STRUCTURED_CLONE_VERSION: ::std::os::raw::c_uint = 6;
+pub const JS_STRUCTURED_CLONE_VERSION: ::std::os::raw::c_uint = 7;
 pub const JS_SCERR_RECURSION: ::std::os::raw::c_uint = 0;
 pub const JS_SCERR_TRANSFERABLE: ::std::os::raw::c_uint = 1;
 pub const JS_SCERR_DUP_TRANSFERABLE: ::std::os::raw::c_uint = 2;
@@ -58,7 +58,7 @@ pub const JSREPORT_ERROR: ::std::os::raw::c_uint = 0;
 pub const JSREPORT_WARNING: ::std::os::raw::c_uint = 1;
 pub const JSREPORT_EXCEPTION: ::std::os::raw::c_uint = 2;
 pub const JSREPORT_STRICT: ::std::os::raw::c_uint = 4;
-pub const JSREPORT_STRICT_MODE_ERROR: ::std::os::raw::c_uint = 8;
+pub const JSREPORT_USER_1: ::std::os::raw::c_uint = 8;
 pub const JS_DEFAULT_ZEAL_FREQ: ::std::os::raw::c_uint = 100;
 pub const JSITER_ENUMERATE: ::std::os::raw::c_uint = 1;
 pub const JSITER_FOREACH: ::std::os::raw::c_uint = 2;
@@ -309,8 +309,13 @@ pub enum JSProtoKey {
     JSProto_Atomics = 45,
     JSProto_SavedFrame = 46,
     JSProto_Wasm = 47,
-    JSProto_Promise = 48,
-    JSProto_LIMIT = 49,
+    JSProto_WebAssembly = 48,
+    JSProto_WasmModule = 49,
+    JSProto_WasmInstance = 50,
+    JSProto_WasmMemory = 51,
+    JSProto_WasmTable = 52,
+    JSProto_Promise = 53,
+    JSProto_LIMIT = 54,
 }
 pub enum JSCompartment { }
 pub enum JSCrossCompartmentCall { }
@@ -446,62 +451,27 @@ impl RootLists {
     }
 }
 #[repr(C)]
+pub struct RootingContext {
+    pub roots: RootLists,
+}
+#[test]
+fn bindgen_test_layout_RootingContext() {
+    assert_eq!(::std::mem::size_of::<RootingContext>() , 392usize);
+    assert_eq!(::std::mem::align_of::<RootingContext>() , 8usize);
+}
+#[repr(C)]
 pub struct ContextFriendFields {
-    pub runtime_: *mut JSRuntime,
+    pub _base: RootingContext,
     pub compartment_: *mut JSCompartment,
     pub zone_: *mut Zone,
-    pub roots: RootLists,
+    pub nativeStackLimit: [usize; 3usize],
 }
 #[test]
 fn bindgen_test_layout_ContextFriendFields() {
-    assert_eq!(::std::mem::size_of::<ContextFriendFields>() , 416usize);
+    assert_eq!(::std::mem::size_of::<ContextFriendFields>() , 432usize);
     assert_eq!(::std::mem::align_of::<ContextFriendFields>() , 8usize);
 }
-pub enum PerThreadData { }
-#[repr(C)]
-pub struct PerThreadDataFriendFields {
-    pub roots: RootLists,
-    pub nativeStackLimit: [usize; 3usize],
-}
-#[repr(C)]
-#[derive(Debug, Copy)]
-pub struct PerThreadDataFriendFields_RuntimeDummy {
-    pub _base: Runtime,
-    pub mainThread: PerThreadDataFriendFields_RuntimeDummy_PerThreadDummy,
-}
-#[repr(C)]
-#[derive(Debug, Copy)]
-pub struct PerThreadDataFriendFields_RuntimeDummy_PerThreadDummy {
-    pub field1: *mut ::std::os::raw::c_void,
-    pub field2: usize,
-    pub field3: u64,
-}
-impl ::std::clone::Clone for
- PerThreadDataFriendFields_RuntimeDummy_PerThreadDummy {
-    fn clone(&self) -> Self { *self }
-}
-#[test]
-fn bindgen_test_layout_PerThreadDataFriendFields_RuntimeDummy_PerThreadDummy() {
-    assert_eq!(::std::mem::size_of::<PerThreadDataFriendFields_RuntimeDummy_PerThreadDummy>()
-               , 24usize);
-    assert_eq!(::std::mem::align_of::<PerThreadDataFriendFields_RuntimeDummy_PerThreadDummy>()
-               , 8usize);
-}
-impl ::std::clone::Clone for PerThreadDataFriendFields_RuntimeDummy {
-    fn clone(&self) -> Self { *self }
-}
-#[test]
-fn bindgen_test_layout_PerThreadDataFriendFields_RuntimeDummy() {
-    assert_eq!(::std::mem::size_of::<PerThreadDataFriendFields_RuntimeDummy>()
-               , 40usize);
-    assert_eq!(::std::mem::align_of::<PerThreadDataFriendFields_RuntimeDummy>()
-               , 8usize);
-}
-#[test]
-fn bindgen_test_layout_PerThreadDataFriendFields() {
-    assert_eq!(::std::mem::size_of::<PerThreadDataFriendFields>() , 416usize);
-    assert_eq!(::std::mem::align_of::<PerThreadDataFriendFields>() , 8usize);
-}
+pub enum PRFileDesc { }
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct MallocAllocPolicy;
@@ -510,6 +480,9 @@ impl ::std::clone::Clone for MallocAllocPolicy {
 }
 pub enum VectorTesting { }
 pub enum Cell { }
+#[repr(i32)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+pub enum ChunkLocation { Invalid = 0, Nursery = 1, TenuredHeap = 2, }
 #[repr(C)]
 pub struct Zone {
     pub runtime_: *mut JSRuntime,
@@ -652,43 +625,43 @@ fn bindgen_test_layout_GCDescription() {
     assert_eq!(::std::mem::align_of::<GCDescription>() , 4usize);
 }
 extern "C" {
-    fn _ZNK2JS13GCDescription18formatSliceMessageEP9JSRuntime(this:
+    fn _ZNK2JS13GCDescription18formatSliceMessageEP9JSContext(this:
                                                                   *mut GCDescription,
-                                                              rt:
-                                                                  *mut JSRuntime)
+                                                              cx:
+                                                                  *mut JSContext)
      -> *mut ::std::os::raw::c_ushort;
-    fn _ZNK2JS13GCDescription20formatSummaryMessageEP9JSRuntime(this:
+    fn _ZNK2JS13GCDescription20formatSummaryMessageEP9JSContext(this:
                                                                     *mut GCDescription,
-                                                                rt:
-                                                                    *mut JSRuntime)
+                                                                cx:
+                                                                    *mut JSContext)
      -> *mut ::std::os::raw::c_ushort;
-    fn _ZNK2JS13GCDescription10formatJSONEP9JSRuntimey(this:
+    fn _ZNK2JS13GCDescription10formatJSONEP9JSContexty(this:
                                                            *mut GCDescription,
-                                                       rt: *mut JSRuntime,
+                                                       cx: *mut JSContext,
                                                        timestamp: u64)
      -> *mut ::std::os::raw::c_ushort;
 }
 impl GCDescription {
     #[inline]
-    pub unsafe fn formatSliceMessage(&mut self, rt: *mut JSRuntime)
+    pub unsafe fn formatSliceMessage(&mut self, cx: *mut JSContext)
      -> *mut ::std::os::raw::c_ushort {
-        _ZNK2JS13GCDescription18formatSliceMessageEP9JSRuntime(&mut *self, rt)
+        _ZNK2JS13GCDescription18formatSliceMessageEP9JSContext(&mut *self, cx)
     }
     #[inline]
-    pub unsafe fn formatSummaryMessage(&mut self, rt: *mut JSRuntime)
+    pub unsafe fn formatSummaryMessage(&mut self, cx: *mut JSContext)
      -> *mut ::std::os::raw::c_ushort {
-        _ZNK2JS13GCDescription20formatSummaryMessageEP9JSRuntime(&mut *self,
-                                                                 rt)
+        _ZNK2JS13GCDescription20formatSummaryMessageEP9JSContext(&mut *self,
+                                                                 cx)
     }
     #[inline]
-    pub unsafe fn formatJSON(&mut self, rt: *mut JSRuntime, timestamp: u64)
+    pub unsafe fn formatJSON(&mut self, cx: *mut JSContext, timestamp: u64)
      -> *mut ::std::os::raw::c_ushort {
-        _ZNK2JS13GCDescription10formatJSONEP9JSRuntimey(&mut *self, rt,
+        _ZNK2JS13GCDescription10formatJSONEP9JSContexty(&mut *self, cx,
                                                         timestamp)
     }
 }
 pub type GCSliceCallback =
-    ::std::option::Option<unsafe extern "C" fn(rt: *mut JSRuntime,
+    ::std::option::Option<unsafe extern "C" fn(cx: *mut JSContext,
                                                progress: GCProgress,
                                                desc: *const GCDescription)>;
 /**
@@ -705,7 +678,7 @@ pub enum GCNurseryProgress {
  * and the reason for the collection.
  */
 pub type GCNurseryCollectionCallback =
-    ::std::option::Option<unsafe extern "C" fn(rt: *mut JSRuntime,
+    ::std::option::Option<unsafe extern "C" fn(cx: *mut JSContext,
                                                progress: GCNurseryProgress,
                                                reason: Reason)>;
 /** Ensure that generational GC is disabled within some scope. */
@@ -817,6 +790,11 @@ pub type Generation = Opaque<::std::os::raw::c_ulonglong>;
 pub struct CStringHasher;
 impl ::std::clone::Clone for CStringHasher {
     fn clone(&self) -> Self { *self }
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct FallibleHashMethods<HashPolicy> {
+    pub _phantom0: ::std::marker::PhantomData<HashPolicy>,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -1180,6 +1158,10 @@ fn bindgen_test_layout_ObjectPtr() {
     assert_eq!(::std::mem::align_of::<ObjectPtr>() , 8usize);
 }
 extern "C" {
+    fn _ZN2JS9ObjectPtr8finalizeEP9JSRuntime(this: *mut ObjectPtr,
+                                             rt: *mut JSRuntime);
+    fn _ZN2JS9ObjectPtr8finalizeEP9JSContext(this: *mut ObjectPtr,
+                                             cx: *mut JSContext);
     fn _ZN2JS9ObjectPtr24updateWeakPointerAfterGCEv(this: *mut ObjectPtr);
     fn _ZN2JS9ObjectPtr5traceEP8JSTracerPKc(this: *mut ObjectPtr,
                                             trc: *mut JSTracer,
@@ -1187,6 +1169,14 @@ extern "C" {
                                                 *const ::std::os::raw::c_char);
 }
 impl ObjectPtr {
+    #[inline]
+    pub unsafe fn finalize(&mut self, rt: *mut JSRuntime) {
+        _ZN2JS9ObjectPtr8finalizeEP9JSRuntime(&mut *self, rt)
+    }
+    #[inline]
+    pub unsafe fn finalize1(&mut self, cx: *mut JSContext) {
+        _ZN2JS9ObjectPtr8finalizeEP9JSContext(&mut *self, cx)
+    }
     #[inline]
     pub unsafe fn updateWeakPointerAfterGC(&mut self) {
         _ZN2JS9ObjectPtr24updateWeakPointerAfterGCEv(&mut *self)
@@ -1864,8 +1854,8 @@ pub type JSHasInstanceOp =
 /**
  * Function type for trace operation of the class called to enumerate all
  * traceable things reachable from obj's private data structure. For each such
- * thing, a trace implementation must call one of the JS_Call*Tracer variants
- * on the thing.
+ * thing, a trace implementation must call JS::TraceEdge on the thing's
+ * location.
  *
  * JSTraceOp implementation can assume that no other threads mutates object
  * state. It must not change state of the object or corresponding native
@@ -2191,6 +2181,13 @@ pub enum ESClass {
     Error = 15,
     Other = 16,
 }
+#[repr(i32)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+pub enum StructuredCloneScope {
+    SameProcessSameThread = 0,
+    SameProcessDifferentThread = 1,
+    DifferentProcess = 2,
+}
 pub const SCTAG_TMO_ALLOC_DATA: TransferableOwnership =
     TransferableOwnership::SCTAG_TMO_FIRST_OWNED;
 #[repr(u32)]
@@ -2331,6 +2328,7 @@ fn bindgen_test_layout_JSStructuredCloneCallbacks() {
 #[repr(C)]
 #[derive(Debug)]
 pub struct JSAutoStructuredCloneBuffer {
+    pub scope_: StructuredCloneScope,
     pub data_: *mut u64,
     pub nbytes_: usize,
     pub version_: u32,
@@ -2348,7 +2346,7 @@ pub enum JSAutoStructuredCloneBuffer_StructuredClone_h_unnamed_7 {
 #[test]
 fn bindgen_test_layout_JSAutoStructuredCloneBuffer() {
     assert_eq!(::std::mem::size_of::<JSAutoStructuredCloneBuffer>() ,
-               40usize);
+               48usize);
     assert_eq!(::std::mem::align_of::<JSAutoStructuredCloneBuffer>() ,
                8usize);
 }
@@ -2651,12 +2649,12 @@ fn bindgen_test_layout_JSFreeOp() {
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum JSGCStatus { JSGC_BEGIN = 0, JSGC_END = 1, }
 pub type JSGCCallback =
-    ::std::option::Option<unsafe extern "C" fn(rt: *mut JSRuntime,
+    ::std::option::Option<unsafe extern "C" fn(cx: *mut JSContext,
                                                status: JSGCStatus,
                                                data:
                                                    *mut ::std::os::raw::c_void)>;
 pub type JSObjectsTenuredCallback =
-    ::std::option::Option<unsafe extern "C" fn(rt: *mut JSRuntime,
+    ::std::option::Option<unsafe extern "C" fn(cx: *mut JSContext,
                                                data:
                                                    *mut ::std::os::raw::c_void)>;
 #[repr(u32)]
@@ -2673,20 +2671,24 @@ pub type JSFinalizeCallback =
                                                data:
                                                    *mut ::std::os::raw::c_void)>;
 pub type JSWeakPointerZoneGroupCallback =
-    ::std::option::Option<unsafe extern "C" fn(rt: *mut JSRuntime,
+    ::std::option::Option<unsafe extern "C" fn(cx: *mut JSContext,
                                                data:
                                                    *mut ::std::os::raw::c_void)>;
 pub type JSWeakPointerCompartmentCallback =
-    ::std::option::Option<unsafe extern "C" fn(rt: *mut JSRuntime,
+    ::std::option::Option<unsafe extern "C" fn(cx: *mut JSContext,
                                                comp: *mut JSCompartment,
                                                data:
                                                    *mut ::std::os::raw::c_void)>;
 pub type JSInterruptCallback =
     ::std::option::Option<unsafe extern "C" fn(cx: *mut JSContext) -> bool>;
+pub type JSGetIncumbentGlobalCallback =
+    ::std::option::Option<unsafe extern "C" fn(cx: *mut JSContext)
+                              -> *mut JSObject>;
 pub type JSEnqueuePromiseJobCallback =
     ::std::option::Option<unsafe extern "C" fn(cx: *mut JSContext,
                                                job: HandleObject,
                                                allocationSite: HandleObject,
+                                               incumbentGlobal: HandleObject,
                                                data:
                                                    *mut ::std::os::raw::c_void)
                               -> bool>;
@@ -2827,7 +2829,7 @@ pub type JSSizeOfIncludingThisCompartmentCallback =
 pub type JSZoneCallback =
     ::std::option::Option<unsafe extern "C" fn(zone: *mut Zone)>;
 pub type JSCompartmentNameCallback =
-    ::std::option::Option<unsafe extern "C" fn(rt: *mut JSRuntime,
+    ::std::option::Option<unsafe extern "C" fn(cx: *mut JSContext,
                                                compartment:
                                                    *mut JSCompartment,
                                                buf:
@@ -2883,11 +2885,11 @@ fn bindgen_test_layout_JSAutoRequest() {
 }
 #[repr(C)]
 #[derive(Debug, Copy)]
-pub struct RuntimeOptions {
+pub struct ContextOptions {
     pub _bitfield_1: u8,
     pub _bitfield_2: u8,
 }
-impl RuntimeOptions {
+impl ContextOptions {
     #[inline]
     pub fn baseline_(&self) -> u8 {
         (self._bitfield_1 & (1usize as u8)) >> 0usize
@@ -3035,13 +3037,13 @@ impl RuntimeOptions {
             ((extraWarnings_ as u8) << 5u32)
     }
 }
-impl ::std::clone::Clone for RuntimeOptions {
+impl ::std::clone::Clone for ContextOptions {
     fn clone(&self) -> Self { *self }
 }
 #[test]
-fn bindgen_test_layout_RuntimeOptions() {
-    assert_eq!(::std::mem::size_of::<RuntimeOptions>() , 2usize);
-    assert_eq!(::std::mem::align_of::<RuntimeOptions>() , 1usize);
+fn bindgen_test_layout_ContextOptions() {
+    assert_eq!(::std::mem::size_of::<ContextOptions>() , 2usize);
+    assert_eq!(::std::mem::align_of::<ContextOptions>() , 1usize);
 }
 #[repr(C)]
 #[derive(Debug)]
@@ -3066,7 +3068,7 @@ fn bindgen_test_layout_JSAutoNullableCompartment() {
     assert_eq!(::std::mem::align_of::<JSAutoNullableCompartment>() , 8usize);
 }
 pub type JSIterateCompartmentCallback =
-    ::std::option::Option<unsafe extern "C" fn(rt: *mut JSRuntime,
+    ::std::option::Option<unsafe extern "C" fn(cx: *mut JSContext,
                                                data:
                                                    *mut ::std::os::raw::c_void,
                                                compartment:
@@ -3330,17 +3332,17 @@ fn bindgen_test_layout_CompartmentBehaviors() {
     assert_eq!(::std::mem::align_of::<CompartmentBehaviors>() , 4usize);
 }
 extern "C" {
-    fn _ZNK2JS20CompartmentBehaviors13extraWarningsEP9JSRuntime(this:
+    fn _ZNK2JS20CompartmentBehaviors13extraWarningsEP9JSContext(this:
                                                                     *mut CompartmentBehaviors,
-                                                                rt:
-                                                                    *mut JSRuntime)
+                                                                cx:
+                                                                    *mut JSContext)
      -> bool;
 }
 impl CompartmentBehaviors {
     #[inline]
-    pub unsafe fn extraWarnings(&mut self, rt: *mut JSRuntime) -> bool {
-        _ZNK2JS20CompartmentBehaviors13extraWarningsEP9JSRuntime(&mut *self,
-                                                                 rt)
+    pub unsafe fn extraWarnings(&mut self, cx: *mut JSContext) -> bool {
+        _ZNK2JS20CompartmentBehaviors13extraWarningsEP9JSContext(&mut *self,
+                                                                 cx)
     }
 }
 /**
@@ -3512,11 +3514,11 @@ fn bindgen_test_layout_ReadOnlyCompileOptions() {
 }
 #[repr(C)]
 pub struct OwningCompileOptions {
-    pub _bindgen_opaque_blob: [u64; 24usize],
+    pub _bindgen_opaque_blob: [u64; 23usize],
 }
 #[test]
 fn bindgen_test_layout_OwningCompileOptions() {
-    assert_eq!(::std::mem::size_of::<OwningCompileOptions>() , 192usize);
+    assert_eq!(::std::mem::size_of::<OwningCompileOptions>() , 184usize);
     assert_eq!(::std::mem::align_of::<OwningCompileOptions>() , 8usize);
 }
 #[repr(C)]
@@ -3655,7 +3657,6 @@ pub struct JSErrorReport {
     pub flags: ::std::os::raw::c_uint,
     pub errorNumber: ::std::os::raw::c_uint,
     pub ucmessage: *const ::std::os::raw::c_ushort,
-    pub messageArgs: *mut *const ::std::os::raw::c_ushort,
     pub exnType: i16,
 }
 impl ::std::clone::Clone for JSErrorReport {
@@ -3663,7 +3664,7 @@ impl ::std::clone::Clone for JSErrorReport {
 }
 #[test]
 fn bindgen_test_layout_JSErrorReport() {
-    assert_eq!(::std::mem::size_of::<JSErrorReport>() , 80usize);
+    assert_eq!(::std::mem::size_of::<JSErrorReport>() , 72usize);
     assert_eq!(::std::mem::align_of::<JSErrorReport>() , 8usize);
 }
 extern "C" {
@@ -3733,9 +3734,9 @@ pub enum JSJitCompilerOption {
     JSJITCOMPILER_ION_ENABLE = 4,
     JSJITCOMPILER_BASELINE_ENABLE = 5,
     JSJITCOMPILER_OFFTHREAD_COMPILATION_ENABLE = 6,
-    JSJITCOMPILER_SIGNALS_ENABLE = 7,
-    JSJITCOMPILER_JUMP_THRESHOLD = 8,
-    JSJITCOMPILER_WASM_TEST_MODE = 9,
+    JSJITCOMPILER_JUMP_THRESHOLD = 7,
+    JSJITCOMPILER_WASM_TEST_MODE = 8,
+    JSJITCOMPILER_WASM_EXPLICIT_BOUNDS_CHECKS = 9,
     JSJITCOMPILER_NOT_AN_OPTION = 10,
 }
 pub enum ScriptSource { }
@@ -3973,6 +3974,49 @@ pub type OutOfMemoryCallback =
     ::std::option::Option<unsafe extern "C" fn(cx: *mut JSContext,
                                                data:
                                                    *mut ::std::os::raw::c_void)>;
+/**
+ * Capture all frames.
+ */
+#[repr(C)]
+#[derive(Debug, Copy)]
+pub struct AllFrames;
+impl ::std::clone::Clone for AllFrames {
+    fn clone(&self) -> Self { *self }
+}
+/**
+ * Capture at most this many frames.
+ */
+#[repr(C)]
+#[derive(Debug, Copy)]
+pub struct MaxFrames {
+    pub maxFrames: u32,
+}
+impl ::std::clone::Clone for MaxFrames {
+    fn clone(&self) -> Self { *self }
+}
+#[test]
+fn bindgen_test_layout_MaxFrames() {
+    assert_eq!(::std::mem::size_of::<MaxFrames>() , 4usize);
+    assert_eq!(::std::mem::align_of::<MaxFrames>() , 4usize);
+}
+/**
+ * Capture the first frame with the given principals. By default, do not
+ * consider self-hosted frames with the given principals as satisfying the stack
+ * capture.
+ */
+#[repr(C)]
+#[derive(Debug)]
+pub struct FirstSubsumedFrame {
+    pub cx: *mut JSContext,
+    pub principals: *mut JSPrincipals,
+    pub ignoreSelfHosted: bool,
+}
+#[test]
+fn bindgen_test_layout_FirstSubsumedFrame() {
+    assert_eq!(::std::mem::size_of::<FirstSubsumedFrame>() , 24usize);
+    assert_eq!(::std::mem::align_of::<FirstSubsumedFrame>() , 8usize);
+}
+pub type StackCapture = ::std::os::raw::c_void;
 #[repr(i32)]
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum SavedFrameResult { Ok = 0, AccessDenied = 1, }
@@ -4145,11 +4189,6 @@ impl PerformanceGroup {
         _ZN2js16PerformanceGroup7ReleaseEv(&mut *self)
     }
 }
-pub type StopwatchStartCallback =
-    ::std::option::Option<unsafe extern "C" fn(arg1: u64,
-                                               arg2:
-                                                   *mut ::std::os::raw::c_void)
-                              -> bool>;
 pub type jsbytecode = u8;
 pub type IsAcceptableThis =
     ::std::option::Option<unsafe extern "C" fn(v: HandleValue) -> bool>;
@@ -4185,11 +4224,12 @@ pub enum jsfriendapi_h_unnamed_10 {
     JS_TELEMETRY_GC_MINOR_REASON = 19,
     JS_TELEMETRY_GC_MINOR_REASON_LONG = 20,
     JS_TELEMETRY_GC_MINOR_US = 21,
-    JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT = 22,
-    JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_ADDONS = 23,
-    JS_TELEMETRY_ADDON_EXCEPTIONS = 24,
-    JS_TELEMETRY_DEFINE_GETTER_SETTER_THIS_NULL_UNDEFINED = 25,
-    JS_TELEMETRY_END = 26,
+    JS_TELEMETRY_GC_NURSERY_BYTES = 22,
+    JS_TELEMETRY_GC_PRETENURE_COUNT = 23,
+    JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT = 24,
+    JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_ADDONS = 25,
+    JS_TELEMETRY_ADDON_EXCEPTIONS = 26,
+    JS_TELEMETRY_END = 27,
 }
 pub type JSAccumulateTelemetryDataCallback =
     ::std::option::Option<unsafe extern "C" fn(id: ::std::os::raw::c_int,
@@ -4265,7 +4305,7 @@ pub type DumpHeapNurseryBehaviour = jsfriendapi_h_unnamed_12;
 #[derive(Debug, Copy)]
 pub struct WeakMapTracer {
     pub _vftable: *const _vftable_WeakMapTracer,
-    pub runtime: *mut JSRuntime,
+    pub context: *mut JSContext,
 }
 #[repr(C)]
 pub struct _vftable_WeakMapTracer {
@@ -4811,205 +4851,218 @@ pub enum JSErrNum {
     JSMSG_RESERVED_ID = 234,
     JSMSG_REST_WITH_DEFAULT = 235,
     JSMSG_SELFHOSTED_TOP_LEVEL_LEXICAL = 236,
-    JSMSG_SELFHOSTED_UNBOUND_NAME = 237,
-    JSMSG_SEMI_AFTER_FOR_COND = 238,
-    JSMSG_SEMI_AFTER_FOR_INIT = 239,
-    JSMSG_SEMI_BEFORE_STMNT = 240,
-    JSMSG_SOURCE_TOO_LONG = 241,
-    JSMSG_STMT_AFTER_RETURN = 242,
-    JSMSG_STRICT_CODE_WITH = 243,
-    JSMSG_TEMPLSTR_UNTERM_EXPR = 244,
-    JSMSG_SIMD_NOT_A_VECTOR = 245,
-    JSMSG_TOO_MANY_CASES = 246,
-    JSMSG_TOO_MANY_CATCH_VARS = 247,
-    JSMSG_TOO_MANY_CON_ARGS = 248,
-    JSMSG_TOO_MANY_DEFAULTS = 249,
-    JSMSG_TOO_MANY_FUN_ARGS = 250,
-    JSMSG_TOO_MANY_LOCALS = 251,
-    JSMSG_TOO_MANY_YIELDS = 252,
-    JSMSG_TOUGH_BREAK = 253,
-    JSMSG_UNEXPECTED_TOKEN = 254,
-    JSMSG_UNNAMED_CLASS_STMT = 255,
-    JSMSG_UNNAMED_FUNCTION_STMT = 256,
-    JSMSG_UNTERMINATED_COMMENT = 257,
-    JSMSG_UNTERMINATED_REGEXP = 258,
-    JSMSG_UNTERMINATED_STRING = 259,
-    JSMSG_USELESS_EXPR = 260,
-    JSMSG_USE_ASM_DIRECTIVE_FAIL = 261,
-    JSMSG_VAR_HIDES_ARG = 262,
-    JSMSG_WHILE_AFTER_DO = 263,
-    JSMSG_YIELD_IN_ARROW = 264,
-    JSMSG_YIELD_IN_DEFAULT = 265,
-    JSMSG_BAD_COLUMN_NUMBER = 266,
-    JSMSG_COMPUTED_NAME_IN_PATTERN = 267,
-    JSMSG_DEFAULT_IN_PATTERN = 268,
-    JSMSG_BAD_NEWTARGET = 269,
-    JSMSG_ESCAPED_KEYWORD = 270,
-    JSMSG_USE_ASM_TYPE_FAIL = 271,
-    JSMSG_USE_ASM_LINK_FAIL = 272,
-    JSMSG_USE_ASM_TYPE_OK = 273,
-    JSMSG_WASM_FAIL = 274,
-    JSMSG_WASM_DECODE_FAIL = 275,
-    JSMSG_WASM_TEXT_FAIL = 276,
-    JSMSG_WASM_BAD_IND_CALL = 277,
-    JSMSG_WASM_BAD_BUF_ARG = 278,
-    JSMSG_WASM_BAD_IMPORT_ARG = 279,
-    JSMSG_WASM_UNREACHABLE = 280,
-    JSMSG_WASM_INTEGER_OVERFLOW = 281,
-    JSMSG_WASM_INVALID_CONVERSION = 282,
-    JSMSG_WASM_INT_DIVIDE_BY_ZERO = 283,
-    JSMSG_WASM_OVERRECURSED = 284,
-    JSMSG_BAD_TRAP_RETURN_VALUE = 285,
-    JSMSG_BAD_GETPROTOTYPEOF_TRAP_RETURN = 286,
-    JSMSG_INCONSISTENT_GETPROTOTYPEOF_TRAP = 287,
-    JSMSG_PROXY_SETPROTOTYPEOF_RETURNED_FALSE = 288,
-    JSMSG_PROXY_ISEXTENSIBLE_RETURNED_FALSE = 289,
-    JSMSG_INCONSISTENT_SETPROTOTYPEOF_TRAP = 290,
-    JSMSG_CANT_CHANGE_EXTENSIBILITY = 291,
-    JSMSG_CANT_DEFINE_INVALID = 292,
-    JSMSG_CANT_DEFINE_NEW = 293,
-    JSMSG_CANT_DEFINE_NE_AS_NC = 294,
-    JSMSG_PROXY_DEFINE_RETURNED_FALSE = 295,
-    JSMSG_PROXY_DELETE_RETURNED_FALSE = 296,
-    JSMSG_PROXY_PREVENTEXTENSIONS_RETURNED_FALSE = 297,
-    JSMSG_PROXY_SET_RETURNED_FALSE = 298,
-    JSMSG_CANT_REPORT_AS_NON_EXTENSIBLE = 299,
-    JSMSG_CANT_REPORT_C_AS_NC = 300,
-    JSMSG_CANT_REPORT_E_AS_NE = 301,
-    JSMSG_CANT_REPORT_INVALID = 302,
-    JSMSG_CANT_REPORT_NC_AS_NE = 303,
-    JSMSG_CANT_REPORT_NEW = 304,
-    JSMSG_CANT_REPORT_NE_AS_NC = 305,
-    JSMSG_CANT_SET_NW_NC = 306,
-    JSMSG_CANT_SET_WO_SETTER = 307,
-    JSMSG_CANT_SKIP_NC = 308,
-    JSMSG_ONWKEYS_STR_SYM = 309,
-    JSMSG_MUST_REPORT_SAME_VALUE = 310,
-    JSMSG_MUST_REPORT_UNDEFINED = 311,
-    JSMSG_OBJECT_ACCESS_DENIED = 312,
-    JSMSG_PROPERTY_ACCESS_DENIED = 313,
-    JSMSG_PROXY_CONSTRUCT_OBJECT = 314,
-    JSMSG_PROXY_EXTENSIBILITY = 315,
-    JSMSG_PROXY_GETOWN_OBJORUNDEF = 316,
-    JSMSG_PROXY_REVOKED = 317,
-    JSMSG_PROXY_ARG_REVOKED = 318,
-    JSMSG_BAD_TRAP = 319,
-    JSMSG_SC_BAD_CLONE_VERSION = 320,
-    JSMSG_SC_BAD_SERIALIZED_DATA = 321,
-    JSMSG_SC_DUP_TRANSFERABLE = 322,
-    JSMSG_SC_NOT_TRANSFERABLE = 323,
-    JSMSG_SC_UNSUPPORTED_TYPE = 324,
-    JSMSG_SC_SHMEM_MUST_TRANSFER = 325,
-    JSMSG_ASSIGN_FUNCTION_OR_NULL = 326,
-    JSMSG_DEBUG_BAD_LINE = 327,
-    JSMSG_DEBUG_BAD_OFFSET = 328,
-    JSMSG_DEBUG_BAD_REFERENT = 329,
-    JSMSG_DEBUG_BAD_RESUMPTION = 330,
-    JSMSG_DEBUG_CANT_DEBUG_GLOBAL = 331,
-    JSMSG_DEBUG_CCW_REQUIRED = 332,
-    JSMSG_DEBUG_COMPARTMENT_MISMATCH = 333,
-    JSMSG_DEBUG_LOOP = 334,
-    JSMSG_DEBUG_NOT_DEBUGGEE = 335,
-    JSMSG_DEBUG_NOT_DEBUGGING = 336,
-    JSMSG_DEBUG_NOT_IDLE = 337,
-    JSMSG_DEBUG_NOT_LIVE = 338,
-    JSMSG_DEBUG_NO_SCOPE_OBJECT = 339,
-    JSMSG_DEBUG_OBJECT_PROTO = 340,
-    JSMSG_DEBUG_OBJECT_WRONG_OWNER = 341,
-    JSMSG_DEBUG_OPTIMIZED_OUT = 342,
-    JSMSG_DEBUG_RESUMPTION_VALUE_DISALLOWED = 343,
-    JSMSG_DEBUG_VARIABLE_NOT_FOUND = 344,
-    JSMSG_DEBUG_WRAPPER_IN_WAY = 345,
-    JSMSG_DEBUGGEE_WOULD_RUN = 346,
-    JSMSG_NOT_CALLABLE_OR_UNDEFINED = 347,
-    JSMSG_NOT_TRACKING_ALLOCATIONS = 348,
-    JSMSG_OBJECT_METADATA_CALLBACK_ALREADY_SET = 349,
-    JSMSG_QUERY_INNERMOST_WITHOUT_LINE_URL = 350,
-    JSMSG_QUERY_LINE_WITHOUT_URL = 351,
-    JSMSG_DEBUG_CANT_SET_OPT_ENV = 352,
-    JSMSG_DEBUG_INVISIBLE_COMPARTMENT = 353,
-    JSMSG_DEBUG_CENSUS_BREAKDOWN = 354,
-    JSMSG_DEBUG_PROMISE_NOT_RESOLVED = 355,
-    JSMSG_TRACELOGGER_ENABLE_FAIL = 356,
-    JSMSG_DATE_NOT_FINITE = 357,
-    JSMSG_INTERNAL_INTL_ERROR = 358,
-    JSMSG_INTL_OBJECT_NOT_INITED = 359,
-    JSMSG_INTL_OBJECT_REINITED = 360,
-    JSMSG_INVALID_CURRENCY_CODE = 361,
-    JSMSG_INVALID_DIGITS_VALUE = 362,
-    JSMSG_INVALID_LANGUAGE_TAG = 363,
-    JSMSG_INVALID_LOCALES_ELEMENT = 364,
-    JSMSG_INVALID_LOCALE_MATCHER = 365,
-    JSMSG_INVALID_OPTION_VALUE = 366,
-    JSMSG_INVALID_TIME_ZONE = 367,
-    JSMSG_UNDEFINED_CURRENCY = 368,
-    JSMSG_BACK_REF_OUT_OF_RANGE = 369,
-    JSMSG_BAD_CLASS_RANGE = 370,
-    JSMSG_ESCAPE_AT_END_OF_REGEXP = 371,
-    JSMSG_EXEC_NOT_OBJORNULL = 372,
-    JSMSG_INVALID_DECIMAL_ESCAPE = 373,
-    JSMSG_INVALID_GROUP = 374,
-    JSMSG_INVALID_IDENTITY_ESCAPE = 375,
-    JSMSG_INVALID_UNICODE_ESCAPE = 376,
-    JSMSG_MISSING_PAREN = 377,
-    JSMSG_NEWREGEXP_FLAGGED = 378,
-    JSMSG_NOTHING_TO_REPEAT = 379,
-    JSMSG_NUMBERS_OUT_OF_ORDER = 380,
-    JSMSG_RANGE_WITH_CLASS_ESCAPE = 381,
-    JSMSG_RAW_BRACE_IN_REGEP = 382,
-    JSMSG_RAW_BRACKET_IN_REGEP = 383,
-    JSMSG_TOO_MANY_PARENS = 384,
-    JSMSG_UNICODE_OVERFLOW = 385,
-    JSMSG_UNMATCHED_RIGHT_PAREN = 386,
-    JSMSG_UNTERM_CLASS = 387,
-    JSMSG_DEFAULT_LOCALE_ERROR = 388,
-    JSMSG_NO_SUCH_SELF_HOSTED_PROP = 389,
-    JSMSG_INVALID_PROTOTYPE = 390,
-    JSMSG_TYPEDOBJECT_BAD_ARGS = 391,
-    JSMSG_TYPEDOBJECT_BINARYARRAY_BAD_INDEX = 392,
-    JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED = 393,
-    JSMSG_TYPEDOBJECT_STRUCTTYPE_BAD_ARGS = 394,
-    JSMSG_TYPEDOBJECT_TOO_BIG = 395,
-    JSMSG_SIMD_FAILED_CONVERSION = 396,
-    JSMSG_SIMD_TO_NUMBER = 397,
-    JSMSG_TOO_LONG_ARRAY = 398,
-    JSMSG_BAD_INDEX = 399,
-    JSMSG_NON_ARRAY_BUFFER_RETURNED = 400,
-    JSMSG_SAME_ARRAY_BUFFER_RETURNED = 401,
-    JSMSG_SHORT_ARRAY_BUFFER_RETURNED = 402,
-    JSMSG_TYPED_ARRAY_BAD_ARGS = 403,
-    JSMSG_TYPED_ARRAY_NEGATIVE_ARG = 404,
-    JSMSG_TYPED_ARRAY_DETACHED = 405,
-    JSMSG_TYPED_ARRAY_CONSTRUCT_BOUNDS = 406,
-    JSMSG_SHARED_ARRAY_BAD_LENGTH = 407,
-    JSMSG_BAD_PARSE_NODE = 408,
-    JSMSG_SYMBOL_TO_STRING = 409,
-    JSMSG_SYMBOL_TO_NUMBER = 410,
-    JSMSG_ATOMICS_BAD_ARRAY = 411,
-    JSMSG_ATOMICS_TOO_LONG = 412,
-    JSMSG_ATOMICS_WAIT_NOT_ALLOWED = 413,
-    JSMSG_CANT_SET_INTERPOSED = 414,
-    JSMSG_CANT_DEFINE_WINDOW_ELEMENT = 415,
-    JSMSG_CANT_DELETE_WINDOW_ELEMENT = 416,
-    JSMSG_CANT_DELETE_WINDOW_NAMED_PROPERTY = 417,
-    JSMSG_CANT_PREVENT_EXTENSIONS = 418,
-    JSMSG_NO_NAMED_SETTER = 419,
-    JSMSG_NO_INDEXED_SETTER = 420,
-    JSMSG_CANT_DELETE_SUPER = 421,
-    JSMSG_REINIT_THIS = 422,
-    JSMSG_BAD_DEFAULT_EXPORT = 423,
-    JSMSG_MISSING_INDIRECT_EXPORT = 424,
-    JSMSG_AMBIGUOUS_INDIRECT_EXPORT = 425,
-    JSMSG_MISSING_IMPORT = 426,
-    JSMSG_AMBIGUOUS_IMPORT = 427,
-    JSMSG_MISSING_NAMESPACE_EXPORT = 428,
-    JSMSG_MISSING_EXPORT = 429,
-    JSMSG_CANNOT_RESOLVE_PROMISE_WITH_ITSELF = 430,
-    JSMSG_PROMISE_CAPABILITY_HAS_SOMETHING_ALREADY = 431,
-    JSMSG_PROMISE_RESOLVE_FUNCTION_NOT_CALLABLE = 432,
-    JSMSG_PROMISE_REJECT_FUNCTION_NOT_CALLABLE = 433,
-    JSMSG_PROMISE_ERROR_IN_WRAPPED_REJECTION_REASON = 434,
-    JSErr_Limit = 435,
+    JSMSG_SELFHOSTED_METHOD_CALL = 237,
+    JSMSG_SELFHOSTED_UNBOUND_NAME = 238,
+    JSMSG_SEMI_AFTER_FOR_COND = 239,
+    JSMSG_SEMI_AFTER_FOR_INIT = 240,
+    JSMSG_SEMI_BEFORE_STMNT = 241,
+    JSMSG_SOURCE_TOO_LONG = 242,
+    JSMSG_STMT_AFTER_RETURN = 243,
+    JSMSG_STRICT_CODE_WITH = 244,
+    JSMSG_TEMPLSTR_UNTERM_EXPR = 245,
+    JSMSG_SIMD_NOT_A_VECTOR = 246,
+    JSMSG_TOO_MANY_CASES = 247,
+    JSMSG_TOO_MANY_CATCH_VARS = 248,
+    JSMSG_TOO_MANY_CON_ARGS = 249,
+    JSMSG_TOO_MANY_DEFAULTS = 250,
+    JSMSG_TOO_MANY_FUN_ARGS = 251,
+    JSMSG_TOO_MANY_LOCALS = 252,
+    JSMSG_TOO_MANY_YIELDS = 253,
+    JSMSG_TOUGH_BREAK = 254,
+    JSMSG_UNEXPECTED_TOKEN = 255,
+    JSMSG_UNNAMED_CLASS_STMT = 256,
+    JSMSG_UNNAMED_FUNCTION_STMT = 257,
+    JSMSG_UNTERMINATED_COMMENT = 258,
+    JSMSG_UNTERMINATED_REGEXP = 259,
+    JSMSG_UNTERMINATED_STRING = 260,
+    JSMSG_USELESS_EXPR = 261,
+    JSMSG_USE_ASM_DIRECTIVE_FAIL = 262,
+    JSMSG_VAR_HIDES_ARG = 263,
+    JSMSG_WHILE_AFTER_DO = 264,
+    JSMSG_YIELD_IN_ARROW = 265,
+    JSMSG_YIELD_IN_DEFAULT = 266,
+    JSMSG_YIELD_IN_METHOD = 267,
+    JSMSG_BAD_COLUMN_NUMBER = 268,
+    JSMSG_COMPUTED_NAME_IN_PATTERN = 269,
+    JSMSG_DEFAULT_IN_PATTERN = 270,
+    JSMSG_BAD_NEWTARGET = 271,
+    JSMSG_ESCAPED_KEYWORD = 272,
+    JSMSG_USE_ASM_TYPE_FAIL = 273,
+    JSMSG_USE_ASM_LINK_FAIL = 274,
+    JSMSG_USE_ASM_TYPE_OK = 275,
+    JSMSG_WASM_FAIL = 276,
+    JSMSG_WASM_DECODE_FAIL = 277,
+    JSMSG_WASM_TEXT_FAIL = 278,
+    JSMSG_WASM_BAD_IND_CALL = 279,
+    JSMSG_WASM_BAD_BUF_ARG = 280,
+    JSMSG_WASM_BAD_MOD_ARG = 281,
+    JSMSG_WASM_BAD_DESC_ARG = 282,
+    JSMSG_WASM_BAD_IMP_SIZE = 283,
+    JSMSG_WASM_BAD_SIZE = 284,
+    JSMSG_WASM_BAD_ELEMENT = 285,
+    JSMSG_WASM_BAD_IMPORT_ARG = 286,
+    JSMSG_WASM_BAD_IMPORT_FIELD = 287,
+    JSMSG_WASM_BAD_IMPORT_SIG = 288,
+    JSMSG_WASM_BAD_SET_VALUE = 289,
+    JSMSG_WASM_UNREACHABLE = 290,
+    JSMSG_WASM_INTEGER_OVERFLOW = 291,
+    JSMSG_WASM_INVALID_CONVERSION = 292,
+    JSMSG_WASM_INT_DIVIDE_BY_ZERO = 293,
+    JSMSG_WASM_UNALIGNED_ACCESS = 294,
+    JSMSG_WASM_OVERRECURSED = 295,
+    JSMSG_BAD_TRAP_RETURN_VALUE = 296,
+    JSMSG_BAD_GETPROTOTYPEOF_TRAP_RETURN = 297,
+    JSMSG_INCONSISTENT_GETPROTOTYPEOF_TRAP = 298,
+    JSMSG_PROXY_SETPROTOTYPEOF_RETURNED_FALSE = 299,
+    JSMSG_PROXY_ISEXTENSIBLE_RETURNED_FALSE = 300,
+    JSMSG_INCONSISTENT_SETPROTOTYPEOF_TRAP = 301,
+    JSMSG_CANT_CHANGE_EXTENSIBILITY = 302,
+    JSMSG_CANT_DEFINE_INVALID = 303,
+    JSMSG_CANT_DEFINE_NEW = 304,
+    JSMSG_CANT_DEFINE_NE_AS_NC = 305,
+    JSMSG_PROXY_DEFINE_RETURNED_FALSE = 306,
+    JSMSG_PROXY_DELETE_RETURNED_FALSE = 307,
+    JSMSG_PROXY_PREVENTEXTENSIONS_RETURNED_FALSE = 308,
+    JSMSG_PROXY_SET_RETURNED_FALSE = 309,
+    JSMSG_CANT_REPORT_AS_NON_EXTENSIBLE = 310,
+    JSMSG_CANT_REPORT_C_AS_NC = 311,
+    JSMSG_CANT_REPORT_E_AS_NE = 312,
+    JSMSG_CANT_REPORT_INVALID = 313,
+    JSMSG_CANT_REPORT_NC_AS_NE = 314,
+    JSMSG_CANT_REPORT_NEW = 315,
+    JSMSG_CANT_REPORT_NE_AS_NC = 316,
+    JSMSG_CANT_SET_NW_NC = 317,
+    JSMSG_CANT_SET_WO_SETTER = 318,
+    JSMSG_CANT_SKIP_NC = 319,
+    JSMSG_ONWKEYS_STR_SYM = 320,
+    JSMSG_MUST_REPORT_SAME_VALUE = 321,
+    JSMSG_MUST_REPORT_UNDEFINED = 322,
+    JSMSG_OBJECT_ACCESS_DENIED = 323,
+    JSMSG_PROPERTY_ACCESS_DENIED = 324,
+    JSMSG_PROXY_CONSTRUCT_OBJECT = 325,
+    JSMSG_PROXY_EXTENSIBILITY = 326,
+    JSMSG_PROXY_GETOWN_OBJORUNDEF = 327,
+    JSMSG_PROXY_REVOKED = 328,
+    JSMSG_PROXY_ARG_REVOKED = 329,
+    JSMSG_BAD_TRAP = 330,
+    JSMSG_SC_BAD_CLONE_VERSION = 331,
+    JSMSG_SC_BAD_SERIALIZED_DATA = 332,
+    JSMSG_SC_DUP_TRANSFERABLE = 333,
+    JSMSG_SC_NOT_TRANSFERABLE = 334,
+    JSMSG_SC_UNSUPPORTED_TYPE = 335,
+    JSMSG_SC_SHMEM_MUST_TRANSFER = 336,
+    JSMSG_ASSIGN_FUNCTION_OR_NULL = 337,
+    JSMSG_DEBUG_BAD_LINE = 338,
+    JSMSG_DEBUG_BAD_OFFSET = 339,
+    JSMSG_DEBUG_BAD_REFERENT = 340,
+    JSMSG_DEBUG_BAD_RESUMPTION = 341,
+    JSMSG_DEBUG_CANT_DEBUG_GLOBAL = 342,
+    JSMSG_DEBUG_CCW_REQUIRED = 343,
+    JSMSG_DEBUG_COMPARTMENT_MISMATCH = 344,
+    JSMSG_DEBUG_LOOP = 345,
+    JSMSG_DEBUG_NOT_DEBUGGEE = 346,
+    JSMSG_DEBUG_NOT_DEBUGGING = 347,
+    JSMSG_DEBUG_NOT_IDLE = 348,
+    JSMSG_DEBUG_NOT_LIVE = 349,
+    JSMSG_DEBUG_NO_SCOPE_OBJECT = 350,
+    JSMSG_DEBUG_OBJECT_PROTO = 351,
+    JSMSG_DEBUG_OBJECT_WRONG_OWNER = 352,
+    JSMSG_DEBUG_OPTIMIZED_OUT = 353,
+    JSMSG_DEBUG_RESUMPTION_VALUE_DISALLOWED = 354,
+    JSMSG_DEBUG_VARIABLE_NOT_FOUND = 355,
+    JSMSG_DEBUG_WRAPPER_IN_WAY = 356,
+    JSMSG_DEBUGGEE_WOULD_RUN = 357,
+    JSMSG_NOT_CALLABLE_OR_UNDEFINED = 358,
+    JSMSG_NOT_TRACKING_ALLOCATIONS = 359,
+    JSMSG_OBJECT_METADATA_CALLBACK_ALREADY_SET = 360,
+    JSMSG_QUERY_INNERMOST_WITHOUT_LINE_URL = 361,
+    JSMSG_QUERY_LINE_WITHOUT_URL = 362,
+    JSMSG_DEBUG_CANT_SET_OPT_ENV = 363,
+    JSMSG_DEBUG_INVISIBLE_COMPARTMENT = 364,
+    JSMSG_DEBUG_CENSUS_BREAKDOWN = 365,
+    JSMSG_DEBUG_PROMISE_NOT_RESOLVED = 366,
+    JSMSG_TRACELOGGER_ENABLE_FAIL = 367,
+    JSMSG_DATE_NOT_FINITE = 368,
+    JSMSG_INTERNAL_INTL_ERROR = 369,
+    JSMSG_INTL_OBJECT_NOT_INITED = 370,
+    JSMSG_INTL_OBJECT_REINITED = 371,
+    JSMSG_INVALID_CURRENCY_CODE = 372,
+    JSMSG_INVALID_DIGITS_VALUE = 373,
+    JSMSG_INVALID_LANGUAGE_TAG = 374,
+    JSMSG_INVALID_LOCALES_ELEMENT = 375,
+    JSMSG_INVALID_LOCALE_MATCHER = 376,
+    JSMSG_INVALID_OPTION_VALUE = 377,
+    JSMSG_INVALID_TIME_ZONE = 378,
+    JSMSG_UNDEFINED_CURRENCY = 379,
+    JSMSG_BACK_REF_OUT_OF_RANGE = 380,
+    JSMSG_BAD_CLASS_RANGE = 381,
+    JSMSG_ESCAPE_AT_END_OF_REGEXP = 382,
+    JSMSG_EXEC_NOT_OBJORNULL = 383,
+    JSMSG_INVALID_DECIMAL_ESCAPE = 384,
+    JSMSG_INVALID_GROUP = 385,
+    JSMSG_INVALID_IDENTITY_ESCAPE = 386,
+    JSMSG_INVALID_UNICODE_ESCAPE = 387,
+    JSMSG_MISSING_PAREN = 388,
+    JSMSG_NEWREGEXP_FLAGGED = 389,
+    JSMSG_NOTHING_TO_REPEAT = 390,
+    JSMSG_NUMBERS_OUT_OF_ORDER = 391,
+    JSMSG_RANGE_WITH_CLASS_ESCAPE = 392,
+    JSMSG_RAW_BRACE_IN_REGEP = 393,
+    JSMSG_RAW_BRACKET_IN_REGEP = 394,
+    JSMSG_TOO_MANY_PARENS = 395,
+    JSMSG_UNICODE_OVERFLOW = 396,
+    JSMSG_UNMATCHED_RIGHT_PAREN = 397,
+    JSMSG_UNTERM_CLASS = 398,
+    JSMSG_DEFAULT_LOCALE_ERROR = 399,
+    JSMSG_NO_SUCH_SELF_HOSTED_PROP = 400,
+    JSMSG_INVALID_PROTOTYPE = 401,
+    JSMSG_TYPEDOBJECT_BAD_ARGS = 402,
+    JSMSG_TYPEDOBJECT_BINARYARRAY_BAD_INDEX = 403,
+    JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED = 404,
+    JSMSG_TYPEDOBJECT_STRUCTTYPE_BAD_ARGS = 405,
+    JSMSG_TYPEDOBJECT_TOO_BIG = 406,
+    JSMSG_SIMD_FAILED_CONVERSION = 407,
+    JSMSG_SIMD_TO_NUMBER = 408,
+    JSMSG_TOO_LONG_ARRAY = 409,
+    JSMSG_BAD_INDEX = 410,
+    JSMSG_NON_ARRAY_BUFFER_RETURNED = 411,
+    JSMSG_SAME_ARRAY_BUFFER_RETURNED = 412,
+    JSMSG_SHORT_ARRAY_BUFFER_RETURNED = 413,
+    JSMSG_TYPED_ARRAY_BAD_ARGS = 414,
+    JSMSG_TYPED_ARRAY_NEGATIVE_ARG = 415,
+    JSMSG_TYPED_ARRAY_DETACHED = 416,
+    JSMSG_TYPED_ARRAY_CONSTRUCT_BOUNDS = 417,
+    JSMSG_SHARED_ARRAY_BAD_LENGTH = 418,
+    JSMSG_BAD_PARSE_NODE = 419,
+    JSMSG_SYMBOL_TO_STRING = 420,
+    JSMSG_SYMBOL_TO_NUMBER = 421,
+    JSMSG_ATOMICS_BAD_ARRAY = 422,
+    JSMSG_ATOMICS_TOO_LONG = 423,
+    JSMSG_ATOMICS_WAIT_NOT_ALLOWED = 424,
+    JSMSG_CANT_SET_INTERPOSED = 425,
+    JSMSG_CANT_DEFINE_WINDOW_ELEMENT = 426,
+    JSMSG_CANT_DELETE_WINDOW_ELEMENT = 427,
+    JSMSG_CANT_DELETE_WINDOW_NAMED_PROPERTY = 428,
+    JSMSG_CANT_PREVENT_EXTENSIONS = 429,
+    JSMSG_NO_NAMED_SETTER = 430,
+    JSMSG_NO_INDEXED_SETTER = 431,
+    JSMSG_CANT_DELETE_SUPER = 432,
+    JSMSG_REINIT_THIS = 433,
+    JSMSG_BAD_DEFAULT_EXPORT = 434,
+    JSMSG_MISSING_INDIRECT_EXPORT = 435,
+    JSMSG_AMBIGUOUS_INDIRECT_EXPORT = 436,
+    JSMSG_MISSING_IMPORT = 437,
+    JSMSG_AMBIGUOUS_IMPORT = 438,
+    JSMSG_MISSING_NAMESPACE_EXPORT = 439,
+    JSMSG_MISSING_EXPORT = 440,
+    JSMSG_MODULE_INSTANTIATE_FAILED = 441,
+    JSMSG_BAD_MODULE_STATE = 442,
+    JSMSG_CANNOT_RESOLVE_PROMISE_WITH_ITSELF = 443,
+    JSMSG_PROMISE_CAPABILITY_HAS_SOMETHING_ALREADY = 444,
+    JSMSG_PROMISE_RESOLVE_FUNCTION_NOT_CALLABLE = 445,
+    JSMSG_PROMISE_REJECT_FUNCTION_NOT_CALLABLE = 446,
+    JSMSG_PROMISE_ERROR_IN_WRAPPED_REJECTION_REASON = 447,
+    JSErr_Limit = 448,
 }
 /**
  * Scalar types that can appear in typed arrays and typed objects.  The enum
@@ -5030,10 +5083,11 @@ pub enum Type {
     Float64 = 7,
     Uint8Clamped = 8,
     MaxTypedArrayViewType = 9,
-    Float32x4 = 10,
-    Int8x16 = 11,
-    Int16x8 = 12,
-    Int32x4 = 13,
+    Int64 = 10,
+    Float32x4 = 11,
+    Int8x16 = 12,
+    Int16x8 = 13,
+    Int32x4 = 14,
 }
 #[repr(u32)]
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
@@ -5431,41 +5485,6 @@ fn bindgen_test_layout_GCHeapProfiler() {
     assert_eq!(::std::mem::size_of::<GCHeapProfiler>() , 8usize);
     assert_eq!(::std::mem::align_of::<GCHeapProfiler>() , 8usize);
 }
-#[repr(C)]
-#[derive(Debug, Copy)]
-pub struct MemProfiler {
-    pub mGCHeapProfiler: *mut GCHeapProfiler,
-    pub mRuntime: *mut JSRuntime,
-}
-impl ::std::clone::Clone for MemProfiler {
-    fn clone(&self) -> Self { *self }
-}
-#[test]
-fn bindgen_test_layout_MemProfiler() {
-    assert_eq!(::std::mem::size_of::<MemProfiler>() , 16usize);
-    assert_eq!(::std::mem::align_of::<MemProfiler>() , 8usize);
-}
-extern "C" {
-    fn _ZN11MemProfiler5startEP14GCHeapProfiler(this: *mut MemProfiler,
-                                                aGCHeapProfiler:
-                                                    *mut GCHeapProfiler);
-    fn _ZN11MemProfiler4stopEv(this: *mut MemProfiler);
-    fn _ZN11MemProfiler14GetMemProfilerEP9JSRuntime(runtime: *mut JSRuntime)
-     -> *mut MemProfiler;
-}
-impl MemProfiler {
-    #[inline]
-    pub unsafe fn start(&mut self, aGCHeapProfiler: *mut GCHeapProfiler) {
-        _ZN11MemProfiler5startEP14GCHeapProfiler(&mut *self, aGCHeapProfiler)
-    }
-    #[inline]
-    pub unsafe fn stop(&mut self) { _ZN11MemProfiler4stopEv(&mut *self) }
-    #[inline]
-    pub unsafe fn GetMemProfiler(runtime: *mut JSRuntime)
-     -> *mut MemProfiler {
-        _ZN11MemProfiler14GetMemProfilerEP9JSRuntime(runtime)
-    }
-}
 #[repr(i32)]
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum InitState { Uninitialized = 0, Running = 1, ShutDown = 2, }
@@ -5668,7 +5687,6 @@ fn bindgen_test_layout_CodeSizes() {
 pub struct GCSizes {
     pub marker: usize,
     pub nurseryCommitted: usize,
-    pub nurseryDecommitted: usize,
     pub nurseryMallocedBuffers: usize,
     pub storeBufferVals: usize,
     pub storeBufferCells: usize,
@@ -5682,7 +5700,7 @@ impl ::std::clone::Clone for GCSizes {
 }
 #[test]
 fn bindgen_test_layout_GCSizes() {
-    assert_eq!(::std::mem::size_of::<GCSizes>() , 80usize);
+    assert_eq!(::std::mem::size_of::<GCSizes>() , 72usize);
     assert_eq!(::std::mem::align_of::<GCSizes>() , 8usize);
 }
 /**
@@ -5788,7 +5806,7 @@ pub struct RuntimeSizes {
 }
 #[test]
 fn bindgen_test_layout_RuntimeSizes() {
-    assert_eq!(::std::mem::size_of::<RuntimeSizes>() , 256usize);
+    assert_eq!(::std::mem::size_of::<RuntimeSizes>() , 248usize);
     assert_eq!(::std::mem::align_of::<RuntimeSizes>() , 8usize);
 }
 #[repr(C)]
@@ -5897,11 +5915,11 @@ pub type CompartmentStatsVector = ::std::os::raw::c_void;
 pub type ZoneStatsVector = ::std::os::raw::c_void;
 #[repr(C)]
 pub struct RuntimeStats {
-    pub _bindgen_opaque_blob: [u64; 125usize],
+    pub _bindgen_opaque_blob: [u64; 124usize],
 }
 #[test]
 fn bindgen_test_layout_RuntimeStats() {
-    assert_eq!(::std::mem::size_of::<RuntimeStats>() , 1000usize);
+    assert_eq!(::std::mem::size_of::<RuntimeStats>() , 992usize);
     assert_eq!(::std::mem::align_of::<RuntimeStats>() , 8usize);
 }
 #[repr(C)]
@@ -6003,21 +6021,21 @@ extern "C" {
     /**
  * Schedule all zones to be collected in the next GC.
  */
-    #[link_name = "_ZN2JS16PrepareForFullGCEP9JSRuntime"]
-    pub fn PrepareForFullGC(rt: *mut JSRuntime);
+    #[link_name = "_ZN2JS16PrepareForFullGCEP9JSContext"]
+    pub fn PrepareForFullGC(cx: *mut JSContext);
     /**
  * When performing an incremental GC, the zones that were selected for the
  * previous incremental slice must be selected in subsequent slices as well.
  * This function selects those slices automatically.
  */
-    #[link_name = "_ZN2JS23PrepareForIncrementalGCEP9JSRuntime"]
-    pub fn PrepareForIncrementalGC(rt: *mut JSRuntime);
+    #[link_name = "_ZN2JS23PrepareForIncrementalGCEP9JSContext"]
+    pub fn PrepareForIncrementalGC(cx: *mut JSContext);
     /**
  * Returns true if any zone in the system has been scheduled for GC with one of
  * the functions above or by the JS engine.
  */
-    #[link_name = "_ZN2JS13IsGCScheduledEP9JSRuntime"]
-    pub fn IsGCScheduled(rt: *mut JSRuntime) -> bool;
+    #[link_name = "_ZN2JS13IsGCScheduledEP9JSContext"]
+    pub fn IsGCScheduled(cx: *mut JSContext) -> bool;
     /**
  * Undoes the effect of the Prepare methods above. The given zone will not be
  * collected in the next GC.
@@ -6034,67 +6052,67 @@ extern "C" {
  * the system.
  */
     #[link_name =
-          "_ZN2JS11GCForReasonEP9JSRuntime18JSGCInvocationKindNS_8gcreason6ReasonE"]
-    pub fn GCForReason(rt: *mut JSRuntime, gckind: JSGCInvocationKind,
+          "_ZN2JS11GCForReasonEP9JSContext18JSGCInvocationKindNS_8gcreason6ReasonE"]
+    pub fn GCForReason(cx: *mut JSContext, gckind: JSGCInvocationKind,
                        reason: Reason);
     /**
  * Begin an incremental collection and perform one slice worth of work. When
  * this function returns, the collection may not be complete.
  * IncrementalGCSlice() must be called repeatedly until
- * !IsIncrementalGCInProgress(rt).
+ * !IsIncrementalGCInProgress(cx).
  *
  * Note: SpiderMonkey's GC is not realtime. Slices in practice may be longer or
  *       shorter than the requested interval.
  */
     #[link_name =
-          "_ZN2JS18StartIncrementalGCEP9JSRuntime18JSGCInvocationKindNS_8gcreason6ReasonEx"]
-    pub fn StartIncrementalGC(rt: *mut JSRuntime, gckind: JSGCInvocationKind,
+          "_ZN2JS18StartIncrementalGCEP9JSContext18JSGCInvocationKindNS_8gcreason6ReasonEx"]
+    pub fn StartIncrementalGC(cx: *mut JSContext, gckind: JSGCInvocationKind,
                               reason: Reason, millis: i64);
     /**
  * Perform a slice of an ongoing incremental collection. When this function
  * returns, the collection may not be complete. It must be called repeatedly
- * until !IsIncrementalGCInProgress(rt).
+ * until !IsIncrementalGCInProgress(cx).
  *
  * Note: SpiderMonkey's GC is not realtime. Slices in practice may be longer or
  *       shorter than the requested interval.
  */
     #[link_name =
-          "_ZN2JS18IncrementalGCSliceEP9JSRuntimeNS_8gcreason6ReasonEx"]
-    pub fn IncrementalGCSlice(rt: *mut JSRuntime, reason: Reason,
+          "_ZN2JS18IncrementalGCSliceEP9JSContextNS_8gcreason6ReasonEx"]
+    pub fn IncrementalGCSlice(cx: *mut JSContext, reason: Reason,
                               millis: i64);
     /**
- * If IsIncrementalGCInProgress(rt), this call finishes the ongoing collection
- * by performing an arbitrarily long slice. If !IsIncrementalGCInProgress(rt),
+ * If IsIncrementalGCInProgress(cx), this call finishes the ongoing collection
+ * by performing an arbitrarily long slice. If !IsIncrementalGCInProgress(cx),
  * this is equivalent to GCForReason. When this function returns,
- * IsIncrementalGCInProgress(rt) will always be false.
+ * IsIncrementalGCInProgress(cx) will always be false.
  */
     #[link_name =
-          "_ZN2JS19FinishIncrementalGCEP9JSRuntimeNS_8gcreason6ReasonE"]
-    pub fn FinishIncrementalGC(rt: *mut JSRuntime, reason: Reason);
+          "_ZN2JS19FinishIncrementalGCEP9JSContextNS_8gcreason6ReasonE"]
+    pub fn FinishIncrementalGC(cx: *mut JSContext, reason: Reason);
     /**
- * If IsIncrementalGCInProgress(rt), this call aborts the ongoing collection and
+ * If IsIncrementalGCInProgress(cx), this call aborts the ongoing collection and
  * performs whatever work needs to be done to return the collector to its idle
  * state. This may take an arbitrarily long time. When this function returns,
- * IsIncrementalGCInProgress(rt) will always be false.
+ * IsIncrementalGCInProgress(cx) will always be false.
  */
-    #[link_name = "_ZN2JS18AbortIncrementalGCEP9JSRuntime"]
-    pub fn AbortIncrementalGC(rt: *mut JSRuntime);
+    #[link_name = "_ZN2JS18AbortIncrementalGCEP9JSContext"]
+    pub fn AbortIncrementalGC(cx: *mut JSContext);
     /**
  * The GC slice callback is called at the beginning and end of each slice. This
  * callback may be used for GC notifications as well as to perform additional
  * marking.
  */
     #[link_name =
-          "_ZN2JS18SetGCSliceCallbackEP9JSRuntimePFvS1_NS_10GCProgressERKNS_13GCDescriptionEE"]
-    pub fn SetGCSliceCallback(rt: *mut JSRuntime, callback: GCSliceCallback)
+          "_ZN2JS18SetGCSliceCallbackEP9JSContextPFvS1_NS_10GCProgressERKNS_13GCDescriptionEE"]
+    pub fn SetGCSliceCallback(cx: *mut JSContext, callback: GCSliceCallback)
      -> GCSliceCallback;
     /**
  * Set the nursery collection callback for the given runtime. When set, it will
  * be called at the start and end of every nursery collection.
  */
     #[link_name =
-          "_ZN2JS30SetGCNurseryCollectionCallbackEP9JSRuntimePFvS1_NS_17GCNurseryProgressENS_8gcreason6ReasonEE"]
-    pub fn SetGCNurseryCollectionCallback(rt: *mut JSRuntime,
+          "_ZN2JS30SetGCNurseryCollectionCallbackEP9JSContextPFvS1_NS_17GCNurseryProgressENS_8gcreason6ReasonEE"]
+    pub fn SetGCNurseryCollectionCallback(cx: *mut JSContext,
                                           callback:
                                               GCNurseryCollectionCallback)
      -> GCNurseryCollectionCallback;
@@ -6104,8 +6122,8 @@ extern "C" {
  * There is not currently a way to re-enable incremental GC once it has been
  * disabled on the runtime.
  */
-    #[link_name = "_ZN2JS20DisableIncrementalGCEP9JSRuntime"]
-    pub fn DisableIncrementalGC(rt: *mut JSRuntime);
+    #[link_name = "_ZN2JS20DisableIncrementalGCEP9JSContext"]
+    pub fn DisableIncrementalGC(cx: *mut JSContext);
     /**
  * Returns true if incremental GC is enabled. Simply having incremental GC
  * enabled is not sufficient to ensure incremental collections are happening.
@@ -6114,16 +6132,16 @@ extern "C" {
  * GCDescription returned by GCSliceCallback may help narrow down the cause if
  * collections are not happening incrementally when expected.
  */
-    #[link_name = "_ZN2JS22IsIncrementalGCEnabledEP9JSRuntime"]
-    pub fn IsIncrementalGCEnabled(rt: *mut JSRuntime) -> bool;
+    #[link_name = "_ZN2JS22IsIncrementalGCEnabledEP9JSContext"]
+    pub fn IsIncrementalGCEnabled(cx: *mut JSContext) -> bool;
     /**
  * Returns true while an incremental GC is ongoing, both when actively
  * collecting and between slices.
  */
-    #[link_name = "_ZN2JS25IsIncrementalGCInProgressEP9JSRuntime"]
-    pub fn IsIncrementalGCInProgress(rt: *mut JSRuntime) -> bool;
-    #[link_name = "_ZN2JS26IsIncrementalBarrierNeededEP9JSRuntime"]
-    pub fn IsIncrementalBarrierNeeded(rt: *mut JSRuntime) -> bool;
+    #[link_name = "_ZN2JS25IsIncrementalGCInProgressEP9JSContext"]
+    pub fn IsIncrementalGCInProgress(cx: *mut JSContext) -> bool;
+    #[link_name = "_ZN2JS26IsIncrementalBarrierNeededEP9JSContext"]
+    pub fn IsIncrementalBarrierNeeded(cx: *mut JSContext) -> bool;
     #[link_name = "_ZN2JS27IncrementalReferenceBarrierENS_9GCCellPtrE"]
     pub fn IncrementalReferenceBarrier(thing: GCCellPtr);
     #[link_name = "_ZN2JS23IncrementalValueBarrierERKNS_5ValueE"]
@@ -6133,8 +6151,8 @@ extern "C" {
     /**
  * Returns true if the most recent GC ran incrementally.
  */
-    #[link_name = "_ZN2JS16WasIncrementalGCEP9JSRuntime"]
-    pub fn WasIncrementalGC(rt: *mut JSRuntime) -> bool;
+    #[link_name = "_ZN2JS16WasIncrementalGCEP9JSContext"]
+    pub fn WasIncrementalGC(cx: *mut JSContext) -> bool;
     /**
  * Returns true if generational allocation and collection is currently enabled
  * on the given runtime.
@@ -6149,23 +6167,16 @@ extern "C" {
     #[link_name = "_ZN2JS11GetGCNumberEv"]
     pub fn GetGCNumber() -> usize;
     /**
- * The GC does not immediately return the unused memory freed by a collection
- * back to the system incase it is needed soon afterwards. This call forces the
- * GC to return this memory immediately.
- */
-    #[link_name = "_ZN2JS15ShrinkGCBuffersEP9JSRuntime"]
-    pub fn ShrinkGCBuffers(rt: *mut JSRuntime);
-    /**
  * Unsets the gray bit for anything reachable from |thing|. |kind| should not be
  * JS::TraceKind::Shape. |thing| should be non-null. The return value indicates
  * if anything was unmarked.
  */
     #[link_name = "_ZN2JS28UnmarkGrayGCThingRecursivelyENS_9GCCellPtrE"]
     pub fn UnmarkGrayGCThingRecursively(thing: GCCellPtr) -> bool;
-    #[link_name = "_ZN2JS6PokeGCEP9JSRuntime"]
-    pub fn PokeGC(rt: *mut JSRuntime);
-    #[link_name = "_ZN2JS14NotifyDidPaintEP9JSRuntime"]
-    pub fn NotifyDidPaint(rt: *mut JSRuntime);
+    #[link_name = "_ZN2JS6PokeGCEP9JSContext"]
+    pub fn PokeGC(cx: *mut JSContext);
+    #[link_name = "_ZN2JS14NotifyDidPaintEP9JSContext"]
+    pub fn NotifyDidPaint(cx: *mut JSContext);
     /** Returns a static string equivalent of |kind|. */
     #[link_name = "_ZN2JS18GCTraceKindToAsciiENS_9TraceKindE"]
     pub fn GCTraceKindToAscii(kind: TraceKind)
@@ -6245,9 +6256,10 @@ extern "C" {
                  vp: MutableHandleValue) -> bool;
     /** Note: if the *data contains transferable objects, it can be read only once. */
     #[link_name =
-          "_Z22JS_ReadStructuredCloneP9JSContextPyyjN2JS13MutableHandleINS2_5ValueEEEPK26JSStructuredCloneCallbacksPv"]
+          "_Z22JS_ReadStructuredCloneP9JSContextPyyjN2JS20StructuredCloneScopeENS2_13MutableHandleINS2_5ValueEEEPK26JSStructuredCloneCallbacksPv"]
     pub fn JS_ReadStructuredClone(cx: *mut JSContext, data: *mut u64,
                                   nbytes: usize, version: u32,
+                                  scope: StructuredCloneScope,
                                   vp: MutableHandleValue,
                                   optionalCallbacks:
                                       *const JSStructuredCloneCallbacks,
@@ -6258,9 +6270,10 @@ extern "C" {
  * JS_ClearStructuredClone(*datap, nbytes, optionalCallbacks, closure).
  */
     #[link_name =
-          "_Z23JS_WriteStructuredCloneP9JSContextN2JS6HandleINS1_5ValueEEEPPyS5_PK26JSStructuredCloneCallbacksPvS4_"]
+          "_Z23JS_WriteStructuredCloneP9JSContextN2JS6HandleINS1_5ValueEEEPPyS5_NS1_20StructuredCloneScopeEPK26JSStructuredCloneCallbacksPvS4_"]
     pub fn JS_WriteStructuredClone(cx: *mut JSContext, v: HandleValue,
                                    datap: *mut *mut u64, nbytesp: *mut usize,
+                                   scope: StructuredCloneScope,
                                    optionalCallbacks:
                                        *const JSStructuredCloneCallbacks,
                                    closure: *mut ::std::os::raw::c_void,
@@ -6312,29 +6325,32 @@ extern "C" {
           "_Z19JS_ObjectNotWrittenP23JSStructuredCloneWriterN2JS6HandleIP8JSObjectEE"]
     pub fn JS_ObjectNotWritten(w: *mut JSStructuredCloneWriter,
                                obj: HandleObject) -> bool;
+    #[link_name = "_Z26JS_GetStructuredCloneScopeP23JSStructuredCloneWriter"]
+    pub fn JS_GetStructuredCloneScope(w: *mut JSStructuredCloneWriter)
+     -> StructuredCloneScope;
     #[link_name = "_Z17JS_HoldPrincipalsP12JSPrincipals"]
     pub fn JS_HoldPrincipals(principals: *mut JSPrincipals);
-    #[link_name = "_Z17JS_DropPrincipalsP9JSRuntimeP12JSPrincipals"]
-    pub fn JS_DropPrincipals(rt: *mut JSRuntime,
+    #[link_name = "_Z17JS_DropPrincipalsP9JSContextP12JSPrincipals"]
+    pub fn JS_DropPrincipals(cx: *mut JSContext,
                              principals: *mut JSPrincipals);
     #[link_name =
-          "_Z23JS_SetSecurityCallbacksP9JSRuntimePK19JSSecurityCallbacks"]
-    pub fn JS_SetSecurityCallbacks(rt: *mut JSRuntime,
+          "_Z23JS_SetSecurityCallbacksP9JSContextPK19JSSecurityCallbacks"]
+    pub fn JS_SetSecurityCallbacks(cx: *mut JSContext,
                                    callbacks: *const JSSecurityCallbacks);
-    #[link_name = "_Z23JS_GetSecurityCallbacksP9JSRuntime"]
-    pub fn JS_GetSecurityCallbacks(rt: *mut JSRuntime)
+    #[link_name = "_Z23JS_GetSecurityCallbacksP9JSContext"]
+    pub fn JS_GetSecurityCallbacks(cx: *mut JSContext)
      -> *const JSSecurityCallbacks;
-    #[link_name = "_Z23JS_SetTrustedPrincipalsP9JSRuntimeP12JSPrincipals"]
-    pub fn JS_SetTrustedPrincipals(rt: *mut JSRuntime,
+    #[link_name = "_Z23JS_SetTrustedPrincipalsP9JSContextP12JSPrincipals"]
+    pub fn JS_SetTrustedPrincipals(cx: *mut JSContext,
                                    prin: *mut JSPrincipals);
     #[link_name =
-          "_Z32JS_InitDestroyPrincipalsCallbackP9JSRuntimePFvP12JSPrincipalsE"]
-    pub fn JS_InitDestroyPrincipalsCallback(rt: *mut JSRuntime,
+          "_Z32JS_InitDestroyPrincipalsCallbackP9JSContextPFvP12JSPrincipalsE"]
+    pub fn JS_InitDestroyPrincipalsCallback(cx: *mut JSContext,
                                             destroyPrincipals:
                                                 JSDestroyPrincipalsOp);
     #[link_name =
-          "_Z29JS_InitReadPrincipalsCallbackP9JSRuntimePFbP9JSContextP23JSStructuredCloneReaderPP12JSPrincipalsE"]
-    pub fn JS_InitReadPrincipalsCallback(rt: *mut JSRuntime,
+          "_Z29JS_InitReadPrincipalsCallbackP9JSContextPFbS0_P23JSStructuredCloneReaderPP12JSPrincipalsE"]
+    pub fn JS_InitReadPrincipalsCallback(cx: *mut JSContext,
                                          read: JSReadPrincipalsOp);
     /************************************************************************/
     #[link_name = "_Z22JS_StringHasBeenPinnedP9JSContextP8JSString"]
@@ -6363,8 +6379,8 @@ extern "C" {
     pub fn JS_GetPositiveInfinityValue(cx: *mut JSContext) -> Value;
     #[link_name = "_Z22JS_GetEmptyStringValueP9JSContext"]
     pub fn JS_GetEmptyStringValue(cx: *mut JSContext) -> Value;
-    #[link_name = "_Z17JS_GetEmptyStringP9JSRuntime"]
-    pub fn JS_GetEmptyString(rt: *mut JSRuntime) -> *mut JSString;
+    #[link_name = "_Z17JS_GetEmptyStringP9JSContext"]
+    pub fn JS_GetEmptyString(cx: *mut JSContext) -> *mut JSString;
     #[link_name =
           "_Z16JS_ValueToObjectP9JSContextN2JS6HandleINS1_5ValueEEENS1_13MutableHandleIP8JSObjectEE"]
     pub fn JS_ValueToObject(cx: *mut JSContext, v: HandleValue,
@@ -6402,11 +6418,11 @@ extern "C" {
     #[link_name = "_Z31JS_IsBuiltinFunctionConstructorP10JSFunction"]
     pub fn JS_IsBuiltinFunctionConstructor(fun: *mut JSFunction) -> bool;
     /************************************************************************/
-    #[link_name = "_Z13JS_NewRuntimejjP9JSRuntime"]
-    pub fn JS_NewRuntime(maxbytes: u32, maxNurseryBytes: u32,
-                         parentRuntime: *mut JSRuntime) -> *mut JSRuntime;
-    #[link_name = "_Z17JS_DestroyRuntimeP9JSRuntime"]
-    pub fn JS_DestroyRuntime(rt: *mut JSRuntime);
+    #[link_name = "_Z13JS_NewContextjjP9JSContext"]
+    pub fn JS_NewContext(maxbytes: u32, maxNurseryBytes: u32,
+                         parentContext: *mut JSContext) -> *mut JSContext;
+    #[link_name = "_Z17JS_DestroyContextP9JSContext"]
+    pub fn JS_DestroyContext(cx: *mut JSContext);
     /**
  * The embedding can specify a time function that will be used in some
  * situations.  The function can return the time however it likes; but
@@ -6423,30 +6439,22 @@ extern "C" {
  */
     #[link_name = "_Z25JS_GetCurrentEmbedderTimev"]
     pub fn JS_GetCurrentEmbedderTime() -> f64;
-    #[link_name = "_Z20JS_GetRuntimePrivateP9JSRuntime"]
-    pub fn JS_GetRuntimePrivate(rt: *mut JSRuntime)
+    #[link_name = "_Z20JS_GetContextPrivateP9JSContext"]
+    pub fn JS_GetContextPrivate(cx: *mut JSContext)
      -> *mut ::std::os::raw::c_void;
-    #[link_name = "_Z13JS_GetRuntimeP9JSContext"]
-    pub fn JS_GetRuntime(cx: *mut JSContext) -> *mut JSRuntime;
-    #[link_name = "_Z19JS_GetParentRuntimeP9JSRuntime"]
-    pub fn JS_GetParentRuntime(rt: *mut JSRuntime) -> *mut JSRuntime;
-    #[link_name = "_Z20JS_SetRuntimePrivateP9JSRuntimePv"]
-    pub fn JS_SetRuntimePrivate(rt: *mut JSRuntime,
+    #[link_name = "_Z20JS_SetContextPrivateP9JSContextPv"]
+    pub fn JS_SetContextPrivate(cx: *mut JSContext,
                                 data: *mut ::std::os::raw::c_void);
+    #[link_name = "_Z19JS_GetParentContextP9JSContext"]
+    pub fn JS_GetParentContext(cx: *mut JSContext) -> *mut JSContext;
     #[link_name = "_Z15JS_BeginRequestP9JSContext"]
     pub fn JS_BeginRequest(cx: *mut JSContext);
     #[link_name = "_Z13JS_EndRequestP9JSContext"]
     pub fn JS_EndRequest(cx: *mut JSContext);
-    #[link_name = "_Z18JS_SetFutexCanWaitP9JSRuntime"]
-    pub fn JS_SetFutexCanWait(rt: *mut JSRuntime);
+    #[link_name = "_Z18JS_SetFutexCanWaitP9JSContext"]
+    pub fn JS_SetFutexCanWait(cx: *mut JSContext);
     #[link_name = "_ZN2js16AssertHeapIsIdleEP9JSRuntime"]
     pub fn AssertHeapIsIdle(rt: *mut JSRuntime);
-    /**
- * Returns the runtime's JSContext. The plan is to expose a single type to the
- * API, so this function will likely be removed soon.
- */
-    #[link_name = "_Z13JS_GetContextP9JSRuntime"]
-    pub fn JS_GetContext(rt: *mut JSRuntime) -> *mut JSContext;
     #[link_name = "_Z13JS_GetVersionP9JSContext"]
     pub fn JS_GetVersion(cx: *mut JSContext) -> JSVersion;
     /**
@@ -6466,10 +6474,8 @@ extern "C" {
     #[link_name = "_Z18JS_StringToVersionPKc"]
     pub fn JS_StringToVersion(string: *const ::std::os::raw::c_char)
      -> JSVersion;
-    #[link_name = "_ZN2JS17RuntimeOptionsRefEP9JSRuntime"]
-    pub fn RuntimeOptionsRef(rt: *mut JSRuntime) -> *mut RuntimeOptions;
-    #[link_name = "_ZN2JS17RuntimeOptionsRefEP9JSContext"]
-    pub fn RuntimeOptionsRef1(cx: *mut JSContext) -> *mut RuntimeOptions;
+    #[link_name = "_ZN2JS17ContextOptionsRefEP9JSContext"]
+    pub fn ContextOptionsRef(cx: *mut JSContext) -> *mut ContextOptions;
     /**
  * Initialize the runtime's self-hosted code. Embeddings should call this
  * exactly once per runtime/context, before the first JS_NewGlobalObject
@@ -6477,31 +6483,37 @@ extern "C" {
  */
     #[link_name = "_ZN2JS18InitSelfHostedCodeEP9JSContext"]
     pub fn InitSelfHostedCode(cx: *mut JSContext) -> bool;
+    /**
+ * Asserts (in debug and release builds) that `obj` belongs to the current
+ * thread's context.
+ */
+    #[link_name = "_ZN2JS34AssertObjectBelongsToCurrentThreadEP8JSObject"]
+    pub fn AssertObjectBelongsToCurrentThread(obj: *mut JSObject);
     #[link_name = "_Z27JS_GetImplementationVersionv"]
     pub fn JS_GetImplementationVersion() -> *const ::std::os::raw::c_char;
     #[link_name =
-          "_Z32JS_SetDestroyCompartmentCallbackP9JSRuntimePFvP8JSFreeOpP13JSCompartmentE"]
-    pub fn JS_SetDestroyCompartmentCallback(rt: *mut JSRuntime,
+          "_Z32JS_SetDestroyCompartmentCallbackP9JSContextPFvP8JSFreeOpP13JSCompartmentE"]
+    pub fn JS_SetDestroyCompartmentCallback(cx: *mut JSContext,
                                             callback:
                                                 JSDestroyCompartmentCallback);
     #[link_name =
-          "_Z44JS_SetSizeOfIncludingThisCompartmentCallbackP9JSRuntimePFyPFyPKvEP13JSCompartmentE"]
-    pub fn JS_SetSizeOfIncludingThisCompartmentCallback(rt: *mut JSRuntime,
+          "_Z44JS_SetSizeOfIncludingThisCompartmentCallbackP9JSContextPFyPFyPKvEP13JSCompartmentE"]
+    pub fn JS_SetSizeOfIncludingThisCompartmentCallback(cx: *mut JSContext,
                                                         callback:
                                                             JSSizeOfIncludingThisCompartmentCallback);
-    #[link_name = "_Z25JS_SetDestroyZoneCallbackP9JSRuntimePFvPN2JS4ZoneEE"]
-    pub fn JS_SetDestroyZoneCallback(rt: *mut JSRuntime,
+    #[link_name = "_Z25JS_SetDestroyZoneCallbackP9JSContextPFvPN2JS4ZoneEE"]
+    pub fn JS_SetDestroyZoneCallback(cx: *mut JSContext,
                                      callback: JSZoneCallback);
-    #[link_name = "_Z23JS_SetSweepZoneCallbackP9JSRuntimePFvPN2JS4ZoneEE"]
-    pub fn JS_SetSweepZoneCallback(rt: *mut JSRuntime,
+    #[link_name = "_Z23JS_SetSweepZoneCallbackP9JSContextPFvPN2JS4ZoneEE"]
+    pub fn JS_SetSweepZoneCallback(cx: *mut JSContext,
                                    callback: JSZoneCallback);
     #[link_name =
-          "_Z29JS_SetCompartmentNameCallbackP9JSRuntimePFvS0_P13JSCompartmentPcyE"]
-    pub fn JS_SetCompartmentNameCallback(rt: *mut JSRuntime,
+          "_Z29JS_SetCompartmentNameCallbackP9JSContextPFvS0_P13JSCompartmentPcyE"]
+    pub fn JS_SetCompartmentNameCallback(cx: *mut JSContext,
                                          callback: JSCompartmentNameCallback);
     #[link_name =
-          "_Z25JS_SetWrapObjectCallbacksP9JSRuntimePK21JSWrapObjectCallbacks"]
-    pub fn JS_SetWrapObjectCallbacks(rt: *mut JSRuntime,
+          "_Z25JS_SetWrapObjectCallbacksP9JSContextPK21JSWrapObjectCallbacks"]
+    pub fn JS_SetWrapObjectCallbacks(cx: *mut JSContext,
                                      callbacks: *const JSWrapObjectCallbacks);
     #[link_name = "_Z24JS_SetCompartmentPrivateP13JSCompartmentPv"]
     pub fn JS_SetCompartmentPrivate(compartment: *mut JSCompartment,
@@ -6543,8 +6555,8 @@ extern "C" {
  * returns. Also, barriers are disabled via the TraceSession.
  */
     #[link_name =
-          "_Z22JS_IterateCompartmentsP9JSRuntimePvPFvS0_S1_P13JSCompartmentE"]
-    pub fn JS_IterateCompartments(rt: *mut JSRuntime,
+          "_Z22JS_IterateCompartmentsP9JSContextPvPFvS0_S1_P13JSCompartmentE"]
+    pub fn JS_IterateCompartments(cx: *mut JSContext,
                                   data: *mut ::std::os::raw::c_void,
                                   compartmentCallback:
                                       JSIterateCompartmentCallback);
@@ -6705,8 +6717,6 @@ extern "C" {
  */
     #[link_name = "_Z9JS_freeopP8JSFreeOpPv"]
     pub fn JS_freeop(fop: *mut JSFreeOp, p: *mut ::std::os::raw::c_void);
-    #[link_name = "_Z19JS_GetDefaultFreeOpP9JSRuntime"]
-    pub fn JS_GetDefaultFreeOp(rt: *mut JSRuntime) -> *mut JSFreeOp;
     #[link_name = "_Z22JS_updateMallocCounterP9JSContexty"]
     pub fn JS_updateMallocCounter(cx: *mut JSContext, nbytes: usize);
     #[link_name = "_Z9JS_strdupP9JSContextPKc"]
@@ -6720,77 +6730,77 @@ extern "C" {
  * Register externally maintained GC roots.
  *
  * traceOp: the trace operation. For each root the implementation should call
- *          JS_CallTracer whenever the root contains a traceable thing.
+ *          JS::TraceEdge whenever the root contains a traceable thing.
  * data:    the data argument to pass to each invocation of traceOp.
  */
     #[link_name =
-          "_Z24JS_AddExtraGCRootsTracerP9JSRuntimePFvP8JSTracerPvES3_"]
-    pub fn JS_AddExtraGCRootsTracer(rt: *mut JSRuntime,
+          "_Z24JS_AddExtraGCRootsTracerP9JSContextPFvP8JSTracerPvES3_"]
+    pub fn JS_AddExtraGCRootsTracer(cx: *mut JSContext,
                                     traceOp: JSTraceDataOp,
                                     data: *mut ::std::os::raw::c_void)
      -> bool;
     /** Undo a call to JS_AddExtraGCRootsTracer. */
     #[link_name =
-          "_Z27JS_RemoveExtraGCRootsTracerP9JSRuntimePFvP8JSTracerPvES3_"]
-    pub fn JS_RemoveExtraGCRootsTracer(rt: *mut JSRuntime,
+          "_Z27JS_RemoveExtraGCRootsTracerP9JSContextPFvP8JSTracerPvES3_"]
+    pub fn JS_RemoveExtraGCRootsTracer(cx: *mut JSContext,
                                        traceOp: JSTraceDataOp,
                                        data: *mut ::std::os::raw::c_void);
-    #[link_name = "_Z5JS_GCP9JSRuntime"]
-    pub fn JS_GC(rt: *mut JSRuntime);
+    #[link_name = "_Z5JS_GCP9JSContext"]
+    pub fn JS_GC(cx: *mut JSContext);
     #[link_name = "_Z10JS_MaybeGCP9JSContext"]
     pub fn JS_MaybeGC(cx: *mut JSContext);
-    #[link_name = "_Z16JS_SetGCCallbackP9JSRuntimePFvS0_10JSGCStatusPvES2_"]
-    pub fn JS_SetGCCallback(rt: *mut JSRuntime, cb: JSGCCallback,
+    #[link_name = "_Z16JS_SetGCCallbackP9JSContextPFvS0_10JSGCStatusPvES2_"]
+    pub fn JS_SetGCCallback(cx: *mut JSContext, cb: JSGCCallback,
                             data: *mut ::std::os::raw::c_void);
-    #[link_name = "_Z28JS_SetObjectsTenuredCallbackP9JSRuntimePFvS0_PvES1_"]
-    pub fn JS_SetObjectsTenuredCallback(rt: *mut JSRuntime,
+    #[link_name = "_Z28JS_SetObjectsTenuredCallbackP9JSContextPFvS0_PvES1_"]
+    pub fn JS_SetObjectsTenuredCallback(cx: *mut JSContext,
                                         cb: JSObjectsTenuredCallback,
                                         data: *mut ::std::os::raw::c_void);
     #[link_name =
-          "_Z22JS_AddFinalizeCallbackP9JSRuntimePFvP8JSFreeOp16JSFinalizeStatusbPvES4_"]
-    pub fn JS_AddFinalizeCallback(rt: *mut JSRuntime, cb: JSFinalizeCallback,
+          "_Z22JS_AddFinalizeCallbackP9JSContextPFvP8JSFreeOp16JSFinalizeStatusbPvES4_"]
+    pub fn JS_AddFinalizeCallback(cx: *mut JSContext, cb: JSFinalizeCallback,
                                   data: *mut ::std::os::raw::c_void) -> bool;
     #[link_name =
-          "_Z25JS_RemoveFinalizeCallbackP9JSRuntimePFvP8JSFreeOp16JSFinalizeStatusbPvE"]
-    pub fn JS_RemoveFinalizeCallback(rt: *mut JSRuntime,
+          "_Z25JS_RemoveFinalizeCallbackP9JSContextPFvP8JSFreeOp16JSFinalizeStatusbPvE"]
+    pub fn JS_RemoveFinalizeCallback(cx: *mut JSContext,
                                      cb: JSFinalizeCallback);
     #[link_name =
-          "_Z34JS_AddWeakPointerZoneGroupCallbackP9JSRuntimePFvS0_PvES1_"]
-    pub fn JS_AddWeakPointerZoneGroupCallback(rt: *mut JSRuntime,
+          "_Z34JS_AddWeakPointerZoneGroupCallbackP9JSContextPFvS0_PvES1_"]
+    pub fn JS_AddWeakPointerZoneGroupCallback(cx: *mut JSContext,
                                               cb:
                                                   JSWeakPointerZoneGroupCallback,
                                               data:
                                                   *mut ::std::os::raw::c_void)
      -> bool;
     #[link_name =
-          "_Z37JS_RemoveWeakPointerZoneGroupCallbackP9JSRuntimePFvS0_PvE"]
-    pub fn JS_RemoveWeakPointerZoneGroupCallback(rt: *mut JSRuntime,
+          "_Z37JS_RemoveWeakPointerZoneGroupCallbackP9JSContextPFvS0_PvE"]
+    pub fn JS_RemoveWeakPointerZoneGroupCallback(cx: *mut JSContext,
                                                  cb:
                                                      JSWeakPointerZoneGroupCallback);
     #[link_name =
-          "_Z36JS_AddWeakPointerCompartmentCallbackP9JSRuntimePFvS0_P13JSCompartmentPvES3_"]
-    pub fn JS_AddWeakPointerCompartmentCallback(rt: *mut JSRuntime,
+          "_Z36JS_AddWeakPointerCompartmentCallbackP9JSContextPFvS0_P13JSCompartmentPvES3_"]
+    pub fn JS_AddWeakPointerCompartmentCallback(cx: *mut JSContext,
                                                 cb:
                                                     JSWeakPointerCompartmentCallback,
                                                 data:
                                                     *mut ::std::os::raw::c_void)
      -> bool;
     #[link_name =
-          "_Z39JS_RemoveWeakPointerCompartmentCallbackP9JSRuntimePFvS0_P13JSCompartmentPvE"]
-    pub fn JS_RemoveWeakPointerCompartmentCallback(rt: *mut JSRuntime,
+          "_Z39JS_RemoveWeakPointerCompartmentCallbackP9JSContextPFvS0_P13JSCompartmentPvE"]
+    pub fn JS_RemoveWeakPointerCompartmentCallback(cx: *mut JSContext,
                                                    cb:
                                                        JSWeakPointerCompartmentCallback);
     #[link_name = "_Z27JS_UpdateWeakPointerAfterGCPN2JS4HeapIP8JSObjectEE"]
     pub fn JS_UpdateWeakPointerAfterGC(objp: *mut Heap<*mut JSObject>);
     #[link_name = "_Z38JS_UpdateWeakPointerAfterGCUnbarrieredPP8JSObject"]
     pub fn JS_UpdateWeakPointerAfterGCUnbarriered(objp: *mut *mut JSObject);
-    #[link_name = "_Z17JS_SetGCParameterP9JSRuntime12JSGCParamKeyj"]
-    pub fn JS_SetGCParameter(rt: *mut JSRuntime, key: JSGCParamKey,
+    #[link_name = "_Z17JS_SetGCParameterP9JSContext12JSGCParamKeyj"]
+    pub fn JS_SetGCParameter(cx: *mut JSContext, key: JSGCParamKey,
                              value: u32);
-    #[link_name = "_Z17JS_GetGCParameterP9JSRuntime12JSGCParamKey"]
-    pub fn JS_GetGCParameter(rt: *mut JSRuntime, key: JSGCParamKey) -> u32;
-    #[link_name = "_Z40JS_SetGCParametersBasedOnAvailableMemoryP9JSRuntimej"]
-    pub fn JS_SetGCParametersBasedOnAvailableMemory(rt: *mut JSRuntime,
+    #[link_name = "_Z17JS_GetGCParameterP9JSContext12JSGCParamKey"]
+    pub fn JS_GetGCParameter(cx: *mut JSContext, key: JSGCParamKey) -> u32;
+    #[link_name = "_Z40JS_SetGCParametersBasedOnAvailableMemoryP9JSContextj"]
+    pub fn JS_SetGCParametersBasedOnAvailableMemory(cx: *mut JSContext,
                                                     availMem: u32);
     /**
  * Create a new JSString whose chars member refers to external memory, i.e.,
@@ -6832,8 +6842,8 @@ extern "C" {
  * This function may only be called immediately after the runtime is initialized
  * and before any code is executed and/or interrupts requested.
  */
-    #[link_name = "_Z22JS_SetNativeStackQuotaP9JSRuntimeyyy"]
-    pub fn JS_SetNativeStackQuota(cx: *mut JSRuntime,
+    #[link_name = "_Z22JS_SetNativeStackQuotaP9JSContextyyy"]
+    pub fn JS_SetNativeStackQuota(cx: *mut JSContext,
                                   systemCodeStackSize: usize,
                                   trustedScriptStackSize: usize,
                                   untrustedScriptStackSize: usize);
@@ -6911,6 +6921,10 @@ extern "C" {
           "_Z14JS_HasInstanceP9JSContextN2JS6HandleIP8JSObjectEENS2_INS1_5ValueEEEPb"]
     pub fn JS_HasInstance(cx: *mut JSContext, obj: Handle<*mut JSObject>,
                           v: Handle<Value>, bp: *mut bool) -> bool;
+    #[link_name =
+          "_ZN2JS19OrdinaryHasInstanceEP9JSContextNS_6HandleIP8JSObjectEENS2_INS_5ValueEEEPb"]
+    pub fn OrdinaryHasInstance(cx: *mut JSContext, objArg: HandleObject,
+                               v: HandleValue, bp: *mut bool) -> bool;
     #[link_name = "_Z13JS_GetPrivateP8JSObject"]
     pub fn JS_GetPrivate(obj: *mut JSObject) -> *mut ::std::os::raw::c_void;
     #[link_name = "_Z13JS_SetPrivateP8JSObjectPv"]
@@ -6970,8 +6984,6 @@ extern "C" {
      -> *mut JSObject;
     #[link_name = "_Z11JS_IsNativeP8JSObject"]
     pub fn JS_IsNative(obj: *mut JSObject) -> bool;
-    #[link_name = "_Z19JS_GetObjectRuntimeP8JSObject"]
-    pub fn JS_GetObjectRuntime(obj: *mut JSObject) -> *mut JSRuntime;
     /**
  * Unlike JS_NewObject, JS_NewObjectWithGivenProto does not compute a default
  * proto. If proto is nullptr, the JS object will have `null` as [[Prototype]].
@@ -7837,6 +7849,10 @@ extern "C" {
                                  nargs: ::std::os::raw::c_uint,
                                  attrs: ::std::os::raw::c_uint)
      -> *mut JSFunction;
+    #[link_name = "_Z18JS_IsFunctionBoundP10JSFunction"]
+    pub fn JS_IsFunctionBound(fun: *mut JSFunction) -> bool;
+    #[link_name = "_Z25JS_GetBoundFunctionTargetP10JSFunction"]
+    pub fn JS_GetBoundFunctionTarget(fun: *mut JSFunction) -> *mut JSObject;
     /**
  * Clone a top-level function into cx's global. This function will dynamically
  * fail if funobj was lexically nested inside some other function.
@@ -7981,10 +7997,13 @@ extern "C" {
                             length: usize, callback: OffThreadCompileCallback,
                             callbackData: *mut ::std::os::raw::c_void)
      -> bool;
-    #[link_name = "_ZN2JS21FinishOffThreadScriptEP9JSContextP9JSRuntimePv"]
-    pub fn FinishOffThreadScript(maybecx: *mut JSContext, rt: *mut JSRuntime,
+    #[link_name = "_ZN2JS21FinishOffThreadScriptEP9JSContextPv"]
+    pub fn FinishOffThreadScript(cx: *mut JSContext,
                                  token: *mut ::std::os::raw::c_void)
      -> *mut JSScript;
+    #[link_name = "_ZN2JS21CancelOffThreadScriptEP9JSContextPv"]
+    pub fn CancelOffThreadScript(cx: *mut JSContext,
+                                 token: *mut ::std::os::raw::c_void);
     #[link_name =
           "_ZN2JS22CompileOffThreadModuleEP9JSContextRKNS_22ReadOnlyCompileOptionsEPKDsyPFvPvS7_ES7_"]
     pub fn CompileOffThreadModule(cx: *mut JSContext,
@@ -7994,10 +8013,13 @@ extern "C" {
                                   callback: OffThreadCompileCallback,
                                   callbackData: *mut ::std::os::raw::c_void)
      -> bool;
-    #[link_name = "_ZN2JS21FinishOffThreadModuleEP9JSContextP9JSRuntimePv"]
-    pub fn FinishOffThreadModule(maybecx: *mut JSContext, rt: *mut JSRuntime,
+    #[link_name = "_ZN2JS21FinishOffThreadModuleEP9JSContextPv"]
+    pub fn FinishOffThreadModule(cx: *mut JSContext,
                                  token: *mut ::std::os::raw::c_void)
      -> *mut JSObject;
+    #[link_name = "_ZN2JS21CancelOffThreadModuleEP9JSContextPv"]
+    pub fn CancelOffThreadModule(cx: *mut JSContext,
+                                 token: *mut ::std::os::raw::c_void);
     /**
  * Compile a function with scopeChain plus the global as its scope chain.
  * scopeChain must contain objects in the current compartment of cx.  The actual
@@ -8086,9 +8108,10 @@ extern "C" {
  * cross-compartment, it is cloned into the current compartment before executing.
  */
     #[link_name =
-          "_ZN2JS21CloneAndExecuteScriptEP9JSContextNS_6HandleIP8JSScriptEE"]
+          "_ZN2JS21CloneAndExecuteScriptEP9JSContextNS_6HandleIP8JSScriptEENS_13MutableHandleINS_5ValueEEE"]
     pub fn CloneAndExecuteScript(cx: *mut JSContext,
-                                 script: Handle<*mut JSScript>) -> bool;
+                                 script: Handle<*mut JSScript>,
+                                 rval: MutableHandleValue) -> bool;
     /**
  * Evaluate the given source buffer in the scope of the current global of cx.
  */
@@ -8197,14 +8220,26 @@ extern "C" {
      -> *mut JSScript;
     #[link_name = "_Z20JS_CheckForInterruptP9JSContext"]
     pub fn JS_CheckForInterrupt(cx: *mut JSContext) -> bool;
-    #[link_name = "_Z23JS_SetInterruptCallbackP9JSRuntimePFbP9JSContextE"]
-    pub fn JS_SetInterruptCallback(rt: *mut JSRuntime,
+    #[link_name = "_Z23JS_SetInterruptCallbackP9JSContextPFbS0_E"]
+    pub fn JS_SetInterruptCallback(cx: *mut JSContext,
                                    callback: JSInterruptCallback)
      -> JSInterruptCallback;
-    #[link_name = "_Z23JS_GetInterruptCallbackP9JSRuntime"]
-    pub fn JS_GetInterruptCallback(rt: *mut JSRuntime) -> JSInterruptCallback;
-    #[link_name = "_Z27JS_RequestInterruptCallbackP9JSRuntime"]
-    pub fn JS_RequestInterruptCallback(rt: *mut JSRuntime);
+    #[link_name = "_Z23JS_GetInterruptCallbackP9JSContext"]
+    pub fn JS_GetInterruptCallback(cx: *mut JSContext) -> JSInterruptCallback;
+    #[link_name = "_Z27JS_RequestInterruptCallbackP9JSContext"]
+    pub fn JS_RequestInterruptCallback(cx: *mut JSContext);
+    /**
+ * Sets the callback that's invoked whenever an incumbent global is required.
+ *
+ * SpiderMonkey doesn't itself have a notion of incumbent globals as defined
+ * by the html spec, so we need the embedding to provide this.
+ * See dom/base/ScriptSettings.h for details.
+ */
+    #[link_name =
+          "_ZN2JS29SetGetIncumbentGlobalCallbackEP9JSContextPFP8JSObjectS1_E"]
+    pub fn SetGetIncumbentGlobalCallback(cx: *mut JSContext,
+                                         callback:
+                                             JSGetIncumbentGlobalCallback);
     /**
  * Sets the callback that's invoked whenever a Promise job should be enqeued.
  *
@@ -8215,8 +8250,8 @@ extern "C" {
  * passed here as arguments.
  */
     #[link_name =
-          "_ZN2JS28SetEnqueuePromiseJobCallbackEP9JSRuntimePFbP9JSContextNS_6HandleIP8JSObjectEES7_PvES8_"]
-    pub fn SetEnqueuePromiseJobCallback(rt: *mut JSRuntime,
+          "_ZN2JS28SetEnqueuePromiseJobCallbackEP9JSContextPFbS1_NS_6HandleIP8JSObjectEES5_S5_PvES6_"]
+    pub fn SetEnqueuePromiseJobCallback(cx: *mut JSContext,
                                         callback: JSEnqueuePromiseJobCallback,
                                         data: *mut ::std::os::raw::c_void);
     /**
@@ -8225,8 +8260,8 @@ extern "C" {
  * without a handler gets a handler attached.
  */
     #[link_name =
-          "_ZN2JS34SetPromiseRejectionTrackerCallbackEP9JSRuntimePFvP9JSContextNS_6HandleIP8JSObjectEE29PromiseRejectionHandlingStatePvES9_"]
-    pub fn SetPromiseRejectionTrackerCallback(rt: *mut JSRuntime,
+          "_ZN2JS34SetPromiseRejectionTrackerCallbackEP9JSContextPFvS1_NS_6HandleIP8JSObjectEE29PromiseRejectionHandlingStatePvES7_"]
+    pub fn SetPromiseRejectionTrackerCallback(cx: *mut JSContext,
                                               callback:
                                                   JSPromiseRejectionTrackerCallback,
                                               data:
@@ -8691,27 +8726,27 @@ extern "C" {
  * specify their own locales.
  * The locale string remains owned by the caller.
  */
-    #[link_name = "_Z19JS_SetDefaultLocaleP9JSRuntimePKc"]
-    pub fn JS_SetDefaultLocale(rt: *mut JSRuntime,
+    #[link_name = "_Z19JS_SetDefaultLocaleP9JSContextPKc"]
+    pub fn JS_SetDefaultLocale(cx: *mut JSContext,
                                locale: *const ::std::os::raw::c_char) -> bool;
     /**
  * Reset the default locale to OS defaults.
  */
-    #[link_name = "_Z21JS_ResetDefaultLocaleP9JSRuntime"]
-    pub fn JS_ResetDefaultLocale(rt: *mut JSRuntime);
+    #[link_name = "_Z21JS_ResetDefaultLocaleP9JSContext"]
+    pub fn JS_ResetDefaultLocale(cx: *mut JSContext);
     /**
  * Establish locale callbacks. The pointer must persist as long as the
- * JSRuntime.  Passing nullptr restores the default behaviour.
+ * JSContext.  Passing nullptr restores the default behaviour.
  */
-    #[link_name = "_Z21JS_SetLocaleCallbacksP9JSRuntimePK17JSLocaleCallbacks"]
-    pub fn JS_SetLocaleCallbacks(rt: *mut JSRuntime,
+    #[link_name = "_Z21JS_SetLocaleCallbacksP9JSContextPK17JSLocaleCallbacks"]
+    pub fn JS_SetLocaleCallbacks(cx: *mut JSContext,
                                  callbacks: *const JSLocaleCallbacks);
     /**
  * Return the address of the current locale callbacks struct, which may
  * be nullptr.
  */
-    #[link_name = "_Z21JS_GetLocaleCallbacksP9JSRuntime"]
-    pub fn JS_GetLocaleCallbacks(rt: *mut JSRuntime)
+    #[link_name = "_Z21JS_GetLocaleCallbacksP9JSContext"]
+    pub fn JS_GetLocaleCallbacks(cx: *mut JSContext)
      -> *const JSLocaleCallbacks;
     /**
  * Report an exception represented by the sprintf-like conversion of format
@@ -8780,11 +8815,11 @@ extern "C" {
     #[link_name = "_Z27JS_ReportAllocationOverflowP9JSContext"]
     pub fn JS_ReportAllocationOverflow(cx: *mut JSContext);
     #[link_name =
-          "_ZN2JS18SetWarningReporterEP9JSRuntimePFvP9JSContextPKcP13JSErrorReportE"]
-    pub fn SetWarningReporter(rt: *mut JSRuntime, reporter: WarningReporter)
+          "_ZN2JS18SetWarningReporterEP9JSContextPFvS1_PKcP13JSErrorReportE"]
+    pub fn SetWarningReporter(cx: *mut JSContext, reporter: WarningReporter)
      -> WarningReporter;
-    #[link_name = "_ZN2JS18GetWarningReporterEP9JSRuntime"]
-    pub fn GetWarningReporter(rt: *mut JSRuntime) -> WarningReporter;
+    #[link_name = "_ZN2JS18GetWarningReporterEP9JSContext"]
+    pub fn GetWarningReporter(cx: *mut JSContext) -> WarningReporter;
     #[link_name =
           "_ZN2JS11CreateErrorEP9JSContext9JSExnTypeNS_6HandleIP8JSObjectEENS3_IP8JSStringEEjjP13JSErrorReportS9_NS_13MutableHandleINS_5ValueEEE"]
     pub fn CreateError(cx: *mut JSContext, type_: JSExnType,
@@ -8992,16 +9027,16 @@ extern "C" {
     #[link_name = "_Z19JS_GetCurrentThreadv"]
     pub fn JS_GetCurrentThread() -> isize;
     /**
- * A JS runtime always has an "owner thread". The owner thread is set when the
- * runtime is created (to the current thread) and practically all entry points
- * into the JS engine check that a runtime (or anything contained in the
- * runtime: context, compartment, object, etc) is only touched by its owner
+ * A JS context always has an "owner thread". The owner thread is set when the
+ * context is created (to the current thread) and practically all entry points
+ * into the JS engine check that a context (or anything contained in the
+ * context: runtime, compartment, object, etc) is only touched by its owner
  * thread. Embeddings may check this invariant outside the JS engine by calling
  * JS_AbortIfWrongThread (which will abort if not on the owner thread, even for
  * non-debug builds).
  */
-    #[link_name = "_Z21JS_AbortIfWrongThreadP9JSRuntime"]
-    pub fn JS_AbortIfWrongThread(rt: *mut JSRuntime);
+    #[link_name = "_Z21JS_AbortIfWrongThreadP9JSContext"]
+    pub fn JS_AbortIfWrongThread(cx: *mut JSContext);
     /**
  * A constructor can request that the JS engine create a default new 'this'
  * object of the given class, using the callee to determine parentage and
@@ -9015,23 +9050,23 @@ extern "C" {
     #[link_name = "_Z16JS_GetGCZealBitsP9JSContextPjS1_S1_"]
     pub fn JS_GetGCZealBits(cx: *mut JSContext, zealBits: *mut u32,
                             frequency: *mut u32, nextScheduled: *mut u32);
-    #[link_name = "_Z12JS_SetGCZealP9JSRuntimehj"]
-    pub fn JS_SetGCZeal(rt: *mut JSRuntime, zeal: u8, frequency: u32);
+    #[link_name = "_Z12JS_SetGCZealP9JSContexthj"]
+    pub fn JS_SetGCZeal(cx: *mut JSContext, zeal: u8, frequency: u32);
     #[link_name = "_Z13JS_ScheduleGCP9JSContextj"]
     pub fn JS_ScheduleGC(cx: *mut JSContext, count: u32);
-    #[link_name = "_Z28JS_SetParallelParsingEnabledP9JSRuntimeb"]
-    pub fn JS_SetParallelParsingEnabled(rt: *mut JSRuntime, enabled: bool);
-    #[link_name = "_Z36JS_SetOffthreadIonCompilationEnabledP9JSRuntimeb"]
-    pub fn JS_SetOffthreadIonCompilationEnabled(rt: *mut JSRuntime,
+    #[link_name = "_Z28JS_SetParallelParsingEnabledP9JSContextb"]
+    pub fn JS_SetParallelParsingEnabled(cx: *mut JSContext, enabled: bool);
+    #[link_name = "_Z36JS_SetOffthreadIonCompilationEnabledP9JSContextb"]
+    pub fn JS_SetOffthreadIonCompilationEnabled(cx: *mut JSContext,
                                                 enabled: bool);
     #[link_name =
-          "_Z29JS_SetGlobalJitCompilerOptionP9JSRuntime19JSJitCompilerOptionj"]
-    pub fn JS_SetGlobalJitCompilerOption(rt: *mut JSRuntime,
+          "_Z29JS_SetGlobalJitCompilerOptionP9JSContext19JSJitCompilerOptionj"]
+    pub fn JS_SetGlobalJitCompilerOption(cx: *mut JSContext,
                                          opt: JSJitCompilerOption,
                                          value: u32);
     #[link_name =
-          "_Z29JS_GetGlobalJitCompilerOptionP9JSRuntime19JSJitCompilerOption"]
-    pub fn JS_GetGlobalJitCompilerOption(rt: *mut JSRuntime,
+          "_Z29JS_GetGlobalJitCompilerOptionP9JSContext19JSJitCompilerOption"]
+    pub fn JS_GetGlobalJitCompilerOption(cx: *mut JSContext,
                                          opt: JSJitCompilerOption)
      -> ::std::os::raw::c_int;
     /**
@@ -9113,34 +9148,45 @@ extern "C" {
     pub fn JS_DecodeInterpretedFunction(cx: *mut JSContext,
                                         data: *const ::std::os::raw::c_void,
                                         length: u32) -> *mut JSObject;
-    #[link_name = "_ZN2JS16SetAsmJSCacheOpsEP9JSRuntimePKNS_13AsmJSCacheOpsE"]
-    pub fn SetAsmJSCacheOps(rt: *mut JSRuntime,
+    #[link_name = "_ZN2JS16SetAsmJSCacheOpsEP9JSContextPKNS_13AsmJSCacheOpsE"]
+    pub fn SetAsmJSCacheOps(cx: *mut JSContext,
                             callbacks: *const AsmJSCacheOps);
     #[link_name =
-          "_ZN2JS12SetBuildIdOpEP9JSRuntimePFbPN7mozilla6VectorIcLy0EN2js17SystemAllocPolicyEEEE"]
-    pub fn SetBuildIdOp(rt: *mut JSRuntime, buildIdOp: BuildIdOp);
+          "_ZN2JS12SetBuildIdOpEP9JSContextPFbPN7mozilla6VectorIcLy0EN2js17SystemAllocPolicyEEEE"]
+    pub fn SetBuildIdOp(cx: *mut JSContext, buildIdOp: BuildIdOp);
     #[link_name =
-          "_ZN2JS33SetLargeAllocationFailureCallbackEP9JSRuntimePFvPvES2_"]
-    pub fn SetLargeAllocationFailureCallback(rt: *mut JSRuntime,
+          "_ZN2JS33SetLargeAllocationFailureCallbackEP9JSContextPFvPvES2_"]
+    pub fn SetLargeAllocationFailureCallback(cx: *mut JSContext,
                                              afc:
                                                  LargeAllocationFailureCallback,
                                              data:
                                                  *mut ::std::os::raw::c_void);
-    #[link_name =
-          "_ZN2JS22SetOutOfMemoryCallbackEP9JSRuntimePFvP9JSContextPvES4_"]
-    pub fn SetOutOfMemoryCallback(rt: *mut JSRuntime, cb: OutOfMemoryCallback,
+    #[link_name = "_ZN2JS22SetOutOfMemoryCallbackEP9JSContextPFvS1_PvES2_"]
+    pub fn SetOutOfMemoryCallback(cx: *mut JSContext, cb: OutOfMemoryCallback,
                                   data: *mut ::std::os::raw::c_void);
     /**
  * Capture the current call stack as a chain of SavedFrame JSObjects, and set
  * |stackp| to the SavedFrame for the youngest stack frame, or nullptr if there
- * are no JS frames on the stack. If |maxFrameCount| is non-zero, capture at
- * most the youngest |maxFrameCount| frames.
+ * are no JS frames on the stack.
+ *
+ * The |capture| parameter describes the portion of the JS stack to capture:
+ *
+ *   * |JS::AllFrames|: Capture all frames on the stack.
+ *
+ *   * |JS::MaxFrames|: Capture no more than |JS::MaxFrames::maxFrames| from the
+ *      stack.
+ *
+ *   * |JS::FirstSubsumedFrame|: Capture the first frame whose principals are
+ *     subsumed by |JS::FirstSubsumedFrame::principals|. By default, do not
+ *     consider self-hosted frames; this can be controlled via the
+ *     |JS::FirstSubsumedFrame::ignoreSelfHosted| flag. Do not capture any async
+ *     stack.
  */
     #[link_name =
-          "_ZN2JS19CaptureCurrentStackEP9JSContextNS_13MutableHandleIP8JSObjectEEj"]
+          "_ZN2JS19CaptureCurrentStackEP9JSContextNS_13MutableHandleIP8JSObjectEEON7mozilla7VariantIJNS_9AllFramesENS_9MaxFramesENS_18FirstSubsumedFrameEEEE"]
     pub fn CaptureCurrentStack(cx: *mut JSContext,
                                stackp: MutableHandleObject,
-                               maxFrameCount: ::std::os::raw::c_uint) -> bool;
+                               capture: ::std::os::raw::c_void) -> bool;
     #[link_name =
           "_ZN2JS14CopyAsyncStackEP9JSContextNS_6HandleIP8JSObjectEENS2_IP8JSStringEENS_13MutableHandleIS4_EEj"]
     pub fn CopyAsyncStack(cx: *mut JSContext, asyncStack: HandleObject,
@@ -9249,18 +9295,18 @@ extern "C" {
  * Until `FlushMonitoring` has been called, all PerformanceMonitoring data is invisible
  * to the outside world and can cancelled with a call to `ResetMonitoring`.
  */
-    #[link_name = "_ZN2js26FlushPerformanceMonitoringEP9JSRuntime"]
-    pub fn FlushPerformanceMonitoring(arg1: *mut JSRuntime) -> bool;
+    #[link_name = "_ZN2js26FlushPerformanceMonitoringEP9JSContext"]
+    pub fn FlushPerformanceMonitoring(arg1: *mut JSContext) -> bool;
     /**
  * Cancel any measurement that hasn't been committed.
  */
-    #[link_name = "_ZN2js26ResetPerformanceMonitoringEP9JSRuntime"]
-    pub fn ResetPerformanceMonitoring(arg1: *mut JSRuntime);
+    #[link_name = "_ZN2js26ResetPerformanceMonitoringEP9JSContext"]
+    pub fn ResetPerformanceMonitoring(arg1: *mut JSContext);
     /**
  * Cleanup any memory used by performance monitoring.
  */
-    #[link_name = "_ZN2js28DisposePerformanceMonitoringEP9JSRuntime"]
-    pub fn DisposePerformanceMonitoring(arg1: *mut JSRuntime);
+    #[link_name = "_ZN2js28DisposePerformanceMonitoringEP9JSContext"]
+    pub fn DisposePerformanceMonitoring(arg1: *mut JSContext);
     /**
  * Turn on/off stopwatch-based CPU monitoring.
  *
@@ -9268,41 +9314,34 @@ extern "C" {
  * may return `false` if monitoring could not be activated, which may
  * happen if we are out of memory.
  */
-    #[link_name = "_ZN2js28SetStopwatchIsMonitoringCPOWEP9JSRuntimeb"]
-    pub fn SetStopwatchIsMonitoringCPOW(arg1: *mut JSRuntime, arg2: bool)
+    #[link_name = "_ZN2js28SetStopwatchIsMonitoringCPOWEP9JSContextb"]
+    pub fn SetStopwatchIsMonitoringCPOW(arg1: *mut JSContext, arg2: bool)
      -> bool;
-    #[link_name = "_ZN2js28GetStopwatchIsMonitoringCPOWEP9JSRuntime"]
-    pub fn GetStopwatchIsMonitoringCPOW(arg1: *mut JSRuntime) -> bool;
-    #[link_name = "_ZN2js28SetStopwatchIsMonitoringJankEP9JSRuntimeb"]
-    pub fn SetStopwatchIsMonitoringJank(arg1: *mut JSRuntime, arg2: bool)
+    #[link_name = "_ZN2js28GetStopwatchIsMonitoringCPOWEP9JSContext"]
+    pub fn GetStopwatchIsMonitoringCPOW(arg1: *mut JSContext) -> bool;
+    #[link_name = "_ZN2js28SetStopwatchIsMonitoringJankEP9JSContextb"]
+    pub fn SetStopwatchIsMonitoringJank(arg1: *mut JSContext, arg2: bool)
      -> bool;
-    #[link_name = "_ZN2js28GetStopwatchIsMonitoringJankEP9JSRuntime"]
-    pub fn GetStopwatchIsMonitoringJank(arg1: *mut JSRuntime) -> bool;
-    #[link_name = "_ZN2js17IsStopwatchActiveEP9JSRuntime"]
-    pub fn IsStopwatchActive(arg1: *mut JSRuntime) -> bool;
+    #[link_name = "_ZN2js28GetStopwatchIsMonitoringJankEP9JSContext"]
+    pub fn GetStopwatchIsMonitoringJank(arg1: *mut JSContext) -> bool;
     #[link_name =
-          "_ZN2js36GetPerfMonitoringTestCpuReschedulingEP9JSRuntimePyS2_"]
-    pub fn GetPerfMonitoringTestCpuRescheduling(arg1: *mut JSRuntime,
+          "_ZN2js36GetPerfMonitoringTestCpuReschedulingEP9JSContextPyS2_"]
+    pub fn GetPerfMonitoringTestCpuRescheduling(arg1: *mut JSContext,
                                                 stayed: *mut u64,
                                                 moved: *mut u64);
     /**
  * Add a number of microseconds to the time spent waiting on CPOWs
  * since process start.
  */
-    #[link_name = "_ZN2js23AddCPOWPerformanceDeltaEP9JSRuntimey"]
-    pub fn AddCPOWPerformanceDelta(arg1: *mut JSRuntime, delta: u64);
-    #[link_name = "_ZN2js25SetStopwatchStartCallbackEP9JSRuntimePFbyPvES2_"]
-    pub fn SetStopwatchStartCallback(arg1: *mut JSRuntime,
-                                     arg2: StopwatchStartCallback,
-                                     arg3: *mut ::std::os::raw::c_void)
-     -> bool;
+    #[link_name = "_ZN2js23AddCPOWPerformanceDeltaEP9JSContexty"]
+    pub fn AddCPOWPerformanceDelta(arg1: *mut JSContext, delta: u64);
     #[link_name =
           "_ZN2JS6detail19CallMethodIfWrappedEP9JSContextPFbNS_6HandleINS_5ValueEEEEPFbS2_RKNS_8CallArgsEESA_"]
     pub fn CallMethodIfWrapped(cx: *mut JSContext, test: IsAcceptableThis,
                                impl_: NativeImpl, args: *const CallArgs)
      -> bool;
-    #[link_name = "_Z23JS_SetGrayGCRootsTracerP9JSRuntimePFvP8JSTracerPvES3_"]
-    pub fn JS_SetGrayGCRootsTracer(rt: *mut JSRuntime, traceOp: JSTraceDataOp,
+    #[link_name = "_Z23JS_SetGrayGCRootsTracerP9JSContextPFvP8JSTracerPvES3_"]
+    pub fn JS_SetGrayGCRootsTracer(cx: *mut JSContext, traceOp: JSTraceDataOp,
                                    data: *mut ::std::os::raw::c_void);
     #[link_name =
           "_Z23JS_FindCompilationScopeP9JSContextN2JS6HandleIP8JSObjectEE"]
@@ -9371,8 +9410,8 @@ extern "C" {
           "_Z41JS_TraceObjectGroupCycleCollectorChildrenPN2JS14CallbackTracerENS_9GCCellPtrE"]
     pub fn JS_TraceObjectGroupCycleCollectorChildren(trc: *mut CallbackTracer,
                                                      group: GCCellPtr);
-    #[link_name = "_Z33JS_SetAccumulateTelemetryCallbackP9JSRuntimePFvijPKcE"]
-    pub fn JS_SetAccumulateTelemetryCallback(rt: *mut JSRuntime,
+    #[link_name = "_Z33JS_SetAccumulateTelemetryCallbackP9JSContextPFvijPKcE"]
+    pub fn JS_SetAccumulateTelemetryCallback(cx: *mut JSContext,
                                              callback:
                                                  JSAccumulateTelemetryDataCallback);
     #[link_name = "_Z21JS_GetIsSecureContextP13JSCompartment"]
@@ -9607,8 +9646,8 @@ extern "C" {
   * fp is the file for the dump output.
   */
     #[link_name =
-          "_ZN2js8DumpHeapEP9JSRuntimeP6_iobufNS_24DumpHeapNurseryBehaviourE"]
-    pub fn DumpHeap(rt: *mut JSRuntime, fp: *mut FILE,
+          "_ZN2js8DumpHeapEP9JSContextP6_iobufNS_24DumpHeapNurseryBehaviourE"]
+    pub fn DumpHeap(cx: *mut JSContext, fp: *mut FILE,
                     nurseryBehaviour: DumpHeapNurseryBehaviour);
     #[link_name = "_ZN2js16obj_defineGetterEP9JSContextjPN2JS5ValueE"]
     pub fn obj_defineGetter(cx: *mut JSContext, argc: ::std::os::raw::c_uint,
@@ -9626,8 +9665,8 @@ extern "C" {
     pub fn IsAtomsZone(zone: *mut Zone) -> bool;
     #[link_name = "_ZN2js13TraceWeakMapsEPNS_13WeakMapTracerE"]
     pub fn TraceWeakMaps(trc: *mut WeakMapTracer);
-    #[link_name = "_ZN2js18AreGCGrayBitsValidEP9JSRuntime"]
-    pub fn AreGCGrayBitsValid(rt: *mut JSRuntime) -> bool;
+    #[link_name = "_ZN2js18AreGCGrayBitsValidEP9JSContext"]
+    pub fn AreGCGrayBitsValid(cx: *mut JSContext) -> bool;
     #[link_name = "_ZN2js21ZoneGlobalsAreAllGrayEPN2JS4ZoneE"]
     pub fn ZoneGlobalsAreAllGray(zone: *mut Zone) -> bool;
     #[link_name =
@@ -9757,8 +9796,8 @@ extern "C" {
     pub fn StringIsArrayIndex(str: *mut JSLinearString, indexp: *mut u32)
      -> bool;
     #[link_name =
-          "_ZN2js26SetPreserveWrapperCallbackEP9JSRuntimePFbP9JSContextP8JSObjectE"]
-    pub fn SetPreserveWrapperCallback(rt: *mut JSRuntime,
+          "_ZN2js26SetPreserveWrapperCallbackEP9JSContextPFbS1_P8JSObjectE"]
+    pub fn SetPreserveWrapperCallback(cx: *mut JSContext,
                                       callback: PreserveWrapperCallback);
     #[link_name =
           "_ZN2js28IsObjectInContextCompartmentEP8JSObjectPK9JSContext"]
@@ -9796,22 +9835,22 @@ extern "C" {
  * last active request ceases - and begins activity - when it was
  * idle and a request begins.
  */
-    #[link_name = "_ZN2js19SetActivityCallbackEP9JSRuntimePFvPvbES2_"]
-    pub fn SetActivityCallback(rt: *mut JSRuntime, cb: ActivityCallback,
+    #[link_name = "_ZN2js19SetActivityCallbackEP9JSContextPFvPvbES2_"]
+    pub fn SetActivityCallback(cx: *mut JSContext, cb: ActivityCallback,
                                arg: *mut ::std::os::raw::c_void);
-    #[link_name = "_ZN2js15SetDOMCallbacksEP9JSRuntimePKNS_14JSDOMCallbacksE"]
-    pub fn SetDOMCallbacks(rt: *mut JSRuntime,
+    #[link_name = "_ZN2js15SetDOMCallbacksEP9JSContextPKNS_14JSDOMCallbacksE"]
+    pub fn SetDOMCallbacks(cx: *mut JSContext,
                            callbacks: *const DOMCallbacks);
-    #[link_name = "_ZN2js15GetDOMCallbacksEP9JSRuntime"]
-    pub fn GetDOMCallbacks(rt: *mut JSRuntime) -> *const DOMCallbacks;
+    #[link_name = "_ZN2js15GetDOMCallbacksEP9JSContext"]
+    pub fn GetDOMCallbacks(cx: *mut JSContext) -> *const DOMCallbacks;
     #[link_name = "_ZN2js19GetTestingFunctionsEP9JSContext"]
     pub fn GetTestingFunctions(cx: *mut JSContext) -> *mut JSObject;
     /**
  * Get an error type name from a JSExnType constant.
  * Returns nullptr for invalid arguments and JSEXN_INTERNALERR
  */
-    #[link_name = "_ZN2js16GetErrorTypeNameEP9JSRuntimes"]
-    pub fn GetErrorTypeName(rt: *mut JSRuntime, exnType: i16)
+    #[link_name = "_ZN2js16GetErrorTypeNameEP9JSContexts"]
+    pub fn GetErrorTypeName(cx: *mut JSContext, exnType: i16)
      -> *mut JSFlatString;
     #[link_name = "_ZN2js24GetEnterCompartmentDepthEP9JSContext"]
     pub fn GetEnterCompartmentDepth(cx: *mut JSContext)
@@ -10377,8 +10416,8 @@ extern "C" {
                                              closure:
                                                  *mut ScriptEnvironmentPreparer_Closure);
     #[link_name =
-          "_ZN2js28SetScriptEnvironmentPreparerEP9JSRuntimePNS_25ScriptEnvironmentPreparerE"]
-    pub fn SetScriptEnvironmentPreparer(rt: *mut JSRuntime,
+          "_ZN2js28SetScriptEnvironmentPreparerEP9JSContextPNS_25ScriptEnvironmentPreparerE"]
+    pub fn SetScriptEnvironmentPreparer(cx: *mut JSContext,
                                         preparer:
                                             *mut ScriptEnvironmentPreparer);
     /**
@@ -10386,8 +10425,8 @@ extern "C" {
  * calling into C.
  */
     #[link_name =
-          "_ZN2js25SetCTypesActivityCallbackEP9JSRuntimePFvP9JSContextNS_18CTypesActivityTypeEE"]
-    pub fn SetCTypesActivityCallback(rt: *mut JSRuntime,
+          "_ZN2js25SetCTypesActivityCallbackEP9JSContextPFvS1_NS_18CTypesActivityTypeEE"]
+    pub fn SetCTypesActivityCallback(cx: *mut JSContext,
                                      cb: CTypesActivityCallback);
     /**
  * Specify a callback to invoke when creating each JS object in the current
@@ -10484,8 +10523,8 @@ extern "C" {
  * Tell the JS engine which Class is used for WindowProxy objects. Used by the
  * functions below.
  */
-    #[link_name = "_ZN2js19SetWindowProxyClassEP9JSRuntimePKNS_5ClassE"]
-    pub fn SetWindowProxyClass(rt: *mut JSRuntime, clasp: *const Class);
+    #[link_name = "_ZN2js19SetWindowProxyClassEP9JSContextPKNS_5ClassE"]
+    pub fn SetWindowProxyClass(cx: *mut JSContext, clasp: *const Class);
     /**
  * Associates a WindowProxy with a Window (global object). `windowProxy` must
  * have the Class set by SetWindowProxyClass.
@@ -10576,6 +10615,9 @@ extern "C" {
           "_ZN2JS19OrdinaryToPrimitiveEP9JSContextNS_6HandleIP8JSObjectEE6JSTypeNS_13MutableHandleINS_5ValueEEE"]
     pub fn OrdinaryToPrimitive(cx: *mut JSContext, obj: HandleObject,
                                type_: JSType, vp: MutableHandleValue) -> bool;
+    #[link_name = "_ZN2JS6detail25InitWithFailureDiagnosticEb"]
+    pub fn InitWithFailureDiagnostic(isDebugBuild: bool)
+     -> *const ::std::os::raw::c_char;
     /**
  * This function can be used to track memory used by ICU.  If it is called, it
  * *must* be called before JS_Init.  Don't use it unless you know what you're
@@ -10585,28 +10627,6 @@ extern "C" {
     pub fn JS_SetICUMemoryFunctions(allocFn: JS_ICUAllocFn,
                                     reallocFn: JS_ICUReallocFn,
                                     freeFn: JS_ICUFreeFn) -> bool;
-    /**
- * Initialize SpiderMonkey, returning true only if initialization succeeded.
- * Once this method has succeeded, it is safe to call JS_NewRuntime and other
- * JSAPI methods.
- *
- * This method must be called before any other JSAPI method is used on any
- * thread.  Once it has been used, it is safe to call any JSAPI method, and it
- * remains safe to do so until JS_ShutDown is correctly called.
- *
- * It is currently not possible to initialize SpiderMonkey multiple times (that
- * is, calling JS_Init/JSAPI methods/JS_ShutDown in that order, then doing so
- * again).  This restriction may eventually be lifted.
- */
-    #[link_name = "_Z7JS_Initv"]
-    pub fn JS_Init() -> bool;
-    /**
- * A variant of JS_Init. On success it returns nullptr. On failure it returns a
- * pointer to a string literal that describes how initialization failed, which
- * can be useful for debugging purposes.
- */
-    #[link_name = "_Z28JS_InitWithFailureDiagnosticv"]
-    pub fn JS_InitWithFailureDiagnostic() -> *const ::std::os::raw::c_char;
     /**
  * Destroy free-standing resources allocated by SpiderMonkey, not associated
  * with any runtime, context, or other structure.
@@ -10638,25 +10658,25 @@ extern "C" {
     #[link_name = "_ZN2js32MemoryReportingSundriesThresholdEv"]
     pub fn MemoryReportingSundriesThreshold() -> usize;
     #[link_name =
-          "_ZN2JS19CollectRuntimeStatsEP9JSRuntimePNS_12RuntimeStatsEPNS_20ObjectPrivateVisitorEb"]
-    pub fn CollectRuntimeStats(rt: *mut JSRuntime, rtStats: *mut RuntimeStats,
+          "_ZN2JS19CollectRuntimeStatsEP9JSContextPNS_12RuntimeStatsEPNS_20ObjectPrivateVisitorEb"]
+    pub fn CollectRuntimeStats(cx: *mut JSContext, rtStats: *mut RuntimeStats,
                                opv: *mut ObjectPrivateVisitor,
                                anonymize: bool) -> bool;
-    #[link_name = "_ZN2JS22SystemCompartmentCountEP9JSRuntime"]
-    pub fn SystemCompartmentCount(rt: *mut JSRuntime) -> usize;
-    #[link_name = "_ZN2JS20UserCompartmentCountEP9JSRuntime"]
-    pub fn UserCompartmentCount(rt: *mut JSRuntime) -> usize;
-    #[link_name = "_ZN2JS19PeakSizeOfTemporaryEPK9JSRuntime"]
-    pub fn PeakSizeOfTemporary(rt: *const JSRuntime) -> usize;
+    #[link_name = "_ZN2JS22SystemCompartmentCountEP9JSContext"]
+    pub fn SystemCompartmentCount(cx: *mut JSContext) -> usize;
+    #[link_name = "_ZN2JS20UserCompartmentCountEP9JSContext"]
+    pub fn UserCompartmentCount(cx: *mut JSContext) -> usize;
+    #[link_name = "_ZN2JS19PeakSizeOfTemporaryEPK9JSContext"]
+    pub fn PeakSizeOfTemporary(cx: *const JSContext) -> usize;
     #[link_name =
-          "_ZN2JS12AddSizeOfTabEP9JSRuntimeNS_6HandleIP8JSObjectEEPFyPKvEPNS_20ObjectPrivateVisitorEPNS_8TabSizesE"]
-    pub fn AddSizeOfTab(rt: *mut JSRuntime, obj: HandleObject,
+          "_ZN2JS12AddSizeOfTabEP9JSContextNS_6HandleIP8JSObjectEEPFyPKvEPNS_20ObjectPrivateVisitorEPNS_8TabSizesE"]
+    pub fn AddSizeOfTab(cx: *mut JSContext, obj: HandleObject,
                         mallocSizeOf: MallocSizeOf,
                         opv: *mut ObjectPrivateVisitor, sizes: *mut TabSizes)
      -> bool;
     #[link_name =
-          "_ZN2JS14AddServoSizeOfEP9JSRuntimePFyPKvEPNS_20ObjectPrivateVisitorEPNS_10ServoSizesE"]
-    pub fn AddServoSizeOf(rt: *mut JSRuntime, mallocSizeOf: MallocSizeOf,
+          "_ZN2JS14AddServoSizeOfEP9JSContextPFyPKvEPNS_20ObjectPrivateVisitorEPNS_10ServoSizesE"]
+    pub fn AddServoSizeOf(cx: *mut JSContext, mallocSizeOf: MallocSizeOf,
                           opv: *mut ObjectPrivateVisitor,
                           sizes: *mut ServoSizes) -> bool;
 }

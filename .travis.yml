@@ -1,6 +1,7 @@
 language: rust
 sudo: 9000
 dist: trusty
+osx_image: xcode7
 rust:
   - nightly
 os:
@@ -12,7 +13,9 @@ env:
   - FEATURES="--features debugmozjs"
 
 before_install:
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ccache; fi
+- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
+- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ccache cmake; fi
+- cmake --version
 
 script:
   - ccache -z
