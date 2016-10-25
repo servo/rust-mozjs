@@ -12,7 +12,7 @@ env:
   - FEATURES="--features debugmozjs"
 
 before_install:
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ccache; fi
+- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ccache yasm; fi
 
 script:
   - ccache -z
