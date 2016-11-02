@@ -539,7 +539,7 @@ impl<T: ToJSValConvertible> ToJSValConvertible for Vec<T> {
                                      index as u32, val.handle(), JSPROP_ENUMERATE, None, None));
         }
 
-        rval.set(ObjectValue(&*js_array.handle().get()));
+        rval.set(ObjectValue(js_array.handle().get()));
     }
 }
 
@@ -629,7 +629,7 @@ impl ToJSValConvertible for *mut JSObject {
 impl ToJSValConvertible for NonZero<*mut JSObject> {
     #[inline]
     unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
-        rval.set(ObjectValue(&***self));
+        rval.set(ObjectValue(**self));
         assert!(JS_WrapValue(cx, rval));
     }
 }

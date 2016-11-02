@@ -7,7 +7,6 @@ extern crate js;
 
 use js::jsapi::CompartmentOptions;
 use js::jsapi::JSAutoCompartment;
-use js::jsapi::JSITER_OWNONLY;
 use js::jsapi::JS_NewGlobalObject;
 use js::jsapi::OnNewGlobalHookOption;
 use js::jsval::UndefinedValue;
