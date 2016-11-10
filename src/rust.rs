@@ -556,8 +556,10 @@ impl<T: GCMethods<T> + Copy> Heap<T> {
     }
 }
 
-impl Default for Heap<*mut JSObject> {
-    fn default() -> Heap<*mut JSObject> {
+impl<T> Default for Heap<*mut T>
+    where *mut T: GCMethods<*mut T> + Copy
+{
+    fn default() -> Heap<*mut T> {
         Heap {
             ptr: UnsafeCell::new(ptr::null_mut())
         }
