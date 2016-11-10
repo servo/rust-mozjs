@@ -532,6 +532,14 @@ impl GCMethods<Value> for Value {
 }
 
 impl<T: GCMethods<T> + Copy> Heap<T> {
+    pub fn new(v: T) -> Heap<T>
+        where Heap<T>: Default
+    {
+        let mut ptr = Heap::default();
+        ptr.set(v);
+        ptr
+    }
+
     pub fn set(&mut self, v: T) {
         unsafe {
             let ptr = self.ptr.get();
