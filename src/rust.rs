@@ -599,6 +599,11 @@ impl<T: GCMethods<T> + Copy> Drop for Heap<T> {
     }
 }
 
+impl<T: GCMethods<T> + Copy + PartialEq> PartialEq for Heap<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.get() == other.get()
+    }
+}
 
 // ___________________________________________________________________________
 // Implementations for various things in jsapi.rs
