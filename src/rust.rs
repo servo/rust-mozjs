@@ -51,6 +51,8 @@ use jsapi::AutoIdVector;
 use jsapi::JS_MayResolveStandardClass;
 use jsapi::JS_EnumerateStandardClasses;
 use jsapi::JS_ResolveStandardClass;
+use jsapi::JSTracer;
+use glue::{CallFunctionTracer, CallObjectTracer, CallScriptTracer, CallStringTracer, CallValueTracer, CallIdTracer};
 use glue::{CreateAutoIdVector, SliceAutoIdVector, DestroyAutoIdVector};
 use glue::{CreateAutoObjectVector, CreateCallArgsFromVp, AppendToAutoObjectVector, DeleteAutoObjectVector};
 use glue::{NewCompileOptions, DeleteCompileOptions};
@@ -278,6 +280,57 @@ impl RootKind for jsid {
 impl RootKind for Value {
     #[inline(always)]
     fn rootKind() -> jsapi::RootKind { jsapi::RootKind::Value }
+}
+
+// Creates a C string literal `$str`.
+macro_rules! c_str {
+    ($str:expr) => {
+        concat!($str, "\0").as_ptr() as *const ::std::os::raw::c_char
+    }
+}
+
+/// Types that can be traced.
+///
+/// This trait is unsafe; if it is implemented incorrectly, the GC may end up collecting objects
+/// that are still reachable.
+pub unsafe trait Trace {
+    unsafe fn trace(&self, trc: *mut JSTracer);
+}
+
+unsafe impl Trace for Heap<*mut JSFunction> {
+    unsafe fn trace(&self, trc: *mut JSTracer) {
+        CallFunctionTracer(trc, self as *const _ as *mut Self, c_str!("function"));
+    }
+}
+
+unsafe impl Trace for Heap<*mut JSObject> {
+    unsafe fn trace(&self, trc: *mut JSTracer) {
+        CallObjectTracer(trc, self as *const _ as *mut Self, c_str!("object"));
+    }
+}
+
+unsafe impl Trace for Heap<*mut JSScript> {
+    unsafe fn trace(&self, trc: *mut JSTracer) {
+        CallScriptTracer(trc, self as *const _ as *mut Self, c_str!("script"));
+    }
+}
+
+unsafe impl Trace for Heap<*mut JSString> {
+    unsafe fn trace(&self, trc: *mut JSTracer) {
+        CallStringTracer(trc, self as *const _ as *mut Self, c_str!("string"));
+    }
+}
+
+unsafe impl Trace for Heap<Value> {
+    unsafe fn trace(&self, trc: *mut JSTracer) {
+        CallValueTracer(trc, self as *const _ as *mut Self, c_str!("value"));
+    }
+}
+
+unsafe impl Trace for Heap<jsid> {
+    unsafe fn trace(&self, trc: *mut JSTracer) {
+        CallIdTracer(trc, self as *const _ as *mut Self, c_str!("id"));
+    }
 }
 
 impl<T> Rooted<T> {
@@ -532,6 +585,14 @@ impl GCMethods<Value> for Value {
 }
 
 impl<T: GCMethods<T> + Copy> Heap<T> {
+    pub fn new(v: T) -> Heap<T>
+        where Heap<T>: Default
+    {
+        let mut ptr = Heap::default();
+        ptr.set(v);
+        ptr
+    }
+
     pub fn set(&mut self, v: T) {
         unsafe {
             let ptr = self.ptr.get();
@@ -556,8 +617,18 @@ impl<T: GCMethods<T> + Copy> Heap<T> {
     }
 }
 
-impl Default for Heap<*mut JSObject> {
-    fn default() -> Heap<*mut JSObject> {
+impl<T: GCMethods<T> + Copy> Clone for Heap<T>
+    where Heap<T>: Default
+{
+    fn clone(&self) -> Self {
+        Heap::new(self.get())
+    }
+}
+
+impl<T> Default for Heap<*mut T>
+    where *mut T: GCMethods<*mut T> + Copy
+{
+    fn default() -> Heap<*mut T> {
         Heap {
             ptr: UnsafeCell::new(ptr::null_mut())
         }
@@ -581,6 +652,11 @@ impl<T: GCMethods<T> + Copy> Drop for Heap<T> {
     }
 }
 
+impl<T: GCMethods<T> + Copy + PartialEq> PartialEq for Heap<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.get() == other.get()
+    }
+}
 
 // ___________________________________________________________________________
 // Implementations for various things in jsapi.rs
