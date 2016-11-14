@@ -56,6 +56,7 @@ use glue::{CallFunctionTracer, CallObjectTracer, CallScriptTracer, CallStringTra
 use glue::{CreateAutoIdVector, SliceAutoIdVector, DestroyAutoIdVector};
 use glue::{CreateAutoObjectVector, CreateCallArgsFromVp, AppendToAutoObjectVector, DeleteAutoObjectVector};
 use glue::{NewCompileOptions, DeleteCompileOptions};
+use panic::maybe_resume_unwind;
 use default_heapsize;
 
 // From Gecko:
@@ -207,6 +208,7 @@ impl Runtime {
         unsafe {
             if !Evaluate2(self.cx(), options.ptr, ptr as *const u16, len as size_t, rval) {
                 debug!("...err!");
+                maybe_resume_unwind();
                 Err(())
             } else {
                 // we could return the script result but then we'd have

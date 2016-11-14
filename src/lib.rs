@@ -102,6 +102,7 @@ pub mod conversions;
 pub mod error;
 pub mod glue;
 pub mod jsval;
+pub mod panic;
 pub mod typedarray;
 
 
