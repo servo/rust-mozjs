@@ -34,7 +34,7 @@ use jsapi::{JSString, JSTracer, MutableHandle, MutableHandleBase, MutableHandleV
 use jsapi::{NullHandleValue, Object, ObjectGroup,ReadOnlyCompileOptions, Rooted};
 use jsapi::{RootedBase, RuntimeOptionsRef, SetWarningReporter, Symbol, ToBooleanSlow};
 use jsapi::{ToInt32Slow, ToInt64Slow, ToNumberSlow, ToStringSlow, ToUint16Slow};
-use jsapi::{ToUint32Slow, ToUint64Slow, ToWindowIfWindowProxy, UndefinedHandleValue};
+use jsapi::{ToUint32Slow, ToUint64Slow, ToWindowProxyIfWindow, UndefinedHandleValue};
 use jsapi::{Value, jsid};
 use jsval::{ObjectValue, UndefinedValue};
 use glue::{AppendToAutoObjectVector, CallFunctionTracer, CallIdTracer, CallObjectTracer};
@@ -1118,7 +1118,7 @@ pub unsafe fn is_window(obj: *mut JSObject) -> bool {
 pub unsafe fn try_to_outerize(rval: MutableHandleValue) {
     let obj = rval.to_object();
     if is_window(obj) {
-        let obj = ToWindowIfWindowProxy(obj);
+        let obj = ToWindowProxyIfWindow(obj);
         assert!(!obj.is_null());
         rval.set(ObjectValue(&mut *obj));
     }
