@@ -495,7 +495,7 @@ impl HandleValue {
     }
 }
 
-const ConstNullValue: *mut JSObject = 0 as *mut JSObject;
+static ConstNullValue: *mut JSObject = 0 as *mut JSObject;
 
 impl HandleObject {
     pub fn null() -> HandleObject {
