@@ -20,8 +20,8 @@ use consts::{JSCLASS_RESERVED_SLOTS_MASK, JSCLASS_GLOBAL_SLOT_COUNT};
 use consts::{JSCLASS_IS_DOMJSCLASS, JSCLASS_IS_GLOBAL};
 use jsapi;
 use jsapi::{AutoIdVector, AutoObjectVector, CallArgs, CompartmentOptions, ContextFriendFields};
-use jsapi::{Evaluate2, Handle, HandleBase, HandleObject, HandleValue, Heap, HeapObjectPostBarrier};
-use jsapi::{HeapValuePostBarrier, InitSelfHostedCode, IsWindowSlow, JS_BeginRequest};
+use jsapi::{Evaluate2, Handle, HandleBase, HandleObject, HandleValue, HandleValueArray, Heap};
+use jsapi::{HeapObjectPostBarrier, HeapValuePostBarrier, InitSelfHostedCode, IsWindowSlow, JS_BeginRequest};
 use jsapi::{JS_DefineFunctions, JS_DefineProperties, JS_DestroyRuntime, JS_EndRequest};
 use jsapi::{JS_EnterCompartment, JS_EnumerateStandardClasses, JS_GetContext, JS_GlobalObjectTraceHook};
 use jsapi::{JS_Init, JS_LeaveCompartment, JS_MayResolveStandardClass, JS_NewRuntime, JS_ResolveStandardClass};
@@ -491,6 +491,22 @@ impl HandleValue {
     pub fn undefined() -> HandleValue {
         unsafe {
             UndefinedHandleValue
+        }
+    }
+}
+
+impl HandleValueArray {
+    pub fn new() -> HandleValueArray {
+        HandleValueArray {
+            length_: 0,
+            elements_: ptr::null_mut(),
+        }
+    }
+
+    pub fn from_slice(values: &[Value]) -> HandleValueArray {
+        HandleValueArray {
+            length_: values.len(),
+            elements_: values.as_ptr()
         }
     }
 }
