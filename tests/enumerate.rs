@@ -14,6 +14,8 @@ use js::jsapi::JS_NewGlobalObject;
 use js::jsapi::JS_StringEqualsAscii;
 use js::jsapi::OnNewGlobalHookOption;
 use js::jsval::UndefinedValue;
+use js::rust::AsHandle;
+use js::rust::AsHandleMut;
 use js::rust::IdVector;
 use js::rust::Runtime;
 use js::rust::SIMPLE_GLOBAL_CLASS;

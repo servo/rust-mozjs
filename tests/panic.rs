@@ -14,7 +14,7 @@ use js::jsapi::OnNewGlobalHookOption;
 use js::jsapi::Value;
 use js::jsval::UndefinedValue;
 use js::panic::wrap_panic;
-use js::rust::{Runtime, SIMPLE_GLOBAL_CLASS};
+use js::rust::{AsHandle, AsHandleMut, Runtime, SIMPLE_GLOBAL_CLASS};
 use std::ptr;
 use std::str;
 

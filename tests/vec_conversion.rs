@@ -15,7 +15,7 @@ use js::jsapi::JS_InitStandardClasses;
 use js::jsapi::JS_NewGlobalObject;
 use js::jsapi::OnNewGlobalHookOption;
 use js::jsval::UndefinedValue;
-use js::rust::{Runtime, SIMPLE_GLOBAL_CLASS};
+use js::rust::{AsHandle, AsHandleMut, Runtime, SIMPLE_GLOBAL_CLASS};
 
 use std::ptr;
 
