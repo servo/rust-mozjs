@@ -623,10 +623,34 @@ impl ToJSValConvertible for *mut JSObject {
 }
 
 // https://heycam.github.io/webidl/#es-object
+impl FromJSValConvertible for *mut JSObject {
+    type Config = ();
+    #[inline]
+    unsafe fn from_jsval(_cx: *mut JSContext,
+                         val: HandleValue,
+                         _option: ())
+                         -> Result<ConversionResult<*mut JSObject>, ()> {
+        Ok(ConversionResult::Success(val.to_object_or_null()))
+    }
+}
+
+// https://heycam.github.io/webidl/#es-object
 impl ToJSValConvertible for NonZero<*mut JSObject> {
     #[inline]
     unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
         rval.set(ObjectValue(**self));
         maybe_wrap_object_value(cx, rval);
+    }
+}
+
+// https://heycam.github.io/webidl/#es-object
+impl FromJSValConvertible for NonZero<*mut JSObject> {
+    type Config = ();
+    #[inline]
+    unsafe fn from_jsval(_cx: *mut JSContext,
+                         val: HandleValue,
+                         _option: ())
+                         -> Result<ConversionResult<NonZero<*mut JSObject>>, ()> {
+        Ok(ConversionResult::Success(NonZero::new(val.to_object())))
     }
 }
