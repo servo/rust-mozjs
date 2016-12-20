@@ -14,7 +14,7 @@ use std::mem;
 use std::u32;
 use std::default::Default;
 use std::ops::{Deref, DerefMut};
-use std::cell::UnsafeCell;
+use std::cell::{Cell, UnsafeCell};
 use std::marker::PhantomData;
 use consts::{JSCLASS_RESERVED_SLOTS_MASK, JSCLASS_GLOBAL_SLOT_COUNT};
 use consts::{JSCLASS_IS_DOMJSCLASS, JSCLASS_IS_GLOBAL};
@@ -96,6 +96,8 @@ impl ToResult for bool {
 // ___________________________________________________________________________
 // friendly Rustic API to runtimes
 
+thread_local!(static CONTEXT: Cell<*mut JSContext> = Cell::new(ptr::null_mut()));
+
 /// A wrapper for the `JSRuntime` and `JSContext` structures in SpiderMonkey.
 pub struct Runtime {
     rt: *mut JSRuntime,
@@ -103,6 +105,15 @@ pub struct Runtime {
 }
 
 impl Runtime {
+    /// Get the `JSContext` for this thread.
+    pub fn get() -> *mut JSContext {
+        let cx = CONTEXT.with(|context| {
+            context.get()
+        });
+        assert!(!cx.is_null());
+        cx
+    }
+
     /// Creates a new `JSRuntime` and `JSContext`.
     pub fn new() -> Runtime {
         unsafe {
@@ -156,6 +167,11 @@ impl Runtime {
 
             JS_BeginRequest(js_context);
 
+            CONTEXT.with(|context| {
+                assert!(context.get().is_null());
+                context.set(js_context);
+            });
+
             Runtime {
                 rt: js_runtime,
                 cx: js_context,
@@ -208,6 +224,11 @@ impl Runtime {
 impl Drop for Runtime {
     fn drop(&mut self) {
         unsafe {
+            CONTEXT.with(|context| {
+                assert!(!context.get().is_null());
+                context.set(ptr::null_mut());
+            });
+
             JS_EndRequest(self.cx);
             JS_DestroyRuntime(self.rt);
         }
