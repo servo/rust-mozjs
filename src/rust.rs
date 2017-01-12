@@ -342,27 +342,31 @@ unsafe impl Trace for Heap<jsid> {
 }
 
 impl<T> Rooted<T> {
-    pub fn new_unrooted(initial: T) -> Rooted<T> {
+    pub fn new_unrooted() -> Rooted<T>
+        where T: GCMethods,
+    {
         Rooted {
             _base: RootedBase { _phantom0: PhantomData },
             stack: ptr::null_mut(),
             prev: ptr::null_mut(),
-            ptr: initial,
+            ptr: unsafe { T::initial() },
         }
     }
 
     pub unsafe fn add_to_root_stack(&mut self, cx: *mut JSContext) where T: RootKind {
-        let ctxfriend: &mut ContextFriendFields = mem::transmute(cx);
+        let ctxfriend = cx as *mut ContextFriendFields;
 
         let kind = T::rootKind() as usize;
-        self.stack = &mut ctxfriend.roots.stackRoots_[kind] as *mut _ as *mut _;
-        self.prev = ctxfriend.roots.stackRoots_[kind] as *mut _;
+        let stack = &mut (*ctxfriend).roots.stackRoots_[kind] as *mut _ as *mut _;
 
-        ctxfriend.roots.stackRoots_[kind] = self as *mut _ as usize as _;
+        self.stack = stack;
+        self.prev = *stack;
+
+        *stack = self as *mut _ as usize as _;
     }
 
     pub unsafe fn remove_from_root_stack(&mut self) {
-        assert!(*self.stack == mem::transmute(&*self));
+        assert!(*self.stack == self as *mut _ as usize as _);
         *self.stack = self.prev;
     }
 }
@@ -370,12 +374,13 @@ impl<T> Rooted<T> {
 /// Rust API for keeping a Rooted value in the context's root stack.
 /// Example usage: `rooted!(in(cx) let x = UndefinedValue());`.
 /// `RootedGuard::new` also works, but the macro is preferred.
-pub struct RootedGuard<'a, T: 'a> {
+pub struct RootedGuard<'a, T: 'a + RootKind + GCMethods> {
     root: &'a mut Rooted<T>
 }
 
-impl<'a, T> RootedGuard<'a, T> {
-    pub fn new(cx: *mut JSContext, root: &'a mut Rooted<T>) -> Self where T: RootKind {
+impl<'a, T: 'a + RootKind + GCMethods> RootedGuard<'a, T> {
+    pub fn new(cx: *mut JSContext, root: &'a mut Rooted<T>, initial: T) -> Self {
+        root.ptr = initial;
         unsafe {
             root.add_to_root_stack(cx);
         }
@@ -405,22 +410,23 @@ impl<'a, T> RootedGuard<'a, T> {
     }
 }
 
-impl<'a, T> Deref for RootedGuard<'a, T> {
+impl<'a, T: 'a + RootKind + GCMethods> Deref for RootedGuard<'a, T> {
     type Target = T;
     fn deref(&self) -> &T {
         &self.root.ptr
     }
 }
 
-impl<'a, T> DerefMut for RootedGuard<'a, T> {
+impl<'a, T: 'a + RootKind + GCMethods> DerefMut for RootedGuard<'a, T> {
     fn deref_mut(&mut self) -> &mut T {
         &mut self.root.ptr
     }
 }
 
-impl<'a, T> Drop for RootedGuard<'a, T> {
+impl<'a, T: 'a + RootKind + GCMethods> Drop for RootedGuard<'a, T> {
     fn drop(&mut self) {
         unsafe {
+            self.root.ptr = T::initial();
             self.root.remove_from_root_stack();
         }
     }
@@ -429,12 +435,12 @@ impl<'a, T> Drop for RootedGuard<'a, T> {
 #[macro_export]
 macro_rules! rooted {
     (in($cx:expr) let $name:ident = $init:expr) => {
-        let mut __root = $crate::jsapi::Rooted::new_unrooted($init);
-        let $name = $crate::rust::RootedGuard::new($cx, &mut __root);
+        let mut __root = $crate::jsapi::Rooted::new_unrooted();
+        let $name = $crate::rust::RootedGuard::new($cx, &mut __root, $init);
     };
     (in($cx:expr) let mut $name:ident = $init:expr) => {
-        let mut __root = $crate::jsapi::Rooted::new_unrooted($init);
-        let mut $name = $crate::rust::RootedGuard::new($cx, &mut __root);
+        let mut __root = $crate::jsapi::Rooted::new_unrooted();
+        let mut $name = $crate::rust::RootedGuard::new($cx, &mut __root, $init);
     }
 }
 
@@ -564,17 +570,17 @@ const ChunkSize: usize = 1 << ChunkShift;
 #[cfg(target_pointer_width = "32")]
 const ChunkLocationOffset: usize = ChunkSize - 2 * 4 - 8;
 
-pub trait GCMethods<T> {
-    unsafe fn initial() -> T;
-    unsafe fn post_barrier(v: *mut T, prev: T, next: T);
+pub trait GCMethods {
+    unsafe fn initial() -> Self;
+    unsafe fn post_barrier(v: *mut Self, prev: Self, next: Self);
 }
 
-impl GCMethods<jsid> for jsid {
+impl GCMethods for jsid {
     unsafe fn initial() -> jsid { JSID_VOID }
     unsafe fn post_barrier(_: *mut jsid, _: jsid, _: jsid) {}
 }
 
-impl GCMethods<*mut JSObject> for *mut JSObject {
+impl GCMethods for *mut JSObject {
     unsafe fn initial() -> *mut JSObject { ptr::null_mut() }
     unsafe fn post_barrier(v: *mut *mut JSObject,
                            prev: *mut JSObject, next: *mut JSObject) {
@@ -582,17 +588,17 @@ impl GCMethods<*mut JSObject> for *mut JSObject {
     }
 }
 
-impl GCMethods<*mut JSString> for *mut JSString {
+impl GCMethods for *mut JSString {
     unsafe fn initial() -> *mut JSString { ptr::null_mut() }
     unsafe fn post_barrier(_: *mut *mut JSString, _: *mut JSString, _: *mut JSString) {}
 }
 
-impl GCMethods<*mut JSScript> for *mut JSScript {
+impl GCMethods for *mut JSScript {
     unsafe fn initial() -> *mut JSScript { ptr::null_mut() }
     unsafe fn post_barrier(_: *mut *mut JSScript, _: *mut JSScript, _: *mut JSScript) { }
 }
 
-impl GCMethods<*mut JSFunction> for *mut JSFunction {
+impl GCMethods for *mut JSFunction {
     unsafe fn initial() -> *mut JSFunction { ptr::null_mut() }
     unsafe fn post_barrier(v: *mut *mut JSFunction,
                            prev: *mut JSFunction, next: *mut JSFunction) {
@@ -601,14 +607,14 @@ impl GCMethods<*mut JSFunction> for *mut JSFunction {
     }
 }
 
-impl GCMethods<Value> for Value {
+impl GCMethods for Value {
     unsafe fn initial() -> Value { UndefinedValue() }
     unsafe fn post_barrier(v: *mut Value, prev: Value, next: Value) {
         HeapValuePostBarrier(v, &prev, &next);
     }
 }
 
-impl<T: GCMethods<T> + Copy> Heap<T> {
+impl<T: GCMethods + Copy> Heap<T> {
     pub fn new(v: T) -> Heap<T>
         where Heap<T>: Default
     {
@@ -641,7 +647,7 @@ impl<T: GCMethods<T> + Copy> Heap<T> {
     }
 }
 
-impl<T: GCMethods<T> + Copy> Clone for Heap<T>
+impl<T: GCMethods + Copy> Clone for Heap<T>
     where Heap<T>: Default
 {
     fn clone(&self) -> Self {
@@ -650,7 +656,7 @@ impl<T: GCMethods<T> + Copy> Clone for Heap<T>
 }
 
 impl<T> Default for Heap<*mut T>
-    where *mut T: GCMethods<*mut T> + Copy
+    where *mut T: GCMethods + Copy
 {
     fn default() -> Heap<*mut T> {
         Heap {
@@ -667,7 +673,7 @@ impl Default for Heap<Value> {
     }
 }
 
-impl<T: GCMethods<T> + Copy> Drop for Heap<T> {
+impl<T: GCMethods + Copy> Drop for Heap<T> {
     fn drop(&mut self) {
         unsafe {
             let ptr = self.ptr.get();
@@ -676,7 +682,7 @@ impl<T: GCMethods<T> + Copy> Drop for Heap<T> {
     }
 }
 
-impl<T: GCMethods<T> + Copy + PartialEq> PartialEq for Heap<T> {
+impl<T: GCMethods + Copy + PartialEq> PartialEq for Heap<T> {
     fn eq(&self, other: &Self) -> bool {
         self.get() == other.get()
     }
