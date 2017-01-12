@@ -564,17 +564,17 @@ const ChunkSize: usize = 1 << ChunkShift;
 #[cfg(target_pointer_width = "32")]
 const ChunkLocationOffset: usize = ChunkSize - 2 * 4 - 8;
 
-pub trait GCMethods<T> {
-    unsafe fn initial() -> T;
-    unsafe fn post_barrier(v: *mut T, prev: T, next: T);
+pub trait GCMethods {
+    unsafe fn initial() -> Self;
+    unsafe fn post_barrier(v: *mut Self, prev: Self, next: Self);
 }
 
-impl GCMethods<jsid> for jsid {
+impl GCMethods for jsid {
     unsafe fn initial() -> jsid { JSID_VOID }
     unsafe fn post_barrier(_: *mut jsid, _: jsid, _: jsid) {}
 }
 
-impl GCMethods<*mut JSObject> for *mut JSObject {
+impl GCMethods for *mut JSObject {
     unsafe fn initial() -> *mut JSObject { ptr::null_mut() }
     unsafe fn post_barrier(v: *mut *mut JSObject,
                            prev: *mut JSObject, next: *mut JSObject) {
@@ -582,17 +582,17 @@ impl GCMethods<*mut JSObject> for *mut JSObject {
     }
 }
 
-impl GCMethods<*mut JSString> for *mut JSString {
+impl GCMethods for *mut JSString {
     unsafe fn initial() -> *mut JSString { ptr::null_mut() }
     unsafe fn post_barrier(_: *mut *mut JSString, _: *mut JSString, _: *mut JSString) {}
 }
 
-impl GCMethods<*mut JSScript> for *mut JSScript {
+impl GCMethods for *mut JSScript {
     unsafe fn initial() -> *mut JSScript { ptr::null_mut() }
     unsafe fn post_barrier(_: *mut *mut JSScript, _: *mut JSScript, _: *mut JSScript) { }
 }
 
-impl GCMethods<*mut JSFunction> for *mut JSFunction {
+impl GCMethods for *mut JSFunction {
     unsafe fn initial() -> *mut JSFunction { ptr::null_mut() }
     unsafe fn post_barrier(v: *mut *mut JSFunction,
                            prev: *mut JSFunction, next: *mut JSFunction) {
@@ -601,14 +601,14 @@ impl GCMethods<*mut JSFunction> for *mut JSFunction {
     }
 }
 
-impl GCMethods<Value> for Value {
+impl GCMethods for Value {
     unsafe fn initial() -> Value { UndefinedValue() }
     unsafe fn post_barrier(v: *mut Value, prev: Value, next: Value) {
         HeapValuePostBarrier(v, &prev, &next);
     }
 }
 
-impl<T: GCMethods<T> + Copy> Heap<T> {
+impl<T: GCMethods + Copy> Heap<T> {
     pub fn new(v: T) -> Heap<T>
         where Heap<T>: Default
     {
@@ -641,7 +641,7 @@ impl<T: GCMethods<T> + Copy> Heap<T> {
     }
 }
 
-impl<T: GCMethods<T> + Copy> Clone for Heap<T>
+impl<T: GCMethods + Copy> Clone for Heap<T>
     where Heap<T>: Default
 {
     fn clone(&self) -> Self {
@@ -650,7 +650,7 @@ impl<T: GCMethods<T> + Copy> Clone for Heap<T>
 }
 
 impl<T> Default for Heap<*mut T>
-    where *mut T: GCMethods<*mut T> + Copy
+    where *mut T: GCMethods + Copy
 {
     fn default() -> Heap<*mut T> {
         Heap {
@@ -667,7 +667,7 @@ impl Default for Heap<Value> {
     }
 }
 
-impl<T: GCMethods<T> + Copy> Drop for Heap<T> {
+impl<T: GCMethods + Copy> Drop for Heap<T> {
     fn drop(&mut self) {
         unsafe {
             let ptr = self.ptr.get();
@@ -676,7 +676,7 @@ impl<T: GCMethods<T> + Copy> Drop for Heap<T> {
     }
 }
 
-impl<T: GCMethods<T> + Copy + PartialEq> PartialEq for Heap<T> {
+impl<T: GCMethods + Copy + PartialEq> PartialEq for Heap<T> {
     fn eq(&self, other: &Self) -> bool {
         self.get() == other.get()
     }

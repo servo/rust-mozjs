@@ -27,7 +27,7 @@ pub mod jsapi {
 
     #[repr(C)]
     #[derive(Debug)]
-    pub struct Heap<T: ::rust::GCMethods<T> + Copy> {
+    pub struct Heap<T: ::rust::GCMethods + Copy> {
         pub ptr: ::std::cell::UnsafeCell<T>,
     }
 
@@ -124,7 +124,7 @@ pub unsafe fn JS_CALLEE(_cx: *mut JSContext, vp: *mut JSVal) -> JSVal {
 }
 
 // This is measured properly by the heap measurement implemented in SpiderMonkey.
-impl<T: Copy + GCMethods<T>> HeapSizeOf for Heap<T> {
+impl<T: Copy + GCMethods> HeapSizeOf for Heap<T> {
     fn heap_size_of_children(&self) -> usize {
         0
     }
