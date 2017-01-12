@@ -354,17 +354,19 @@ impl<T> Rooted<T> {
     }
 
     pub unsafe fn add_to_root_stack(&mut self, cx: *mut JSContext) where T: RootKind {
-        let ctxfriend: &mut ContextFriendFields = mem::transmute(cx);
+        let ctxfriend = cx as *mut ContextFriendFields;
 
         let kind = T::rootKind() as usize;
-        self.stack = &mut ctxfriend.roots.stackRoots_[kind] as *mut _ as *mut _;
-        self.prev = ctxfriend.roots.stackRoots_[kind] as *mut _;
+        let stack = &mut (*ctxfriend).roots.stackRoots_[kind] as *mut _ as *mut _;
 
-        ctxfriend.roots.stackRoots_[kind] = self as *mut _ as usize as _;
+        self.stack = stack;
+        self.prev = *stack;
+
+        *stack = self as *mut _ as usize as _;
     }
 
     pub unsafe fn remove_from_root_stack(&mut self) {
-        assert!(*self.stack == mem::transmute(&*self));
+        assert!(*self.stack == self as *mut _ as usize as _);
         *self.stack = self.prev;
     }
 }
