@@ -17,6 +17,8 @@ name = "evaluate"
 [[test]]
 name = "panic"
 [[test]]
+name = "rooting"
+[[test]]
 name = "typedarray"
 [[test]]
 name = "stack_limit"
