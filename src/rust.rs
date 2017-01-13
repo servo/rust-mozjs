@@ -35,7 +35,7 @@ use jsapi::{NullHandleValue, Object, ObjectGroup,ReadOnlyCompileOptions, Rooted}
 use jsapi::{RootedBase, RuntimeOptionsRef, SetWarningReporter, Symbol, ToBooleanSlow};
 use jsapi::{ToInt32Slow, ToInt64Slow, ToNumberSlow, ToStringSlow, ToUint16Slow};
 use jsapi::{ToUint32Slow, ToUint64Slow, ToWindowProxyIfWindow, UndefinedHandleValue};
-use jsapi::{Value, jsid};
+use jsapi::{Value, jsid, PerThreadDataFriendFields, PerThreadDataFriendFields_RuntimeDummy};
 use jsval::{ObjectValue, UndefinedValue};
 use glue::{AppendToAutoObjectVector, CallFunctionTracer, CallIdTracer, CallObjectTracer};
 use glue::{CallScriptTracer, CallStringTracer, CallValueTracer, CreateAutoIdVector};
@@ -355,9 +355,19 @@ impl<T> Rooted<T> {
 
     pub unsafe fn add_to_root_stack(&mut self, cx: *mut JSContext) where T: RootKind {
         let ctxfriend = cx as *mut ContextFriendFields;
+        let zone = (*ctxfriend).zone_;
+        let roots: *mut _ = if !zone.is_null() {
+            &mut (*zone).stackRoots_
+        } else {
+            let rt = (*ctxfriend).runtime_;
+            let rt = rt as *mut PerThreadDataFriendFields_RuntimeDummy;
+            let main_thread = &mut (*rt).mainThread as *mut _;
+            let main_thread = main_thread as *mut PerThreadDataFriendFields;
+            &mut (*main_thread).roots.stackRoots_
+        };
 
         let kind = T::rootKind() as usize;
-        let stack = &mut (*ctxfriend).roots.stackRoots_[kind] as *mut _ as *mut _;
+        let stack = &mut (*roots)[kind] as *mut _ as *mut _;
 
         self.stack = stack;
         self.prev = *stack;
