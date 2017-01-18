@@ -823,4 +823,10 @@ JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Float64, double)
 
 #undef JS_DEFINE_DATA_AND_LENGTH_ACCESSOR
 
+bool
+IsInsideNursery(const js::gc::Cell* cell)
+{
+    return js::gc::IsInsideNursery(cell);
+}
+
 } // extern "C"

@@ -307,4 +307,5 @@ extern "C" {
                                         length: *mut u32,
                                         isSharedMemory: *mut bool,
                                         data: *mut *mut f64);
+    pub fn IsInsideNursery(cell: *const Cell) -> bool;
 }
