@@ -156,6 +156,11 @@ impl Runtime {
             let js_context = JS_GetContext(js_runtime);
             assert!(!js_context.is_null());
 
+            CONTEXT.with(|context| {
+                assert!(context.get().is_null());
+                context.set(js_context);
+            });
+
             InitSelfHostedCode(js_context);
 
             let runtimeopts = RuntimeOptionsRef(js_runtime);
@@ -166,11 +171,6 @@ impl Runtime {
             SetWarningReporter(js_runtime, Some(report_warning));
 
             JS_BeginRequest(js_context);
-
-            CONTEXT.with(|context| {
-                assert!(context.get().is_null());
-                context.set(js_context);
-            });
 
             Runtime {
                 rt: js_runtime,
@@ -224,13 +224,13 @@ impl Runtime {
 impl Drop for Runtime {
     fn drop(&mut self) {
         unsafe {
-            CONTEXT.with(|context| {
-                assert!(!context.get().is_null());
-                context.set(ptr::null_mut());
-            });
-
             JS_EndRequest(self.cx);
             JS_DestroyRuntime(self.rt);
+
+            CONTEXT.with(|context| {
+                assert_eq!(context.get(), self.cx);
+                context.set(ptr::null_mut());
+            });
         }
     }
 }
