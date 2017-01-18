@@ -10,6 +10,8 @@ use js::jsapi::JSAutoCompartment;
 use js::jsapi::JS_NewGlobalObject;
 use js::jsapi::OnNewGlobalHookOption;
 use js::jsval::UndefinedValue;
+use js::rust::AsHandle;
+use js::rust::AsHandleMut;
 use js::rust::Runtime as Runtime_;
 use js::rust::SIMPLE_GLOBAL_CLASS;
 use js::typedarray::Uint32Array;

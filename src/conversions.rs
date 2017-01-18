@@ -42,6 +42,7 @@ use rust::{ToString, maybe_wrap_object_or_null_value};
 use rust::{maybe_wrap_object_value, maybe_wrap_value};
 use libc;
 use num_traits::{Bounded, Zero};
+use rust::{AsHandle, AsHandleMut};
 use std::borrow::Cow;
 use std::rc::Rc;
 use std::{ptr, slice};

@@ -291,6 +291,7 @@ impl RootKind for Value {
 }
 
 // Creates a C string literal `$str`.
+#[macro_export]
 macro_rules! c_str {
     ($str:expr) => {
         concat!($str, "\0").as_ptr() as *const ::std::os::raw::c_char
@@ -338,6 +339,50 @@ unsafe impl Trace for Heap<Value> {
 unsafe impl Trace for Heap<jsid> {
     unsafe fn trace(&self, trc: *mut JSTracer) {
         CallIdTracer(trc, self as *const _ as *mut Self, c_str!("id"));
+    }
+}
+
+pub trait AsHandle<T> {
+    fn handle(&self) -> Handle<T>;
+
+    fn get(&self) -> T where T: Copy {
+        self.handle().get()
+    }
+}
+
+/// Given the types `$T` and `$U`, implements the trait `AsHandle<$T>` for the type `$U`, where
+/// `$U` is a newtype whose underlying type implements `AsHandle<$T>`.
+#[macro_export]
+macro_rules! derive_as_handle {
+    ($T:ty, $U:ty) => {
+        impl $crate::rust::AsHandle<$T> for $U {
+            fn handle(&self) -> $crate::jsapi::Handle<$T> {
+                self.0.handle()
+            }
+        }
+    }
+}
+
+pub trait AsHandleMut<T> : AsHandle<T> {
+    fn handle_mut(&mut self) -> MutableHandle<T>;
+
+    fn set(&mut self, v: T) where T: Copy {
+        self.handle_mut().set(v)
+    }
+}
+
+/// Given the types `$T` and `$U`, implements the trait `AsHandleMut<$T>` for the type `$U`, where
+/// `$U` is a newtype whose underlying type implements `HandleMut<$T>`.
+#[macro_export]
+macro_rules! derive_as_handle_mut {
+    ($T:ty, $U:ty) => {
+        derive_as_handle($T, $U);
+
+        impl $crate::rust::AsHandleMut<$T> for $U {
+            fn handle_mut(&self) -> $crate::jsapi::MutableHandle<$T> {
+                self.0.handle_mut()
+            }
+        }
     }
 }
 
@@ -398,26 +443,6 @@ impl<'a, T: 'a + RootKind + GCMethods> RootedGuard<'a, T> {
             root: root
         }
     }
-
-    pub fn handle(&self) -> Handle<T> {
-        unsafe {
-            Handle::from_marked_location(&self.root.ptr)
-        }
-    }
-
-    pub fn handle_mut(&mut self) -> MutableHandle<T> {
-        unsafe {
-            MutableHandle::from_marked_location(&mut self.root.ptr)
-        }
-    }
-
-    pub fn get(&self) -> T where T: Copy {
-        self.root.ptr
-    }
-
-    pub fn set(&mut self, v: T) {
-        self.root.ptr = v;
-    }
 }
 
 impl<'a, T: 'a + RootKind + GCMethods> Deref for RootedGuard<'a, T> {
@@ -438,6 +463,22 @@ impl<'a, T: 'a + RootKind + GCMethods> Drop for RootedGuard<'a, T> {
         unsafe {
             self.root.ptr = T::initial();
             self.root.remove_from_root_stack();
+        }
+    }
+}
+
+impl<'a, T> AsHandle<T> for RootedGuard<'a, T> {
+    fn handle(&self) -> Handle<T> {
+        unsafe {
+            Handle::from_marked_location(&self.root.ptr)
+        }
+    }
+}
+
+impl<'a, T> AsHandleMut<T> for RootedGuard<'a, T> {
+    fn handle_mut(&mut self) -> MutableHandle<T> {
+        unsafe {
+            MutableHandle::from_marked_location(&mut self.root.ptr)
         }
     }
 }
@@ -633,27 +674,8 @@ impl<T: GCMethods + Copy> Heap<T> {
         ptr
     }
 
-    pub fn set(&mut self, v: T) {
-        unsafe {
-            let ptr = self.ptr.get();
-            let prev = *ptr;
-            *ptr = v;
-            T::post_barrier(ptr, prev, v);
-        }
-    }
-
-    pub fn get(&self) -> T {
-        unsafe { *self.ptr.get() }
-    }
-
     pub fn get_unsafe(&self) -> *mut T {
         self.ptr.get()
-    }
-
-    pub fn handle(&self) -> Handle<T> {
-        unsafe {
-            Handle::from_marked_location(self.ptr.get() as *const _)
-        }
     }
 }
 
@@ -695,6 +717,22 @@ impl<T: GCMethods + Copy> Drop for Heap<T> {
 impl<T: GCMethods + Copy + PartialEq> PartialEq for Heap<T> {
     fn eq(&self, other: &Self) -> bool {
         self.get() == other.get()
+    }
+}
+
+impl<T: GCMethods<T> + Copy> AsHandle<T> for Heap<T> {
+    fn handle(&self) -> Handle<T> {
+        unsafe {
+            Handle::from_marked_location(self.ptr.get() as *const _)
+        }
+    }
+}
+
+impl<T: GCMethods<T> + Copy> AsHandleMut<T> for Heap<T> {
+    fn handle_mut(&mut self) -> MutableHandle<T> {
+        unsafe {
+            MutableHandle::from_marked_location(self.ptr.get() as *mut _)
+        }
     }
 }
 
