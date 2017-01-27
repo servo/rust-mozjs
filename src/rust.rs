@@ -628,12 +628,12 @@ impl<T: GCMethods + Copy> Heap<T> {
     pub fn new(v: T) -> Heap<T>
         where Heap<T>: Default
     {
-        let mut ptr = Heap::default();
+        let ptr = Heap::default();
         ptr.set(v);
         ptr
     }
 
-    pub fn set(&mut self, v: T) {
+    pub fn set(&self, v: T) {
         unsafe {
             let ptr = self.ptr.get();
             let prev = *ptr;
