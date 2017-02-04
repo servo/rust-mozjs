@@ -132,13 +132,20 @@ impl<'a, T: TypedArrayElementCreator + TypedArrayElement> TypedArray<'a, T> {
             return Err(());
         }
 
+        TypedArray::<T>::update(length, data, result);
+        
+        Ok(())
+    }
+    
+    ///  Update an existed JS typed array
+    pub unsafe fn update(length: u32,
+                         data: Option<&[T::Element]>,
+                         result: MutableHandleObject) {
         if let Some(data) = data {
             assert!(data.len() <= length as usize);
             let buf = T::get_data(result.get());
             ptr::copy_nonoverlapping(data.as_ptr(), buf, data.len());
         }
-
-        Ok(())
     }
 }
 
