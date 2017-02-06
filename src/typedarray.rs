@@ -70,6 +70,9 @@ impl<'a, T: TypedArrayElement> TypedArray<'a, T> {
                 root: &'a mut Rooted<*mut JSObject>,
                 object: *mut JSObject)
                 -> Result<Self, ()> {
+            if object == ptr::null_mut() {
+                return Err(());
+            }
         unsafe {
             let mut guard = RootedGuard::new(cx, root, object);
             let unwrapped = T::unwrap_array(*guard);
