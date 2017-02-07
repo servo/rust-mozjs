@@ -655,6 +655,12 @@ impl<T: GCMethods + Copy> Heap<T> {
             Handle::from_marked_location(self.ptr.get() as *const _)
         }
     }
+
+    pub fn handle_mut(&self) -> MutableHandle<T> {
+        unsafe {
+            MutableHandle::from_marked_location(self.ptr.get())
+        }
+    }
 }
 
 impl<T: GCMethods + Copy> Clone for Heap<T>
