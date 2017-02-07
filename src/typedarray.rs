@@ -17,6 +17,7 @@ use glue::GetUint8ArrayLengthAndData;
 use glue::GetUint8ClampedArrayLengthAndData;
 use jsapi::GetArrayBufferLengthAndData;
 use jsapi::GetArrayBufferViewLengthAndData;
+use jsapi::HandleObject;
 use jsapi::JSContext;
 use jsapi::JSObject;
 use jsapi::JS_GetArrayBufferData;
@@ -136,12 +137,23 @@ impl<'a, T: TypedArrayElementCreator + TypedArrayElement> TypedArray<'a, T> {
         }
 
         if let Some(data) = data {
-            assert!(data.len() <= length as usize);
-            let buf = T::get_data(result.get());
-            ptr::copy_nonoverlapping(data.as_ptr(), buf, data.len());
+            TypedArray::<T>::update_raw(data, result.handle());
         }
 
         Ok(())
+    }
+    
+    ///  Update an existed JS typed array
+    pub unsafe fn update(&mut self,
+                         data: &[T::Element]) {
+        TypedArray::<T>::update_raw(data, self.object.handle());
+    }
+
+    unsafe fn update_raw(data: &[T::Element],
+                         result: HandleObject) {
+        let (buf, length) = T::length_and_data(result.get());
+        assert!(data.len() <= length as usize);
+        ptr::copy_nonoverlapping(data.as_ptr(), buf, data.len());
     }
 }
 
