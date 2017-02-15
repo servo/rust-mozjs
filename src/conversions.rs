@@ -184,14 +184,6 @@ impl ToJSValConvertible for () {
     }
 }
 
-impl ToJSValConvertible for JSVal {
-    #[inline]
-    unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
-        rval.set(*self);
-        maybe_wrap_value(cx, rval);
-    }
-}
-
 impl FromJSValConvertible for JSVal {
     type Config = ();
     unsafe fn from_jsval(_cx: *mut JSContext,
@@ -199,6 +191,14 @@ impl FromJSValConvertible for JSVal {
                          _option: ())
                          -> Result<ConversionResult<JSVal>, ()> {
         Ok(ConversionResult::Success(value.get()))
+    }
+}
+
+impl ToJSValConvertible for JSVal {
+    #[inline]
+    unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
+        rval.set(*self);
+        maybe_wrap_value(cx, rval);
     }
 }
 
