@@ -9,6 +9,7 @@ use js::jsapi::CompartmentOptions;
 use js::jsapi::JSAutoCompartment;
 use js::jsapi::JS_NewGlobalObject;
 use js::jsapi::OnNewGlobalHookOption;
+use js::jsapi::Type;
 use js::jsval::UndefinedValue;
 use js::rust::Runtime as Runtime_;
 use js::rust::SIMPLE_GLOBAL_CLASS;
@@ -40,6 +41,9 @@ fn typedarray() {
         typedarray!(in(cx) let array: Uint16Array = rval.to_object());
         assert!(array.is_err());
 
+        typedarray!(in(cx) let view: ArrayBufferView = rval.to_object());
+        assert_eq!(view.unwrap().get_array_type(), Type::Uint8);
+
         rooted!(in(cx) let mut rval = ptr::null_mut());
         assert!(Uint32Array::create(cx, CreateWith::Slice(&[1, 3, 5]), rval.handle_mut()).is_ok());
 
@@ -63,6 +67,9 @@ fn typedarray() {
         typedarray!(in(cx) let mut array: Uint32Array = rval.get());
         array.as_mut().unwrap().update(&[0, 1, 2, 3]);
         assert_eq!(array.unwrap().as_slice(), &[0, 1, 2, 3, 0]);
+
+        typedarray!(in(cx) let view: ArrayBufferView = rval.get());
+        assert_eq!(view.unwrap().get_array_type(), Type::Uint32);
     }
 }
 
