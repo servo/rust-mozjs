@@ -21,6 +21,7 @@ use jsapi::HandleObject;
 use jsapi::JSContext;
 use jsapi::JSObject;
 use jsapi::JS_GetArrayBufferData;
+use jsapi::JS_GetArrayBufferViewType;
 use jsapi::JS_GetFloat32ArrayData;
 use jsapi::JS_GetFloat64ArrayData;
 use jsapi::JS_GetInt16ArrayData;
@@ -42,6 +43,7 @@ use jsapi::JS_NewUint8Array;
 use jsapi::JS_NewUint8ClampedArray;
 use jsapi::MutableHandleObject;
 use jsapi::Rooted;
+use jsapi::Type;
 use jsapi::UnwrapArrayBuffer;
 use jsapi::UnwrapArrayBufferView;
 use jsapi::UnwrapFloat32Array;
@@ -316,6 +318,12 @@ pub type Float64Array<'a> = TypedArray<'a, Float64>;
 pub type ArrayBuffer<'a> = TypedArray<'a, ArrayBufferU8>;
 /// The ArrayBufferView type
 pub type ArrayBufferView<'a> = TypedArray<'a, ArrayBufferViewU8>;
+
+impl<'a> ArrayBufferView<'a> {
+    pub fn get_array_type(&self) -> Type {
+        unsafe { JS_GetArrayBufferViewType(self.object.get()) }
+    }
+}
 
 #[macro_export]
 macro_rules! typedarray {
