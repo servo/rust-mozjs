@@ -31,7 +31,7 @@ use core::nonzero::NonZero;
 use error::throw_type_error;
 use glue::RUST_JS_NumberValue;
 use jsapi::{ForOfIterator, ForOfIterator_NonIterableBehavior, HandleValue};
-use jsapi::{JS_DefineElement, JS_GetLatin1StringCharsAndLength};
+use jsapi::{Heap, JS_DefineElement, JS_GetLatin1StringCharsAndLength};
 use jsapi::{JS_GetTwoByteStringCharsAndLength, JS_NewArrayObject1};
 use jsapi::{JS_NewUCStringCopyN, JSPROP_ENUMERATE, JS_StringHasLatin1Chars};
 use jsapi::{JSContext, JSObject, JSString, MutableHandleValue, RootedObject};
@@ -184,14 +184,6 @@ impl ToJSValConvertible for () {
     }
 }
 
-impl ToJSValConvertible for JSVal {
-    #[inline]
-    unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
-        rval.set(*self);
-        maybe_wrap_value(cx, rval);
-    }
-}
-
 impl FromJSValConvertible for JSVal {
     type Config = ();
     unsafe fn from_jsval(_cx: *mut JSContext,
@@ -202,7 +194,33 @@ impl FromJSValConvertible for JSVal {
     }
 }
 
+impl FromJSValConvertible for Heap<JSVal> {
+    type Config = ();
+    unsafe fn from_jsval(_cx: *mut JSContext,
+                         value: HandleValue,
+                         _option: ())
+                         -> Result<ConversionResult<Self>, ()> {
+        Ok(ConversionResult::Success(Heap::new(value.get())))
+    }
+}
+
+impl ToJSValConvertible for JSVal {
+    #[inline]
+    unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
+        rval.set(*self);
+        maybe_wrap_value(cx, rval);
+    }
+}
+
 impl ToJSValConvertible for HandleValue {
+    #[inline]
+    unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
+        rval.set(self.get());
+        maybe_wrap_value(cx, rval);
+    }
+}
+
+impl ToJSValConvertible for Heap<JSVal> {
     #[inline]
     unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
         rval.set(self.get());
@@ -628,5 +646,14 @@ impl ToJSValConvertible for NonZero<*mut JSObject> {
     unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
         rval.set(ObjectValue(**self));
         maybe_wrap_object_value(cx, rval);
+    }
+}
+
+// https://heycam.github.io/webidl/#es-object
+impl ToJSValConvertible for Heap<*mut JSObject> {
+    #[inline]
+    unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
+        rval.set(ObjectOrNullValue(self.get()));
+        maybe_wrap_object_or_null_value(cx, rval);
     }
 }
