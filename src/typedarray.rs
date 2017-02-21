@@ -18,8 +18,8 @@ use glue::GetUint8ClampedArrayLengthAndData;
 use jsapi::GetArrayBufferLengthAndData;
 use jsapi::GetArrayBufferViewLengthAndData;
 use jsapi::HandleObject;
+use jsapi::Heap;
 use jsapi::JSContext;
-use jsapi::JSObject;
 use jsapi::JS_GetArrayBufferData;
 use jsapi::JS_GetArrayBufferViewType;
 use jsapi::JS_GetFloat32ArrayData;
@@ -41,8 +41,8 @@ use jsapi::JS_NewUint16Array;
 use jsapi::JS_NewUint32Array;
 use jsapi::JS_NewUint8Array;
 use jsapi::JS_NewUint8ClampedArray;
+use jsapi::JSObject;
 use jsapi::MutableHandleObject;
-use jsapi::Rooted;
 use jsapi::Type;
 use jsapi::UnwrapArrayBuffer;
 use jsapi::UnwrapArrayBufferView;
@@ -55,7 +55,6 @@ use jsapi::UnwrapUint16Array;
 use jsapi::UnwrapUint32Array;
 use jsapi::UnwrapUint8Array;
 use jsapi::UnwrapUint8ClampedArray;
-use rust::RootedGuard;
 use std::ptr;
 use std::slice;
 
@@ -65,32 +64,33 @@ pub enum CreateWith<'a, T: 'a> {
 }
 
 /// A rooted typed array.
-pub struct TypedArray<'a, T: 'a + TypedArrayElement> {
-    object: RootedGuard<'a, *mut JSObject>,
+pub struct TypedArray<T: TypedArrayElement> {
+    object: Box<Heap<*mut JSObject>>,
     computed: Option<(*mut T::Element, u32)>,
 }
 
-impl<'a, T: TypedArrayElement> TypedArray<'a, T> {
+impl<T: TypedArrayElement> TypedArray<T> {
     /// Create a typed array representation that wraps an existing JS reflector.
     /// This operation will fail if attempted on a JS object that does not match
     /// the expected typed array details.
     pub fn from(cx: *mut JSContext,
-                root: &'a mut Rooted<*mut JSObject>,
                 object: *mut JSObject)
                 -> Result<Self, ()> {
+        rooted!(in (cx) let object = object);
         if object.is_null() {
             return Err(());
         }
         unsafe {
-            let mut guard = RootedGuard::new(cx, root, object);
-            let unwrapped = T::unwrap_array(*guard);
+            let unwrapped = T::unwrap_array(object.get());
             if unwrapped.is_null() {
                 return Err(());
             }
 
-            *guard = unwrapped;
+            let array = Box::new(Heap::new(ptr::null_mut()));
+            array.set(unwrapped);
+
             Ok(TypedArray {
-                object: guard,
+                object: array,
                 computed: None,
             })
         }
@@ -101,7 +101,7 @@ impl<'a, T: TypedArrayElement> TypedArray<'a, T> {
             return data;
         }
 
-        let data = unsafe { T::length_and_data(*self.object) };
+        let data = unsafe { T::length_and_data(self.object.get()) };
         self.computed = Some(data);
         data
     }
@@ -126,9 +126,13 @@ impl<'a, T: TypedArrayElement> TypedArray<'a, T> {
         let (pointer, length) = self.data();
         slice::from_raw_parts_mut(pointer, length as usize)
     }
+
+    pub fn object(&self) -> &Heap<*mut JSObject> {
+        &self.object
+    }
 }
 
-impl<'a, T: TypedArrayElementCreator + TypedArrayElement> TypedArray<'a, T> {
+impl<T: TypedArrayElementCreator + TypedArrayElement> TypedArray<T> {
     /// Create a new JS typed array, optionally providing initial data that will
     /// be copied into the newly-allocated buffer. Returns the new JS reflector.
     pub unsafe fn create(cx: *mut JSContext,
@@ -297,29 +301,29 @@ typed_array_element!(ArrayBufferViewU8,
                      GetArrayBufferViewLengthAndData);
 
 /// The Uint8ClampedArray type.
-pub type Uint8ClampedArray<'a> = TypedArray<'a, ClampedU8>;
+pub type Uint8ClampedArray = TypedArray<ClampedU8>;
 /// The Uint8Array type.
-pub type Uint8Array<'a> = TypedArray<'a, Uint8>;
+pub type Uint8Array = TypedArray<Uint8>;
 /// The Int8Array type.
-pub type Int8Array<'a> = TypedArray<'a, Int8>;
+pub type Int8Array = TypedArray<Int8>;
 /// The Uint16Array type.
-pub type Uint16Array<'a> = TypedArray<'a, Uint16>;
+pub type Uint16Array = TypedArray<Uint16>;
 /// The Int16Array type.
-pub type Int16Array<'a> = TypedArray<'a, Int16>;
+pub type Int16Array = TypedArray<Int16>;
 /// The Uint32Array type.
-pub type Uint32Array<'a> = TypedArray<'a, Uint32>;
+pub type Uint32Array = TypedArray<Uint32>;
 /// The Int32Array type.
-pub type Int32Array<'a> = TypedArray<'a, Int32>;
+pub type Int32Array = TypedArray<Int32>;
 /// The Float32Array type.
-pub type Float32Array<'a> = TypedArray<'a, Float32>;
+pub type Float32Array = TypedArray<Float32>;
 /// The Float64Array type.
-pub type Float64Array<'a> = TypedArray<'a, Float64>;
+pub type Float64Array = TypedArray<Float64>;
 /// The ArrayBuffer type.
-pub type ArrayBuffer<'a> = TypedArray<'a, ArrayBufferU8>;
+pub type ArrayBuffer = TypedArray<ArrayBufferU8>;
 /// The ArrayBufferView type
-pub type ArrayBufferView<'a> = TypedArray<'a, ArrayBufferViewU8>;
+pub type ArrayBufferView = TypedArray<ArrayBufferViewU8>;
 
-impl<'a> ArrayBufferView<'a> {
+impl ArrayBufferView {
     pub fn get_array_type(&self) -> Type {
         unsafe { JS_GetArrayBufferViewType(self.object.get()) }
     }
