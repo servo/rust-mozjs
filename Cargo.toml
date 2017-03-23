@@ -1,9 +1,9 @@
 [package]
-
 name = "js"
 version = "0.1.4"
 authors = ["The Servo Project Developers"]
 build = "build.rs"
+license = "MPL-2.0"
 
 [build-dependencies]
 cmake = "0.1"
