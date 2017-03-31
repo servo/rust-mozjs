@@ -21,7 +21,7 @@ use std::ptr;
 #[test]
 fn runtime() {
     unsafe {
-        let runtime = Runtime::new();
+        let runtime = Runtime::new().unwrap();
 
         let cx = runtime.cx();
         let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
@@ -35,6 +35,8 @@ fn runtime() {
         let _ac = JSAutoCompartment::new(cx, global.get());
         rooted!(in(cx) let _object = JS_NewObject(cx, &CLASS as *const _));
     }
+
+    assert!(Runtime::new().is_err());
 }
 
 unsafe extern fn finalize(_fop: *mut JSFreeOp, _object: *mut JSObject) {

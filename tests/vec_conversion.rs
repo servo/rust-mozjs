@@ -21,7 +21,7 @@ use std::ptr;
 
 #[test]
 fn vec_conversion() {
-    let rt = Runtime::new();
+    let rt = Runtime::new().unwrap();
     let cx = rt.cx();
 
     let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;

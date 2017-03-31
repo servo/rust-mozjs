@@ -16,13 +16,14 @@ use std::default::Default;
 use std::ops::{Deref, DerefMut};
 use std::cell::{Cell, UnsafeCell};
 use std::marker::PhantomData;
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use consts::{JSCLASS_RESERVED_SLOTS_MASK, JSCLASS_GLOBAL_SLOT_COUNT};
 use consts::{JSCLASS_IS_DOMJSCLASS, JSCLASS_IS_GLOBAL};
 use jsapi;
 use jsapi::{AutoIdVector, AutoObjectVector, CallArgs, CompartmentOptions, ContextFriendFields};
 use jsapi::{Evaluate2, Handle, HandleBase, HandleObject, HandleValue, HandleValueArray, Heap};
 use jsapi::{HeapObjectPostBarrier, HeapValuePostBarrier, InitSelfHostedCode, IsWindowSlow, JS_BeginRequest};
-use jsapi::{JS_DefineFunctions, JS_DefineProperties, JS_DestroyRuntime, JS_EndRequest};
+use jsapi::{JS_DefineFunctions, JS_DefineProperties, JS_DestroyRuntime, JS_EndRequest, JS_ShutDown};
 use jsapi::{JS_EnterCompartment, JS_EnumerateStandardClasses, JS_GetContext, JS_GlobalObjectTraceHook};
 use jsapi::{JS_Init, JS_LeaveCompartment, JS_MayResolveStandardClass, JS_NewRuntime, JS_ResolveStandardClass};
 use jsapi::{JS_SetGCParameter, JS_SetNativeStackQuota, JS_WrapValue, JSAutoCompartment};
@@ -98,6 +99,11 @@ impl ToResult for bool {
 
 thread_local!(static CONTEXT: Cell<*mut JSContext> = Cell::new(ptr::null_mut()));
 
+lazy_static! {
+    static ref OUTSTANDING_RUNTIMES: AtomicUsize = AtomicUsize::new(0);
+    static ref SHUT_DOWN: AtomicBool = AtomicBool::new(false);
+}
+
 /// A wrapper for the `JSRuntime` and `JSContext` structures in SpiderMonkey.
 pub struct Runtime {
     rt: *mut JSRuntime,
@@ -115,7 +121,13 @@ impl Runtime {
     }
 
     /// Creates a new `JSRuntime` and `JSContext`.
-    pub fn new() -> Runtime {
+    pub fn new() -> Result<Runtime, ()> {
+        if SHUT_DOWN.load(Ordering::SeqCst) {
+            return Err(());
+        }
+
+        OUTSTANDING_RUNTIMES.fetch_add(1, Ordering::SeqCst);
+
         unsafe {
             struct TopRuntime(*mut JSRuntime);
             unsafe impl Sync for TopRuntime {}
@@ -172,10 +184,10 @@ impl Runtime {
 
             JS_BeginRequest(js_context);
 
-            Runtime {
+            Ok(Runtime {
                 rt: js_runtime,
                 cx: js_context,
-            }
+            })
         }
     }
 
@@ -231,6 +243,11 @@ impl Drop for Runtime {
                 assert_eq!(context.get(), self.cx);
                 context.set(ptr::null_mut());
             });
+
+            if OUTSTANDING_RUNTIMES.fetch_sub(1, Ordering::SeqCst) == 1 {
+                SHUT_DOWN.store(true, Ordering::SeqCst);
+                JS_ShutDown();
+            }
         }
     }
 }
