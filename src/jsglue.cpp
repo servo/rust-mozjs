@@ -18,7 +18,7 @@
 #include "js/Class.h"
 #include "jswrapper.h"
 #include "js/MemoryMetrics.h"
-
+#include "js/Principals.h"
 #include "assert.h"
 
 struct ProxyTraps {
@@ -332,6 +332,30 @@ class WrapperProxyHandler : public js::Wrapper
     }
 };
 
+//http://searchfox.org/mozilla-central/source/js/public/Principals.h#24
+class ServoJSPrincipal : public JSPrincipals
+{
+    const void* origin; //box with origin in it
+  public:
+    ServoJSPrincipal(const void* origin)
+    : JSPrincipals() {
+      this->origin = origin;
+    }
+
+    virtual const void* getOrigin() {
+      return origin;
+    }
+
+    virtual void destroy() {
+      //TODO
+    }
+
+    virtual bool write(JSContext* cx, JSStructuredCloneWriter* writer) {
+      //TODO
+      return false;
+    }
+};
+
 class ForwardingProxyHandler : public js::BaseProxyHandler
 {
     ProxyTraps mTraps;
@@ -406,6 +430,16 @@ class ForwardingProxyHandler : public js::BaseProxyHandler
 };
 
 extern "C" {
+
+JSPrincipals *
+CreateServoJSPrincipal(const void* origin){
+  return new ServoJSPrincipal(origin);
+}
+
+const void*
+getPrincipalOrigin(JSPrincipals* principal) {
+  return static_cast<ServoJSPrincipal*>(principal)->getOrigin();
+}
 
 bool
 InvokeGetOwnPropertyDescriptor(
@@ -488,6 +522,12 @@ const void*
 GetCrossCompartmentWrapper()
 {
     return &js::CrossCompartmentWrapper::singleton;
+}
+
+const void*
+GetSecurityWrapper()
+{
+  return &js::CrossCompartmentSecurityWrapper::singleton;
 }
 
 JS::ReadOnlyCompileOptions*
