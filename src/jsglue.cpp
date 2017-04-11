@@ -18,7 +18,7 @@
 #include "js/Class.h"
 #include "jswrapper.h"
 #include "js/MemoryMetrics.h"
-
+#include "js/Principals.h"
 #include "assert.h"
 
 struct ProxyTraps {
@@ -332,6 +332,35 @@ class WrapperProxyHandler : public js::Wrapper
     }
 };
 
+class ServoJSPrincipal : public JSPrincipals
+{
+    const void* origin; //box with origin in it
+    void (*destroyCallback)(JSPrincipals *principal);
+    bool (*writeCallback)(JSContext* cx, JSStructuredCloneWriter* writer);
+
+  public:
+    ServoJSPrincipal(const void* origin, 
+                     void (*destroy)(JSPrincipals *principal),
+                     bool (*write)(JSContext* cx, JSStructuredCloneWriter* writer))
+    : JSPrincipals() {
+      this->origin = origin;
+      this->destroyCallback = destroy;
+      this->writeCallback = write;
+    }
+
+    virtual const void* getOrigin() {
+      return origin;
+    }
+
+    virtual void destroy() {
+      this->destroyCallback(this);
+    }
+
+    bool write(JSContext* cx, JSStructuredCloneWriter* writer) {
+      return this->writeCallback(cx, writer);
+    }
+};
+
 class ForwardingProxyHandler : public js::BaseProxyHandler
 {
     ProxyTraps mTraps;
@@ -406,6 +435,18 @@ class ForwardingProxyHandler : public js::BaseProxyHandler
 };
 
 extern "C" {
+
+JSPrincipals*
+CreateServoJSPrincipal(const void* origin,
+                       void (*destroy)(JSPrincipals *principal),
+                       bool (*write)(JSContext* cx, JSStructuredCloneWriter *writer)){
+  return new ServoJSPrincipal(origin, destroy, write);
+}
+
+const void*
+GetPrincipalOrigin(JSPrincipals* principal) {
+  return static_cast<ServoJSPrincipal*>(principal)->getOrigin();
+}
 
 bool
 InvokeGetOwnPropertyDescriptor(
@@ -488,6 +529,12 @@ const void*
 GetCrossCompartmentWrapper()
 {
     return &js::CrossCompartmentWrapper::singleton;
+}
+
+const void*
+GetSecurityWrapper()
+{
+  return &js::CrossCompartmentSecurityWrapper::singleton;
 }
 
 JS::ReadOnlyCompileOptions*
