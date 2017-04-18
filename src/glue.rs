@@ -203,8 +203,8 @@ extern "C" {
     pub fn CreateWrapperProxyHandler(aTraps: *const ProxyTraps)
      -> *const ::libc::c_void;
     pub fn CreateServoJSPrincipal(origin: *const ::libc::c_void,
-                                  destroy: *const ::libc::c_void,
-                                  write: bool)
+                                  destroy: Option<*const ::libc::c_void>,
+                                  write: Option<bool>)
      -> *mut JSPrincipals;
     pub fn GetPrincipalOrigin(principal: *const JSPrincipals)
      -> *const ::libc::c_void;
