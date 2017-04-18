@@ -30,6 +30,7 @@
 use core::nonzero::NonZero;
 use error::throw_type_error;
 use glue::RUST_JS_NumberValue;
+use jsapi::AssertSameCompartment;
 use jsapi::{ForOfIterator, ForOfIterator_NonIterableBehavior, HandleValue};
 use jsapi::{Heap, JS_DefineElement, JS_GetLatin1StringCharsAndLength};
 use jsapi::{JS_GetTwoByteStringCharsAndLength, JS_NewArrayObject1};
@@ -181,6 +182,20 @@ impl ToJSValConvertible for () {
     #[inline]
     unsafe fn to_jsval(&self, _cx: *mut JSContext, rval: MutableHandleValue) {
         rval.set(UndefinedValue());
+    }
+}
+
+impl FromJSValConvertible for HandleValue {
+    type Config = ();
+    #[inline]
+    unsafe fn from_jsval(cx: *mut JSContext,
+                         value: HandleValue,
+                         _option: ())
+                         -> Result<ConversionResult<HandleValue>, ()> {
+        if value.is_object() {
+            AssertSameCompartment(cx, value.to_object());
+        }
+        Ok(ConversionResult::Success(value))
     }
 }
 
