@@ -20,9 +20,6 @@ script:
   - CCACHE=$(which ccache) cargo test --verbose $FEATURES
   - ccache -s
 
-branches:
-  except:
-    - master
 notifications:
   webhooks: http://build.servo.org:54856/travis
 
