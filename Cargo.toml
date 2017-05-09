@@ -1,5 +1,5 @@
 [package]
-name = "js"
+name = "js2"
 version = "0.1.4"
 authors = ["The Servo Project Developers"]
 build = "build.rs"
