@@ -38,7 +38,7 @@ if not (os.path.isfile(bindgen) and os.access(bindgen, os.X_OK)):
 
 clang_lib_path = os.path.abspath(clang_lib_path)
 if not os.path.isdir(clang_lib_path):
-    print("error: {} is not a directory".format(bindgen))
+    print("error: {} is not a directory".format(clang_lib_path))
 
 # Go to the root of our repo.
 os.chdir(os.path.dirname(sys.argv[0]))
@@ -60,6 +60,7 @@ def run(cmd, **kwargs):
 # Set up the environment needed to run bindgen.
 bindgen_env = os.environ.copy()
 bindgen_env["LIBCLANG_PATH"] = clang_lib_path
+bindgen_env["BINDGEN"] = bindgen
 if platform.startswith("macos"):
     bindgen_env["DYLD_LIBRARY_PATH"] = clang_lib_path
 else:
