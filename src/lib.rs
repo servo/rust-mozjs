@@ -38,12 +38,12 @@ pub mod jsapi {
     #[cfg(target_env = "msvc")]
     pub type char16_t = ::std::os::raw::c_ushort;
 
-    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[cfg(any(target_os = "linux", target_os = "android", target_os = "freebsd"))]
     #[cfg(target_pointer_width = "64")]
     #[cfg(not(feature = "debugmozjs"))]
     include!("jsapi_linux_64.rs");
 
-    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[cfg(any(target_os = "linux", target_os = "android", target_os = "freebsd"))]
     #[cfg(target_pointer_width = "64")]
     #[cfg(feature = "debugmozjs")]
     include!("jsapi_linux_64_debug.rs");
@@ -82,12 +82,12 @@ pub mod jsapi {
     #[cfg(feature = "debugmozjs")]
     include!("jsapi_windows_msvc14_64_debug.rs");
 
-    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[cfg(any(target_os = "linux", target_os = "android", target_os = "freebsd"))]
     #[cfg(target_pointer_width = "32")]
     #[cfg(not(feature = "debugmozjs"))]
     include!("jsapi_linux_32.rs");
 
-    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[cfg(any(target_os = "linux", target_os = "android", target_os = "freebsd"))]
     #[cfg(target_pointer_width = "32")]
     #[cfg(feature = "debugmozjs")]
     include!("jsapi_linux_32_debug.rs");

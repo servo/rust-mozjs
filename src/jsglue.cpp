@@ -778,6 +778,8 @@ DeleteAutoObjectVector(JS::AutoObjectVector* v)
  #include <malloc.h>
 #elif defined(__APPLE__)
  #include <malloc/malloc.h>
+#elif defined(__FreeBSD__)
+ #include <malloc_np.h>
 #elif defined(__MINGW32__) || defined(__MINGW64__)
  // nothing needed here
 #elif defined(_MSC_VER)
@@ -789,7 +791,7 @@ DeleteAutoObjectVector(JS::AutoObjectVector* v)
 // SpiderMonkey-in-Rust currently uses system malloc, not jemalloc.
 static size_t MallocSizeOf(const void* aPtr)
 {
-#if defined(__linux__)
+#if defined(__linux__) || defined(__FreeBSD__)
     return malloc_usable_size((void*)aPtr);
 #elif defined(__APPLE__)
     return malloc_size((void*)aPtr);
