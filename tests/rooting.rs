@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #![feature(const_fn)]
+#![feature(const_ptr_null)]
 #![cfg(feature = "debugmozjs")]
 
 #[macro_use]
