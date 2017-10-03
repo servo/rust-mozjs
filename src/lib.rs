@@ -5,7 +5,6 @@
 #![crate_name = "js"]
 #![crate_type = "rlib"]
 
-#![feature(link_args)]
 #![feature(nonzero)]
 #![feature(const_fn)]
 
