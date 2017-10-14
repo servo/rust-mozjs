@@ -1237,3 +1237,31 @@ pub unsafe fn maybe_wrap_value(cx: *mut JSContext, rval: MutableHandleValue) {
         maybe_wrap_object_value(cx, rval);
     }
 }
+
+/// Like `JSJitInfo::new_bitfield_1`, but usable in `const` contexts.
+#[macro_export]
+macro_rules! new_jsjitinfo_bitfield_1 {
+    (
+        $type_: expr,
+        $aliasSet_: expr,
+        $returnType_: expr,
+        $isInfallible: expr,
+        $isMovable: expr,
+        $isEliminatable: expr,
+        $isAlwaysInSlot: expr,
+        $isLazilyCachedInSlot: expr,
+        $isTypedMethod: expr,
+        $slotIndex: expr,
+    ) => {
+        0 | (($type_ as u32) << 0u32) |
+            (($aliasSet_ as u32) << 4u32) |
+            (($returnType_ as u32) << 8u32) |
+            (($isInfallible as u32) << 16u32) |
+            (($isMovable as u32) << 17u32) |
+            (($isEliminatable as u32) << 18u32) |
+            (($isAlwaysInSlot as u32) << 19u32) |
+            (($isLazilyCachedInSlot as u32) << 20u32) |
+            (($isTypedMethod as u32) << 21u32) |
+            (($slotIndex as u32) << 22u32)
+    }
+}
