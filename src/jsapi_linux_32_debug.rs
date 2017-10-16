@@ -2984,7 +2984,7 @@ impl RuntimeOptions {
         self._bitfield_1 &= !(128usize as u8);
         self._bitfield_1 |= ((val as u8) << 7usize) & (128usize as u8);
     }
-    pub const fn new_bitfield_1(baseline_: bool, ion_: bool, asmJS_: bool,
+    pub fn new_bitfield_1(baseline_: bool, ion_: bool, asmJS_: bool,
                                 wasm_: bool, wasmAlwaysBaseline_: bool,
                                 throwOnAsmJSValidationFailure_: bool,
                                 nativeRegExp_: bool, unboxedArrays_: bool)
@@ -3049,7 +3049,7 @@ impl RuntimeOptions {
         self._bitfield_2 &= !(32usize as u8);
         self._bitfield_2 |= ((val as u8) << 5usize) & (32usize as u8);
     }
-    pub const fn new_bitfield_2(asyncStack_: bool,
+    pub fn new_bitfield_2(asyncStack_: bool,
                                 throwOnDebuggeeWouldRun_: bool,
                                 dumpStackOnDebuggeeWouldRun_: bool,
                                 werror_: bool, strictMode_: bool,
@@ -5275,7 +5275,7 @@ impl JSJitInfo {
         self._bitfield_1 |=
             ((val as u32) << 22usize) & (4290772992usize as u32);
     }
-    pub const fn new_bitfield_1(type_: u8, aliasSet_: u8, returnType_: u8,
+    pub fn new_bitfield_1(type_: u8, aliasSet_: u8, returnType_: u8,
                                 isInfallible: bool, isMovable: bool,
                                 isEliminatable: bool, isAlwaysInSlot: bool,
                                 isLazilyCachedInSlot: bool,

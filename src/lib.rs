@@ -5,12 +5,8 @@
 #![crate_name = "js"]
 #![crate_type = "rlib"]
 
-#![feature(nonzero)]
-#![feature(const_fn)]
-
 #![allow(non_upper_case_globals, non_camel_case_types, non_snake_case, improper_ctypes)]
 
-extern crate core;
 #[macro_use]
 extern crate heapsize;
 #[macro_use]
