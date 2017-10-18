@@ -8,8 +8,6 @@
 #![allow(non_upper_case_globals, non_camel_case_types, non_snake_case, improper_ctypes)]
 
 #[macro_use]
-extern crate heapsize;
-#[macro_use]
 extern crate lazy_static;
 extern crate libc;
 #[macro_use]
@@ -103,7 +101,6 @@ pub mod typedarray;
 
 pub use consts::*;
 
-use heapsize::HeapSizeOf;
 use jsapi::{JSContext, Heap};
 use jsval::JSVal;
 use rust::GCMethods;
@@ -117,14 +114,6 @@ pub unsafe fn JS_ARGV(_cx: *mut JSContext, vp: *mut JSVal) -> *mut JSVal {
 pub unsafe fn JS_CALLEE(_cx: *mut JSContext, vp: *mut JSVal) -> JSVal {
     *vp
 }
-
-// This is measured properly by the heap measurement implemented in SpiderMonkey.
-impl<T: Copy + GCMethods> HeapSizeOf for Heap<T> {
-    fn heap_size_of_children(&self) -> usize {
-        0
-    }
-}
-known_heap_size!(0, JSVal);
 
 impl jsapi::ObjectOpResult {
     /// Set this ObjectOpResult to true and return true.
