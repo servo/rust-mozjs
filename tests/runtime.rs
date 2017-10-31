@@ -3,19 +3,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #[macro_use]
-extern crate js;
+extern crate mozjs;
 extern crate libc;
 
-use js::jsapi::CompartmentOptions;
-use js::jsapi::JSAutoCompartment;
-use js::jsapi::JSClass;
-use js::jsapi::JSClassOps;
-use js::jsapi::JSFreeOp;
-use js::jsapi::JS_NewGlobalObject;
-use js::jsapi::JS_NewObject;
-use js::jsapi::JSObject;
-use js::jsapi::OnNewGlobalHookOption;
-use js::rust::{Runtime, SIMPLE_GLOBAL_CLASS};
+use mozjs::jsapi::CompartmentOptions;
+use mozjs::jsapi::JSAutoCompartment;
+use mozjs::jsapi::JSClass;
+use mozjs::jsapi::JSClassOps;
+use mozjs::jsapi::JSFreeOp;
+use mozjs::jsapi::JS_NewGlobalObject;
+use mozjs::jsapi::JS_NewObject;
+use mozjs::jsapi::JSObject;
+use mozjs::jsapi::OnNewGlobalHookOption;
+use mozjs::rust::{Runtime, SIMPLE_GLOBAL_CLASS};
 use std::ptr;
 
 #[test]
