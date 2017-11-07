@@ -3,21 +3,21 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #[macro_use]
-extern crate js;
+extern crate mozjs;
 extern crate libc;
 
-use js::jsapi::CallArgs;
-use js::jsapi::CompartmentOptions;
-use js::jsapi::JSAutoCompartment;
-use js::jsapi::JSContext;
-use js::jsapi::JS_DefineFunction;
-use js::jsapi::JS_EncodeStringToUTF8;
-use js::jsapi::JS_NewGlobalObject;
-use js::jsapi::JS_ReportError;
-use js::jsapi::OnNewGlobalHookOption;
-use js::jsapi::Value;
-use js::jsval::UndefinedValue;
-use js::rust::{Runtime, SIMPLE_GLOBAL_CLASS};
+use mozjs::jsapi::CallArgs;
+use mozjs::jsapi::CompartmentOptions;
+use mozjs::jsapi::JSAutoCompartment;
+use mozjs::jsapi::JSContext;
+use mozjs::jsapi::JS_DefineFunction;
+use mozjs::jsapi::JS_EncodeStringToUTF8;
+use mozjs::jsapi::JS_NewGlobalObject;
+use mozjs::jsapi::JS_ReportError;
+use mozjs::jsapi::OnNewGlobalHookOption;
+use mozjs::jsapi::Value;
+use mozjs::jsval::UndefinedValue;
+use mozjs::rust::{Runtime, SIMPLE_GLOBAL_CLASS};
 
 use std::ffi::CStr;
 use std::ptr;
@@ -53,7 +53,7 @@ unsafe extern "C" fn puts(context: *mut JSContext, argc: u32, vp: *mut Value) ->
     }
 
     let arg = args.get(0);
-    let js = js::rust::ToString(context, arg);
+    let js = mozjs::rust::ToString(context, arg);
     rooted!(in(context) let message_root = js);
     let message = JS_EncodeStringToUTF8(context, message_root.handle());
     let message = CStr::from_ptr(message);

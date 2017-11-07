@@ -7,23 +7,23 @@
 #![cfg(feature = "debugmozjs")]
 
 #[macro_use]
-extern crate js;
+extern crate mozjs;
 extern crate libc;
 
-use js::jsapi::CompartmentOptions;
-use js::jsapi::JSAutoCompartment;
-use js::jsapi::JSClass;
-use js::jsapi::JSContext;
-use js::jsapi::JSFunctionSpec;
-use js::jsapi::JS_GetObjectPrototype;
-use js::jsapi::JSNativeWrapper;
-use js::jsapi::JS_NewGlobalObject;
-use js::jsapi::JS_NewObjectWithUniqueType;
-use js::jsapi::JSPROP_ENUMERATE;
-use js::jsapi::JS_SetGCZeal;
-use js::jsapi::OnNewGlobalHookOption;
-use js::jsapi::Value;
-use js::rust::{Runtime, SIMPLE_GLOBAL_CLASS, define_methods};
+use mozjs::jsapi::CompartmentOptions;
+use mozjs::jsapi::JSAutoCompartment;
+use mozjs::jsapi::JSClass;
+use mozjs::jsapi::JSContext;
+use mozjs::jsapi::JSFunctionSpec;
+use mozjs::jsapi::JS_GetObjectPrototype;
+use mozjs::jsapi::JSNativeWrapper;
+use mozjs::jsapi::JS_NewGlobalObject;
+use mozjs::jsapi::JS_NewObjectWithUniqueType;
+use mozjs::jsapi::JSPROP_ENUMERATE;
+use mozjs::jsapi::JS_SetGCZeal;
+use mozjs::jsapi::OnNewGlobalHookOption;
+use mozjs::jsapi::Value;
+use mozjs::rust::{Runtime, SIMPLE_GLOBAL_CLASS, define_methods};
 use std::ptr;
 
 #[test]
