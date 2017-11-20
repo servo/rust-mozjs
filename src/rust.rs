@@ -480,14 +480,14 @@ impl AutoGCRooter {
             (*ctxfriend).roots.autoGCRooters_
         };
         self.down = autoGCRooters;
-        self.stackTop = &mut autoGCRooters as *mut _ as *mut _;
+        self.stackTop = &mut autoGCRooters;
 
-        assert!(*self.stackTop != self as *mut _ as usize as _);
-        *self.stackTop = self as *mut _ as usize as _;
+        assert!(*self.stackTop != self);
+        *self.stackTop = self;
     }
 
     pub unsafe fn remove_from_root_stack(&mut self) {
-        assert!(*self.stackTop == self as *mut _ as usize as _);
+        assert!(*self.stackTop == self);
         *self.stackTop = self.down;
     }
 }
