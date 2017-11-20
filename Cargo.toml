@@ -25,6 +25,8 @@ name = "runtime"
 [[test]]
 name = "typedarray"
 [[test]]
+name = "sequence_rooter"
+[[test]]
 name = "stack_limit"
 [[test]]
 name = "vec_conversion"
