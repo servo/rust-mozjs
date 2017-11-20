@@ -475,12 +475,12 @@ impl AutoGCRooter {
     }
 
     pub unsafe fn add_to_root_stack(&mut self, cx: *mut JSContext) {
-        let mut autoGCRooters = {
+        let autoGCRooters: &mut _ = {
             let ctxfriend = cx as *mut ContextFriendFields;
-            (*ctxfriend).roots.autoGCRooters_
+            &mut (*ctxfriend).roots.autoGCRooters_
         };
-        self.down = autoGCRooters;
-        self.stackTop = &mut autoGCRooters;
+        self.stackTop = autoGCRooters;
+        self.down = *autoGCRooters;
 
         assert!(*self.stackTop != self);
         *self.stackTop = self;
