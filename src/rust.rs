@@ -36,6 +36,7 @@ use jsapi::{RootedBase, RuntimeOptionsRef, SetWarningReporter, Symbol, ToBoolean
 use jsapi::{ToInt32Slow, ToInt64Slow, ToNumberSlow, ToStringSlow, ToUint16Slow};
 use jsapi::{ToUint32Slow, ToUint64Slow, ToWindowProxyIfWindow, UndefinedHandleValue};
 use jsapi::{Value, jsid, PerThreadDataFriendFields, PerThreadDataFriendFields_RuntimeDummy};
+use jsapi::{CaptureCurrentStack, BuildStackString, JS_NewStringCopyZ, JS_EncodeStringToUTF8, JS_free, JS_NewPlainObject};
 use jsval::{ObjectValue, UndefinedValue};
 use glue::{AppendToAutoObjectVector, CallFunctionTracer, CallIdTracer, CallObjectTracer};
 use glue::{CallScriptTracer, CallStringTracer, CallValueTracer, CreateAutoIdVector};
@@ -1255,5 +1256,57 @@ macro_rules! new_jsjitinfo_bitfield_1 {
             (($isLazilyCachedInSlot as u32) << 20u32) |
             (($isTypedMethod as u32) << 21u32) |
             (($slotIndex as u32) << 22u32)
+    }
+}
+
+pub struct CapturedJSStack<'a> { // lifetime inspired by typedarrays
+    cx: *mut JSContext,
+    stack: RootedGuard<'a, *mut JSObject>,
+}
+
+impl<'a> CapturedJSStack<'a> {
+    pub fn new(cx: *mut JSContext, max_frame_count: u32) -> Option<Self> { // or maybe another name, for example "capture"?
+        unsafe { // how to handle unsafe in a nice way?
+            rooted!(in(cx) let mut obj = JS_NewPlainObject(cx)); // how to overcome this problem with lifetimes?
+            let mut obj_handle = obj.handle_mut(); // if null, return None // how to handle such errors in a nice way?
+            CaptureCurrentStack(cx, obj_handle, max_frame_count); // if failed, return None
+
+            Some(CapturedJSStack {
+                cx: cx,
+                stack: obj,
+            })
+        }
+    }
+
+    pub fn as_string(&self, indent: usize) -> Option<String> {
+        // TODO where errors can occur? some example of non trivial error handling?
+        // TODO how to write tests for this code? Including the problem of obtaining some stack trace
+        // do we want to do the actual logic of conversion in this method or maybe in constructor and just return cached result?
+        unsafe {
+            let stack_handle = self.stack.handle();
+            let nullptr = 0 as *const ::std::os::raw::c_char;
+            rooted!(in(self.cx) let mut js_string = JS_NewStringCopyZ(self.cx, nullptr)); // can fail, check it
+            let string_handle = js_string.handle_mut();
+
+            BuildStackString(self.cx, stack_handle, string_handle, indent); // returns bool, check it
+            // wanted somehow to just get the utf-16 string and use String::from_utf16_lossy
+            // but JS_GetTwoByteStringCharsAndLength requires some object of strange type (AutoCheckCannotGC)
+            let str_contents = JS_EncodeStringToUTF8(self.cx, string_handle.handle());
+
+            if str_contents as *const _ == nullptr {
+                None
+            }
+            else {
+                let mut size = 0 as usize;
+                while *str_contents.offset(size as isize) != 0 { // what is some better way of calculating length on raw pointers?
+                    size += 1;
+                }
+
+                let str_slice = slice::from_raw_parts(str_contents as *const u8, size);
+                let result = String::from_utf8_lossy(str_slice).to_string();
+                JS_free(self.cx, str_contents as *mut ::std::os::raw::c_void);
+                Some(result)
+            }
+        }
     }
 }
