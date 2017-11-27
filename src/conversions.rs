@@ -39,7 +39,7 @@ use jsval::{BooleanValue, Int32Value, NullValue, UInt32Value, UndefinedValue};
 use jsval::{JSVal, ObjectValue, ObjectOrNullValue, StringValue};
 use rust::{ToBoolean, ToInt32, ToInt64, ToNumber, ToUint16, ToUint32, ToUint64};
 use rust::{ToString, maybe_wrap_object_or_null_value};
-use rust::{maybe_wrap_object_value, maybe_wrap_value};
+use rust::maybe_wrap_value;
 use libc;
 use num_traits::{Bounded, Zero};
 use std::borrow::Cow;
@@ -612,7 +612,7 @@ impl<C: Clone, T: FromJSValConvertible<Config=C>> FromJSValConvertible for Vec<T
             iterator: RootedObject::new_unrooted(),
             index: ::std::u32::MAX, // NOT_ARRAY
         };
-        let mut iterator = ForOfIteratorGuard::new(cx, &mut iterator);
+        let iterator = ForOfIteratorGuard::new(cx, &mut iterator);
         let iterator = &mut *iterator.root;
 
         if !iterator.init(value, ForOfIterator_NonIterableBehavior::AllowNonIterable) {

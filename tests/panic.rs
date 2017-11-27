@@ -16,7 +16,6 @@ use mozjs::jsval::UndefinedValue;
 use mozjs::panic::wrap_panic;
 use mozjs::rust::{Runtime, SIMPLE_GLOBAL_CLASS};
 use std::ptr;
-use std::str;
 
 #[test]
 #[should_panic]
