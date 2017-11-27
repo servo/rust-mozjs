@@ -492,10 +492,12 @@ impl AutoGCRooter {
     }
 }
 
+// This structure reimplements a C++ class that uses virtual dispatch, so
+// use C layout to guarantee that vftable in CustomAutoRooter is in right place.
 #[repr(C)]
 pub struct CustomAutoRooter<T> {
     pub _base: jsapi::CustomAutoRooter,
-    pub data: T
+    pub data: Option<T>
 }
 
 impl<T> CustomAutoRooter<T> {
@@ -528,18 +530,18 @@ unsafe trait CustomAutoTraceable: Sized {
 
 unsafe impl<T: CustomTrace> CustomAutoTraceable for CustomAutoRooter<T> {
     fn do_trace(&self, trc: *mut JSTracer) {
-        self.data.trace(trc);
+        self.data.as_ref().unwrap().trace(trc);
     }
 }
 
-impl<T: CustomTrace + Default> CustomAutoRooter<T> {
+impl<T: CustomTrace> CustomAutoRooter<T> {
     pub fn new() -> Self {
         CustomAutoRooter {
             _base: jsapi::CustomAutoRooter {
                 _vftable: &<Self as CustomAutoTraceable>::vftable,
                 _base: AutoGCRooter::new_unrooted(AutoGCRooterTag::CUSTOM),
             },
-            data: <T as Default>::default(),
+            data: None,
         }
     }
 }
@@ -596,7 +598,7 @@ pub struct SequenceRooterGuard<'a, T: 'a + RootKind + GCMethods> {
 
 impl<'a, T: 'a + RootKind + GCMethods> SequenceRooterGuard<'a, T> {
     pub fn new(cx: *mut JSContext, rooter: &'a mut SequenceRooter<T>, initial: Vec<T>) -> Self {
-        rooter.data = initial;
+        rooter.data = Some(initial);
         unsafe {
             rooter.add_to_root_stack(cx);
         }
@@ -611,13 +613,13 @@ impl<'a, T: 'a + RootKind + GCMethods> SequenceRooterGuard<'a, T> {
 impl<'a, T: 'a + RootKind + GCMethods> Deref for SequenceRooterGuard<'a, T> {
     type Target = Vec<T>;
     fn deref(&self) -> &Vec<T> {
-        &self.rooter.data
+        self.rooter.data.as_ref().unwrap()
     }
 }
 
 impl<'a, T: 'a + RootKind + GCMethods> DerefMut for SequenceRooterGuard<'a, T> {
     fn deref_mut(&mut self) -> &mut Vec<T> {
-        &mut self.rooter.data
+        self.rooter.data.as_mut().unwrap()
     }
 }
 
