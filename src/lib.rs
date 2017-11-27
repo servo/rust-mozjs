@@ -101,9 +101,8 @@ pub mod typedarray;
 
 pub use consts::*;
 
-use jsapi::{JSContext, Heap};
+use jsapi::JSContext;
 use jsval::JSVal;
-use rust::GCMethods;
 
 #[inline(always)]
 pub unsafe fn JS_ARGV(_cx: *mut JSContext, vp: *mut JSVal) -> *mut JSVal {
