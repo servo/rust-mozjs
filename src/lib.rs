@@ -2,18 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#![crate_name = "js"]
+#![crate_name = "mozjs"]
 #![crate_type = "rlib"]
-
-#![feature(link_args)]
-#![feature(nonzero)]
-#![feature(const_fn)]
 
 #![allow(non_upper_case_globals, non_camel_case_types, non_snake_case, improper_ctypes)]
 
-extern crate core;
-#[macro_use]
-extern crate heapsize;
 #[macro_use]
 extern crate lazy_static;
 extern crate libc;
@@ -39,12 +32,12 @@ pub mod jsapi {
     #[cfg(target_env = "msvc")]
     pub type char16_t = ::std::os::raw::c_ushort;
 
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", target_os = "android", target_os = "freebsd"))]
     #[cfg(target_pointer_width = "64")]
     #[cfg(not(feature = "debugmozjs"))]
     include!("jsapi_linux_64.rs");
 
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", target_os = "android", target_os = "freebsd"))]
     #[cfg(target_pointer_width = "64")]
     #[cfg(feature = "debugmozjs")]
     include!("jsapi_linux_64_debug.rs");
@@ -83,12 +76,12 @@ pub mod jsapi {
     #[cfg(feature = "debugmozjs")]
     include!("jsapi_windows_msvc14_64_debug.rs");
 
-    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[cfg(any(target_os = "linux", target_os = "android", target_os = "freebsd"))]
     #[cfg(target_pointer_width = "32")]
     #[cfg(not(feature = "debugmozjs"))]
     include!("jsapi_linux_32.rs");
 
-    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[cfg(any(target_os = "linux", target_os = "android", target_os = "freebsd"))]
     #[cfg(target_pointer_width = "32")]
     #[cfg(feature = "debugmozjs")]
     include!("jsapi_linux_32_debug.rs");
@@ -108,10 +101,8 @@ pub mod typedarray;
 
 pub use consts::*;
 
-use heapsize::HeapSizeOf;
-use jsapi::{JSContext, Heap};
+use jsapi::JSContext;
 use jsval::JSVal;
-use rust::GCMethods;
 
 #[inline(always)]
 pub unsafe fn JS_ARGV(_cx: *mut JSContext, vp: *mut JSVal) -> *mut JSVal {
@@ -122,14 +113,6 @@ pub unsafe fn JS_ARGV(_cx: *mut JSContext, vp: *mut JSVal) -> *mut JSVal {
 pub unsafe fn JS_CALLEE(_cx: *mut JSContext, vp: *mut JSVal) -> JSVal {
     *vp
 }
-
-// This is measured properly by the heap measurement implemented in SpiderMonkey.
-impl<T: Copy + GCMethods> HeapSizeOf for Heap<T> {
-    fn heap_size_of_children(&self) -> usize {
-        0
-    }
-}
-known_heap_size!(0, JSVal);
 
 impl jsapi::ObjectOpResult {
     /// Set this ObjectOpResult to true and return true.

@@ -3,19 +3,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #[macro_use]
-extern crate js;
+extern crate mozjs;
 
-use js::conversions::ConversionBehavior;
-use js::conversions::ConversionResult;
-use js::conversions::FromJSValConvertible;
-use js::conversions::ToJSValConvertible;
-use js::jsapi::CompartmentOptions;
-use js::jsapi::JSAutoCompartment;
-use js::jsapi::JS_InitStandardClasses;
-use js::jsapi::JS_NewGlobalObject;
-use js::jsapi::OnNewGlobalHookOption;
-use js::jsval::UndefinedValue;
-use js::rust::{Runtime, SIMPLE_GLOBAL_CLASS};
+use mozjs::conversions::ConversionBehavior;
+use mozjs::conversions::ConversionResult;
+use mozjs::conversions::FromJSValConvertible;
+use mozjs::conversions::ToJSValConvertible;
+use mozjs::jsapi::CompartmentOptions;
+use mozjs::jsapi::JSAutoCompartment;
+use mozjs::jsapi::JS_InitStandardClasses;
+use mozjs::jsapi::JS_NewGlobalObject;
+use mozjs::jsapi::OnNewGlobalHookOption;
+use mozjs::jsval::UndefinedValue;
+use mozjs::rust::{Runtime, SIMPLE_GLOBAL_CLASS};
 
 use std::ptr;
 

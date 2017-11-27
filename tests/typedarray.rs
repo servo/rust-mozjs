@@ -3,17 +3,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #[macro_use]
-extern crate js;
+extern crate mozjs;
 
-use js::jsapi::CompartmentOptions;
-use js::jsapi::JSAutoCompartment;
-use js::jsapi::JS_NewGlobalObject;
-use js::jsapi::OnNewGlobalHookOption;
-use js::jsapi::Type;
-use js::jsval::UndefinedValue;
-use js::rust::Runtime as Runtime_;
-use js::rust::SIMPLE_GLOBAL_CLASS;
-use js::typedarray::{CreateWith, Uint32Array};
+use mozjs::jsapi::CompartmentOptions;
+use mozjs::jsapi::JSAutoCompartment;
+use mozjs::jsapi::JS_NewGlobalObject;
+use mozjs::jsapi::OnNewGlobalHookOption;
+use mozjs::jsapi::Type;
+use mozjs::jsval::UndefinedValue;
+use mozjs::rust::Runtime as Runtime_;
+use mozjs::rust::SIMPLE_GLOBAL_CLASS;
+use mozjs::typedarray::{CreateWith, Uint32Array};
 use std::ptr;
 
 #[test]

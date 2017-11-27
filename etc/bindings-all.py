@@ -11,6 +11,7 @@ def usage_and_exit():
     print("    tests them.")
     print("")
     print("    <platform>         One of 'linux_32', 'linux_64', 'macos_64',")
+    print("                       'freebsd_32', 'freebsd_64',")
     print("                       'windows_gcc_64', or 'windows_msvc14_64'.")
     print("")
     print("    <bindgen>          The path to bindgen")
@@ -26,7 +27,7 @@ if len(sys.argv) != 4:
 [platform, bindgen, clang_lib_path] = sys.argv[1:]
 
 try:
-    ["linux_32", "linux_64", "macos_64", "windows_gcc_64", "windows_msvc14_64"].index(platform)
+    ["linux_32", "linux_64", "freebsd_32", "freebsd_64", "macos_64", "windows_gcc_64", "windows_msvc14_64"].index(platform)
 except ValueError:
     print("error: {} is not a valid platform".format(platform))
     usage_and_exit()
@@ -38,7 +39,7 @@ if not (os.path.isfile(bindgen) and os.access(bindgen, os.X_OK)):
 
 clang_lib_path = os.path.abspath(clang_lib_path)
 if not os.path.isdir(clang_lib_path):
-    print("error: {} is not a directory".format(bindgen))
+    print("error: {} is not a directory".format(clang_lib_path))
 
 # Go to the root of our repo.
 os.chdir(os.path.dirname(sys.argv[0]))
@@ -60,6 +61,7 @@ def run(cmd, **kwargs):
 # Set up the environment needed to run bindgen.
 bindgen_env = os.environ.copy()
 bindgen_env["LIBCLANG_PATH"] = clang_lib_path
+bindgen_env["BINDGEN"] = bindgen
 if platform.startswith("macos"):
     bindgen_env["DYLD_LIBRARY_PATH"] = clang_lib_path
 else:

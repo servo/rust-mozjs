@@ -27,9 +27,9 @@
 
 #![deny(missing_docs)]
 
-use core::nonzero::NonZero;
 use error::throw_type_error;
 use glue::RUST_JS_NumberValue;
+use jsapi::AssertSameCompartment;
 use jsapi::{ForOfIterator, ForOfIterator_NonIterableBehavior, HandleValue};
 use jsapi::{Heap, JS_DefineElement, JS_GetLatin1StringCharsAndLength};
 use jsapi::{JS_GetTwoByteStringCharsAndLength, JS_NewArrayObject1};
@@ -39,7 +39,7 @@ use jsval::{BooleanValue, Int32Value, NullValue, UInt32Value, UndefinedValue};
 use jsval::{JSVal, ObjectValue, ObjectOrNullValue, StringValue};
 use rust::{ToBoolean, ToInt32, ToInt64, ToNumber, ToUint16, ToUint32, ToUint64};
 use rust::{ToString, maybe_wrap_object_or_null_value};
-use rust::{maybe_wrap_object_value, maybe_wrap_value};
+use rust::maybe_wrap_value;
 use libc;
 use num_traits::{Bounded, Zero};
 use std::borrow::Cow;
@@ -99,7 +99,7 @@ pub trait ToJSValConvertible {
 pub enum ConversionResult<T> {
     /// Everything went fine.
     Success(T),
-    /// Pending exception.
+    /// Conversion failed, without a pending exception.
     Failure(Cow<'static, str>),
 }
 
@@ -121,6 +121,7 @@ pub trait FromJSValConvertible: Sized {
     /// Optional configuration of type `T` can be passed as the `option`
     /// argument.
     /// If it returns `Err(())`, a JSAPI exception is pending.
+    /// If it returns `Ok(Failure(reason))`, there is no pending JSAPI exception.
     unsafe fn from_jsval(cx: *mut JSContext,
                          val: HandleValue,
                          option: Self::Config)
@@ -181,6 +182,20 @@ impl ToJSValConvertible for () {
     #[inline]
     unsafe fn to_jsval(&self, _cx: *mut JSContext, rval: MutableHandleValue) {
         rval.set(UndefinedValue());
+    }
+}
+
+impl FromJSValConvertible for HandleValue {
+    type Config = ();
+    #[inline]
+    unsafe fn from_jsval(cx: *mut JSContext,
+                         value: HandleValue,
+                         _option: ())
+                         -> Result<ConversionResult<HandleValue>, ()> {
+        if value.is_object() {
+            AssertSameCompartment(cx, value.to_object());
+        }
+        Ok(ConversionResult::Success(value))
     }
 }
 
@@ -597,7 +612,7 @@ impl<C: Clone, T: FromJSValConvertible<Config=C>> FromJSValConvertible for Vec<T
             iterator: RootedObject::new_unrooted(),
             index: ::std::u32::MAX, // NOT_ARRAY
         };
-        let mut iterator = ForOfIteratorGuard::new(cx, &mut iterator);
+        let iterator = ForOfIteratorGuard::new(cx, &mut iterator);
         let iterator = &mut *iterator.root;
 
         if !iterator.init(value, ForOfIterator_NonIterableBehavior::AllowNonIterable) {
@@ -637,15 +652,6 @@ impl ToJSValConvertible for *mut JSObject {
     unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
         rval.set(ObjectOrNullValue(*self));
         maybe_wrap_object_or_null_value(cx, rval);
-    }
-}
-
-// https://heycam.github.io/webidl/#es-object
-impl ToJSValConvertible for NonZero<*mut JSObject> {
-    #[inline]
-    unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
-        rval.set(ObjectValue(**self));
-        maybe_wrap_object_value(cx, rval);
     }
 }
 

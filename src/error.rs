@@ -71,3 +71,8 @@ pub unsafe fn throw_type_error(cx: *mut JSContext, error: &str) {
 pub unsafe fn throw_range_error(cx: *mut JSContext, error: &str) {
     throw_js_error(cx, error, JSExnType::JSEXN_RANGEERR as u32);
 }
+
+/// Throw an `InternalError` with the given message.
+pub unsafe fn throw_internal_error(cx: *mut JSContext, error: &str) {
+    throw_js_error(cx, error, JSExnType::JSEXN_INTERNALERR as u32);
+}

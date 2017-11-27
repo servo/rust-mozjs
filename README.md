@@ -2,7 +2,7 @@
 
 Rust bindings to SpiderMonkey
 
-[Documentation](http://doc.servo.org/js/)
+[Documentation](http://doc.servo.org/mozjs/)
 
 ## Building
 

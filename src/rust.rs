@@ -5,7 +5,6 @@
 //! Rust wrappers around the raw JS apis
 
 use libc::{size_t, c_uint, c_char};
-use heapsize::HeapSizeOf;
 use std::char;
 use std::ffi;
 use std::ptr;
@@ -249,13 +248,6 @@ impl Drop for Runtime {
                 JS_ShutDown();
             }
         }
-    }
-}
-
-// This is measured through `glue::CollectServoSizes`.
-impl HeapSizeOf for Runtime {
-    fn heap_size_of_children(&self) -> usize {
-        0
     }
 }
 
@@ -835,6 +827,14 @@ impl CallArgs {
     pub fn callee(&self) -> *mut JSObject {
         self.calleev().to_object()
     }
+
+    #[inline]
+    pub fn new_target(&self) -> MutableHandleValue {
+        assert!(self._base.constructing_);
+        unsafe {
+            MutableHandleValue::from_marked_location(self._base.argv_.offset(self._base.argc_ as isize))
+        }
+    }
 }
 
 impl JSJitGetterCallArgs {
@@ -1227,5 +1227,33 @@ pub unsafe fn maybe_wrap_value(cx: *mut JSContext, rval: MutableHandleValue) {
         assert!(JS_WrapValue(cx, rval));
     } else if rval.is_object() {
         maybe_wrap_object_value(cx, rval);
+    }
+}
+
+/// Like `JSJitInfo::new_bitfield_1`, but usable in `const` contexts.
+#[macro_export]
+macro_rules! new_jsjitinfo_bitfield_1 {
+    (
+        $type_: expr,
+        $aliasSet_: expr,
+        $returnType_: expr,
+        $isInfallible: expr,
+        $isMovable: expr,
+        $isEliminatable: expr,
+        $isAlwaysInSlot: expr,
+        $isLazilyCachedInSlot: expr,
+        $isTypedMethod: expr,
+        $slotIndex: expr,
+    ) => {
+        0 | (($type_ as u32) << 0u32) |
+            (($aliasSet_ as u32) << 4u32) |
+            (($returnType_ as u32) << 8u32) |
+            (($isInfallible as u32) << 16u32) |
+            (($isMovable as u32) << 17u32) |
+            (($isEliminatable as u32) << 18u32) |
+            (($isAlwaysInSlot as u32) << 19u32) |
+            (($isLazilyCachedInSlot as u32) << 20u32) |
+            (($isTypedMethod as u32) << 21u32) |
+            (($slotIndex as u32) << 22u32)
     }
 }

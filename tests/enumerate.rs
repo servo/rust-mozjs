@@ -3,20 +3,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #[macro_use]
-extern crate js;
+extern crate mozjs;
 
-use js::glue::RUST_JSID_IS_STRING;
-use js::glue::RUST_JSID_TO_STRING;
-use js::jsapi::CompartmentOptions;
-use js::jsapi::GetPropertyKeys;
-use js::jsapi::JSITER_OWNONLY;
-use js::jsapi::JS_NewGlobalObject;
-use js::jsapi::JS_StringEqualsAscii;
-use js::jsapi::OnNewGlobalHookOption;
-use js::jsval::UndefinedValue;
-use js::rust::IdVector;
-use js::rust::Runtime;
-use js::rust::SIMPLE_GLOBAL_CLASS;
+use mozjs::glue::RUST_JSID_IS_STRING;
+use mozjs::glue::RUST_JSID_TO_STRING;
+use mozjs::jsapi::CompartmentOptions;
+use mozjs::jsapi::GetPropertyKeys;
+use mozjs::jsapi::JSITER_OWNONLY;
+use mozjs::jsapi::JS_NewGlobalObject;
+use mozjs::jsapi::JS_StringEqualsAscii;
+use mozjs::jsapi::OnNewGlobalHookOption;
+use mozjs::jsval::UndefinedValue;
+use mozjs::rust::IdVector;
+use mozjs::rust::Runtime;
+use mozjs::rust::SIMPLE_GLOBAL_CLASS;
 use std::ptr;
 
 #[test]

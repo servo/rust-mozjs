@@ -3,20 +3,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #[macro_use]
-extern crate js;
+extern crate mozjs;
 
-use js::jsapi::CompartmentOptions;
-use js::jsapi::JSAutoCompartment;
-use js::jsapi::JSContext;
-use js::jsapi::JS_DefineFunction;
-use js::jsapi::JS_NewGlobalObject;
-use js::jsapi::OnNewGlobalHookOption;
-use js::jsapi::Value;
-use js::jsval::UndefinedValue;
-use js::panic::wrap_panic;
-use js::rust::{Runtime, SIMPLE_GLOBAL_CLASS};
+use mozjs::jsapi::CompartmentOptions;
+use mozjs::jsapi::JSAutoCompartment;
+use mozjs::jsapi::JSContext;
+use mozjs::jsapi::JS_DefineFunction;
+use mozjs::jsapi::JS_NewGlobalObject;
+use mozjs::jsapi::OnNewGlobalHookOption;
+use mozjs::jsapi::Value;
+use mozjs::jsval::UndefinedValue;
+use mozjs::panic::wrap_panic;
+use mozjs::rust::{Runtime, SIMPLE_GLOBAL_CLASS};
 use std::ptr;
-use std::str;
 
 #[test]
 #[should_panic]
