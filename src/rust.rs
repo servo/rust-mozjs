@@ -1259,54 +1259,72 @@ macro_rules! new_jsjitinfo_bitfield_1 {
     }
 }
 
-pub struct CapturedJSStack<'a> { // lifetime inspired by typedarrays
+pub struct CapturedJSStack<'a> {
     cx: *mut JSContext,
     stack: RootedGuard<'a, *mut JSObject>,
 }
 
 impl<'a> CapturedJSStack<'a> {
-    pub fn new(cx: *mut JSContext, max_frame_count: u32) -> Option<Self> { // or maybe another name, for example "capture"?
-        unsafe { // how to handle unsafe in a nice way?
-            rooted!(in(cx) let mut obj = JS_NewPlainObject(cx)); // how to overcome this problem with lifetimes?
-            let mut obj_handle = obj.handle_mut(); // if null, return None // how to handle such errors in a nice way?
-            CaptureCurrentStack(cx, obj_handle, max_frame_count); // if failed, return None
-
-            Some(CapturedJSStack {
-                cx: cx,
-                stack: obj,
-            })
+    pub fn new(cx: *mut JSContext, mut guard: RootedGuard<'a, *mut JSObject>, max_frame_count: u32) -> Option<Self> { // or maybe another name, for example "capture"?
+        let obj_handle = guard.handle_mut(); // if nullptr, return None
+                                             // how to check if handle is not nullptr?
+                                             // how to handle such errors in a nice way?
+        unsafe {
+            if !CaptureCurrentStack(cx, obj_handle, max_frame_count) {
+                return None;
+            }
         }
+
+        Some(CapturedJSStack {
+            cx: cx,
+            stack: guard,
+        })
     }
 
     pub fn as_string(&self, indent: usize) -> Option<String> {
         // TODO where errors can occur? some example of non trivial error handling?
         // TODO how to write tests for this code? Including the problem of obtaining some stack trace
         // do we want to do the actual logic of conversion in this method or maybe in constructor and just return cached result?
-        unsafe {
+        unsafe { // since almost everything here is unsafe, is it okay to wrap it like this?
             let stack_handle = self.stack.handle();
-            let nullptr = 0 as *const ::std::os::raw::c_char;
-            rooted!(in(self.cx) let mut js_string = JS_NewStringCopyZ(self.cx, nullptr)); // can fail, check it
-            let string_handle = js_string.handle_mut();
+            rooted!(in(self.cx) let mut js_string = JS_NewStringCopyZ(self.cx, ptr::null()));
+            let string_handle = js_string.handle_mut(); // as above -- how to check if is not nullptr?
 
-            BuildStackString(self.cx, stack_handle, string_handle, indent); // returns bool, check it
+            if !BuildStackString(self.cx, stack_handle, string_handle, indent) {
+                return None;
+            }
+
             // wanted somehow to just get the utf-16 string and use String::from_utf16_lossy
             // but JS_GetTwoByteStringCharsAndLength requires some object of strange type (AutoCheckCannotGC)
             let str_contents = JS_EncodeStringToUTF8(self.cx, string_handle.handle());
-
-            if str_contents as *const _ == nullptr {
-                None
+            if str_contents.is_null() {
+                return None;
             }
-            else {
-                let mut size = 0 as usize;
-                while *str_contents.offset(size as isize) != 0 { // what is some better way of calculating length on raw pointers?
-                    size += 1;
-                }
 
-                let str_slice = slice::from_raw_parts(str_contents as *const u8, size);
-                let result = String::from_utf8_lossy(str_slice).to_string();
-                JS_free(self.cx, str_contents as *mut ::std::os::raw::c_void);
-                Some(result)
+            let mut size = 0 as usize;
+            while *str_contents.offset(size as isize) != 0 { // what is some better way of calculating length on raw pointers?
+                size += 1;
             }
+
+            let str_slice = slice::from_raw_parts(str_contents as *const u8, size);
+            let result = String::from_utf8_lossy(str_slice).to_string();
+            JS_free(self.cx, str_contents as *mut ::std::os::raw::c_void);
+            Some(result)
         }
     }
 }
+
+#[macro_export]
+macro_rules! capture_stack {
+    ($cx:expr, $max_frame_count:expr) => {
+        rooted!(in($cx) let mut __obj = JS_NewPlainObject($cx));
+        $crate::rust::CapturedJSStack::new($cx, __obj, $max_frame_count)
+    };
+    ($cx:expr) => {
+        capture_stack!($cx, 0)
+    }
+}
+
+// Usage:
+// let stack = capture_stack!(cx);
+// println!(stack.as_string());
