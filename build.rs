@@ -8,4 +8,5 @@ fn main() {
     let dst = cmake::Config::new(".").build();
     println!("cargo:rustc-link-search=native={}/lib", dst.display());
     println!("cargo:rustc-link-lib=static=jsglue");
+    println!("cargo:rerun-if-changed=src/jsglue.cpp");
 }
