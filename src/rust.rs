@@ -36,7 +36,7 @@ use jsapi::{RootedBase, RuntimeOptionsRef, SetWarningReporter, Symbol, ToBoolean
 use jsapi::{ToInt32Slow, ToInt64Slow, ToNumberSlow, ToStringSlow, ToUint16Slow};
 use jsapi::{ToUint32Slow, ToUint64Slow, ToWindowProxyIfWindow, UndefinedHandleValue};
 use jsapi::{Value, jsid, PerThreadDataFriendFields, PerThreadDataFriendFields_RuntimeDummy};
-use jsapi::{CaptureCurrentStack, BuildStackString, JS_NewStringCopyZ, JS_EncodeStringToUTF8, JS_free, JS_NewPlainObject};
+use jsapi::{CaptureCurrentStack, BuildStackString, JS_EncodeStringToUTF8, JS_GetTwoByteStringCharsAndLength, JS_free, IsSavedFrame};
 use jsval::{ObjectValue, UndefinedValue};
 use glue::{AppendToAutoObjectVector, CallFunctionTracer, CallIdTracer, CallObjectTracer};
 use glue::{CallScriptTracer, CallStringTracer, CallValueTracer, CreateAutoIdVector};
@@ -1265,66 +1265,64 @@ pub struct CapturedJSStack<'a> {
 }
 
 impl<'a> CapturedJSStack<'a> {
-    pub fn new(cx: *mut JSContext, mut guard: RootedGuard<'a, *mut JSObject>, max_frame_count: u32) -> Option<Self> { // or maybe another name, for example "capture"?
-        let obj_handle = guard.handle_mut(); // if nullptr, return None
-                                             // how to check if handle is not nullptr?
-                                             // how to handle such errors in a nice way?
-        unsafe {
-            if !CaptureCurrentStack(cx, obj_handle, max_frame_count) {
-                return None;
-            }
-        }
+    pub unsafe fn new(cx: *mut JSContext,
+                      mut guard: RootedGuard<'a, *mut JSObject>,
+                      max_frame_count: Option<u32>) -> Option<Self> {
+        let obj_handle = guard.handle_mut();
 
-        Some(CapturedJSStack {
-            cx: cx,
-            stack: guard,
-        })
+        if !CaptureCurrentStack(cx, obj_handle, max_frame_count.unwrap_or(0)) {
+            None
+        }
+        else {
+            Some(CapturedJSStack {
+                cx: cx,
+                stack: guard,
+            })
+        }
     }
 
-    pub fn as_string(&self, indent: usize) -> Option<String> {
-        // TODO where errors can occur? some example of non trivial error handling?
-        // TODO how to write tests for this code? Including the problem of obtaining some stack trace
-        // do we want to do the actual logic of conversion in this method or maybe in constructor and just return cached result?
-        unsafe { // since almost everything here is unsafe, is it okay to wrap it like this?
+    pub fn as_string(&self, indent: Option<usize>) -> Option<String> {
+        unsafe {
             let stack_handle = self.stack.handle();
-            rooted!(in(self.cx) let mut js_string = JS_NewStringCopyZ(self.cx, ptr::null()));
-            let string_handle = js_string.handle_mut(); // as above -- how to check if is not nullptr?
+            rooted!(in(self.cx) let mut js_string = ptr::null_mut());
+            let string_handle = js_string.handle_mut();
 
-            if !BuildStackString(self.cx, stack_handle, string_handle, indent) {
+            if !IsSavedFrame(stack_handle.get()) {
                 return None;
             }
 
-            // wanted somehow to just get the utf-16 string and use String::from_utf16_lossy
-            // but JS_GetTwoByteStringCharsAndLength requires some object of strange type (AutoCheckCannotGC)
+            if !BuildStackString(self.cx, stack_handle, string_handle, indent.unwrap_or(0)) {
+                return None;
+            }
+
             let str_contents = JS_EncodeStringToUTF8(self.cx, string_handle.handle());
             if str_contents.is_null() {
-                return None;
+               return None;
             }
 
-            let mut size = 0 as usize;
-            while *str_contents.offset(size as isize) != 0 { // what is some better way of calculating length on raw pointers?
-                size += 1;
-            }
-
-            let str_slice = slice::from_raw_parts(str_contents as *const u8, size);
+            let str_contents = ffi::CStr::from_ptr(str_contents);
+            let str_slice = slice::from_raw_parts(str_contents.as_ptr() as *mut u8, str_contents.to_bytes().len());
             let result = String::from_utf8_lossy(str_slice).to_string();
-            JS_free(self.cx, str_contents as *mut ::std::os::raw::c_void);
+            JS_free(self.cx, str_contents.as_ptr() as *mut ::std::os::raw::c_void);
             Some(result)
+            // let mut length = 0;
+            // don't know why, but JS_GetTwoByteStringCharsAndLength returns some trash
+            // let chars = JS_GetTwoByteStringCharsAndLength(self.cx, ptr::null(), string_handle.get(), &mut length);
+            // assert!(!chars.is_null());
+            // let char_vec = slice::from_raw_parts(chars, length as usize);
+            // Some(String::from_utf16_lossy(char_vec))
         }
     }
 }
 
 #[macro_export]
 macro_rules! capture_stack {
-    ($cx:expr, $max_frame_count:expr) => {
-        rooted!(in($cx) let mut __obj = JS_NewPlainObject($cx));
-        $crate::rust::CapturedJSStack::new($cx, __obj, $max_frame_count)
+    (in($cx:expr) let $name:ident = with max depth($max_frame_count:expr)) => {
+        rooted!(in($cx) let mut __obj = ::std::ptr::null_mut());
+        let $name = $crate::rust::CapturedJSStack::new($cx, __obj, Some($max_frame_count));
     };
-    ($cx:expr) => {
-        capture_stack!($cx, 0)
+    (in($cx:expr) let $name:ident ) => {
+        rooted!(in($cx) let mut __obj = ::std::ptr::null_mut());
+        let $name = $crate::rust::CapturedJSStack::new($cx, __obj, None);
     }
 }
-
-// Usage:
-// let stack = capture_stack!(cx);
-// println!(stack.as_string());
