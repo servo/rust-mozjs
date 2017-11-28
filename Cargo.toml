@@ -13,6 +13,8 @@ cmake = "0.1"
 [[test]]
 name = "callback"
 [[test]]
+name = "custom_auto_rooter"
+[[test]]
 name = "enumerate"
 [[test]]
 name = "evaluate"
@@ -24,8 +26,6 @@ name = "rooting"
 name = "runtime"
 [[test]]
 name = "typedarray"
-[[test]]
-name = "sequence_rooter"
 [[test]]
 name = "stack_limit"
 [[test]]
