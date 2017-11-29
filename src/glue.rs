@@ -281,6 +281,12 @@ extern "C" {
     pub fn CallUnbarrieredObjectTracer(trc: *mut JSTracer,
                                        objp: *mut *mut JSObject,
                                        name: *const ::libc::c_char);
+    pub fn CallObjectRootTracer(trc: *mut JSTracer,
+                                objp: *mut *mut JSObject,
+                                name: *const ::libc::c_char);
+    pub fn CallValueRootTracer(trc: *mut JSTracer,
+                                valp: *mut Value,
+                                name: *const ::libc::c_char);
     pub fn GetProxyHandlerFamily() -> *const c_void;
 
     pub fn GetInt8ArrayLengthAndData(obj: *mut JSObject,

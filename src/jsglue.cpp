@@ -854,6 +854,18 @@ CallUnbarrieredObjectTracer(JSTracer* trc, JSObject** objp, const char* name)
     js::UnsafeTraceManuallyBarrieredEdge(trc, objp, name);
 }
 
+void
+CallObjectRootTracer(JSTracer* trc, JSObject** objp, const char* name)
+{
+    JS::UnsafeTraceRoot(trc, objp, name);
+}
+
+void
+CallValueRootTracer(JSTracer* trc, JS::Value* valp, const char* name)
+{
+    JS::UnsafeTraceRoot(trc, valp, name);
+}
+
 #define JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Type, type)                         \
     void                                                                       \
     Get ## Type ## ArrayLengthAndData(JSObject* obj, uint32_t* length,         \
