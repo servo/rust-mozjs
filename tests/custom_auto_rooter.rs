@@ -9,14 +9,22 @@ use mozjs::jsapi::JS_GC;
 use mozjs::rust::Runtime;
 use mozjs::rust::CustomTrace;
 use mozjs::rust::CustomAutoRooter;
+use std::cell::Cell;
 
-macro_rules! checked_trace_impl {
-    ($flag:ident, $implementer:ident) => {
-        static mut $flag: bool = false;
-        unsafe impl CustomTrace for $implementer {
-            fn trace(&self, _: *mut JSTracer) { unsafe { $flag = true; } }
-        }
-    };
+struct TraceCheck {
+    trace_was_called: Cell<bool>
+}
+
+impl TraceCheck {
+    fn new() -> TraceCheck {
+        TraceCheck { trace_was_called: Cell::new(false) }
+    }
+}
+
+unsafe impl CustomTrace for TraceCheck {
+    fn trace(&self, _: *mut JSTracer) {
+        self.trace_was_called.set(true);
+    }
 }
 
 /// Check if Rust reimplementation of CustomAutoRooter properly appends itself
@@ -24,35 +32,25 @@ macro_rules! checked_trace_impl {
 /// by checking if appropriate virtual trace function was called.
 #[test]
 fn virtual_trace_called() {
-    pub struct TestStruct { }
-    checked_trace_impl!(TRACE_FN_WAS_CALLED, TestStruct);
-
     let rt = Runtime::new().unwrap();
     let (rt, cx) = (rt.rt(), rt.cx());
 
-    let mut rooter = CustomAutoRooter::new(TestStruct { });
-    let _guard = rooter.root(cx);
+    let mut rooter = CustomAutoRooter::new(TraceCheck::new());
+    let guard = rooter.root(cx);
 
-    unsafe {
-        JS_GC(rt);
+    unsafe { JS_GC(rt); }
 
-        assert!(TRACE_FN_WAS_CALLED);
-    }
+    assert!(guard.trace_was_called.get());
 }
 
 #[test]
 fn sequence_macro() {
-    pub struct TestStruct { }
-    checked_trace_impl!(TRACE_FN_WAS_CALLED, TestStruct);
-
     let rt = Runtime::new().unwrap();
     let (rt, cx) = (rt.rt(), rt.cx());
 
-    rooted_seq!(in(cx) let _val = vec![TestStruct { }]);
+    rooted_seq!(in(cx) let vec = vec![TraceCheck::new(), TraceCheck::new()]);
 
-    unsafe {
-        JS_GC(rt);
+    unsafe { JS_GC(rt); }
 
-        assert!(TRACE_FN_WAS_CALLED);
-    }
+    vec.iter().for_each(|elem| assert!(elem.trace_was_called.get()));
 }
