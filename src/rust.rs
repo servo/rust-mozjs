@@ -1305,12 +1305,6 @@ impl<'a> CapturedJSStack<'a> {
             let result = String::from_utf8_lossy(str_slice).to_string();
             JS_free(self.cx, str_contents.as_ptr() as *mut ::std::os::raw::c_void);
             Some(result)
-            // let mut length = 0;
-            // don't know why, but JS_GetTwoByteStringCharsAndLength returns some trash
-            // let chars = JS_GetTwoByteStringCharsAndLength(self.cx, ptr::null(), string_handle.get(), &mut length);
-            // assert!(!chars.is_null());
-            // let char_vec = slice::from_raw_parts(chars, length as usize);
-            // Some(String::from_utf16_lossy(char_vec))
         }
     }
 }
