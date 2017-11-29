@@ -44,11 +44,11 @@ fn virtual_trace_called() {
 }
 
 #[test]
-fn sequence_macro() {
+fn root_macro() {
     let rt = Runtime::new().unwrap();
     let (rt, cx) = (rt.rt(), rt.cx());
 
-    rooted_seq!(in(cx) let vec = vec![TraceCheck::new(), TraceCheck::new()]);
+    auto_root!(in(cx) let vec = vec![TraceCheck::new(), TraceCheck::new()]);
 
     unsafe { JS_GC(rt); }
 
