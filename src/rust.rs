@@ -18,6 +18,7 @@ use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use consts::{JSCLASS_RESERVED_SLOTS_MASK, JSCLASS_GLOBAL_SLOT_COUNT};
 use consts::{JSCLASS_IS_DOMJSCLASS, JSCLASS_IS_GLOBAL};
+use conversions::jsstr_to_string;
 use jsapi;
 use jsapi::{AutoIdVector, AutoObjectVector, CallArgs, CompartmentOptions, ContextFriendFields};
 use jsapi::{Evaluate2, Handle, HandleBase, HandleObject, HandleValue, HandleValueArray, Heap};
@@ -36,7 +37,7 @@ use jsapi::{RootedBase, RuntimeOptionsRef, SetWarningReporter, Symbol, ToBoolean
 use jsapi::{ToInt32Slow, ToInt64Slow, ToNumberSlow, ToStringSlow, ToUint16Slow};
 use jsapi::{ToUint32Slow, ToUint64Slow, ToWindowProxyIfWindow, UndefinedHandleValue};
 use jsapi::{Value, jsid, PerThreadDataFriendFields, PerThreadDataFriendFields_RuntimeDummy};
-use jsapi::{CaptureCurrentStack, BuildStackString, JS_EncodeStringToUTF8, JS_GetTwoByteStringCharsAndLength, JS_free, IsSavedFrame};
+use jsapi::{CaptureCurrentStack, BuildStackString, IsSavedFrame};
 use jsval::{ObjectValue, UndefinedValue};
 use glue::{AppendToAutoObjectVector, CallFunctionTracer, CallIdTracer, CallObjectTracer};
 use glue::{CallScriptTracer, CallStringTracer, CallValueTracer, CreateAutoIdVector};
@@ -1295,16 +1296,7 @@ impl<'a> CapturedJSStack<'a> {
                 return None;
             }
 
-            let str_contents = JS_EncodeStringToUTF8(self.cx, string_handle.handle());
-            if str_contents.is_null() {
-               return None;
-            }
-
-            let str_contents = ffi::CStr::from_ptr(str_contents);
-            let str_slice = slice::from_raw_parts(str_contents.as_ptr() as *mut u8, str_contents.to_bytes().len());
-            let result = String::from_utf8_lossy(str_slice).to_string();
-            JS_free(self.cx, str_contents.as_ptr() as *mut ::std::os::raw::c_void);
-            Some(result)
+            Some(jsstr_to_string(self.cx, string_handle.get()))
         }
     }
 }

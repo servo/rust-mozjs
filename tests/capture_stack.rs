@@ -18,7 +18,6 @@ use mozjs::jsval::UndefinedValue;
 use mozjs::rust::{Runtime, SIMPLE_GLOBAL_CLASS};
 
 use std::ptr;
-use std::str;
 
 #[test]
 fn capture_stack() {

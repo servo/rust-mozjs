@@ -475,6 +475,19 @@ pub unsafe fn latin1_to_string(cx: *mut JSContext, s: *mut JSString) -> String {
     s
 }
 
+/// Converts a `JSString` into a `String`, regardless of used encoding.
+pub unsafe fn jsstr_to_string(cx: *mut JSContext, jsstr: *mut JSString) -> String {
+    if JS_StringHasLatin1Chars(jsstr) {
+        return latin1_to_string(cx, jsstr);
+    }
+
+    let mut length = 0;
+    let chars = JS_GetTwoByteStringCharsAndLength(cx, ptr::null(), jsstr, &mut length);
+    assert!(!chars.is_null());
+    let char_vec = slice::from_raw_parts(chars, length as usize);
+    String::from_utf16_lossy(char_vec)
+}
+
 // https://heycam.github.io/webidl/#es-USVString
 impl ToJSValConvertible for str {
     #[inline]
@@ -508,15 +521,7 @@ impl FromJSValConvertible for String {
             debug!("ToString failed");
             return Err(());
         }
-        if JS_StringHasLatin1Chars(jsstr) {
-            return Ok(latin1_to_string(cx, jsstr)).map(ConversionResult::Success);
-        }
-
-        let mut length = 0;
-        let chars = JS_GetTwoByteStringCharsAndLength(cx, ptr::null(), jsstr, &mut length);
-        assert!(!chars.is_null());
-        let char_vec = slice::from_raw_parts(chars, length as usize);
-        Ok(String::from_utf16_lossy(char_vec)).map(ConversionResult::Success)
+        Ok(jsstr_to_string(cx, jsstr)).map(ConversionResult::Success)
     }
 }
 
