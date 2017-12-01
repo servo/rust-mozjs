@@ -18,6 +18,7 @@ use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use consts::{JSCLASS_RESERVED_SLOTS_MASK, JSCLASS_GLOBAL_SLOT_COUNT};
 use consts::{JSCLASS_IS_DOMJSCLASS, JSCLASS_IS_GLOBAL};
+use conversions::jsstr_to_string;
 use jsapi;
 use jsapi::{AutoGCRooter, AutoIdVector, AutoObjectVector, CallArgs, CompartmentOptions, ContextFriendFields};
 use jsapi::{Evaluate2, Handle, HandleBase, HandleObject, HandleValue, HandleValueArray, Heap};
@@ -36,6 +37,7 @@ use jsapi::{RootedBase, RuntimeOptionsRef, SetWarningReporter, Symbol, ToBoolean
 use jsapi::{ToInt32Slow, ToInt64Slow, ToNumberSlow, ToStringSlow, ToUint16Slow};
 use jsapi::{ToUint32Slow, ToUint64Slow, ToWindowProxyIfWindow, UndefinedHandleValue};
 use jsapi::{Value, jsid, PerThreadDataFriendFields, PerThreadDataFriendFields_RuntimeDummy};
+use jsapi::{CaptureCurrentStack, BuildStackString, IsSavedFrame};
 use jsapi::{AutoGCRooter_jspubtd_h_unnamed_1 as AutoGCRooterTag, _vftable_CustomAutoRooter as CustomAutoRooterVFTable};
 use jsval::{ObjectValue, UndefinedValue};
 use glue::{AppendToAutoObjectVector, CallFunctionTracer, CallIdTracer, CallObjectTracer};
@@ -1447,5 +1449,58 @@ macro_rules! new_jsjitinfo_bitfield_1 {
             (($isLazilyCachedInSlot as u32) << 20u32) |
             (($isTypedMethod as u32) << 21u32) |
             (($slotIndex as u32) << 22u32)
+    }
+}
+
+pub struct CapturedJSStack<'a> {
+    cx: *mut JSContext,
+    stack: RootedGuard<'a, *mut JSObject>,
+}
+
+impl<'a> CapturedJSStack<'a> {
+    pub unsafe fn new(cx: *mut JSContext,
+                      mut guard: RootedGuard<'a, *mut JSObject>,
+                      max_frame_count: Option<u32>) -> Option<Self> {
+        let obj_handle = guard.handle_mut();
+
+        if !CaptureCurrentStack(cx, obj_handle, max_frame_count.unwrap_or(0)) {
+            None
+        }
+        else {
+            Some(CapturedJSStack {
+                cx: cx,
+                stack: guard,
+            })
+        }
+    }
+
+    pub fn as_string(&self, indent: Option<usize>) -> Option<String> {
+        unsafe {
+            let stack_handle = self.stack.handle();
+            rooted!(in(self.cx) let mut js_string = ptr::null_mut());
+            let string_handle = js_string.handle_mut();
+
+            if !IsSavedFrame(stack_handle.get()) {
+                return None;
+            }
+
+            if !BuildStackString(self.cx, stack_handle, string_handle, indent.unwrap_or(0)) {
+                return None;
+            }
+
+            Some(jsstr_to_string(self.cx, string_handle.get()))
+        }
+    }
+}
+
+#[macro_export]
+macro_rules! capture_stack {
+    (in($cx:expr) let $name:ident = with max depth($max_frame_count:expr)) => {
+        rooted!(in($cx) let mut __obj = ::std::ptr::null_mut());
+        let $name = $crate::rust::CapturedJSStack::new($cx, __obj, Some($max_frame_count));
+    };
+    (in($cx:expr) let $name:ident ) => {
+        rooted!(in($cx) let mut __obj = ::std::ptr::null_mut());
+        let $name = $crate::rust::CapturedJSStack::new($cx, __obj, None);
     }
 }
