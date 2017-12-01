@@ -15,6 +15,10 @@ name = "callback"
 [[test]]
 name = "capture_stack"
 [[test]]
+name = "custom_auto_rooter"
+[[test]]
+name = "custom_auto_rooter_macro"
+[[test]]
 name = "enumerate"
 [[test]]
 name = "evaluate"

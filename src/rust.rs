@@ -20,7 +20,7 @@ use consts::{JSCLASS_RESERVED_SLOTS_MASK, JSCLASS_GLOBAL_SLOT_COUNT};
 use consts::{JSCLASS_IS_DOMJSCLASS, JSCLASS_IS_GLOBAL};
 use conversions::jsstr_to_string;
 use jsapi;
-use jsapi::{AutoIdVector, AutoObjectVector, CallArgs, CompartmentOptions, ContextFriendFields};
+use jsapi::{AutoGCRooter, AutoIdVector, AutoObjectVector, CallArgs, CompartmentOptions, ContextFriendFields};
 use jsapi::{Evaluate2, Handle, HandleBase, HandleObject, HandleValue, HandleValueArray, Heap};
 use jsapi::{HeapObjectPostBarrier, HeapValuePostBarrier, InitSelfHostedCode, IsWindowSlow, JS_BeginRequest};
 use jsapi::{JS_DefineFunctions, JS_DefineProperties, JS_DestroyRuntime, JS_EndRequest, JS_ShutDown};
@@ -38,11 +38,13 @@ use jsapi::{ToInt32Slow, ToInt64Slow, ToNumberSlow, ToStringSlow, ToUint16Slow};
 use jsapi::{ToUint32Slow, ToUint64Slow, ToWindowProxyIfWindow, UndefinedHandleValue};
 use jsapi::{Value, jsid, PerThreadDataFriendFields, PerThreadDataFriendFields_RuntimeDummy};
 use jsapi::{CaptureCurrentStack, BuildStackString, IsSavedFrame};
+use jsapi::{AutoGCRooter_jspubtd_h_unnamed_1 as AutoGCRooterTag, _vftable_CustomAutoRooter as CustomAutoRooterVFTable};
 use jsval::{ObjectValue, UndefinedValue};
 use glue::{AppendToAutoObjectVector, CallFunctionTracer, CallIdTracer, CallObjectTracer};
 use glue::{CallScriptTracer, CallStringTracer, CallValueTracer, CreateAutoIdVector};
 use glue::{CreateAutoObjectVector, CreateCallArgsFromVp, DeleteAutoObjectVector};
 use glue::{DestroyAutoIdVector, DeleteCompileOptions, NewCompileOptions, SliceAutoIdVector};
+use glue::{CallObjectRootTracer, CallValueRootTracer};
 use panic::maybe_resume_unwind;
 use default_heapsize;
 
@@ -462,6 +464,196 @@ macro_rules! rooted {
     (in($cx:expr) let mut $name:ident = $init:expr) => {
         let mut __root = $crate::jsapi::Rooted::new_unrooted();
         let mut $name = $crate::rust::RootedGuard::new($cx, &mut __root, $init);
+    }
+}
+
+/// Similarly to `Trace` trait, it's used to specify tracing of various types
+/// that are used in conjunction with `CustomAutoRooter`.
+pub unsafe trait CustomTrace {
+    fn trace(&self, trc: *mut JSTracer);
+}
+
+unsafe impl CustomTrace for *mut JSObject {
+    fn trace(&self, trc: *mut JSTracer) {
+        let this = self as *const *mut _ as *mut *mut _;
+        unsafe { CallObjectRootTracer(trc, this, c_str!("object")); }
+    }
+}
+
+unsafe impl CustomTrace for Value {
+    fn trace(&self, trc: *mut JSTracer) {
+        let this = self as *const _ as *mut _;
+        unsafe { CallValueRootTracer(trc, this, c_str!("any")); }
+    }
+}
+
+unsafe impl<T: CustomTrace> CustomTrace for Option<T> {
+    fn trace(&self, trc: *mut JSTracer) {
+        if let Some(ref some) = *self {
+            some.trace(trc);
+        }
+    }
+}
+
+unsafe impl<T: CustomTrace> CustomTrace for Vec<T> {
+    fn trace(&self, trc: *mut JSTracer) {
+        for elem in self {
+            elem.trace(trc);
+        }
+    }
+}
+
+impl AutoGCRooter {
+    pub fn new_unrooted(tag: AutoGCRooterTag) -> AutoGCRooter {
+        AutoGCRooter {
+            down: ptr::null_mut(),
+            tag_: tag as isize,
+            stackTop: ptr::null_mut(),
+        }
+    }
+
+    unsafe fn add_to_root_stack(&mut self, cx: *mut JSContext) {
+        let autoGCRooters: &mut _ = {
+            let ctxfriend = cx as *mut ContextFriendFields;
+            &mut (*ctxfriend).roots.autoGCRooters_
+        };
+        self.stackTop = autoGCRooters;
+        self.down = *autoGCRooters;
+
+        assert!(*self.stackTop != self);
+        *self.stackTop = self;
+    }
+
+    unsafe fn remove_from_root_stack(&mut self) {
+        assert!(*self.stackTop == self);
+        *self.stackTop = self.down;
+    }
+}
+
+// This structure reimplements a C++ class that uses virtual dispatch, so
+// use C layout to guarantee that vftable in CustomAutoRooter is in right place.
+#[repr(C)]
+pub struct CustomAutoRooter<T> {
+    _base: jsapi::CustomAutoRooter,
+    data: T,
+}
+
+impl<T> CustomAutoRooter<T> {
+    unsafe fn add_to_root_stack(&mut self, cx: *mut JSContext) {
+        self._base._base.add_to_root_stack(cx);
+    }
+
+    unsafe fn remove_from_root_stack(&mut self) {
+        self._base._base.remove_from_root_stack();
+    }
+}
+
+/// `CustomAutoRooter` uses dynamic dispatch on the C++ side for custom tracing,
+/// so provide trace logic via vftable when creating an object on Rust side.
+unsafe trait CustomAutoTraceable: Sized {
+    const vftable: CustomAutoRooterVFTable = CustomAutoRooterVFTable {
+        trace: Self::trace,
+    };
+
+    unsafe extern "C" fn trace(this: *mut ::std::os::raw::c_void, trc: *mut JSTracer) {
+        let this = this as *const Self;
+        let this = this.as_ref().unwrap();
+        Self::do_trace(this, trc);
+    }
+
+    /// Used by `CustomAutoTraceable` implementer to trace its contents.
+    /// Corresponds to virtual `trace` call in a `CustomAutoRooter` subclass (C++).
+    fn do_trace(&self, trc: *mut JSTracer);
+}
+
+unsafe impl<T: CustomTrace> CustomAutoTraceable for CustomAutoRooter<T> {
+    fn do_trace(&self, trc: *mut JSTracer) {
+        self.data.trace(trc);
+    }
+}
+
+impl<T: CustomTrace> CustomAutoRooter<T> {
+    pub fn new(data: T) -> Self {
+        CustomAutoRooter {
+            _base: jsapi::CustomAutoRooter {
+                _vftable: &<Self as CustomAutoTraceable>::vftable,
+                _base: AutoGCRooter::new_unrooted(AutoGCRooterTag::CUSTOM),
+            },
+            data,
+        }
+    }
+
+    pub fn root<'a>(&'a mut self, cx: *mut JSContext) -> CustomAutoRooterGuard<'a, T> {
+        CustomAutoRooterGuard::new(cx, self)
+    }
+}
+
+/// An RAII guard used to root underlying data in `CustomAutoRooter` until the
+/// guard is dropped (falls out of scope).
+/// The underlying data can be accessed through this guard via its Deref and
+/// DerefMut implementations.
+/// This structure is created by `root` method on `CustomAutoRooter` or
+/// by an appropriate macro (e.g. `rooted_vec!` for `SequenceRooter` alias).
+pub struct CustomAutoRooterGuard<'a, T: 'a + CustomTrace> {
+    rooter: &'a mut CustomAutoRooter<T>
+}
+
+impl<'a, T: 'a + CustomTrace> CustomAutoRooterGuard<'a, T> {
+    pub fn new(cx: *mut JSContext, rooter: &'a mut CustomAutoRooter<T>) -> Self {
+        unsafe {
+            rooter.add_to_root_stack(cx);
+        }
+        CustomAutoRooterGuard {
+            rooter
+        }
+    }
+
+    pub fn handle(&self) -> Handle<T> where T: RootKind {
+        unsafe {
+            Handle::from_marked_location(&self.rooter.data)
+        }
+    }
+
+    pub fn handle_mut(&mut self) -> MutableHandle<T> where T: RootKind {
+        unsafe {
+            MutableHandle::from_marked_location(&mut self.rooter.data)
+        }
+    }
+}
+
+impl<'a, T: 'a + CustomTrace> Deref for CustomAutoRooterGuard<'a, T> {
+    type Target = T;
+    fn deref(&self) -> &T {
+        &self.rooter.data
+    }
+}
+
+impl<'a, T: 'a + CustomTrace> DerefMut for CustomAutoRooterGuard<'a, T> {
+    fn deref_mut(&mut self) -> &mut T {
+        &mut self.rooter.data
+    }
+}
+
+impl<'a, T: 'a + CustomTrace> Drop for CustomAutoRooterGuard<'a, T> {
+    fn drop(&mut self) {
+        unsafe {
+            self.rooter.remove_from_root_stack();
+        }
+    }
+}
+
+pub type SequenceRooter<T> = CustomAutoRooter<Vec<T>>;
+pub type SequenceRooterGuard<'a, T> = CustomAutoRooterGuard<'a, Vec<T>>;
+
+#[macro_export]
+macro_rules! auto_root {
+    (in($cx:expr) let $name:ident = $init:expr) => {
+        let mut __root = $crate::rust::CustomAutoRooter::new($init);
+        let $name = __root.root($cx);
+    };
+    (in($cx:expr) let mut $name:ident = $init:expr) => {
+        let mut __root = $crate::rust::CustomAutoRooter::new($init);
+        let mut $name = __root.root($cx);
     }
 }
 
