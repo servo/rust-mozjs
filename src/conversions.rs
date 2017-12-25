@@ -654,3 +654,22 @@ impl ToJSValConvertible for Heap<*mut JSObject> {
         maybe_wrap_object_or_null_value(cx, rval);
     }
 }
+
+// https://heycam.github.io/webidl/#es-object
+impl FromJSValConvertible for *mut JSObject {
+    type Config = ();
+    #[inline]
+    unsafe fn from_jsval(cx: *mut JSContext,
+                         value: HandleValue,
+                         _option: ())
+                         -> Result<ConversionResult<*mut JSObject>, ()> {
+        if !value.is_object() {
+            throw_type_error(cx, "value is not an object");
+            return Err(());
+        }
+
+        AssertSameCompartment(cx, value.to_object());
+
+        Ok(ConversionResult::Success(value.to_object()))
+    }
+}
