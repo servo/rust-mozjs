@@ -68,4 +68,3 @@ build_script:
   - echo MOZTOOLS_PATH %MOZTOOLS_PATH%
   - if %BUILD_ENV%==msvc cd %APPVEYOR_BUILD_FOLDER% && cargo build && cargo test
   - if %BUILD_ENV%==gnu  bash -lc "cd $APPVEYOR_BUILD_FOLDER; cargo build && cargo test"
-
