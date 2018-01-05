@@ -593,7 +593,7 @@ impl<T: CustomTrace> CustomAutoRooter<T> {
 /// The underlying data can be accessed through this guard via its Deref and
 /// DerefMut implementations.
 /// This structure is created by `root` method on `CustomAutoRooter` or
-/// by an appropriate macro (e.g. `rooted_vec!` for `SequenceRooter` alias).
+/// by the `auto_root!` macro.
 pub struct CustomAutoRooterGuard<'a, T: 'a + CustomTrace> {
     rooter: &'a mut CustomAutoRooter<T>
 }
