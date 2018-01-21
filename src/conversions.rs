@@ -38,7 +38,7 @@ use jsapi::{JSContext, JSObject, JSString, MutableHandleValue, RootedObject};
 use jsval::{BooleanValue, Int32Value, NullValue, UInt32Value, UndefinedValue};
 use jsval::{JSVal, ObjectValue, ObjectOrNullValue, StringValue};
 use rust::{ToBoolean, ToInt32, ToInt64, ToNumber, ToUint16, ToUint32, ToUint64};
-use rust::{ToString, maybe_wrap_object_or_null_value};
+use rust::{ToString, maybe_wrap_object_or_null_value, maybe_wrap_object_value};
 use rust::maybe_wrap_value;
 use libc;
 use num_traits::{Bounded, Zero};
@@ -643,6 +643,15 @@ impl ToJSValConvertible for *mut JSObject {
     unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
         rval.set(ObjectOrNullValue(*self));
         maybe_wrap_object_or_null_value(cx, rval);
+    }
+}
+
+// https://heycam.github.io/webidl/#es-object
+impl ToJSValConvertible for ptr::NonNull<JSObject> {
+    #[inline]
+    unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
+        rval.set(ObjectValue(self.as_ptr()));
+        maybe_wrap_object_value(cx, rval);
     }
 }
 
