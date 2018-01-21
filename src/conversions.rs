@@ -647,6 +647,15 @@ impl ToJSValConvertible for *mut JSObject {
 }
 
 // https://heycam.github.io/webidl/#es-object
+impl ToJSValConvertible for ptr::NonNull<JSObject> {
+    #[inline]
+    unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
+        rval.set(ObjectOrNullValue(self.get()));
+        maybe_wrap_object_or_null_value(cx, rval);
+    }
+}
+
+// https://heycam.github.io/webidl/#es-object
 impl ToJSValConvertible for Heap<*mut JSObject> {
     #[inline]
     unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
