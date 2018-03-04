@@ -154,7 +154,7 @@ impl<'a, T: TypedArrayElementCreator + TypedArrayElement> TypedArray<'a, T> {
 
     ///  Update an existed JS typed array
     pub unsafe fn update(&mut self, data: &[T::Element]) {
-        TypedArray::<T>::update_raw(data, self.object.handle());
+        TypedArray::<T>::update_raw(data, self.object.handle().into());
     }
 
     unsafe fn update_raw(data: &[T::Element], result: HandleObject) {
