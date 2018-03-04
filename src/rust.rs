@@ -45,9 +45,8 @@ use jsapi::{Value, jsid, PerThreadDataFriendFields, PerThreadDataFriendFields_Ru
 use jsapi::{CaptureCurrentStack, BuildStackString, IsSavedFrame};
 use jsapi::{AutoGCRooter_jspubtd_h_unnamed_1 as AutoGCRooterTag, _vftable_CustomAutoRooter as CustomAutoRooterVFTable};
 use jsapi::Handle as RawHandle;
-use jsapi::MutableHandle as MutableHandle;
+use jsapi::MutableHandle as RawMutableHandle;
 use jsapi::HandleValue as RawHandleValue;
-use jsapi::MutableHandleValue as MutableHandleValue;
 
 use jsval::{ObjectValue, UndefinedValue};
 
@@ -235,7 +234,7 @@ impl Runtime {
         let options = CompileOptionsWrapper::new(self.cx(), filename_cstr.as_ptr(), line_num);
 
         unsafe {
-            if !Evaluate2(self.cx(), options.ptr, ptr as *const u16, len as size_t, rval) {
+            if !Evaluate2(self.cx(), options.ptr, ptr as *const u16, len as size_t, rval.into()) {
                 debug!("...err!");
                 maybe_resume_unwind();
                 Err(())
@@ -673,6 +672,12 @@ pub struct Handle<'a, T: 'a> {
     ptr: &'a T,
 }
 
+pub struct MutableHandle<'a, T: 'a> {
+    ptr: &'a mut T
+}
+
+pub type MutableHandleValue<'a> = MutableHandle<'a, Value>;
+
 pub type HandleValue<'a> = Handle<'a, Value>;
 pub type HandleObject<'a> = Handle<'a, *mut JSObject>;
 pub type HandleId<'a> = Handle<'a, jsid>;
@@ -736,9 +741,9 @@ impl<T> Deref for RawHandle<T> {
     }
 }
 
-impl<T> MutableHandle<T> {
-    pub unsafe fn from_marked_location(ptr: *mut T) -> MutableHandle<T> {
-        MutableHandle {
+impl<T> RawMutableHandle<T> {
+    pub unsafe fn from_marked_location(ptr: *mut T) -> Self {
+        Self {
             _base: MutableHandleBase { _phantom0: PhantomData },
             ptr: ptr,
         }
@@ -746,7 +751,7 @@ impl<T> MutableHandle<T> {
 
     pub fn handle(&self) -> RawHandle<T> {
         unsafe {
-            RawHandle::from_marked_location(self.ptr as *const _)
+            RawHandle::from_marked_location(self.ptr as *const T)
         }
     }
 
@@ -763,7 +768,41 @@ impl<T> MutableHandle<T> {
     }
 }
 
-impl<T> Deref for MutableHandle<T> {
+impl<'a, T> MutableHandle<'a, T> {
+    pub unsafe fn from_marked_location(ptr: *mut T) -> Self {
+        RawMutableHandle::from_marked_location(ptr).into()
+    }
+
+    pub fn handle(&self) -> RawHandle<T> {
+        unsafe {
+            RawHandle::from_marked_location(self.ptr as *const T)
+        }
+    }
+
+    pub fn new(ptr: &'a mut T) -> Self {
+        Self { ptr: ptr }
+    }
+
+    pub fn get(&self) -> T
+        where T: Copy
+    {
+        *self.ptr
+    }
+
+    pub fn set(&mut self, v: T)
+        where T: Copy
+    {
+        *self.ptr = v
+    }
+
+    pub fn raw(&mut self) -> RawMutableHandle<T> {
+        unsafe {
+            RawMutableHandle::from_marked_location(self.ptr)
+        }
+    }
+}
+
+impl<T> Deref for RawMutableHandle<T> {
     type Target = T;
 
     fn deref<'a>(&'a self) -> &'a T {
@@ -771,9 +810,35 @@ impl<T> Deref for MutableHandle<T> {
     }
 }
 
-impl<T> DerefMut for MutableHandle<T> {
+impl<T> DerefMut for RawMutableHandle<T> {
     fn deref_mut<'a>(&'a mut self) -> &'a mut T {
         unsafe { &mut *self.ptr }
+    }
+}
+
+impl<'a, T> Deref for MutableHandle<'a, T> {
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        self.ptr
+    }
+}
+
+impl<'a, T> DerefMut for MutableHandle<'a, T> {
+    fn deref_mut(&mut self) -> &mut T {
+        self.ptr
+    }
+}
+
+impl<'a, T> From<MutableHandle<'a, T>> for RawMutableHandle<T> {
+    fn from(handle: MutableHandle<'a, T>) -> Self {
+        unsafe { RawMutableHandle::from_marked_location(handle.ptr) }
+    }
+}
+
+impl<'a, T> From<RawMutableHandle<T>> for MutableHandle<'a, T> {
+    fn from(handle: RawMutableHandle<T>) -> Self {
+        unsafe { MutableHandle::new(&mut *handle.ptr) }
     }
 }
 
@@ -921,7 +986,7 @@ impl<T: GCMethods + Copy> Heap<T> {
 
     pub fn handle(&self) -> RawHandle<T> {
         unsafe {
-            RawHandle::from_marked_location(self.ptr.get() as *const _)
+            RawHandle::from_marked_location(self.ptr.get() as *const T)
         }
     }
 
@@ -1102,7 +1167,7 @@ impl CallArgs {
 impl JSJitGetterCallArgs {
     #[inline]
     pub fn rval(&self) -> MutableHandleValue {
-        self._base
+        self._base.into()
     }
 }
 
@@ -1453,7 +1518,7 @@ pub unsafe fn is_window(obj: *mut JSObject) -> bool {
 }
 
 #[inline]
-pub unsafe fn try_to_outerize(rval: MutableHandleValue) {
+pub unsafe fn try_to_outerize(mut rval: MutableHandleValue) {
     let obj = rval.to_object();
     if is_window(obj) {
         let obj = ToWindowProxyIfWindow(obj);
@@ -1467,7 +1532,7 @@ pub unsafe fn maybe_wrap_object_value(cx: *mut JSContext, rval: MutableHandleVal
     assert!(rval.is_object());
     let obj = rval.to_object();
     if get_object_compartment(obj) != get_context_compartment(cx) {
-        assert!(JS_WrapValue(cx, rval));
+        assert!(JS_WrapValue(cx, rval.into()));
     } else if is_dom_object(obj) {
         try_to_outerize(rval);
     }
@@ -1486,7 +1551,7 @@ pub unsafe fn maybe_wrap_object_or_null_value(
 #[inline]
 pub unsafe fn maybe_wrap_value(cx: *mut JSContext, rval: MutableHandleValue) {
     if rval.is_string() {
-        assert!(JS_WrapValue(cx, rval));
+        assert!(JS_WrapValue(cx, rval.into()));
     } else if rval.is_object() {
         maybe_wrap_object_value(cx, rval);
     }
@@ -1529,9 +1594,7 @@ impl<'a> CapturedJSStack<'a> {
     pub unsafe fn new(cx: *mut JSContext,
                       mut guard: RootedGuard<'a, *mut JSObject>,
                       max_frame_count: Option<u32>) -> Option<Self> {
-        let obj_handle = guard.handle_mut();
-
-        if !CaptureCurrentStack(cx, obj_handle, max_frame_count.unwrap_or(0)) {
+        if !CaptureCurrentStack(cx, guard.handle_mut().raw(), max_frame_count.unwrap_or(0)) {
             None
         }
         else {
@@ -1546,13 +1609,13 @@ impl<'a> CapturedJSStack<'a> {
         unsafe {
             let stack_handle = self.stack.handle();
             rooted!(in(self.cx) let mut js_string = ptr::null_mut::<JSString>());
-            let string_handle = js_string.handle_mut();
+            let mut string_handle = js_string.handle_mut();
 
             if !IsSavedFrame(stack_handle.get()) {
                 return None;
             }
 
-            if !BuildStackString(self.cx, stack_handle.into(), string_handle, indent.unwrap_or(0)) {
+            if !BuildStackString(self.cx, stack_handle.into(), string_handle.raw(), indent.unwrap_or(0)) {
                 return None;
             }
 
