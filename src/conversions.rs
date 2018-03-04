@@ -34,12 +34,12 @@ use jsapi::{ForOfIterator, ForOfIterator_NonIterableBehavior};
 use jsapi::{Heap, JS_DefineElement, JS_GetLatin1StringCharsAndLength};
 use jsapi::{JS_GetTwoByteStringCharsAndLength, JS_NewArrayObject1};
 use jsapi::{JS_NewUCStringCopyN, JSPROP_ENUMERATE, JS_StringHasLatin1Chars};
-use jsapi::{JSContext, JSObject, JSString, MutableHandleValue, RootedObject};
+use jsapi::{JSContext, JSObject, JSString, RootedObject};
 use jsval::{BooleanValue, Int32Value, NullValue, UInt32Value, UndefinedValue};
 use jsval::{JSVal, ObjectValue, ObjectOrNullValue, StringValue};
 use rust::{ToBoolean, ToInt32, ToInt64, ToNumber, ToUint16, ToUint32, ToUint64};
 use rust::{ToString, maybe_wrap_object_or_null_value, maybe_wrap_object_value};
-use rust::{HandleValue};
+use rust::{HandleValue, MutableHandleValue};
 use rust::maybe_wrap_value;
 use libc;
 use num_traits::{Bounded, Zero};
@@ -181,7 +181,7 @@ fn clamp_to<D>(d: f64) -> D
 // https://heycam.github.io/webidl/#es-void
 impl ToJSValConvertible for () {
     #[inline]
-    unsafe fn to_jsval(&self, _cx: *mut JSContext, rval: MutableHandleValue) {
+    unsafe fn to_jsval(&self, _cx: *mut JSContext, mut rval: MutableHandleValue) {
         rval.set(UndefinedValue());
     }
 }
@@ -208,7 +208,7 @@ impl FromJSValConvertible for Heap<JSVal> {
 
 impl ToJSValConvertible for JSVal {
     #[inline]
-    unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
+    unsafe fn to_jsval(&self, cx: *mut JSContext, mut rval: MutableHandleValue) {
         rval.set(*self);
         maybe_wrap_value(cx, rval);
     }
@@ -216,7 +216,7 @@ impl ToJSValConvertible for JSVal {
 
 impl<'a> ToJSValConvertible for HandleValue<'a> {
     #[inline]
-    unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
+    unsafe fn to_jsval(&self, cx: *mut JSContext, mut rval: MutableHandleValue) {
         rval.set(self.get());
         maybe_wrap_value(cx, rval);
     }
@@ -224,7 +224,7 @@ impl<'a> ToJSValConvertible for HandleValue<'a> {
 
 impl ToJSValConvertible for Heap<JSVal> {
     #[inline]
-    unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
+    unsafe fn to_jsval(&self, cx: *mut JSContext, mut rval: MutableHandleValue) {
         rval.set(self.get());
         maybe_wrap_value(cx, rval);
     }
@@ -249,7 +249,7 @@ unsafe fn convert_int_from_jsval<T, M>(cx: *mut JSContext, value: HandleValue,
 // https://heycam.github.io/webidl/#es-boolean
 impl ToJSValConvertible for bool {
     #[inline]
-    unsafe fn to_jsval(&self, _cx: *mut JSContext, rval: MutableHandleValue) {
+    unsafe fn to_jsval(&self, _cx: *mut JSContext, mut  rval: MutableHandleValue) {
         rval.set(BooleanValue(*self));
     }
 }
@@ -265,7 +265,7 @@ impl FromJSValConvertible for bool {
 // https://heycam.github.io/webidl/#es-byte
 impl ToJSValConvertible for i8 {
     #[inline]
-    unsafe fn to_jsval(&self, _cx: *mut JSContext, rval: MutableHandleValue) {
+    unsafe fn to_jsval(&self, _cx: *mut JSContext, mut rval: MutableHandleValue) {
         rval.set(Int32Value(*self as i32));
     }
 }
@@ -284,7 +284,7 @@ impl FromJSValConvertible for i8 {
 // https://heycam.github.io/webidl/#es-octet
 impl ToJSValConvertible for u8 {
     #[inline]
-    unsafe fn to_jsval(&self, _cx: *mut JSContext, rval: MutableHandleValue) {
+    unsafe fn to_jsval(&self, _cx: *mut JSContext, mut rval: MutableHandleValue) {
         rval.set(Int32Value(*self as i32));
     }
 }
@@ -303,7 +303,7 @@ impl FromJSValConvertible for u8 {
 // https://heycam.github.io/webidl/#es-short
 impl ToJSValConvertible for i16 {
     #[inline]
-    unsafe fn to_jsval(&self, _cx: *mut JSContext, rval: MutableHandleValue) {
+    unsafe fn to_jsval(&self, _cx: *mut JSContext, mut rval: MutableHandleValue) {
         rval.set(Int32Value(*self as i32));
     }
 }
@@ -322,7 +322,7 @@ impl FromJSValConvertible for i16 {
 // https://heycam.github.io/webidl/#es-unsigned-short
 impl ToJSValConvertible for u16 {
     #[inline]
-    unsafe fn to_jsval(&self, _cx: *mut JSContext, rval: MutableHandleValue) {
+    unsafe fn to_jsval(&self, _cx: *mut JSContext, mut rval: MutableHandleValue) {
         rval.set(Int32Value(*self as i32));
     }
 }
@@ -341,7 +341,7 @@ impl FromJSValConvertible for u16 {
 // https://heycam.github.io/webidl/#es-long
 impl ToJSValConvertible for i32 {
     #[inline]
-    unsafe fn to_jsval(&self, _cx: *mut JSContext, rval: MutableHandleValue) {
+    unsafe fn to_jsval(&self, _cx: *mut JSContext, mut rval: MutableHandleValue) {
         rval.set(Int32Value(*self));
     }
 }
@@ -360,7 +360,7 @@ impl FromJSValConvertible for i32 {
 // https://heycam.github.io/webidl/#es-unsigned-long
 impl ToJSValConvertible for u32 {
     #[inline]
-    unsafe fn to_jsval(&self, _cx: *mut JSContext, rval: MutableHandleValue) {
+    unsafe fn to_jsval(&self, _cx: *mut JSContext, mut rval: MutableHandleValue) {
         rval.set(UInt32Value(*self));
     }
 }
@@ -379,7 +379,7 @@ impl FromJSValConvertible for u32 {
 // https://heycam.github.io/webidl/#es-long-long
 impl ToJSValConvertible for i64 {
     #[inline]
-    unsafe fn to_jsval(&self, _cx: *mut JSContext, rval: MutableHandleValue) {
+    unsafe fn to_jsval(&self, _cx: *mut JSContext, mut rval: MutableHandleValue) {
         rval.set(RUST_JS_NumberValue(*self as f64));
     }
 }
@@ -398,7 +398,7 @@ impl FromJSValConvertible for i64 {
 // https://heycam.github.io/webidl/#es-unsigned-long-long
 impl ToJSValConvertible for u64 {
     #[inline]
-    unsafe fn to_jsval(&self, _cx: *mut JSContext, rval: MutableHandleValue) {
+    unsafe fn to_jsval(&self, _cx: *mut JSContext, mut rval: MutableHandleValue) {
         rval.set(RUST_JS_NumberValue(*self as f64));
     }
 }
@@ -417,7 +417,7 @@ impl FromJSValConvertible for u64 {
 // https://heycam.github.io/webidl/#es-float
 impl ToJSValConvertible for f32 {
     #[inline]
-    unsafe fn to_jsval(&self, _cx: *mut JSContext, rval: MutableHandleValue) {
+    unsafe fn to_jsval(&self, _cx: *mut JSContext, mut rval: MutableHandleValue) {
         rval.set(RUST_JS_NumberValue(*self as f64));
     }
 }
@@ -434,7 +434,7 @@ impl FromJSValConvertible for f32 {
 // https://heycam.github.io/webidl/#es-double
 impl ToJSValConvertible for f64 {
     #[inline]
-    unsafe fn to_jsval(&self, _cx: *mut JSContext, rval: MutableHandleValue) {
+    unsafe fn to_jsval(&self, _cx: *mut JSContext, mut rval: MutableHandleValue) {
         rval.set(RUST_JS_NumberValue(*self));
     }
 }
@@ -478,7 +478,7 @@ pub unsafe fn jsstr_to_string(cx: *mut JSContext, jsstr: *mut JSString) -> Strin
 // https://heycam.github.io/webidl/#es-USVString
 impl ToJSValConvertible for str {
     #[inline]
-    unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
+    unsafe fn to_jsval(&self, cx: *mut JSContext, mut rval: MutableHandleValue) {
         let mut string_utf16: Vec<u16> = Vec::with_capacity(self.len());
         string_utf16.extend(self.encode_utf16());
         let jsstr = JS_NewUCStringCopyN(cx,
@@ -514,7 +514,7 @@ impl FromJSValConvertible for String {
 
 impl<T: ToJSValConvertible> ToJSValConvertible for Option<T> {
     #[inline]
-    unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
+    unsafe fn to_jsval(&self, cx: *mut JSContext, mut rval: MutableHandleValue) {
         match self {
             &Some(ref value) => value.to_jsval(cx, rval),
             &None => rval.set(NullValue()),
@@ -549,7 +549,7 @@ impl<T: FromJSValConvertible> FromJSValConvertible for Option<T> {
 // https://heycam.github.io/webidl/#es-sequence
 impl<T: ToJSValConvertible> ToJSValConvertible for Vec<T> {
     #[inline]
-    unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
+    unsafe fn to_jsval(&self, cx: *mut JSContext, mut rval: MutableHandleValue) {
         rooted!(in(cx) let js_array = JS_NewArrayObject1(cx, self.len() as libc::size_t));
         assert!(!js_array.handle().is_null());
 
@@ -620,7 +620,7 @@ impl<C: Clone, T: FromJSValConvertible<Config=C>> FromJSValConvertible for Vec<T
         loop {
             let mut done = false;
             rooted!(in(cx) let mut val = UndefinedValue());
-            if !iterator.next(val.handle_mut(), &mut done) {
+            if !iterator.next(val.handle_mut().into(), &mut done) {
                 return Err(())
             }
 
@@ -641,7 +641,7 @@ impl<C: Clone, T: FromJSValConvertible<Config=C>> FromJSValConvertible for Vec<T
 // https://heycam.github.io/webidl/#es-object
 impl ToJSValConvertible for *mut JSObject {
     #[inline]
-    unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
+    unsafe fn to_jsval(&self, cx: *mut JSContext, mut rval: MutableHandleValue) {
         rval.set(ObjectOrNullValue(*self));
         maybe_wrap_object_or_null_value(cx, rval);
     }
@@ -650,7 +650,7 @@ impl ToJSValConvertible for *mut JSObject {
 // https://heycam.github.io/webidl/#es-object
 impl ToJSValConvertible for ptr::NonNull<JSObject> {
     #[inline]
-    unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
+    unsafe fn to_jsval(&self, cx: *mut JSContext, mut rval: MutableHandleValue) {
         rval.set(ObjectValue(self.as_ptr()));
         maybe_wrap_object_value(cx, rval);
     }
@@ -659,7 +659,7 @@ impl ToJSValConvertible for ptr::NonNull<JSObject> {
 // https://heycam.github.io/webidl/#es-object
 impl ToJSValConvertible for Heap<*mut JSObject> {
     #[inline]
-    unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
+    unsafe fn to_jsval(&self, cx: *mut JSContext, mut rval: MutableHandleValue) {
         rval.set(ObjectOrNullValue(self.get()));
         maybe_wrap_object_or_null_value(cx, rval);
     }
