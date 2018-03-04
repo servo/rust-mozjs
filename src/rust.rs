@@ -4,7 +4,9 @@
 
 //! Rust wrappers around the raw JS apis
 
+
 use libc::{size_t, c_uint, c_char};
+
 use std::char;
 use std::ffi;
 use std::ptr;
@@ -16,12 +18,15 @@ use std::ops::{Deref, DerefMut};
 use std::cell::{Cell, UnsafeCell};
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+
 use consts::{JSCLASS_RESERVED_SLOTS_MASK, JSCLASS_GLOBAL_SLOT_COUNT};
 use consts::{JSCLASS_IS_DOMJSCLASS, JSCLASS_IS_GLOBAL};
+
 use conversions::jsstr_to_string;
+
 use jsapi;
 use jsapi::{AutoGCRooter, AutoIdVector, AutoObjectVector, CallArgs, CompartmentOptions, ContextFriendFields};
-use jsapi::{Evaluate2, Handle, HandleBase, HandleObject, HandleValue, HandleValueArray, Heap};
+use jsapi::{Evaluate2, HandleBase, HandleValueArray, Heap};
 use jsapi::{HeapObjectPostBarrier, HeapValuePostBarrier, InitSelfHostedCode, IsWindowSlow, JS_BeginRequest};
 use jsapi::{JS_DefineFunctions, JS_DefineProperties, JS_DestroyRuntime, JS_EndRequest, JS_ShutDown};
 use jsapi::{JS_EnterCompartment, JS_EnumerateStandardClasses, JS_GetContext, JS_GlobalObjectTraceHook};
@@ -31,7 +36,7 @@ use jsapi::{JSClass, JSCLASS_RESERVED_SLOTS_SHIFT, JSClassOps, JSCompartment, JS
 use jsapi::{JSErrorReport, JSFlatString, JSFunction, JSFunctionSpec, JSGCParamKey};
 use jsapi::{JSID_VOID, JSJitGetterCallArgs, JSJitMethodCallArgs, JSJitSetterCallArgs};
 use jsapi::{JSNativeWrapper, JSObject, JSPropertySpec, JSRuntime, JSScript};
-use jsapi::{JSString, JSTracer, MutableHandle, MutableHandleBase, MutableHandleValue};
+use jsapi::{JSString, JSTracer, MutableHandleBase};
 use jsapi::{NullHandleValue, Object, ObjectGroup,ReadOnlyCompileOptions, Rooted};
 use jsapi::{RootedBase, RuntimeOptionsRef, SetWarningReporter, Symbol, ToBooleanSlow};
 use jsapi::{ToInt32Slow, ToInt64Slow, ToNumberSlow, ToStringSlow, ToUint16Slow};
@@ -39,13 +44,21 @@ use jsapi::{ToUint32Slow, ToUint64Slow, ToWindowProxyIfWindow, UndefinedHandleVa
 use jsapi::{Value, jsid, PerThreadDataFriendFields, PerThreadDataFriendFields_RuntimeDummy};
 use jsapi::{CaptureCurrentStack, BuildStackString, IsSavedFrame};
 use jsapi::{AutoGCRooter_jspubtd_h_unnamed_1 as AutoGCRooterTag, _vftable_CustomAutoRooter as CustomAutoRooterVFTable};
+use jsapi::Handle as RawHandle;
+use jsapi::MutableHandle as MutableHandle;
+use jsapi::HandleValue as RawHandleValue;
+use jsapi::MutableHandleValue as MutableHandleValue;
+
 use jsval::{ObjectValue, UndefinedValue};
+
 use glue::{AppendToAutoObjectVector, CallFunctionTracer, CallIdTracer, CallObjectTracer};
 use glue::{CallScriptTracer, CallStringTracer, CallValueTracer, CreateAutoIdVector};
 use glue::{CreateAutoObjectVector, CreateCallArgsFromVp, DeleteAutoObjectVector};
 use glue::{DestroyAutoIdVector, DeleteCompileOptions, NewCompileOptions, SliceAutoIdVector};
 use glue::{CallObjectRootTracer, CallValueRootTracer};
+
 use panic::maybe_resume_unwind;
+
 use default_heapsize;
 
 // From Gecko:
@@ -412,10 +425,10 @@ impl<'a, T: 'a + RootKind + GCMethods> RootedGuard<'a, T> {
         }
     }
 
-    pub fn handle(&self) -> Handle<T> {
-        unsafe {
-            Handle::from_marked_location(&self.root.ptr)
-        }
+    // REVIEW: is this equivalent to?
+    // pub fn handle(&self) -> Handle<T>
+    pub fn handle(&'a self) -> Handle<'a, T> {
+        Handle::new(&self.root.ptr)
     }
 
     pub fn handle_mut(&mut self) -> MutableHandle<T> {
@@ -608,10 +621,9 @@ impl<'a, T: 'a + CustomTrace> CustomAutoRooterGuard<'a, T> {
         }
     }
 
-    pub fn handle(&self) -> Handle<T> where T: RootKind {
-        unsafe {
-            Handle::from_marked_location(&self.rooter.data)
-        }
+    // REVIEW: as in line 429
+    pub fn handle(&'a self) -> Handle<'a, T> where T: RootKind {
+        Handle::new(&self.rooter.data)
     }
 
     pub fn handle_mut(&mut self) -> MutableHandle<T> where T: RootKind {
@@ -657,22 +669,66 @@ macro_rules! auto_root {
     }
 }
 
-impl<T> Handle<T> {
+pub struct Handle<'a, T: 'a> {
+    ptr: &'a T,
+}
+
+pub type HandleValue<'a> = Handle<'a, Value>;
+pub type HandleObject<'a> = Handle<'a, *mut JSObject>;
+pub type HandleId<'a> = Handle<'a, jsid>;
+
+impl<T> RawHandle<T> {
     pub fn get(&self) -> T
         where T: Copy
     {
         unsafe { *self.ptr }
     }
 
-    pub unsafe fn from_marked_location(ptr: *const T) -> Handle<T> {
-        Handle {
+    pub unsafe fn from_marked_location(ptr: *const T) -> Self {
+        RawHandle {
             _base: HandleBase { _phantom0: PhantomData },
             ptr: ptr,
         }
     }
 }
 
-impl<T> Deref for Handle<T> {
+impl<'a, T> Handle<'a, T> {
+    pub fn get(&self) -> T
+        where T: Copy
+    {
+        *self.ptr
+    }
+
+    pub fn new(ptr: &'a T) -> Self {
+        Handle { ptr: ptr }
+    }
+
+    pub unsafe fn from_marked_location(ptr: *const T) -> Self {
+        RawHandle::from_marked_location(ptr).into()
+    }
+}
+
+impl<'a, T> From<Handle<'a, T>> for RawHandle<T> {
+    fn from(handle: Handle<'a, T>) -> Self {
+        unsafe { RawHandle::from_marked_location(handle.ptr) }
+    }
+}
+
+impl<'a, T> From<RawHandle<T>> for Handle<'a, T> {
+    fn from(handle: RawHandle<T>) -> Self {
+        unsafe { Handle::new(&*handle.ptr) }
+    }
+}
+
+impl<'a, T> Deref for Handle<'a, T> {
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        self.ptr
+    }
+}
+
+impl<T> Deref for RawHandle<T> {
     type Target = T;
 
     fn deref<'a>(&'a self) -> &'a T {
@@ -688,9 +744,9 @@ impl<T> MutableHandle<T> {
         }
     }
 
-    pub fn handle(&self) -> Handle<T> {
+    pub fn handle(&self) -> RawHandle<T> {
         unsafe {
-            Handle::from_marked_location(self.ptr as *const _)
+            RawHandle::from_marked_location(self.ptr as *const _)
         }
     }
 
@@ -721,17 +777,27 @@ impl<T> DerefMut for MutableHandle<T> {
     }
 }
 
-impl HandleValue {
-    pub fn null() -> HandleValue {
+impl RawHandleValue {
+    pub fn null() -> &'static Self {
         unsafe {
-            NullHandleValue
+            &NullHandleValue
         }
     }
 
-    pub fn undefined() -> HandleValue {
+    pub fn undefined() -> &'static Self {
         unsafe {
-            UndefinedHandleValue
+            &UndefinedHandleValue
         }
+    }
+}
+
+impl<'a> HandleValue<'a> {
+    pub fn null() -> Self {
+        Self::new(RawHandleValue::null())
+    }
+
+    pub fn undefined() -> Self {
+        Self::new(RawHandleValue::undefined())
     }
 }
 
@@ -753,8 +819,8 @@ impl HandleValueArray {
 
 const ConstNullValue: *mut JSObject = 0 as *mut JSObject;
 
-impl HandleObject {
-    pub fn null() -> HandleObject {
+impl<'a> HandleObject<'a> {
+    pub fn null() -> Self {
         unsafe {
             HandleObject::from_marked_location(&ConstNullValue)
         }
@@ -853,9 +919,9 @@ impl<T: GCMethods + Copy> Heap<T> {
         self.ptr.get()
     }
 
-    pub fn handle(&self) -> Handle<T> {
+    pub fn handle(&self) -> RawHandle<T> {
         unsafe {
-            Handle::from_marked_location(self.ptr.get() as *const _)
+            RawHandle::from_marked_location(self.ptr.get() as *const _)
         }
     }
 
@@ -930,9 +996,11 @@ impl JSJitMethodCallArgs {
     pub fn get(&self, i: u32) -> HandleValue {
         unsafe {
             if i < self._base.argc_ {
-                HandleValue::from_marked_location(self._base.argv_.offset(i as isize))
+                RawHandleValue::from_marked_location(
+                    self._base.argv_.offset(i as isize)
+                ).into()
             } else {
-                UndefinedHandleValue
+                UndefinedHandleValue.into()
             }
         }
     }
@@ -991,7 +1059,7 @@ impl CallArgs {
             if i < self._base.argc_ {
                 HandleValue::from_marked_location(self._base.argv_.offset(i as isize))
             } else {
-                UndefinedHandleValue
+                UndefinedHandleValue.into()
             }
         }
     }
@@ -1042,7 +1110,7 @@ impl JSJitSetterCallArgs {
     #[inline]
     pub fn get(&self, i: u32) -> HandleValue {
         assert!(i == 0);
-        self._base.handle()
+        self._base.handle().into()
     }
 }
 
@@ -1121,7 +1189,7 @@ pub unsafe fn ToBoolean(v: HandleValue) -> bool {
         return true;
     }
 
-    ToBooleanSlow(v)
+    ToBooleanSlow(v.into())
 }
 
 #[inline]
@@ -1143,7 +1211,7 @@ pub unsafe fn ToNumber(cx: *mut JSContext, v: HandleValue) -> Result<f64, ()> {
 unsafe fn convert_from_int32<T: Default + Copy>(
     cx: *mut JSContext,
     v: HandleValue,
-    conv_fn: unsafe extern "C" fn(*mut JSContext, HandleValue, *mut T) -> bool)
+    conv_fn: unsafe extern "C" fn(*mut JSContext, RawHandleValue, *mut T) -> bool)
         -> Result<T, ()> {
 
     let val = *v.ptr;
@@ -1155,7 +1223,7 @@ unsafe fn convert_from_int32<T: Default + Copy>(
     }
 
     let mut out = Default::default();
-    if conv_fn(cx, v, &mut out) {
+    if conv_fn(cx, v.into(), &mut out) {
         Ok(out)
     } else {
         Err(())
@@ -1194,7 +1262,7 @@ pub unsafe fn ToString(cx: *mut JSContext, v: HandleValue) -> *mut JSString {
         return val.to_string();
     }
 
-    ToStringSlow(cx, v)
+    ToStringSlow(cx, v.into())
 }
 
 pub unsafe extern fn report_warning(_cx: *mut JSContext, _: *const c_char, report: *mut JSErrorReport) {
@@ -1290,7 +1358,7 @@ pub unsafe fn define_methods(cx: *mut JSContext, obj: HandleObject,
         }
     });
 
-    JS_DefineFunctions(cx, obj, methods.as_ptr()).to_result()
+    JS_DefineFunctions(cx, obj.into(), methods.as_ptr()).to_result()
 }
 
 /// Defines attributes on `obj`. The last entry of `properties` must contain
@@ -1320,7 +1388,7 @@ pub unsafe fn define_properties(cx: *mut JSContext, obj: HandleObject,
         }
     });
 
-    JS_DefineProperties(cx, obj, properties.as_ptr()).to_result()
+    JS_DefineProperties(cx, obj.into(), properties.as_ptr()).to_result()
 }
 
 static SIMPLE_GLOBAL_CLASS_OPS: JSClassOps = JSClassOps {
@@ -1484,7 +1552,7 @@ impl<'a> CapturedJSStack<'a> {
                 return None;
             }
 
-            if !BuildStackString(self.cx, stack_handle, string_handle, indent.unwrap_or(0)) {
+            if !BuildStackString(self.cx, stack_handle.into(), string_handle, indent.unwrap_or(0)) {
                 return None;
             }
 

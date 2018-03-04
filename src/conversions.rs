@@ -30,7 +30,7 @@
 use error::throw_type_error;
 use glue::RUST_JS_NumberValue;
 use jsapi::AssertSameCompartment;
-use jsapi::{ForOfIterator, ForOfIterator_NonIterableBehavior, HandleValue};
+use jsapi::{ForOfIterator, ForOfIterator_NonIterableBehavior};
 use jsapi::{Heap, JS_DefineElement, JS_GetLatin1StringCharsAndLength};
 use jsapi::{JS_GetTwoByteStringCharsAndLength, JS_NewArrayObject1};
 use jsapi::{JS_NewUCStringCopyN, JSPROP_ENUMERATE, JS_StringHasLatin1Chars};
@@ -39,6 +39,7 @@ use jsval::{BooleanValue, Int32Value, NullValue, UInt32Value, UndefinedValue};
 use jsval::{JSVal, ObjectValue, ObjectOrNullValue, StringValue};
 use rust::{ToBoolean, ToInt32, ToInt64, ToNumber, ToUint16, ToUint32, ToUint64};
 use rust::{ToString, maybe_wrap_object_or_null_value, maybe_wrap_object_value};
+use rust::{HandleValue};
 use rust::maybe_wrap_value;
 use libc;
 use num_traits::{Bounded, Zero};
@@ -213,7 +214,7 @@ impl ToJSValConvertible for JSVal {
     }
 }
 
-impl ToJSValConvertible for HandleValue {
+impl<'a> ToJSValConvertible for HandleValue<'a> {
     #[inline]
     unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
         rval.set(self.get());
@@ -556,8 +557,8 @@ impl<T: ToJSValConvertible> ToJSValConvertible for Vec<T> {
         for (index, obj) in self.iter().enumerate() {
             obj.to_jsval(cx, val.handle_mut());
 
-            assert!(JS_DefineElement(cx, js_array.handle(),
-                                     index as u32, val.handle(), JSPROP_ENUMERATE, None, None));
+            assert!(JS_DefineElement(cx, js_array.handle().into(),
+                                     index as u32, val.handle().into(), JSPROP_ENUMERATE, None, None));
         }
 
         rval.set(ObjectValue(js_array.handle().get()));
@@ -606,7 +607,7 @@ impl<C: Clone, T: FromJSValConvertible<Config=C>> FromJSValConvertible for Vec<T
         let iterator = ForOfIteratorGuard::new(cx, &mut iterator);
         let iterator = &mut *iterator.root;
 
-        if !iterator.init(value, ForOfIterator_NonIterableBehavior::AllowNonIterable) {
+        if !iterator.init(value.into(), ForOfIterator_NonIterableBehavior::AllowNonIterable) {
             return Err(())
         }
 
