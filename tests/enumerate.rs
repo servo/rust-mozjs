@@ -38,13 +38,13 @@ fn enumerate() {
 
         rooted!(in(cx) let object = rval.to_object());
         let ids = IdVector::new(cx);
-        assert!(GetPropertyKeys(cx, object.handle(), JSITER_OWNONLY, ids.get()));
+        assert!(GetPropertyKeys(cx, object.handle().into(), JSITER_OWNONLY, ids.get()));
 
         assert_eq!(ids.len(), 1);
         rooted!(in(cx) let id = ids[0]);
 
-        assert!(RUST_JSID_IS_STRING(id.handle()));
-        rooted!(in(cx) let id = RUST_JSID_TO_STRING(id.handle()));
+        assert!(RUST_JSID_IS_STRING(id.handle().into()));
+        rooted!(in(cx) let id = RUST_JSID_TO_STRING(id.handle().into()));
 
         let mut matches = false;
         assert!(JS_StringEqualsAscii(cx,

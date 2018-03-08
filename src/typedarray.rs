@@ -17,7 +17,6 @@ use glue::GetUint8ArrayLengthAndData;
 use glue::GetUint8ClampedArrayLengthAndData;
 use jsapi::GetArrayBufferLengthAndData;
 use jsapi::GetArrayBufferViewLengthAndData;
-use jsapi::HandleObject;
 use jsapi::JSContext;
 use jsapi::JSObject;
 use jsapi::JS_GetArrayBufferData;
@@ -41,7 +40,6 @@ use jsapi::JS_NewUint16Array;
 use jsapi::JS_NewUint32Array;
 use jsapi::JS_NewUint8Array;
 use jsapi::JS_NewUint8ClampedArray;
-use jsapi::MutableHandleObject;
 use jsapi::Rooted;
 use jsapi::Type;
 use jsapi::UnwrapArrayBuffer;
@@ -55,7 +53,7 @@ use jsapi::UnwrapUint16Array;
 use jsapi::UnwrapUint32Array;
 use jsapi::UnwrapUint8Array;
 use jsapi::UnwrapUint8ClampedArray;
-use rust::RootedGuard;
+use rust::{HandleObject, MutableHandleObject, RootedGuard};
 use std::ptr;
 use std::slice;
 
@@ -133,7 +131,7 @@ impl<'a, T: TypedArrayElementCreator + TypedArrayElement> TypedArray<'a, T> {
     /// be copied into the newly-allocated buffer. Returns the new JS reflector.
     pub unsafe fn create(cx: *mut JSContext,
                          with: CreateWith<T::Element>,
-                         result: MutableHandleObject)
+                         mut result: MutableHandleObject)
                          -> Result<(), ()> {
         let length = match with {
             CreateWith::Length(len) => len,

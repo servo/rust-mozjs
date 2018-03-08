@@ -42,10 +42,10 @@ fn rooting() {
                                                        h_option,
                                                        &c_option));
         let _ac = JSAutoCompartment::new(cx, global.get());
-        rooted!(in(cx) let prototype_proto = JS_GetObjectPrototype(cx, global.handle()));
+        rooted!(in(cx) let prototype_proto = JS_GetObjectPrototype(cx, global.handle().into()));
         rooted!(in(cx) let proto = JS_NewObjectWithUniqueType(cx,
                                                               &CLASS as *const _,
-                                                              prototype_proto.handle()));
+                                                              prototype_proto.handle().into()));
         define_methods(cx, proto.handle(), METHODS).unwrap();
     }
 }

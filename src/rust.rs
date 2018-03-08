@@ -668,6 +668,7 @@ macro_rules! auto_root {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct Handle<'a, T: 'a> {
     ptr: &'a T,
 }
@@ -677,6 +678,7 @@ pub struct MutableHandle<'a, T: 'a> {
 }
 
 pub type MutableHandleValue<'a> = MutableHandle<'a, Value>;
+pub type MutableHandleObject<'a> = MutableHandle<'a, *mut JSObject>;
 
 pub type HandleValue<'a> = Handle<'a, Value>;
 pub type HandleObject<'a> = Handle<'a, *mut JSObject>;
@@ -773,10 +775,8 @@ impl<'a, T> MutableHandle<'a, T> {
         RawMutableHandle::from_marked_location(ptr).into()
     }
 
-    pub fn handle(&self) -> RawHandle<T> {
-        unsafe {
-            RawHandle::from_marked_location(self.ptr as *const T)
-        }
+    pub fn handle(&self) -> Handle<T> {
+        Handle::new(self.ptr)
     }
 
     pub fn new(ptr: &'a mut T) -> Self {
@@ -795,7 +795,7 @@ impl<'a, T> MutableHandle<'a, T> {
         *self.ptr = v
     }
 
-    pub fn raw(&mut self) -> RawMutableHandle<T> {
+    fn raw(&mut self) -> RawMutableHandle<T> {
         unsafe {
             RawMutableHandle::from_marked_location(self.ptr)
         }
