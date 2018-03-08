@@ -7,6 +7,7 @@ extern crate mozjs;
 
 use mozjs::jsapi::CompartmentOptions;
 use mozjs::jsapi::JSAutoCompartment;
+use mozjs::jsapi::JSObject;
 use mozjs::jsapi::JS_NewGlobalObject;
 use mozjs::jsapi::OnNewGlobalHookOption;
 use mozjs::jsapi::Type;
@@ -44,7 +45,7 @@ fn typedarray() {
         typedarray!(in(cx) let view: ArrayBufferView = rval.to_object());
         assert_eq!(view.unwrap().get_array_type(), Type::Uint8);
 
-        rooted!(in(cx) let mut rval = ptr::null_mut());
+        rooted!(in(cx) let mut rval = ptr::null_mut::<JSObject>());
         assert!(Uint32Array::create(cx, CreateWith::Slice(&[1, 3, 5]), rval.handle_mut()).is_ok());
 
         typedarray!(in(cx) let array: Uint32Array = rval.get());
@@ -54,11 +55,11 @@ fn typedarray() {
         array.as_mut().unwrap().update(&[2, 4, 6]);
         assert_eq!(array.unwrap().as_slice(), &[2, 4, 6][..]);
 
-        rooted!(in(cx) let rval = ptr::null_mut());
+        rooted!(in(cx) let rval = ptr::null_mut::<JSObject>());
         typedarray!(in(cx) let array: Uint8Array = rval.get());
         assert!(array.is_err());
 
-        rooted!(in(cx) let mut rval = ptr::null_mut());
+        rooted!(in(cx) let mut rval = ptr::null_mut::<JSObject>());
         assert!(Uint32Array::create(cx, CreateWith::Length(5), rval.handle_mut()).is_ok());
 
         typedarray!(in(cx) let array: Uint32Array = rval.get());
@@ -87,7 +88,7 @@ fn typedarray_update_panic() {
         );
 
         let _ac = JSAutoCompartment::new(cx, global.get());
-        rooted!(in(cx) let mut rval = ptr::null_mut());
+        rooted!(in(cx) let mut rval = ptr::null_mut::<JSObject>());
         let _ = Uint32Array::create(cx, CreateWith::Slice(&[1, 2, 3, 4, 5]), rval.handle_mut());
         typedarray!(in(cx) let mut array: Uint32Array = rval.get());
         array.as_mut().unwrap().update(&[0, 2, 4, 6, 8, 10]);
