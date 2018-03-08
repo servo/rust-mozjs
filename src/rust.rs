@@ -1477,7 +1477,7 @@ impl<'a> CapturedJSStack<'a> {
     pub fn as_string(&self, indent: Option<usize>) -> Option<String> {
         unsafe {
             let stack_handle = self.stack.handle();
-            rooted!(in(self.cx) let mut js_string = ptr::null_mut());
+            rooted!(in(self.cx) let mut js_string = ptr::null_mut::<JSString>());
             let string_handle = js_string.handle_mut();
 
             if !IsSavedFrame(stack_handle.get()) {
