@@ -836,6 +836,21 @@ impl<T: GCMethods + Copy> Heap<T> {
         ptr
     }
 
+    /// This creates a `Box`-wrapped Heap value. Setting a value inside Heap
+    /// object triggers a barrier, referring to the Heap object location,
+    /// hence why it is not safe to construct a temporary Heap value, assign
+    /// a non-null value and move it (e.g. typical object construction).
+    ///
+    /// Using boxed Heap value guarantees that the underlying Heap value will
+    /// not be moved when constructed.
+    pub fn boxed(v: T) -> Box<Heap<T>>
+        where Heap<T>: Default
+    {
+        let boxed = Box::new(Heap::default());
+        boxed.set(v);
+        boxed
+    }
+
     pub fn set(&self, v: T) {
         unsafe {
             let ptr = self.ptr.get();
