@@ -6,6 +6,9 @@
 //! typed arrays or wrapping existing JS reflectors, and prevents reinterpreting
 //! existing buffers as different types except in well-defined cases.
 
+use conversions::ToJSValConvertible;
+use conversions::ConversionResult;
+use conversions::FromJSValConvertible;
 use glue::GetFloat32ArrayLengthAndData;
 use glue::GetFloat64ArrayLengthAndData;
 use glue::GetInt16ArrayLengthAndData;
@@ -17,6 +20,7 @@ use glue::GetUint8ArrayLengthAndData;
 use glue::GetUint8ClampedArrayLengthAndData;
 use jsapi::GetArrayBufferLengthAndData;
 use jsapi::GetArrayBufferViewLengthAndData;
+use jsapi::HandleValue;
 use jsapi::Heap;
 use jsapi::JSContext;
 use jsapi::JSObject;
@@ -43,6 +47,7 @@ use jsapi::JS_NewUint32Array;
 use jsapi::JS_NewUint8Array;
 use jsapi::JS_NewUint8ClampedArray;
 use jsapi::MutableHandleObject;
+use jsapi::MutableHandleValue;
 use jsapi::Type;
 use jsapi::UnwrapArrayBuffer;
 use jsapi::UnwrapArrayBufferView;
@@ -56,6 +61,7 @@ use jsapi::UnwrapUint32Array;
 use jsapi::UnwrapUint8Array;
 use jsapi::UnwrapUint8ClampedArray;
 use rust::CustomTrace;
+
 use std::ptr;
 use std::slice;
 
@@ -80,6 +86,27 @@ impl JSObjectStorage for Box<Heap<*mut JSObject>> {
         let boxed = Box::new(Heap::default());
         boxed.set(raw);
         boxed
+    }
+}
+
+impl<T: TypedArrayElement, S: JSObjectStorage> FromJSValConvertible for TypedArray<T, S> {
+    type Config = ();
+    unsafe fn from_jsval(_cx: *mut JSContext,
+                         value: HandleValue,
+                         _option: ())
+                         -> Result<ConversionResult<Self>, ()> {
+        if value.get().is_object() {
+            Self::from(value.get().to_object()).map(ConversionResult::Success)
+        } else {
+            Err(())
+        }
+    }
+}
+
+impl<T: TypedArrayElement, S: JSObjectStorage> ToJSValConvertible for TypedArray<T, S> {
+    #[inline]
+    unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
+        ToJSValConvertible::to_jsval(&self.object.as_raw(), cx, rval);
     }
 }
 
