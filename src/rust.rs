@@ -711,19 +711,17 @@ impl<'a, T> Handle<'a, T> {
     }
 
     pub unsafe fn from_marked_location(ptr: *const T) -> Self {
-        RawHandle::from_marked_location(ptr).into()
+        Handle::new(&*ptr)
+    }
+
+    unsafe fn from_raw(handle: RawHandle<T>) -> Self {
+        Handle::from_marked_location(handle.ptr)
     }
 }
 
 impl<'a, T> From<Handle<'a, T>> for RawHandle<T> {
     fn from(handle: Handle<'a, T>) -> Self {
         unsafe { RawHandle::from_marked_location(handle.ptr) }
-    }
-}
-
-impl<'a, T> From<RawHandle<T>> for Handle<'a, T> {
-    fn from(handle: RawHandle<T>) -> Self {
-        unsafe { Handle::new(&*handle.ptr) }
     }
 }
 
@@ -772,7 +770,11 @@ impl<T> RawMutableHandle<T> {
 
 impl<'a, T> MutableHandle<'a, T> {
     pub unsafe fn from_marked_location(ptr: *mut T) -> Self {
-        RawMutableHandle::from_marked_location(ptr).into()
+        MutableHandle::new(&mut *ptr)
+    }
+
+    unsafe fn from_raw(handle: RawMutableHandle<T>) -> Self {
+        MutableHandle::from_marked_location(handle.ptr)
     }
 
     pub fn handle(&self) -> Handle<T> {
@@ -833,12 +835,6 @@ impl<'a, T> DerefMut for MutableHandle<'a, T> {
 impl<'a, T> From<MutableHandle<'a, T>> for RawMutableHandle<T> {
     fn from(handle: MutableHandle<'a, T>) -> Self {
         unsafe { RawMutableHandle::from_marked_location(handle.ptr) }
-    }
-}
-
-impl<'a, T> From<RawMutableHandle<T>> for MutableHandle<'a, T> {
-    fn from(handle: RawMutableHandle<T>) -> Self {
-        unsafe { MutableHandle::new(&mut *handle.ptr) }
     }
 }
 
@@ -1061,11 +1057,11 @@ impl JSJitMethodCallArgs {
     pub fn get(&self, i: u32) -> HandleValue {
         unsafe {
             if i < self._base.argc_ {
-                RawHandleValue::from_marked_location(
+                HandleValue::from_marked_location(
                     self._base.argv_.offset(i as isize)
-                ).into()
+                )
             } else {
-                UndefinedHandleValue.into()
+                HandleValue::from_raw(UndefinedHandleValue)
             }
         }
     }
@@ -1124,7 +1120,7 @@ impl CallArgs {
             if i < self._base.argc_ {
                 HandleValue::from_marked_location(self._base.argv_.offset(i as isize))
             } else {
-                UndefinedHandleValue.into()
+                HandleValue::from_raw(UndefinedHandleValue)
             }
         }
     }
@@ -1167,7 +1163,9 @@ impl CallArgs {
 impl JSJitGetterCallArgs {
     #[inline]
     pub fn rval(&self) -> MutableHandleValue {
-        self._base.into()
+        unsafe {
+            MutableHandleValue::from_raw(self._base)
+        }
     }
 }
 
@@ -1175,7 +1173,9 @@ impl JSJitSetterCallArgs {
     #[inline]
     pub fn get(&self, i: u32) -> HandleValue {
         assert!(i == 0);
-        self._base.handle().into()
+        unsafe {
+            HandleValue::from_raw(self._base.handle())
+        }
     }
 }
 
