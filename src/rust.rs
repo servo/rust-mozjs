@@ -852,7 +852,7 @@ impl RawHandleValue {
     }
 }
 
-impl<'a> HandleValue<'a> {
+impl HandleValue<'static> {
     pub fn null() -> Self {
         Self::new(RawHandleValue::null())
     }
