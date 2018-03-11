@@ -980,9 +980,9 @@ impl<T: GCMethods + Copy> Heap<T> {
         self.ptr.get()
     }
 
-    pub fn handle(&self) -> RawHandle<T> {
+    pub fn handle(&self) -> Handle<T> {
         unsafe {
-            RawHandle::from_marked_location(self.ptr.get() as *const T)
+            Handle::from_marked_location(self.ptr.get() as *const T)
         }
     }
 
