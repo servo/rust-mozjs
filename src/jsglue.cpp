@@ -437,6 +437,13 @@ class ForwardingProxyHandler : public js::BaseProxyHandler
     }
 };
 
+class ObjectPrivateVisitorHeap : public ObjectPrivateVisitor {
+public: 
+  size_t SizeOfIncludingThis(nsISupports *aSupports) const {
+    JSObject * jso = (JSObject*)aSupports;
+  }
+}
+
 extern "C" {
 
 JSPrincipals*
@@ -805,11 +812,13 @@ static size_t MallocSizeOf(const void* aPtr)
 }
 
 bool
-CollectServoSizes(JSRuntime *rt, JS::ServoSizes *sizes)
+CollectServoSizes(JSRuntime *rt, JS::ServoSizes *sizes, bool (*measure)(JObject *), size_t (*func)(JSObject *))
 {
     mozilla::PodZero(sizes);
-    return JS::AddServoSizeOf(rt, MallocSizeOf,
-                              /* ObjectPrivateVisitor = */ nullptr, sizes);
+
+    ObjectPrivateVisitorHeap * opvh = new ObjectPrivateVisitorHeap();
+
+    return JS::AddServoSizeOf(rt, MallocSizeOf, opvh, sizes);
 }
 
 void
