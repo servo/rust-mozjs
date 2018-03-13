@@ -6,6 +6,9 @@
 //! typed arrays or wrapping existing JS reflectors, and prevents reinterpreting
 //! existing buffers as different types except in well-defined cases.
 
+use conversions::ToJSValConvertible;
+use conversions::ConversionResult;
+use conversions::FromJSValConvertible;
 use glue::GetFloat32ArrayLengthAndData;
 use glue::GetFloat64ArrayLengthAndData;
 use glue::GetInt16ArrayLengthAndData;
@@ -17,9 +20,11 @@ use glue::GetUint8ArrayLengthAndData;
 use glue::GetUint8ClampedArrayLengthAndData;
 use jsapi::GetArrayBufferLengthAndData;
 use jsapi::GetArrayBufferViewLengthAndData;
-use jsapi::HandleObject;
+use jsapi::HandleValue;
+use jsapi::Heap;
 use jsapi::JSContext;
 use jsapi::JSObject;
+use jsapi::JSTracer;
 use jsapi::JS_GetArrayBufferData;
 use jsapi::JS_GetArrayBufferViewType;
 use jsapi::JS_GetFloat32ArrayData;
@@ -42,7 +47,7 @@ use jsapi::JS_NewUint32Array;
 use jsapi::JS_NewUint8Array;
 use jsapi::JS_NewUint8ClampedArray;
 use jsapi::MutableHandleObject;
-use jsapi::Rooted;
+use jsapi::MutableHandleValue;
 use jsapi::Type;
 use jsapi::UnwrapArrayBuffer;
 use jsapi::UnwrapArrayBufferView;
@@ -55,42 +60,89 @@ use jsapi::UnwrapUint16Array;
 use jsapi::UnwrapUint32Array;
 use jsapi::UnwrapUint8Array;
 use jsapi::UnwrapUint8ClampedArray;
-use rust::RootedGuard;
+use rust::CustomTrace;
+
 use std::ptr;
 use std::slice;
+
+/// Trait that specifies how pointers to wrapped objects are stored. It supports
+/// two variants, one with bare pointer (to be rooted on stack using
+/// CustomAutoRooter) and wrapped in a Box<Heap<T>>, which can be stored in a
+/// heap-allocated structure, to be rooted with JSTraceable-implementing tracers
+/// (currently implemented in Servo).
+pub trait JSObjectStorage {
+    fn as_raw(&self) -> *mut JSObject;
+    fn from_raw(raw: *mut JSObject) -> Self;
+}
+
+impl JSObjectStorage for *mut JSObject {
+    fn as_raw(&self) -> *mut JSObject { *self }
+    fn from_raw(raw: *mut JSObject) -> Self { raw }
+}
+
+impl JSObjectStorage for Box<Heap<*mut JSObject>> {
+    fn as_raw(&self) -> *mut JSObject { self.get() }
+    fn from_raw(raw: *mut JSObject) -> Self {
+        let boxed = Box::new(Heap::default());
+        boxed.set(raw);
+        boxed
+    }
+}
+
+impl<T: TypedArrayElement, S: JSObjectStorage> FromJSValConvertible for TypedArray<T, S> {
+    type Config = ();
+    unsafe fn from_jsval(_cx: *mut JSContext,
+                         value: HandleValue,
+                         _option: ())
+                         -> Result<ConversionResult<Self>, ()> {
+        if value.get().is_object() {
+            Self::from(value.get().to_object()).map(ConversionResult::Success)
+        } else {
+            Err(())
+        }
+    }
+}
+
+impl<T: TypedArrayElement, S: JSObjectStorage> ToJSValConvertible for TypedArray<T, S> {
+    #[inline]
+    unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
+        ToJSValConvertible::to_jsval(&self.object.as_raw(), cx, rval);
+    }
+}
 
 pub enum CreateWith<'a, T: 'a> {
     Length(u32),
     Slice(&'a [T]),
 }
 
-/// A rooted typed array.
-pub struct TypedArray<'a, T: 'a + TypedArrayElement> {
-    object: RootedGuard<'a, *mut JSObject>,
+/// A typed array wrapper.
+pub struct TypedArray<T: TypedArrayElement, S: JSObjectStorage> {
+    object: S,
     computed: Option<(*mut T::Element, u32)>,
 }
 
-impl<'a, T: TypedArrayElement> TypedArray<'a, T> {
+unsafe impl<T> CustomTrace for TypedArray<T, *mut JSObject> where T: TypedArrayElement {
+    fn trace(&self, trc: *mut JSTracer) {
+        self.object.trace(trc);
+    }
+}
+
+impl<T: TypedArrayElement, S: JSObjectStorage> TypedArray<T, S> {
     /// Create a typed array representation that wraps an existing JS reflector.
     /// This operation will fail if attempted on a JS object that does not match
     /// the expected typed array details.
-    pub fn from(cx: *mut JSContext,
-                root: &'a mut Rooted<*mut JSObject>,
-                object: *mut JSObject)
-                -> Result<Self, ()> {
+    pub fn from(object: *mut JSObject) -> Result<Self, ()> {
         if object.is_null() {
             return Err(());
         }
         unsafe {
-            let mut guard = RootedGuard::new(cx, root, object);
-            let unwrapped = T::unwrap_array(*guard);
+            let unwrapped = T::unwrap_array(object);
             if unwrapped.is_null() {
                 return Err(());
             }
 
-            *guard = unwrapped;
             Ok(TypedArray {
-                object: guard,
+                object: S::from_raw(unwrapped),
                 computed: None,
             })
         }
@@ -101,9 +153,21 @@ impl<'a, T: TypedArrayElement> TypedArray<'a, T> {
             return data;
         }
 
-        let data = unsafe { T::length_and_data(*self.object) };
+        let data = unsafe { T::length_and_data(self.object.as_raw()) };
         self.computed = Some(data);
         data
+    }
+
+    /// # Unsafety
+    ///
+    /// Returned wrapped pointer to the underlying `JSObject` is meant to be
+    /// read-only, modifying it can lead to Undefined Behaviour and violation
+    /// of TypedArray API guarantees.
+    ///
+    /// Practically, this exists only to implement `JSTraceable` trait in Servo
+    /// for Box<Heap<*mut JSObject>> variant.
+    pub unsafe fn underlying_object(&self) -> &S {
+        &self.object
     }
 
     /// # Unsafety
@@ -128,7 +192,7 @@ impl<'a, T: TypedArrayElement> TypedArray<'a, T> {
     }
 }
 
-impl<'a, T: TypedArrayElementCreator + TypedArrayElement> TypedArray<'a, T> {
+impl<T: TypedArrayElementCreator + TypedArrayElement, S: JSObjectStorage> TypedArray<T, S> {
     /// Create a new JS typed array, optionally providing initial data that will
     /// be copied into the newly-allocated buffer. Returns the new JS reflector.
     pub unsafe fn create(cx: *mut JSContext,
@@ -146,7 +210,7 @@ impl<'a, T: TypedArrayElementCreator + TypedArrayElement> TypedArray<'a, T> {
         }
 
         if let CreateWith::Slice(data) = with {
-            TypedArray::<T>::update_raw(data, result.handle());
+            Self::update_raw(data, result.get());
         }
 
         Ok(())
@@ -154,11 +218,11 @@ impl<'a, T: TypedArrayElementCreator + TypedArrayElement> TypedArray<'a, T> {
 
     ///  Update an existed JS typed array
     pub unsafe fn update(&mut self, data: &[T::Element]) {
-        TypedArray::<T>::update_raw(data, self.object.handle());
+        Self::update_raw(data, self.object.as_raw());
     }
 
-    unsafe fn update_raw(data: &[T::Element], result: HandleObject) {
-        let (buf, length) = T::length_and_data(result.get());
+    unsafe fn update_raw(data: &[T::Element], result: *mut JSObject) {
+        let (buf, length) = T::length_and_data(result);
         assert!(data.len() <= length as usize);
         ptr::copy_nonoverlapping(data.as_ptr(), buf, data.len());
     }
@@ -296,43 +360,45 @@ typed_array_element!(ArrayBufferViewU8,
                      UnwrapArrayBufferView,
                      GetArrayBufferViewLengthAndData);
 
-/// The Uint8ClampedArray type.
-pub type Uint8ClampedArray<'a> = TypedArray<'a, ClampedU8>;
-/// The Uint8Array type.
-pub type Uint8Array<'a> = TypedArray<'a, Uint8>;
-/// The Int8Array type.
-pub type Int8Array<'a> = TypedArray<'a, Int8>;
-/// The Uint16Array type.
-pub type Uint16Array<'a> = TypedArray<'a, Uint16>;
-/// The Int16Array type.
-pub type Int16Array<'a> = TypedArray<'a, Int16>;
-/// The Uint32Array type.
-pub type Uint32Array<'a> = TypedArray<'a, Uint32>;
-/// The Int32Array type.
-pub type Int32Array<'a> = TypedArray<'a, Int32>;
-/// The Float32Array type.
-pub type Float32Array<'a> = TypedArray<'a, Float32>;
-/// The Float64Array type.
-pub type Float64Array<'a> = TypedArray<'a, Float64>;
-/// The ArrayBuffer type.
-pub type ArrayBuffer<'a> = TypedArray<'a, ArrayBufferU8>;
-/// The ArrayBufferView type
-pub type ArrayBufferView<'a> = TypedArray<'a, ArrayBufferViewU8>;
+// Default type aliases, uses bare pointer by default, since stack lifetime
+// should be the most common scenario
+macro_rules! array_alias {
+    ($arr: ident, $heap_arr: ident, $elem: ty) => {
+        pub type $arr = TypedArray<$elem, *mut JSObject>;
+        pub type $heap_arr = TypedArray<$elem, Box<Heap<*mut JSObject>>>;
+    }
+}
 
-impl<'a> ArrayBufferView<'a> {
+array_alias!(Uint8ClampedArray, HeapUint8ClampedArray, ClampedU8);
+array_alias!(Uint8Array, HeapUint8Array, Uint8);
+array_alias!(Int8Array, HeapInt8Array, Int8);
+array_alias!(Uint16Array, HeapUint16Array, Uint16);
+array_alias!(Int16Array, HeapInt16Array, Int16);
+array_alias!(Uint32Array, HeapUint32Array, Uint32);
+array_alias!(Int32Array, HeapInt32Array, Int32);
+array_alias!(Float32Array, HeapFloat32Array, Float32);
+array_alias!(Float64Array, HeapFloat64Array, Float64);
+array_alias!(ArrayBuffer, HeapArrayBuffer, ArrayBufferU8);
+array_alias!(ArrayBufferView, HeapArrayBufferView, ArrayBufferViewU8);
+
+impl<S: JSObjectStorage> TypedArray<ArrayBufferViewU8, S> {
     pub fn get_array_type(&self) -> Type {
-        unsafe { JS_GetArrayBufferViewType(self.object.get()) }
+        unsafe { JS_GetArrayBufferViewType(self.object.as_raw()) }
     }
 }
 
 #[macro_export]
 macro_rules! typedarray {
     (in($cx:expr) let $name:ident : $ty:ident = $init:expr) => {
-        let mut __root = $crate::jsapi::Rooted::new_unrooted();
-        let $name = $crate::typedarray::$ty::from($cx, &mut __root, $init);
+        let mut __array = $crate::typedarray::$ty::from($init)
+            .map($crate::rust::CustomAutoRooter::new);
+
+        let $name = __array.as_mut().map(|ok| ok.root($cx));
     };
     (in($cx:expr) let mut $name:ident : $ty:ident = $init:expr) => {
-        let mut __root = $crate::jsapi::Rooted::new_unrooted();
-        let mut $name = $crate::typedarray::$ty::from($cx, &mut __root, $init);
+        let mut __array = $crate::typedarray::$ty::from($init)
+            .map($crate::rust::CustomAutoRooter::new);
+
+        let mut $name = __array.as_mut().map(|ok| ok.root($cx));
     }
 }
