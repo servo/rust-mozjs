@@ -21,6 +21,11 @@
 #include "js/Principals.h"
 #include "assert.h"
 
+typedef bool(*WantToMeasure)(JSObject *);
+typedef size_t(*GetSize)(JSObject *);
+
+WantToMeasure want_to_measure_func = nullptr;
+
 struct ProxyTraps {
     bool (*enter)(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
                   js::BaseProxyHandler::Action action, bool *bp);
@@ -440,8 +445,19 @@ class ForwardingProxyHandler : public js::BaseProxyHandler
 class ObjectPrivateVisitorHeap : public ObjectPrivateVisitor {
 public: 
   size_t SizeOfIncludingThis(nsISupports *aSupports) const {
-    JSObject * jso = (JSObject*)aSupports;
+    JSObject* jso = (JSObject*)aSupports;
+    size_t result = 0;
+
+    if(get_size != nullptr){
+         *(get_size)(jso); 
+    }
+
+    return result;
   }
+
+  GetSize get_size;
+
+  ObjectPrivateVisitorHeap(GetSize gs, GetISupportsFun getISupports) : get_size(gs), ObjectPrivateVisitor(getISupports){}
 }
 
 extern "C" {
@@ -812,13 +828,32 @@ static size_t MallocSizeOf(const void* aPtr)
 }
 
 bool
-CollectServoSizes(JSRuntime *rt, JS::ServoSizes *sizes, bool (*measure)(JObject *), size_t (*func)(JSObject *))
+CollectServoSizes(JSRuntime *rt, JS::ServoSizes *sizes, GetSize gs)
 {
     mozilla::PodZero(sizes);
-
-    ObjectPrivateVisitorHeap * opvh = new ObjectPrivateVisitorHeap();
+    ObjectPrivateVisitorHeap * opvh = new ObjectPrivateVisitorHeap(gs, [](JSObject* obj, nsISupports** iface){
+        bool want_to_measure = (*want_to_measure_func)(obj);
+        if(want_to_measure){
+            *iface = (nsISupports*)obj;
+            return true;
+        }
+        else{
+            return false;
+        }
+    });
 
     return JS::AddServoSizeOf(rt, MallocSizeOf, opvh, sizes);
+}
+
+bool
+InitiailizeMemoryReporter(WantToMeasure wtm){
+    if(wtm != nullptr){
+        want_to_measure_func = wtm;
+        return true;
+    }
+    else{
+        return false;
+    }
 }
 
 void
