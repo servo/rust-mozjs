@@ -21,8 +21,8 @@
 #include "js/Principals.h"
 #include "assert.h"
 
-typedef bool(*WantToMeasure)(JSObject *);
-typedef size_t(*GetSize)(JSObject *);
+typedef bool(*WantToMeasure)(JSObject *obj);
+typedef size_t(*GetSize)(JSObject *obj);
 
 WantToMeasure want_to_measure_func = nullptr;
 
@@ -846,7 +846,7 @@ CollectServoSizes(JSRuntime *rt, JS::ServoSizes *sizes, GetSize gs)
 }
 
 bool
-InitiailizeMemoryReporter(WantToMeasure wtm){
+InitializeMemoryReporter(WantToMeasure wtm){
     if(wtm != nullptr){
         want_to_measure_func = wtm;
         return true;
