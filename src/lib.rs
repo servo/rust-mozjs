@@ -18,6 +18,20 @@ extern crate num_traits;
 pub mod jsapi {
     use libc::FILE;
 
+    /// Heap values encapsulate GC concerns of an on-heap reference to a JS
+    /// object. This means that every reference to a JS object on heap must
+    /// be realized through this structure.
+    ///
+    /// # Safety
+    /// For garbage collection to work correctly in SpiderMonkey, modifying the
+    /// wrapped value triggers a GC barrier, pointing to the underlying object.
+    ///
+    /// This means that after calling the `set()` function with a non-null or
+    /// non-undefined value, the `Heap` wrapper *must not* be moved, since doing
+    /// so will invalidate the local reference to wrapped value, still held by
+    /// SpiderMonkey.
+    ///
+    /// For safe `Heap` construction with value see `Heap::boxed` function.
     #[repr(C)]
     #[derive(Debug)]
     pub struct Heap<T: ::rust::GCMethods + Copy> {

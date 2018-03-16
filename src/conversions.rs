@@ -195,16 +195,6 @@ impl FromJSValConvertible for JSVal {
     }
 }
 
-impl FromJSValConvertible for Heap<JSVal> {
-    type Config = ();
-    unsafe fn from_jsval(_cx: *mut JSContext,
-                         value: HandleValue,
-                         _option: ())
-                         -> Result<ConversionResult<Self>, ()> {
-        Ok(ConversionResult::Success(Heap::new(value.get())))
-    }
-}
-
 impl ToJSValConvertible for JSVal {
     #[inline]
     unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
