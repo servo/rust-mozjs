@@ -26,6 +26,8 @@ typedef size_t(*GetSize)(JSObject *obj);
 
 WantToMeasure want_to_measure_func = nullptr;
 
+//WantToMeasure want_to_measure_func = nullptr;
+
 struct ProxyTraps {
     bool (*enter)(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
                   js::BaseProxyHandler::Action action, bool *bp);
@@ -442,14 +444,14 @@ class ForwardingProxyHandler : public js::BaseProxyHandler
     }
 };
 
-class ObjectPrivateVisitorHeap : public ObjectPrivateVisitor {
+class ObjectPrivateVisitorHeap : public JS::ObjectPrivateVisitor {
 public: 
-  size_t SizeOfIncludingThis(nsISupports *aSupports) const {
+  size_t sizeOfIncludingThis(nsISupports *aSupports){
     JSObject* jso = (JSObject*)aSupports;
     size_t result = 0;
 
     if(get_size != nullptr){
-         *(get_size)(jso); 
+         (*get_size)(jso); 
     }
 
     return result;
@@ -458,9 +460,23 @@ public:
   GetSize get_size;
 
   ObjectPrivateVisitorHeap(GetSize gs, GetISupportsFun getISupports) : get_size(gs), ObjectPrivateVisitor(getISupports){}
+};
+
+bool
+pass_to_ctor(JSObject* obj, nsISupports** iface){
+  bool want_to_measure = (*want_to_measure_func)(obj);
+  if(want_to_measure){
+    *iface = (nsISupports*)obj;
+    return true;
+  }
+  else{
+    return false;
+  }
 }
 
+
 extern "C" {
+
 
 JSPrincipals*
 CreateRustJSPrincipal(const void* origin,
@@ -637,6 +653,7 @@ GetProxyPrivate(JSObject* obj)
 {
     return js::GetProxyPrivate(obj);
 }
+
 
 void
 SetProxyExtra(JSObject* obj, uint32_t slot, const JS::Value& val)
@@ -827,20 +844,14 @@ static size_t MallocSizeOf(const void* aPtr)
 #endif
 }
 
+
 bool
 CollectServoSizes(JSRuntime *rt, JS::ServoSizes *sizes, GetSize gs)
 {
     mozilla::PodZero(sizes);
-    ObjectPrivateVisitorHeap * opvh = new ObjectPrivateVisitorHeap(gs, [](JSObject* obj, nsISupports** iface){
-        bool want_to_measure = (*want_to_measure_func)(obj);
-        if(want_to_measure){
-            *iface = (nsISupports*)obj;
-            return true;
-        }
-        else{
-            return false;
-        }
-    });
+    bool (*pass)(JSObject* obj, nsISupports** iface);
+    pass = &pass_to_ctor;
+    ObjectPrivateVisitorHeap * opvh = new ObjectPrivateVisitorHeap(gs, pass);
 
     return JS::AddServoSizeOf(rt, MallocSizeOf, opvh, sizes);
 }
