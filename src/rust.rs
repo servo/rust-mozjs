@@ -828,14 +828,6 @@ impl GCMethods for Value {
 }
 
 impl<T: GCMethods + Copy> Heap<T> {
-    pub fn new(v: T) -> Heap<T>
-        where Heap<T>: Default
-    {
-        let ptr = Heap::default();
-        ptr.set(v);
-        ptr
-    }
-
     /// This creates a `Box`-wrapped Heap value. Setting a value inside Heap
     /// object triggers a barrier, referring to the Heap object location,
     /// hence why it is not safe to construct a temporary Heap value, assign
@@ -878,14 +870,6 @@ impl<T: GCMethods + Copy> Heap<T> {
         unsafe {
             MutableHandle::from_marked_location(self.ptr.get())
         }
-    }
-}
-
-impl<T: GCMethods + Copy> Clone for Heap<T>
-    where Heap<T>: Default
-{
-    fn clone(&self) -> Self {
-        Heap::new(self.get())
     }
 }
 
