@@ -451,7 +451,7 @@ public:
     size_t result = 0;
 
     if(get_size != nullptr){
-         (*get_size)(jso); 
+        result = (*get_size)(jso); 
     }
 
     return result;
@@ -856,15 +856,9 @@ CollectServoSizes(JSRuntime *rt, JS::ServoSizes *sizes, GetSize gs)
     return JS::AddServoSizeOf(rt, MallocSizeOf, opvh, sizes);
 }
 
-bool
+void
 InitializeMemoryReporter(WantToMeasure wtm){
-    if(wtm != nullptr){
-        want_to_measure_func = wtm;
-        return true;
-    }
-    else{
-        return false;
-    }
+  want_to_measure_func = wtm;
 }
 
 void
