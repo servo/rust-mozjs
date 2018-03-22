@@ -536,7 +536,7 @@ impl<T: FromJSValConvertible> FromJSValConvertible for Option<T> {
 }
 
 // https://heycam.github.io/webidl/#es-sequence
-impl<T: ToJSValConvertible> ToJSValConvertible for Vec<T> {
+impl<T: ToJSValConvertible> ToJSValConvertible for [T] {
     #[inline]
     unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
         rooted!(in(cx) let js_array = JS_NewArrayObject1(cx, self.len() as libc::size_t));
@@ -551,6 +551,14 @@ impl<T: ToJSValConvertible> ToJSValConvertible for Vec<T> {
         }
 
         rval.set(ObjectValue(js_array.handle().get()));
+    }
+}
+
+// https://heycam.github.io/webidl/#es-sequence
+impl<T: ToJSValConvertible> ToJSValConvertible for Vec<T> {
+    #[inline]
+    unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
+        <[_]>::to_jsval(self, cx, rval)
     }
 }
 
