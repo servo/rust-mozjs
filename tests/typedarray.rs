@@ -39,6 +39,9 @@ fn typedarray() {
         typedarray!(in(cx) let array: Uint8Array = rval.to_object());
         assert_eq!(array.unwrap().as_slice(), &[0, 2, 4][..]);
 
+        typedarray!(in(cx) let array: Uint8Array = rval.to_object());
+        assert_eq!(array.unwrap().to_vec(), vec![0, 2, 4]);
+
         typedarray!(in(cx) let array: Uint16Array = rval.to_object());
         assert!(array.is_err());
 
