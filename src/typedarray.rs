@@ -170,6 +170,18 @@ impl<T: TypedArrayElement, S: JSObjectStorage> TypedArray<T, S> {
         &self.object
     }
 
+    /// Retrieves an owned data that's represented by the typed array.
+    pub fn to_vec(&mut self) -> Vec<T::Element>
+        where T::Element: Clone
+    {
+        // This is safe, because we immediately copy from the underlying buffer
+        // to an owned collection. Otherwise, one needs to be careful, since
+        // the underlying buffer can easily invalidated when transferred with
+        // postMessage to another thread (To remedy that, we shouldn't
+        // execute any JS code between getting the data pointer and using it).
+        unsafe { self.as_slice().to_vec() }
+    }
+
     /// # Unsafety
     ///
     /// The returned slice can be invalidated if the underlying typed array
