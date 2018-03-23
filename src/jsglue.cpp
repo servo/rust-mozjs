@@ -4,6 +4,9 @@
 
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>
+#include <iostream>
+#include <fstream>
+#include <string>
 
 #include "js-config.h"
 
@@ -447,13 +450,21 @@ class ForwardingProxyHandler : public js::BaseProxyHandler
 class ObjectPrivateVisitorHeap : public JS::ObjectPrivateVisitor {
 public: 
   size_t sizeOfIncludingThis(nsISupports *aSupports){
+
+  std::ofstream outfile;
+  outfile.open("opv_sizeOfIncludingThis_log.txt", std::ios_base::app);
+
     JSObject* jso = (JSObject*)aSupports;
     size_t result = 0;
 
-    if(get_size != nullptr){
-        result = (*get_size)(jso); 
-    }
+    if(get_size != nullptr && jso != nullptr){
+      outfile << "getting size\n";
 
+      result = (*get_size)(jso); 
+    }
+    outfile << "size = " << result << "\n";
+    outfile.close();
+    
     return result;
   }
 
@@ -464,9 +475,11 @@ public:
 
 bool
 pass_to_ctor(JSObject* obj, nsISupports** iface){
+
   bool want_to_measure = (*want_to_measure_func)(obj);
   if(want_to_measure){
     *iface = (nsISupports*)obj;
+    //iface = &((nsISupports*)obj);
     return true;
   }
   else{
