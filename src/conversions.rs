@@ -239,7 +239,7 @@ unsafe fn convert_int_from_jsval<T, M>(cx: *mut JSContext, value: HandleValue,
 // https://heycam.github.io/webidl/#es-boolean
 impl ToJSValConvertible for bool {
     #[inline]
-    unsafe fn to_jsval(&self, _cx: *mut JSContext, mut  rval: MutableHandleValue) {
+    unsafe fn to_jsval(&self, _cx: *mut JSContext, mut rval: MutableHandleValue) {
         rval.set(BooleanValue(*self));
     }
 }
