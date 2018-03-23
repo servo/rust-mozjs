@@ -1635,3 +1635,101 @@ macro_rules! capture_stack {
         let $name = $crate::rust::CapturedJSStack::new($cx, __obj, None);
     }
 }
+
+macro_rules! wrap {
+    // The invocation of @inner has the following form:
+    // @inner (input args) <> (accumulator) <> unparsed tokens
+    // when `unparsed tokens == \eps`, accumulator contains the final result
+
+    (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: Handle<$gentype:ty>, $($rest:tt)*) => {
+        wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
+    };
+    (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: MutableHandle<$gentype:ty>, $($rest:tt)*) => {
+        wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
+    };
+    (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: Handle, $($rest:tt)*) => {
+        wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
+    };
+    (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: HandleValue, $($rest:tt)*) => {
+        wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
+    };
+    (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: HandleObject, $($rest:tt)*) => {
+        wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
+    };
+    (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: HandleId, $($rest:tt)*) => {
+        wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
+    };
+    (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: MutableHandle, $($rest:tt)*) => {
+        wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
+    };
+    (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: MutableHandleObject, $($rest:tt)*) => {
+        wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
+    };
+    (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: MutableHandleValue, $($rest:tt)*) => {
+        wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
+    };
+    (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: $type:ty, $($rest:tt)*) => {
+        wrap!(@inner $saved <> ($($acc,)* $arg,) <> $($rest)*);
+    };
+    (@inner ($func_name:ident ($($args:tt)*) -> $outtype:ty) <> ($($argexprs:expr,)*) <> ) => {
+        pub unsafe fn $func_name($($args)*) -> $outtype {
+            jsapi::$func_name($($argexprs),*)
+        }
+    };
+    (pub fn $func_name:ident($($args:tt)*) -> $outtype:ty) => {
+        wrap!(@inner ($func_name ($($args)*) -> $outtype) <> () <> $($args)* ,);
+    };
+    (pub fn $func_name:ident($($args:tt)*)) => {
+        wrap!(pub fn $func_name($($args)*) -> ());
+    }
+}
+pub mod wrappers {
+    use jsapi;
+    use jsapi::{IsArrayAnswer, PropertyDescriptor, ElementAdder, DetachDataDisposition};
+    use jsapi::{JSStructuredCloneCallbacks, JSStructuredCloneReader, JSStructuredCloneWriter};
+    use jsapi::{JSNative, JSObject, JSContext, JSFunction, JSRuntime, JSString};
+    use jsapi::{JSType};
+    use jsapi::{HandleString, HandleScript};
+    use jsapi::{SavedFrameResult, SavedFrameSelfHosted};
+    use jsapi::{MallocSizeOf, ObjectPrivateVisitor, ObjectOpResult, TabSizes};
+    use jsapi::AutoIdVector;
+    use jsapi::AutoObjectVector;
+    use jsapi::CallArgs;
+    use jsapi::CompileOptions;
+    use jsapi::ESClass;
+    use jsapi::HandleFunction;
+    use jsapi::HandleSymbol;
+    use jsapi::HandleValueArray;
+    use jsapi::JSAddonId;
+    use jsapi::JSClass;
+    use jsapi::JSConstDoubleSpec;
+    use jsapi::JSConstIntegerSpec;
+    use jsapi::JSErrorReport;
+    use jsapi::JSExnType;
+    use jsapi::JSFunctionSpec;
+    use jsapi::JSFunctionSpecWithHelp;
+    use jsapi::jsid;
+    use jsapi::JSONWriteCallback;
+    use jsapi::JSPropertySpec;
+    use jsapi::JSProtoKey;
+    use jsapi::JSScript;
+    use jsapi::MutableHandleFunction;
+    use jsapi::MutableHandleId;
+    use jsapi::MutableHandleScript;
+    use jsapi::MutableHandleString;
+    use jsapi::PromiseState;
+    use jsapi::PropertyCopyBehavior;
+    use jsapi::ReadOnlyCompileOptions;
+    use jsapi::RegExpGuard;
+    use jsapi::ScriptEnvironmentPreparer_Closure;
+    use jsapi::Shape;
+    use jsapi::SourceBufferHolder;
+    use jsapi::Symbol;
+    use jsapi::SymbolCode;
+    use jsapi::TwoByteChars;
+    use jsapi::Value;
+    use libc::FILE;
+    use super::{Handle, HandleId, HandleObject, HandleValue};
+    use super::{MutableHandle, MutableHandleObject, MutableHandleValue};
+    include!("jsapi_wrappers.rs");
+}
