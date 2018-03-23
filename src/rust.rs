@@ -714,7 +714,7 @@ impl<'a, T> Handle<'a, T> {
         Handle::new(&*ptr)
     }
 
-    unsafe fn from_raw(handle: RawHandle<T>) -> Self {
+    pub unsafe fn from_raw(handle: RawHandle<T>) -> Self {
         Handle::from_marked_location(handle.ptr)
     }
 }
@@ -773,7 +773,7 @@ impl<'a, T> MutableHandle<'a, T> {
         MutableHandle::new(&mut *ptr)
     }
 
-    unsafe fn from_raw(handle: RawMutableHandle<T>) -> Self {
+    pub unsafe fn from_raw(handle: RawMutableHandle<T>) -> Self {
         MutableHandle::from_marked_location(handle.ptr)
     }
 
