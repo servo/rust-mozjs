@@ -860,10 +860,21 @@ impl<T: GCMethods + Copy> Heap<T> {
         self.ptr.get()
     }
 
-    pub fn handle(&self) -> Handle<T> {
-        unsafe {
-            Handle::from_marked_location(self.ptr.get() as *const _)
-        }
+    /// Retrieves a Handle to the underlying value.
+    ///
+    /// # Safety
+    ///
+    /// This is only safe to do on a rooted object (which Heap is not, it needs
+    /// to be additionally rooted), like RootedGuard, so use this only if you
+    /// know what you're doing.
+    ///
+    /// # Notes
+    ///
+    /// Since Heap values need to be informed when a change to underlying
+    /// value is made (e.g. via `get()`), this does not allow to create
+    /// MutableHandle objects, which can bypass this and lead to crashes.
+    pub unsafe fn handle(&self) -> Handle<T> {
+        Handle::from_marked_location(self.ptr.get() as *const _)
     }
 }
 
