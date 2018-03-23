@@ -955,12 +955,19 @@ impl GCMethods for Value {
 }
 
 impl<T: GCMethods + Copy> Heap<T> {
-    pub fn new(v: T) -> Heap<T>
+    /// This creates a `Box`-wrapped Heap value. Setting a value inside Heap
+    /// object triggers a barrier, referring to the Heap object location,
+    /// hence why it is not safe to construct a temporary Heap value, assign
+    /// a non-null value and move it (e.g. typical object construction).
+    ///
+    /// Using boxed Heap value guarantees that the underlying Heap value will
+    /// not be moved when constructed.
+    pub fn boxed(v: T) -> Box<Heap<T>>
         where Heap<T>: Default
     {
-        let ptr = Heap::default();
-        ptr.set(v);
-        ptr
+        let boxed = Box::new(Heap::default());
+        boxed.set(v);
+        boxed
     }
 
     pub fn set(&self, v: T) {
@@ -990,14 +997,6 @@ impl<T: GCMethods + Copy> Heap<T> {
         unsafe {
             MutableHandle::from_marked_location(self.ptr.get())
         }
-    }
-}
-
-impl<T: GCMethods + Copy> Clone for Heap<T>
-    where Heap<T>: Default
-{
-    fn clone(&self) -> Self {
-        Heap::new(self.get())
     }
 }
 
@@ -1731,5 +1730,5 @@ pub mod wrappers {
     use libc::FILE;
     use super::{Handle, HandleId, HandleObject, HandleValue};
     use super::{MutableHandle, MutableHandleObject, MutableHandleValue};
-    include!("jsapi_wrappers.rs");
+    include!("jsapi_wrappers.in");
 }
