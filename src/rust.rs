@@ -1671,6 +1671,7 @@ macro_rules! wrap {
         wrap!(@inner $saved <> ($($acc,)* $arg,) <> $($rest)*);
     };
     (@inner ($func_name:ident ($($args:tt)*) -> $outtype:ty) <> ($($argexprs:expr,)*) <> ) => {
+        #[inline]
         pub unsafe fn $func_name($($args)*) -> $outtype {
             jsapi::$func_name($($argexprs),*)
         }
@@ -1682,6 +1683,12 @@ macro_rules! wrap {
         wrap!(pub fn $func_name($($args)*) -> ());
     }
 }
+
+/** Wrappers for JSAPI methods that accept lifetimed Handle and MutableHandle arguments.
+ *
+ * The wrapped methods are identical except that they accept Handle and MutableHandle arguments
+ * that include lifetimes instead.
+ * */
 pub mod wrappers {
     use jsapi;
     use jsapi::{IsArrayAnswer, PropertyDescriptor, ElementAdder, DetachDataDisposition};
