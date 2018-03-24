@@ -64,6 +64,7 @@ use rust::CustomTrace;
 
 use std::ptr;
 use std::slice;
+use std::cell::Cell;
 
 /// Trait that specifies how pointers to wrapped objects are stored. It supports
 /// two variants, one with bare pointer (to be rooted on stack using
@@ -118,7 +119,7 @@ pub enum CreateWith<'a, T: 'a> {
 /// A typed array wrapper.
 pub struct TypedArray<T: TypedArrayElement, S: JSObjectStorage> {
     object: S,
-    computed: Option<(*mut T::Element, u32)>,
+    computed: Cell<Option<(*mut T::Element, u32)>>,
 }
 
 unsafe impl<T> CustomTrace for TypedArray<T, *mut JSObject> where T: TypedArrayElement {
@@ -143,18 +144,18 @@ impl<T: TypedArrayElement, S: JSObjectStorage> TypedArray<T, S> {
 
             Ok(TypedArray {
                 object: S::from_raw(unwrapped),
-                computed: None,
+                computed: Cell::new(None),
             })
         }
     }
 
-    fn data(&mut self) -> (*mut T::Element, u32) {
-        if let Some(data) = self.computed {
+    fn data(&self) -> (*mut T::Element, u32) {
+        if let Some(data) = self.computed.get() {
             return data;
         }
 
         let data = unsafe { T::length_and_data(self.object.as_raw()) };
-        self.computed = Some(data);
+        self.computed.set(Some(data));
         data
     }
 
@@ -171,7 +172,7 @@ impl<T: TypedArrayElement, S: JSObjectStorage> TypedArray<T, S> {
     }
 
     /// Retrieves an owned data that's represented by the typed array.
-    pub fn to_vec(&mut self) -> Vec<T::Element>
+    pub fn to_vec(&self) -> Vec<T::Element>
         where T::Element: Clone
     {
         // This is safe, because we immediately copy from the underlying buffer
@@ -186,7 +187,7 @@ impl<T: TypedArrayElement, S: JSObjectStorage> TypedArray<T, S> {
     ///
     /// The returned slice can be invalidated if the underlying typed array
     /// is neutered.
-    pub unsafe fn as_slice(&mut self) -> &[T::Element] {
+    pub unsafe fn as_slice(&self) -> &[T::Element] {
         let (pointer, length) = self.data();
         slice::from_raw_parts(pointer as *const T::Element, length as usize)
     }
