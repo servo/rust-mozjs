@@ -39,6 +39,7 @@ use jsapi::{ToUint32Slow, ToUint64Slow, ToWindowProxyIfWindow, UndefinedHandleVa
 use jsapi::{Value, jsid, PerThreadDataFriendFields, PerThreadDataFriendFields_RuntimeDummy};
 use jsapi::{CaptureCurrentStack, BuildStackString, IsSavedFrame};
 use jsapi::{AutoGCRooter_jspubtd_h_unnamed_1 as AutoGCRooterTag, _vftable_CustomAutoRooter as CustomAutoRooterVFTable};
+use jsapi::PropertyDescriptor;
 use jsval::{ObjectValue, UndefinedValue};
 use glue::{AppendToAutoObjectVector, CallFunctionTracer, CallIdTracer, CallObjectTracer};
 use glue::{CallScriptTracer, CallStringTracer, CallValueTracer, CreateAutoIdVector};
@@ -1506,5 +1507,18 @@ macro_rules! capture_stack {
     (in($cx:expr) let $name:ident ) => {
         rooted!(in($cx) let mut __obj = ::std::ptr::null_mut());
         let $name = $crate::rust::CapturedJSStack::new($cx, __obj, None);
+    }
+}
+
+
+impl Default for PropertyDescriptor {
+    fn default() -> PropertyDescriptor {
+        PropertyDescriptor { 
+            obj: ptr::null_mut(),
+            attrs: 0,
+            getter: None,
+            setter: None,
+            value: UndefinedValue()  
+        }
     }
 }
