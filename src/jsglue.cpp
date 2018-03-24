@@ -466,10 +466,14 @@ public:
 bool
 pass_to_ctor(JSObject* obj, nsISupports** iface){
 
+  if(obj == nullptr){
+    return false;
+  }
+
   bool want_to_measure = (*want_to_measure_func)(obj);
+
   if(want_to_measure){
     *iface = (nsISupports*)obj;
-    //iface = &((nsISupports*)obj);
     return true;
   }
   else{
@@ -854,6 +858,11 @@ CollectServoSizes(JSRuntime *rt, JS::ServoSizes *sizes, GetSize gs)
     mozilla::PodZero(sizes);
     bool (*pass)(JSObject* obj, nsISupports** iface);
     pass = &pass_to_ctor;
+    
+    if(pass == nullptr){
+      return false;
+    }
+
     ObjectPrivateVisitorHeap * opvh = new ObjectPrivateVisitorHeap(gs, pass);
 
     return JS::AddServoSizeOf(rt, MallocSizeOf, opvh, sizes);
