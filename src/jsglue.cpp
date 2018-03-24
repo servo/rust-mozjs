@@ -4,9 +4,6 @@
 
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>
-#include <iostream>
-#include <fstream>
-#include <string>
 
 #include "js-config.h"
 
@@ -451,19 +448,12 @@ class ObjectPrivateVisitorHeap : public JS::ObjectPrivateVisitor {
 public: 
   size_t sizeOfIncludingThis(nsISupports *aSupports){
 
-  std::ofstream outfile;
-  outfile.open("opv_sizeOfIncludingThis_log.txt", std::ios_base::app);
-
     JSObject* jso = (JSObject*)aSupports;
     size_t result = 0;
 
     if(get_size != nullptr && jso != nullptr){
-      outfile << "getting size\n";
-
       result = (*get_size)(jso); 
     }
-    outfile << "size = " << result << "\n";
-    outfile.close();
     
     return result;
   }
