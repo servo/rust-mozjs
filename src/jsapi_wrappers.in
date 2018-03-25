@@ -1,6 +1,5 @@
 wrap!(jsapi: pub fn IsArray(cx: *mut JSContext, obj: HandleObject, isArray: *mut bool) -> bool);
 wrap!(jsapi: pub fn IsArray1(cx: *mut JSContext, obj: HandleObject, answer: *mut IsArrayAnswer) -> bool);
-wrap!(jsapi: pub fn Unbox(cx: *mut JSContext, obj: HandleObject, vp: MutableHandleValue) -> bool);
 wrap!(jsapi: pub fn JS_ReadStructuredClone(cx: *mut JSContext, data: *mut u64, nbytes: usize, version: u32, vp: MutableHandleValue, optionalCallbacks: *const JSStructuredCloneCallbacks, closure: *mut ::std::os::raw::c_void) -> bool);
 wrap!(jsapi: pub fn JS_WriteStructuredClone(cx: *mut JSContext, v: HandleValue, datap: *mut *mut u64, nbytesp: *mut usize, optionalCallbacks: *const JSStructuredCloneCallbacks, closure: *mut ::std::os::raw::c_void, transferable: HandleValue) -> bool);
 wrap!(jsapi: pub fn JS_StructuredClone(cx: *mut JSContext, v: HandleValue, vp: MutableHandleValue, optionalCallbacks: *const JSStructuredCloneCallbacks, closure: *mut ::std::os::raw::c_void) -> bool);

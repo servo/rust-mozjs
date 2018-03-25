@@ -13,6 +13,7 @@ grep_heur() {
         grep 'pub fn' | \
         grep Handle | \
         grep -v roxyHandler | \
+        grep -v 'pub fn Unbox' | # this function seems to be platform specific \
         sed 's/Handle<\*mut JSObject>/HandleObject/g'
 }
 
