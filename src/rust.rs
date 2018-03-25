@@ -1670,17 +1670,17 @@ macro_rules! wrap {
     (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: $type:ty, $($rest:tt)*) => {
         wrap!(@inner $saved <> ($($acc,)* $arg,) <> $($rest)*);
     };
-    (@inner ($func_name:ident ($($args:tt)*) -> $outtype:ty) <> ($($argexprs:expr,)*) <> ) => {
+    (@inner ($module:tt: $func_name:ident ($($args:tt)*) -> $outtype:ty) <> ($($argexprs:expr,)*) <> ) => {
         #[inline]
         pub unsafe fn $func_name($($args)*) -> $outtype {
-            jsapi::$func_name($($argexprs),*)
+            $module::$func_name($($argexprs),*)
         }
     };
-    (pub fn $func_name:ident($($args:tt)*) -> $outtype:ty) => {
-        wrap!(@inner ($func_name ($($args)*) -> $outtype) <> () <> $($args)* ,);
+    ($module:tt: pub fn $func_name:ident($($args:tt)*) -> $outtype:ty) => {
+        wrap!(@inner ($module: $func_name ($($args)*) -> $outtype) <> () <> $($args)* ,);
     };
-    (pub fn $func_name:ident($($args:tt)*)) => {
-        wrap!(pub fn $func_name($($args)*) -> ());
+    ($module:tt: pub fn $func_name:ident($($args:tt)*)) => {
+        wrap!($module: pub fn $func_name($($args)*) -> ());
     }
 }
 
@@ -1691,6 +1691,7 @@ macro_rules! wrap {
  * */
 pub mod wrappers {
     use jsapi;
+    use glue;
     use jsapi::{IsArrayAnswer, PropertyDescriptor, ElementAdder, DetachDataDisposition};
     use jsapi::{JSStructuredCloneCallbacks, JSStructuredCloneReader, JSStructuredCloneWriter};
     use jsapi::{JSNative, JSObject, JSContext, JSFunction, JSRuntime, JSString};
@@ -1734,8 +1735,10 @@ pub mod wrappers {
     use jsapi::SymbolCode;
     use jsapi::TwoByteChars;
     use jsapi::Value;
+    use jsapi::JSJitInfo;
     use libc::FILE;
     use super::{Handle, HandleId, HandleObject, HandleValue};
     use super::{MutableHandle, MutableHandleObject, MutableHandleValue};
     include!("jsapi_wrappers.in");
+    include!("glue_wrappers.in");
 }
