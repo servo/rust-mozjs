@@ -24,9 +24,7 @@
 typedef bool(*WantToMeasure)(JSObject *obj);
 typedef size_t(*GetSize)(JSObject *obj);
 
-WantToMeasure want_to_measure_func = nullptr;
-
-//WantToMeasure want_to_measure_func = nullptr;
+WantToMeasure gWantToMeasure = nullptr;
 
 struct ProxyTraps {
     bool (*enter)(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
@@ -444,15 +442,15 @@ class ForwardingProxyHandler : public js::BaseProxyHandler
     }
 };
 
-class ObjectPrivateVisitorHeap : public JS::ObjectPrivateVisitor {
+class ServoDOMVisitor : public JS::ObjectPrivateVisitor {
 public: 
-  size_t sizeOfIncludingThis(nsISupports *aSupports){
+  size_t sizeOfIncludingThis(nsISupports *aSupports) {
 
-    JSObject* jso = (JSObject*)aSupports;
+    JSObject* obj = (JSObject*)aSupports;
     size_t result = 0;
 
-    if(get_size != nullptr && jso != nullptr){
-      result = (*get_size)(jso); 
+    if(get_size != nullptr && obj != nullptr) {
+      result = (*get_size)(obj);
     }
     
     return result;
@@ -460,25 +458,26 @@ public:
 
   GetSize get_size;
 
-  ObjectPrivateVisitorHeap(GetSize gs, GetISupportsFun getISupports) : get_size(gs), ObjectPrivateVisitor(getISupports){}
+  ServoDOMVisitor(GetSize gs, GetISupportsFun getISupports)
+  : ObjectPrivateVisitor(getISupports)
+  , get_size(gs)
+  {}
 };
 
 bool
-pass_to_ctor(JSObject* obj, nsISupports** iface){
+ShouldMeasureObject(JSObject* obj, nsISupports** iface) {
 
-  if(obj == nullptr){
+  if (obj == nullptr) {
     return false;
   }
 
-  bool want_to_measure = (*want_to_measure_func)(obj);
+  bool want_to_measure = (*gWantToMeasure)(obj);
 
-  if(want_to_measure){
+  if (want_to_measure) {
     *iface = (nsISupports*)obj;
     return true;
   }
-  else{
-    return false;
-  }
+  return false;
 }
 
 
@@ -660,7 +659,6 @@ GetProxyPrivate(JSObject* obj)
 {
     return js::GetProxyPrivate(obj);
 }
-
 
 void
 SetProxyExtra(JSObject* obj, uint32_t slot, const JS::Value& val)
@@ -851,26 +849,19 @@ static size_t MallocSizeOf(const void* aPtr)
 #endif
 }
 
-
 bool
 CollectServoSizes(JSRuntime *rt, JS::ServoSizes *sizes, GetSize gs)
 {
-    mozilla::PodZero(sizes);
-    bool (*pass)(JSObject* obj, nsISupports** iface);
-    pass = &pass_to_ctor;
-    
-    if(pass == nullptr){
-      return false;
-    }
+  mozilla::PodZero(sizes);
 
-    ObjectPrivateVisitorHeap * opvh = new ObjectPrivateVisitorHeap(gs, pass);
+  ServoDOMVisitor * opvh = new ServoDOMVisitor(gs, ShouldMeasureObject);
 
-    return JS::AddServoSizeOf(rt, MallocSizeOf, opvh, sizes);
+  return JS::AddServoSizeOf(rt, MallocSizeOf, opvh, sizes);
 }
 
 void
 InitializeMemoryReporter(WantToMeasure wtm){
-  want_to_measure_func = wtm;
+  gWantToMeasure = wtm;
 }
 
 void

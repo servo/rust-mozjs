@@ -261,8 +261,8 @@ extern "C" {
     pub fn AppendToAutoObjectVector(v: *mut AutoObjectVector,
                                     obj: *mut JSObject) -> bool;
     pub fn DeleteAutoObjectVector(v: *mut AutoObjectVector);
-    pub fn CollectServoSizes(rt: *mut JSRuntime, sizes: *mut ServoSizes, gs: Option<unsafe extern "C" fn (obj: *mut JSObject) -> usize>) -> bool;
-    pub fn InitializeMemoryReporter(wtm: Option<unsafe extern "C" fn (obj: *mut JSObject) -> bool>);
+    pub fn CollectServoSizes(rt: *mut JSRuntime, sizes: *mut ServoSizes, get_size: Option<unsafe extern "C" fn (obj: *mut JSObject) -> usize>) -> bool;
+    pub fn InitializeMemoryReporter(want_to_measure: Option<unsafe extern "C" fn (obj: *mut JSObject) -> bool>);
     pub fn CallIdTracer(trc: *mut JSTracer, idp: *mut Heap<jsid>,
                         name: *const ::libc::c_char);
     pub fn CallValueTracer(trc: *mut JSTracer, valuep: *mut Heap<Value>,
