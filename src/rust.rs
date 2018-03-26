@@ -465,7 +465,15 @@ macro_rules! rooted {
     (in($cx:expr) let mut $name:ident = $init:expr) => {
         let mut __root = $crate::jsapi::Rooted::new_unrooted();
         let mut $name = $crate::rust::RootedGuard::new($cx, &mut __root, $init);
-    }
+    };
+    (in($cx:expr) let $name:ident: $type:ty) => {
+        let mut __root = $crate::jsapi::Rooted::new_unrooted();
+        let $name = $crate::rust::RootedGuard::new($cx, &mut __root, $type::default());
+    };
+    (in($cx:expr) let mut $name:ident: $type:ty) => {
+        let mut __root = $crate::jsapi::Rooted::new_unrooted();
+        let mut $name = $crate::rust::RootedGuard::new($cx, &mut __root, $type::default());
+    };
 }
 
 /// Similarly to `Trace` trait, it's used to specify tracing of various types
@@ -1513,12 +1521,12 @@ macro_rules! capture_stack {
 
 impl Default for PropertyDescriptor {
     fn default() -> PropertyDescriptor {
-        PropertyDescriptor { 
+        PropertyDescriptor {
             obj: ptr::null_mut(),
             attrs: 0,
             getter: None,
             setter: None,
-            value: UndefinedValue()  
+            value: UndefinedValue()
         }
     }
 }
