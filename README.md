@@ -37,8 +37,8 @@ rustup default nightly
 
 ### Other dependencies
 
-#### OS X
-#### On OS X (homebrew)
+#### macOS
+#### On macOS (Homebrew)
 
 ```sh
 brew install automake pkg-config python2 cmake
