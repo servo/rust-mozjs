@@ -673,8 +673,10 @@ pub struct Handle<'a, T: 'a> {
     ptr: &'a T,
 }
 
+#[derive(Copy, Clone)]
 pub struct MutableHandle<'a, T: 'a> {
-    ptr: &'a mut T
+    ptr: *mut T,
+    anchor: PhantomData<&'a mut T>,
 }
 
 pub type MutableHandleValue<'a> = MutableHandle<'a, Value>;
@@ -778,23 +780,23 @@ impl<'a, T> MutableHandle<'a, T> {
     }
 
     pub fn handle(&self) -> Handle<T> {
-        Handle::new(self.ptr)
+        unsafe { Handle::new(&*self.ptr) }
     }
 
     pub fn new(ptr: &'a mut T) -> Self {
-        Self { ptr: ptr }
+        Self { ptr: ptr, anchor: PhantomData }
     }
 
     pub fn get(&self) -> T
         where T: Copy
     {
-        *self.ptr
+        unsafe { *self.ptr }
     }
 
     pub fn set(&mut self, v: T)
         where T: Copy
     {
-        *self.ptr = v
+        unsafe { *self.ptr = v }
     }
 
     fn raw(&mut self) -> RawMutableHandle<T> {
@@ -822,13 +824,13 @@ impl<'a, T> Deref for MutableHandle<'a, T> {
     type Target = T;
 
     fn deref(&self) -> &T {
-        self.ptr
+        unsafe { &*self.ptr }
     }
 }
 
 impl<'a, T> DerefMut for MutableHandle<'a, T> {
     fn deref_mut(&mut self) -> &mut T {
-        self.ptr
+        unsafe { &mut *self.ptr }
     }
 }
 
