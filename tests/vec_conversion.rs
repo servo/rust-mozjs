@@ -34,7 +34,7 @@ fn vec_conversion() {
         let global = global_root.handle();
 
         let _ac = JSAutoCompartment::new(cx, global.get());
-        assert!(JS_InitStandardClasses(cx, global));
+        assert!(JS_InitStandardClasses(cx, global.into()));
 
         rooted!(in(cx) let mut rval = UndefinedValue());
 

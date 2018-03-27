@@ -31,7 +31,7 @@ fn panic() {
         rooted!(in(context) let global_root = global);
         let global = global_root.handle();
         let _ac = JSAutoCompartment::new(context, global.get());
-        let function = JS_DefineFunction(context, global,
+        let function = JS_DefineFunction(context, global.into(),
                                          b"test\0".as_ptr() as *const _,
                                          Some(test), 0, 0);
         assert!(!function.is_null());
