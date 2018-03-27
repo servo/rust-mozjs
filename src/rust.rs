@@ -48,6 +48,7 @@ use jsapi::Handle as RawHandle;
 use jsapi::MutableHandle as RawMutableHandle;
 use jsapi::HandleValue as RawHandleValue;
 
+use jsapi::PropertyDescriptor;
 use jsval::{ObjectValue, UndefinedValue};
 
 use glue::{AppendToAutoObjectVector, CallFunctionTracer, CallIdTracer, CallObjectTracer};
@@ -476,7 +477,15 @@ macro_rules! rooted {
     (in($cx:expr) let mut $name:ident = $init:expr) => {
         let mut __root = $crate::jsapi::Rooted::new_unrooted();
         let mut $name = $crate::rust::RootedGuard::new($cx, &mut __root, $init);
-    }
+    };
+    (in($cx:expr) let $name:ident: $type:ty) => {
+        let mut __root = $crate::jsapi::Rooted::new_unrooted();
+        let $name = $crate::rust::RootedGuard::new($cx, &mut __root, $type::default());
+    };
+    (in($cx:expr) let mut $name:ident: $type:ty) => {
+        let mut __root = $crate::jsapi::Rooted::new_unrooted();
+        let mut $name = $crate::rust::RootedGuard::new($cx, &mut __root, $type::default());
+    };
 }
 
 /// Similarly to `Trace` trait, it's used to specify tracing of various types
@@ -989,16 +998,26 @@ impl<T: GCMethods + Copy> Heap<T> {
         self.ptr.get()
     }
 
-    pub fn handle(&self) -> Handle<T> {
-        unsafe {
-            Handle::from_marked_location(self.ptr.get() as *const T)
-        }
-    }
-
     pub fn handle_mut(&self) -> MutableHandle<T> {
         unsafe {
             MutableHandle::from_marked_location(self.ptr.get())
         }
+    }
+    /// Retrieves a Handle to the underlying value.
+    ///
+    /// # Safety
+    ///
+    /// This is only safe to do on a rooted object (which Heap is not, it needs
+    /// to be additionally rooted), like RootedGuard, so use this only if you
+    /// know what you're doing.
+    ///
+    /// # Notes
+    ///
+    /// Since Heap values need to be informed when a change to underlying
+    /// value is made (e.g. via `get()`), this does not allow to create
+    /// MutableHandle objects, which can bypass this and lead to crashes.
+    pub unsafe fn handle(&self) -> Handle<T> {
+        Handle::from_marked_location(self.ptr.get() as *const _)
     }
 }
 
@@ -1743,4 +1762,16 @@ pub mod wrappers {
     use super::{MutableHandle, MutableHandleObject, MutableHandleValue};
     include!("jsapi_wrappers.in");
     include!("glue_wrappers.in");
+}
+
+impl Default for PropertyDescriptor {
+    fn default() -> PropertyDescriptor {
+        PropertyDescriptor {
+            obj: ptr::null_mut(),
+            attrs: 0,
+            getter: None,
+            setter: None,
+            value: UndefinedValue()
+        }
+    }
 }
