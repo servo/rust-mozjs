@@ -2,7 +2,7 @@
 name = "mozjs"
 description = "Rust bindings to the Mozilla SpiderMonkey JavaScript engine."
 repository = "https://github.com/servo/rust-mozjs"
-version = "0.5.0"
+version = "0.6.0"
 authors = ["The Servo Project Developers"]
 build = "build.rs"
 license = "MPL-2.0"

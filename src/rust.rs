@@ -304,6 +304,11 @@ impl RootKind for Value {
     fn rootKind() -> jsapi::RootKind { jsapi::RootKind::Value }
 }
 
+impl RootKind for PropertyDescriptor {
+        #[inline(always)]
+    fn rootKind() -> jsapi::RootKind { jsapi::RootKind::Traceable }
+}
+
 // Creates a C string literal `$str`.
 macro_rules! c_str {
     ($str:expr) => {
@@ -836,6 +841,10 @@ impl GCMethods for Value {
     }
 }
 
+impl GCMethods for PropertyDescriptor {
+    unsafe fn initial() -> PropertyDescriptor { PropertyDescriptor::default() }
+    unsafe fn post_barrier(_ : *mut PropertyDescriptor, _ : PropertyDescriptor, _ :PropertyDescriptor) {}
+}
 impl<T: GCMethods + Copy> Heap<T> {
     /// This creates a `Box`-wrapped Heap value. Setting a value inside Heap
     /// object triggers a barrier, referring to the Heap object location,
