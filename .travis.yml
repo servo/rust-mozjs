@@ -17,7 +17,7 @@ before_install:
 script:
   - ccache -z
   - CCACHE=$(which ccache) travis_wait cargo build --verbose $FEATURES
-  - CCACHE=$(which ccache) cargo test --verbose $FEATURES
+  - CCACHE=$(which ccache) RUST_BACKTRACE=1 cargo test --verbose $FEATURES
   - ccache -s
 
 notifications:

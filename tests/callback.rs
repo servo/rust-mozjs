@@ -35,7 +35,7 @@ fn callback() {
         rooted!(in(context) let global_root = global);
         let global = global_root.handle();
         let _ac = JSAutoCompartment::new(context, global.get());
-        let function = JS_DefineFunction(context, global, b"puts\0".as_ptr() as *const libc::c_char,
+        let function = JS_DefineFunction(context, global.into(), b"puts\0".as_ptr() as *const libc::c_char,
                                          Some(puts), 1, 0);
         assert!(!function.is_null());
         let javascript = "puts('Test Iñtërnâtiônàlizætiøn ┬─┬ノ( º _ ºノ) ');";
@@ -55,7 +55,7 @@ unsafe extern "C" fn puts(context: *mut JSContext, argc: u32, vp: *mut Value) ->
     let arg = args.get(0);
     let js = mozjs::rust::ToString(context, arg);
     rooted!(in(context) let message_root = js);
-    let message = JS_EncodeStringToUTF8(context, message_root.handle());
+    let message = JS_EncodeStringToUTF8(context, message_root.handle().into());
     let message = CStr::from_ptr(message);
     println!("{}", str::from_utf8(message.to_bytes()).unwrap());
 

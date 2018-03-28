@@ -31,7 +31,7 @@ fn capture_stack() {
         rooted!(in(context) let global_root = global);
         let global = global_root.handle();
         let _ac = JSAutoCompartment::new(context, global.get());
-        let function = JS_DefineFunction(context, global, b"print_stack\0".as_ptr() as *const libc::c_char,
+        let function = JS_DefineFunction(context, global.into(), b"print_stack\0".as_ptr() as *const libc::c_char,
                                          Some(print_stack), 0, 0);
         assert!(!function.is_null());
         let javascript = "

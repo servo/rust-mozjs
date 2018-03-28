@@ -25,6 +25,7 @@ environment:
     C:\\Program Files\\Git\\cmd;\
     C:\\Program Files\\Git\\usr\\bin;\
     C:\\Program Files\\AppVeyor\\BuildAgent;"
+  RUST_BACKTRACE: "1"
   matrix:
   - TARGET: nightly-x86_64-pc-windows-msvc
 
