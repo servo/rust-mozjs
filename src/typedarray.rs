@@ -157,6 +157,11 @@ impl<T: TypedArrayElement, S: JSObjectStorage> TypedArray<T, S> {
         data
     }
 
+    /// Returns the number of elements in the underlying typed array.
+    pub fn len(&self) -> usize {
+        self.data().1 as usize
+    }
+
     /// # Unsafety
     ///
     /// Returned wrapped pointer to the underlying `JSObject` is meant to be
