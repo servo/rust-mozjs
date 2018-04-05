@@ -688,12 +688,22 @@ pub struct MutableHandle<'a, T: 'a> {
     anchor: PhantomData<&'a mut T>,
 }
 
-pub type MutableHandleValue<'a> = MutableHandle<'a, Value>;
-pub type MutableHandleObject<'a> = MutableHandle<'a, *mut JSObject>;
 
-pub type HandleValue<'a> = Handle<'a, Value>;
-pub type HandleObject<'a> = Handle<'a, *mut JSObject>;
+pub type HandleFunction<'a> = Handle<'a, *mut JSFunction>;
 pub type HandleId<'a> = Handle<'a, jsid>;
+pub type HandleObject<'a> = Handle<'a, *mut JSObject>;
+pub type HandleScript<'a> = Handle<'a, *mut JSScript>;
+pub type HandleString<'a> = Handle<'a, *mut JSString>;
+pub type HandleSymbol<'a> = Handle<'a, *mut Symbol>;
+pub type HandleValue<'a> = Handle<'a, Value>;
+pub type MutableHandleFunction<'a> = MutableHandle<'a, *mut JSFunction>;
+pub type MutableHandleId<'a> = MutableHandle<'a, jsid>;
+pub type MutableHandleObject<'a> = MutableHandle<'a, *mut JSObject>;
+pub type MutableHandleScript<'a> = MutableHandle<'a, *mut JSScript>;
+pub type MutableHandleString<'a> = MutableHandle<'a, *mut JSString>;
+pub type MutableHandleSymbol<'a> = MutableHandle<'a, *mut Symbol>;
+pub type MutableHandleValue<'a> = MutableHandle<'a, Value>;
+
 
 impl<T> RawHandle<T> {
     pub fn get(&self) -> T
@@ -1670,22 +1680,49 @@ macro_rules! wrap {
     (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: Handle, $($rest:tt)*) => {
         wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
     };
-    (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: HandleValue, $($rest:tt)*) => {
-        wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
-    };
-    (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: HandleObject, $($rest:tt)*) => {
-        wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
-    };
-    (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: HandleId, $($rest:tt)*) => {
-        wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
-    };
     (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: MutableHandle, $($rest:tt)*) => {
         wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
     };
-    (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: MutableHandleObject, $($rest:tt)*) => {
+        (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: HandleFunction , $($rest:tt)*) => {
         wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
     };
-    (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: MutableHandleValue, $($rest:tt)*) => {
+    (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: HandleId , $($rest:tt)*) => {
+        wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
+    };
+    (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: HandleObject , $($rest:tt)*) => {
+        wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
+    };
+    (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: HandleScript , $($rest:tt)*) => {
+        wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
+    };
+    (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: HandleString , $($rest:tt)*) => {
+        wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
+    };
+    (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: HandleSymbol , $($rest:tt)*) => {
+        wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
+    };
+    (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: HandleValue , $($rest:tt)*) => {
+        wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
+    };
+    (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: MutableHandleFunction , $($rest:tt)*) => {
+        wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
+    };
+    (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: MutableHandleId , $($rest:tt)*) => {
+        wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
+    };
+    (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: MutableHandleObject , $($rest:tt)*) => {
+        wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
+    };
+    (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: MutableHandleScript , $($rest:tt)*) => {
+        wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
+    };
+    (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: MutableHandleString , $($rest:tt)*) => {
+        wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
+    };
+    (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: MutableHandleSymbol , $($rest:tt)*) => {
+        wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
+    };
+    (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: MutableHandleValue , $($rest:tt)*) => {
         wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
     };
     (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: $type:ty, $($rest:tt)*) => {
@@ -1717,7 +1754,6 @@ pub mod wrappers {
     use jsapi::{JSStructuredCloneCallbacks, JSStructuredCloneReader, JSStructuredCloneWriter};
     use jsapi::{JSNative, JSObject, JSContext, JSFunction, JSRuntime, JSString};
     use jsapi::{JSType};
-    use jsapi::{HandleString, HandleScript};
     use jsapi::{SavedFrameResult, SavedFrameSelfHosted};
     use jsapi::{MallocSizeOf, ObjectPrivateVisitor, ObjectOpResult, TabSizes};
     use jsapi::AutoIdVector;
@@ -1725,9 +1761,6 @@ pub mod wrappers {
     use jsapi::CallArgs;
     use jsapi::CompileOptions;
     use jsapi::ESClass;
-    use jsapi::HandleFunction;
-    use jsapi::HandleSymbol;
-    use jsapi::HandleValueArray;
     use jsapi::JSAddonId;
     use jsapi::JSClass;
     use jsapi::JSConstDoubleSpec;
@@ -1741,10 +1774,6 @@ pub mod wrappers {
     use jsapi::JSPropertySpec;
     use jsapi::JSProtoKey;
     use jsapi::JSScript;
-    use jsapi::MutableHandleFunction;
-    use jsapi::MutableHandleId;
-    use jsapi::MutableHandleScript;
-    use jsapi::MutableHandleString;
     use jsapi::PromiseState;
     use jsapi::PropertyCopyBehavior;
     use jsapi::ReadOnlyCompileOptions;
@@ -1758,8 +1787,7 @@ pub mod wrappers {
     use jsapi::Value;
     use jsapi::JSJitInfo;
     use libc::FILE;
-    use super::{Handle, HandleId, HandleObject, HandleValue};
-    use super::{MutableHandle, MutableHandleObject, MutableHandleValue};
+    use super::*;
     include!("jsapi_wrappers.in");
     include!("glue_wrappers.in");
 }
