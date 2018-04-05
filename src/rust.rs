@@ -425,8 +425,6 @@ impl<'a, T: 'a + RootKind + GCMethods> RootedGuard<'a, T> {
         }
     }
 
-    // REVIEW: is this equivalent to?
-    // pub fn handle(&self) -> Handle<T>
     pub fn handle(&'a self) -> Handle<'a, T> {
         Handle::new(&self.root.ptr)
     }
@@ -629,7 +627,6 @@ impl<'a, T: 'a + CustomTrace> CustomAutoRooterGuard<'a, T> {
         }
     }
 
-    // REVIEW: as in line 429
     pub fn handle(&'a self) -> Handle<'a, T> where T: RootKind {
         Handle::new(&self.rooter.data)
     }
