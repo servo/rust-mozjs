@@ -316,6 +316,11 @@ impl RootKind for Value {
     fn rootKind() -> jsapi::RootKind { jsapi::RootKind::Value }
 }
 
+impl RootKind for PropertyDescriptor {
+    #[inline(always)]
+    fn rootKind() -> jsapi::RootKind { jsapi::RootKind::Traceable }
+}
+
 // Creates a C string literal `$str`.
 macro_rules! c_str {
     ($str:expr) => {
@@ -970,6 +975,11 @@ impl GCMethods for Value {
     unsafe fn post_barrier(v: *mut Value, prev: Value, next: Value) {
         HeapValuePostBarrier(v, &prev, &next);
     }
+}
+
+impl GCMethods for PropertyDescriptor {
+    unsafe fn initial() -> PropertyDescriptor { PropertyDescriptor::default() }
+    unsafe fn post_barrier(_ : *mut PropertyDescriptor, _ : PropertyDescriptor, _ :PropertyDescriptor) {}
 }
 
 impl<T: GCMethods + Copy> Heap<T> {
