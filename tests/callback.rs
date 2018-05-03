@@ -47,12 +47,12 @@ fn callback() {
 unsafe extern "C" fn puts(context: *mut JSContext, argc: u32, vp: *mut Value) -> bool {
     let args = CallArgs::from_vp(vp, argc);
 
-    if args._base.argc_ != 1 {
+    if args.argc_ != 1 {
         JS_ReportError(context, b"puts() requires exactly 1 argument\0".as_ptr() as *const libc::c_char);
         return false;
     }
 
-    let arg = args.get(0);
+    let arg = mozjs::rust::Handle::from_raw(args.get(0));
     let js = mozjs::rust::ToString(context, arg);
     rooted!(in(context) let message_root = js);
     let message = JS_EncodeStringToUTF8(context, message_root.handle().into());
