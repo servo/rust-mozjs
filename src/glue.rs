@@ -42,9 +42,8 @@ pub struct ProxyTraps {
                                            -> bool>,
     pub enumerate: ::std::option::Option<unsafe extern "C" fn
                                              (cx: *mut JSContext,
-                                              proxy: HandleObject,
-                                              objp: MutableHandleObject)
-                                             -> bool>,
+                                              proxy: HandleObject)
+                                             -> *mut JSObject>,
     pub getPrototypeIfOrdinary: ::std::option::Option<unsafe extern "C" fn
                                                           (cx: *mut JSContext,
                                                            proxy: HandleObject,
@@ -124,7 +123,7 @@ pub struct ProxyTraps {
     pub fun_toString: ::std::option::Option<unsafe extern "C" fn
                                                 (cx: *mut JSContext,
                                                  proxy: HandleObject,
-                                                 indent: u32)
+                                                 isToString: bool)
                                                 -> *mut JSString>,
     pub boxedValue_unbox: ::std::option::Option<unsafe extern "C" fn
                                                     (cx: *mut JSContext,
@@ -145,7 +144,8 @@ pub struct ProxyTraps {
                                              proxy: *mut JSObject)>,
     pub objectMoved: ::std::option::Option<unsafe extern "C" fn
                                                (proxy: *mut JSObject,
-                                                old: *const JSObject)>,
+                                                old: *mut JSObject)
+					       -> usize>,
     pub isCallable: ::std::option::Option<unsafe extern "C" fn
                                               (obj: *mut JSObject) -> bool>,
     pub isConstructor: ::std::option::Option<unsafe extern "C" fn
@@ -225,20 +225,26 @@ extern "C" {
     pub fn WrapperNew(aCx: *mut JSContext, aObj: HandleObject,
                       aHandler: *const ::libc::c_void, aClass: *const JSClass,
                       aSingleton: bool)
-     -> *mut JSObject;
+                      -> *mut JSObject;
+
+
+
     pub fn NewWindowProxy(aCx: *mut JSContext, aObj: HandleObject,
                           aHandler: *const ::libc::c_void)
      -> *mut JSObject;
     pub fn GetWindowProxyClass() -> *const Class;
-    pub fn GetProxyExtra(obj: *mut JSObject, slot: u32) -> Value;
+    pub fn GetProxyReservedSlot(obj: *mut JSObject, slot: u32) -> JS::Value;
     pub fn GetProxyPrivate(obj: *mut JSObject) -> Value;
-    pub fn SetProxyExtra(obj: *mut JSObject, slot: u32, val: *const Value);
+    pub fn SetProxyReservedSlot(obj: *mut JSObject, slot: u32, val: *const JS::Value);
+    pub fn SetProxyPrivate(obj: *mut JSObject, expando: *const JS::Value);
+
     pub fn RUST_JSID_IS_INT(id: HandleId) -> bool;
     pub fn RUST_JSID_TO_INT(id: HandleId) -> i32;
     pub fn int_to_jsid(i: i32) -> jsid;
     pub fn RUST_JSID_IS_STRING(id: HandleId) -> bool;
     pub fn RUST_JSID_TO_STRING(id: HandleId) -> *mut JSString;
     pub fn RUST_SYMBOL_TO_JSID(sym: *mut Symbol) -> jsid;
+    pub fn SetBuildId(buildId: *mut JS::BuildIdCharVector, chars: *const u8, len: usize) -> bool;
     pub fn RUST_SET_JITINFO(func: *mut JSFunction, info: *const JSJitInfo);
     pub fn RUST_INTERNED_STRING_TO_JSID(cx: *mut JSContext,
                                         str: *mut JSString) -> jsid;
@@ -261,8 +267,7 @@ extern "C" {
     pub fn AppendToAutoObjectVector(v: *mut AutoObjectVector,
                                     obj: *mut JSObject) -> bool;
     pub fn DeleteAutoObjectVector(v: *mut AutoObjectVector);
-    pub fn CollectServoSizes(rt: *mut JSRuntime, sizes: *mut ServoSizes, get_size: Option<unsafe extern "C" fn (obj: *mut JSObject) -> usize>) -> bool;
-    pub fn InitializeMemoryReporter(want_to_measure: Option<unsafe extern "C" fn (obj: *mut JSObject) -> bool>);
+    pub fn CollectServoSizes(cx: *mut JSContext, sizes: *mut ServoSizes) -> bool;
     pub fn CallIdTracer(trc: *mut JSTracer, idp: *mut Heap<jsid>,
                         name: *const ::libc::c_char);
     pub fn CallValueTracer(trc: *mut JSTracer, valuep: *mut Heap<Value>,
@@ -326,4 +331,12 @@ extern "C" {
                                         length: *mut u32,
                                         isSharedMemory: *mut bool,
                                         data: *mut *mut f64);
+
+    pub fn NewJSAutoStructuredCloneBuffer(scope: JS::StructuredCloneScope,
+                                          callbacks: *const JSStructuredCloneCallbacks) ->
+                                         *mut JSAutoStructuredCloneBuffer;
+    pub fn DeleteJSAutoStructuredCloneBuffer(buf: *mut JSAutoStructuredCloneBuffer);
+    pub fn GetLengthOfJSStructuredCloneData(data: *mut JSStructuredCloneData) -> usize;
+    pub fn CopyJSStructuredCloneData(src: *const JSStructuredCloneData, dest: *mut u8);
+    pub fn WriteBytesToJSStructuredCloneData(src: *const u8, len: usize, dest: *mut JSStructuredCloneData);
 }

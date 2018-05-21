@@ -23,6 +23,7 @@ pub mod jsapi {
     pub use mozjs_sys::jsapi::js::shadow::{Object, ObjectGroup};
     pub use mozjs_sys::jsapi::js::Scalar::{Type};
     pub use mozjs_sys::jsapi::mozilla::{MallocSizeOf};
+    pub use mozjs_sys::jsapi::glue::*;
 }
 
 #[macro_use]

@@ -14,8 +14,12 @@ grep_heur() {
         grep Handle | \
         grep -v roxyHandler | \
         grep -v 'pub fn Unbox' | # this function seems to be platform specific \
+        sed 's/root:://g' |
+        sed 's/JS:://g' |
+        sed 's/js:://g' |
+        sed 's/mozilla:://g' |
         sed 's/Handle<\*mut JSObject>/HandleObject/g'
 }
 
-grep_heur jsapi_linux_64.rs | sed 's/\(.*\)/wrap!(jsapi: \1);/g'  > jsapi_wrappers.in
+grep_heur ../target/debug/build/mozjs_sys-*/out/jsapi.rs | sed 's/\(.*\)/wrap!(jsapi: \1);/g'  > jsapi_wrappers.in
 grep_heur glue.rs | sed 's/\(.*\)/wrap!(glue: \1);/g'  > glue_wrappers.in

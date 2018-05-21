@@ -39,12 +39,13 @@ fn main() {
     if cfg!(target_os = "windows") {
         build.flag(&format!("-FI{}", confdefs_path.to_string_lossy()));
         build.define("WIN32", "");
+        build.define("XP_PC", "");
         build.flag("-Zi");
         build.flag("-GR-");
     } else {
         build.flag("-fPIC");
         build.flag("-fno-rtti");
-        build.flag("-std=c++11");
+        build.flag("-std=c++14");
         build.define("JS_NO_JSVAL_JSID_STRUCT_TYPES", "");
         build.flag("-include");
         build.flag(&confdefs_path.to_string_lossy());

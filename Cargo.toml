@@ -31,6 +31,8 @@ name = "runtime"
 [[test]]
 name = "typedarray"
 [[test]]
+name = "typedarray_panic"
+[[test]]
 name = "stack_limit"
 [[test]]
 name = "vec_conversion"
@@ -40,11 +42,13 @@ doctest = false
 
 [features]
 debugmozjs = ['mozjs_sys/debugmozjs']
-promises = ['mozjs_sys/promises']
 
 [dependencies]
 lazy_static = "1"
 libc = "0.2"
 log = "0.4"
 num-traits = "0.1.32"
-mozjs_sys = "0.51.1"
+mozjs_sys = "0.60.0"
+
+[patch.crates-io]
+mozjs_sys = { git = "https://github.com/asajeffrey/mozjs.git", branch = "smup" }
