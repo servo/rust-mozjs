@@ -13,7 +13,7 @@ use mozjs::jsapi::JSContext;
 use mozjs::jsapi::JS_DefineFunction;
 use mozjs::jsapi::JS_EncodeStringToUTF8;
 use mozjs::jsapi::JS_NewGlobalObject;
-use mozjs::jsapi::JS_ReportError;
+use mozjs::jsapi::JS_ReportErrorASCII;
 use mozjs::jsapi::OnNewGlobalHookOption;
 use mozjs::jsapi::Value;
 use mozjs::jsval::UndefinedValue;
@@ -48,7 +48,7 @@ unsafe extern "C" fn puts(context: *mut JSContext, argc: u32, vp: *mut Value) ->
     let args = CallArgs::from_vp(vp, argc);
 
     if args.argc_ != 1 {
-        JS_ReportError(context, b"puts() requires exactly 1 argument\0".as_ptr() as *const libc::c_char);
+        JS_ReportErrorASCII(context, b"puts() requires exactly 1 argument\0".as_ptr() as *const libc::c_char);
         return false;
     }
 

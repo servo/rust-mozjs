@@ -16,15 +16,10 @@
 #include "jsfriendapi.h"
 #include "js/Proxy.h"
 #include "js/Class.h"
-#include "jswrapper.h"
 #include "js/MemoryMetrics.h"
 #include "js/Principals.h"
+#include "js/Wrapper.h"
 #include "assert.h"
-
-typedef bool(*WantToMeasure)(JSObject *obj);
-typedef size_t(*GetSize)(JSObject *obj);
-
-WantToMeasure gWantToMeasure = nullptr;
 
 struct ProxyTraps {
     bool (*enter)(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
@@ -42,8 +37,7 @@ struct ProxyTraps {
     bool (*delete_)(JSContext *cx, JS::HandleObject proxy,
                     JS::HandleId id, JS::ObjectOpResult &result);
 
-    bool (*enumerate)(JSContext *cx, JS::HandleObject proxy,
-                      JS::MutableHandleObject objp);
+    JSObject* (*enumerate)(JSContext *cx, JS::HandleObject proxy);
 
     bool (*getPrototypeIfOrdinary)(JSContext *cx, JS::HandleObject proxy,
                                    bool *isOrdinary, JS::MutableHandleObject protop);
@@ -83,21 +77,19 @@ struct ProxyTraps {
     bool (*objectClassIs)(JS::HandleObject obj, js::ESClass classValue,
                           JSContext *cx);
     const char *(*className)(JSContext *cx, JS::HandleObject proxy);
-    JSString *(*fun_toString)(JSContext *cx, JS::HandleObject proxy,
-                              unsigned indent);
+    JSString* (*fun_toString)(JSContext *cx, JS::HandleObject proxy,
+                              bool isToString);
     //bool (*regexp_toShared)(JSContext *cx, JS::HandleObject proxy, RegExpGuard *g);
     bool (*boxedValue_unbox)(JSContext *cx, JS::HandleObject proxy,
                              JS::MutableHandleValue vp);
     bool (*defaultValue)(JSContext *cx, JS::HandleObject obj, JSType hint, JS::MutableHandleValue vp);
     void (*trace)(JSTracer *trc, JSObject *proxy);
     void (*finalize)(JSFreeOp *fop, JSObject *proxy);
-    void (*objectMoved)(JSObject *proxy, const JSObject *old);
+    size_t (*objectMoved)(JSObject *proxy, JSObject *old);
 
     bool (*isCallable)(JSObject *obj);
     bool (*isConstructor)(JSObject *obj);
 
-    // watch
-    // unwatch
     // getElements
 
     // weakmapKeyDelegate
@@ -108,21 +100,13 @@ static int HandlerFamily;
 
 #define DEFER_TO_TRAP_OR_BASE_CLASS(_base)                                      \
                                                                                 \
-    virtual bool enter(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,  \
-                       _base::Action action, bool *bp) const override           \
-    {                                                                           \
-        return mTraps.enter                                                     \
-               ? mTraps.enter(cx, proxy, id, action, bp)                        \
-               : _base::enter(cx, proxy, id, action, bp);                       \
-    }                                                                           \
-                                                                                \
     /* Standard internal methods. */                                            \
-    virtual bool enumerate(JSContext *cx, JS::HandleObject proxy,               \
-                           JS::MutableHandleObject objp) const override         \
+    virtual JSObject* enumerate(JSContext *cx,                                  \
+                                JS::HandleObject proxy) const override          \
     {                                                                           \
         return mTraps.enumerate                                                 \
-               ? mTraps.enumerate(cx, proxy, objp)                              \
-               : _base::enumerate(cx, proxy, objp);                             \
+               ? mTraps.enumerate(cx, proxy)                                    \
+               : _base::enumerate(cx, proxy);                                   \
     }                                                                           \
                                                                                 \
     virtual bool has(JSContext* cx, JS::HandleObject proxy,                     \
@@ -134,7 +118,7 @@ static int HandlerFamily;
     }                                                                           \
                                                                                 \
     virtual bool get(JSContext* cx, JS::HandleObject proxy,                     \
-                     JS::HandleValue receiver,                                 \
+                     JS::HandleValue receiver,                                  \
                      JS::HandleId id, JS::MutableHandleValue vp) const override \
     {                                                                           \
         return mTraps.get                                                       \
@@ -211,11 +195,11 @@ static int HandlerFamily;
     }                                                                           \
                                                                                 \
     virtual JSString* fun_toString(JSContext* cx, JS::HandleObject proxy,       \
-                                   unsigned indent) const override              \
+                                   bool isToString) const override              \
     {                                                                           \
         return mTraps.fun_toString                                              \
-               ? mTraps.fun_toString(cx, proxy, indent)                         \
-               : _base::fun_toString(cx, proxy, indent);                        \
+               ? mTraps.fun_toString(cx, proxy, isToString)                     \
+               : _base::fun_toString(cx, proxy, isToString);                    \
     }                                                                           \
                                                                                 \
     virtual bool boxedValue_unbox(JSContext* cx, JS::HandleObject proxy,        \
@@ -240,12 +224,11 @@ static int HandlerFamily;
         : _base::finalize(fop, proxy);                                          \
     }                                                                           \
                                                                                 \
-    virtual void objectMoved(JSObject* proxy,                                   \
-                             const JSObject *old) const override                \
+    virtual size_t objectMoved(JSObject* proxy, JSObject *old) const override   \
     {                                                                           \
-        mTraps.objectMoved                                                      \
-        ? mTraps.objectMoved(proxy, old)                                        \
-        : _base::objectMoved(proxy, old);                                       \
+        return mTraps.objectMoved                                               \
+               ? mTraps.objectMoved(proxy, old)                                 \
+               : _base::objectMoved(proxy, old);                                \
     }                                                                           \
                                                                                 \
     virtual bool isCallable(JSObject* obj) const override                       \
@@ -269,7 +252,7 @@ class WrapperProxyHandler : public js::Wrapper
     WrapperProxyHandler(const ProxyTraps& aTraps)
     : js::Wrapper(0), mTraps(aTraps) {}
 
-    virtual bool finalizeInBackground(JS::Value priv) const override
+    virtual bool finalizeInBackground(const JS::Value& priv) const override
     {
         return false;
     }
@@ -344,7 +327,7 @@ class RustJSPrincipal : public JSPrincipals
     bool (*writeCallback)(JSContext* cx, JSStructuredCloneWriter* writer);
 
   public:
-    RustJSPrincipal(const void* origin, 
+    RustJSPrincipal(const void* origin,
                      void (*destroy)(JSPrincipals *principal),
                      bool (*write)(JSContext* cx, JSStructuredCloneWriter* writer))
     : JSPrincipals() {
@@ -381,7 +364,7 @@ class ForwardingProxyHandler : public js::BaseProxyHandler
         return mExtra;
     }
 
-    virtual bool finalizeInBackground(JS::Value priv) const override
+    virtual bool finalizeInBackground(const JS::Value& priv) const override
     {
         return false;
     }
@@ -442,45 +425,6 @@ class ForwardingProxyHandler : public js::BaseProxyHandler
     }
 };
 
-class ServoDOMVisitor : public JS::ObjectPrivateVisitor {
-public:
-  size_t sizeOfIncludingThis(nsISupports *aSupports) {
-
-    JSObject* obj = (JSObject*)aSupports;
-    size_t result = 0;
-
-    if (get_size != nullptr && obj != nullptr) {
-      result = (*get_size)(obj);
-    }
-
-    return result;
-  }
-
-  GetSize get_size;
-
-  ServoDOMVisitor(GetSize gs, GetISupportsFun getISupports)
-  : ObjectPrivateVisitor(getISupports)
-  , get_size(gs)
-  {}
-};
-
-bool
-ShouldMeasureObject(JSObject* obj, nsISupports** iface) {
-
-  if (obj == nullptr) {
-    return false;
-  }
-
-  bool want_to_measure = (*gWantToMeasure)(obj);
-
-  if (want_to_measure) {
-    *iface = (nsISupports*)obj;
-    return true;
-  }
-  return false;
-}
-
-
 extern "C" {
 
 JSPrincipals*
@@ -515,10 +459,10 @@ InvokeHasOwn(
         hasOwn(cx, proxy, id, bp);
 }
 
-JS::Value
-RUST_JS_NumberValue(double d)
+void
+RUST_JS_NumberValue(double d, JS::Value* dest)
 {
-    return JS_NumberValue(d);
+    *dest = JS_NumberValue(d);
 }
 
 const JSJitInfo*
@@ -589,7 +533,6 @@ NewCompileOptions(JSContext* aCx, const char* aFile, unsigned aLine)
 {
     JS::OwningCompileOptions *opts = new JS::OwningCompileOptions(aCx);
     opts->setFileAndLine(aCx, aFile, aLine);
-    opts->setVersion(JSVERSION_DEFAULT);
     return opts;
 }
 
@@ -621,19 +564,9 @@ WrapperNew(JSContext* aCx, JS::HandleObject aObj, const void* aHandler,
     return js::Wrapper::New(aCx, aObj, (const js::Wrapper*)aHandler, options);
 }
 
-void WindowProxyObjectMoved(JSObject*, const JSObject*)
-{
-    abort();
-}
-
-static const js::ClassExtension WindowProxyClassExtension = PROXY_MAKE_EXT(
-    WindowProxyObjectMoved
-);
-
-const js::Class WindowProxyClass = PROXY_CLASS_WITH_EXT(
+const js::Class WindowProxyClass = PROXY_CLASS_DEF(
     "Proxy",
-    0, /* additional class flags */
-    &WindowProxyClassExtension);
+    JSCLASS_HAS_RESERVED_SLOTS(1)); /* additional class flags */
 
 const js::Class*
 GetWindowProxyClass()
@@ -647,22 +580,28 @@ NewWindowProxy(JSContext* aCx, JS::HandleObject aObj, const void* aHandler)
     return WrapperNew(aCx, aObj, aHandler, Jsvalify(&WindowProxyClass), true);
 }
 
-JS::Value
-GetProxyExtra(JSObject* obj, uint32_t slot)
+void
+GetProxyReservedSlot(JSObject* obj, uint32_t slot, JS::Value* dest)
 {
-    return js::GetProxyExtra(obj, slot);
-}
-
-JS::Value
-GetProxyPrivate(JSObject* obj)
-{
-    return js::GetProxyPrivate(obj);
+    *dest = js::GetProxyReservedSlot(obj, slot);
 }
 
 void
-SetProxyExtra(JSObject* obj, uint32_t slot, const JS::Value& val)
+GetProxyPrivate(JSObject* obj, JS::Value* dest)
 {
-    js::SetProxyExtra(obj, slot, val);
+    *dest = js::GetProxyPrivate(obj);
+}
+
+void
+SetProxyReservedSlot(JSObject* obj, uint32_t slot, const JS::Value* val)
+{
+    js::SetProxyReservedSlot(obj, slot, *val);
+}
+
+void
+SetProxyPrivate(JSObject* obj, const JS::Value* expando)
+{
+    js::SetProxyPrivate(obj, *expando);
 }
 
 bool
@@ -701,6 +640,12 @@ RUST_SYMBOL_TO_JSID(JS::Symbol* sym)
     return SYMBOL_TO_JSID(sym);
 }
 
+bool
+SetBuildId(JS::BuildIdCharVector* buildId, const char* chars, size_t len) {
+    buildId->clear();
+    return buildId->append(chars, len);
+}
+
 void
 RUST_SET_JITINFO(JSFunction* func, const JSJitInfo* info) {
     SET_JITINFO(func, info);
@@ -720,7 +665,8 @@ RUST_js_GetErrorMessage(void* userRef, uint32_t errorNumber)
 bool
 IsProxyHandlerFamily(JSObject* obj)
 {
-    return js::GetProxyHandler(obj)->family() == &HandlerFamily;
+    auto family = js::GetProxyHandler(obj)->family();
+    return family == &HandlerFamily;
 }
 
 const void*
@@ -746,14 +692,25 @@ GetProxyHandler(JSObject* obj)
 }
 
 void
-ReportError(JSContext* aCx, const char* aError)
+ReportErrorASCII(JSContext* aCx, const char* aError)
 {
 #ifdef DEBUG
     for (const char* p = aError; *p; ++p) {
         assert(*p != '%');
     }
 #endif
-    JS_ReportError(aCx, aError);
+    JS_ReportErrorASCII(aCx, "%s", aError);
+}
+
+void
+ReportErrorUTF8(JSContext* aCx, const char* aError)
+{
+#ifdef DEBUG
+    for (const char* p = aError; *p; ++p) {
+        assert(*p != '%');
+    }
+#endif
+    JS_ReportErrorUTF8(aCx, "%s", aError);
 }
 
 bool
@@ -822,8 +779,6 @@ DeleteAutoObjectVector(JS::AutoObjectVector* v)
  #include <malloc.h>
 #elif defined(__APPLE__)
  #include <malloc/malloc.h>
-#elif defined(__FreeBSD__)
- #include <malloc_np.h>
 #elif defined(__MINGW32__) || defined(__MINGW64__)
  // nothing needed here
 #elif defined(_MSC_VER)
@@ -835,7 +790,7 @@ DeleteAutoObjectVector(JS::AutoObjectVector* v)
 // SpiderMonkey-in-Rust currently uses system malloc, not jemalloc.
 static size_t MallocSizeOf(const void* aPtr)
 {
-#if defined(__linux__) || defined(__FreeBSD__)
+#if defined(__linux__)
     return malloc_usable_size((void*)aPtr);
 #elif defined(__APPLE__)
     return malloc_size((void*)aPtr);
@@ -849,18 +804,11 @@ static size_t MallocSizeOf(const void* aPtr)
 }
 
 bool
-CollectServoSizes(JSRuntime *rt, JS::ServoSizes *sizes, GetSize gs)
+CollectServoSizes(JSContext* cx, JS::ServoSizes *sizes)
 {
-  mozilla::PodZero(sizes);
-
-  ServoDOMVisitor sdv(gs, ShouldMeasureObject);
-
-  return JS::AddServoSizeOf(rt, MallocSizeOf, &sdv, sizes);
-}
-
-void
-InitializeMemoryReporter(WantToMeasure wtm){
-  gWantToMeasure = wtm;
+    mozilla::PodZero(sizes);
+    return JS::AddServoSizeOf(cx, MallocSizeOf,
+                              /* ObjectPrivateVisitor = */ nullptr, sizes);
 }
 
 void
@@ -917,6 +865,16 @@ CallValueRootTracer(JSTracer* trc, JS::Value* valp, const char* name)
     JS::UnsafeTraceRoot(trc, valp, name);
 }
 
+bool
+IsDebugBuild()
+{
+#ifdef JS_DEBUG
+    return true;
+#else
+    return false;
+#endif
+}
+
 #define JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Type, type)                         \
     void                                                                       \
     Get ## Type ## ArrayLengthAndData(JSObject* obj, uint32_t* length,         \
@@ -937,5 +895,109 @@ JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Float32, float)
 JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Float64, double)
 
 #undef JS_DEFINE_DATA_AND_LENGTH_ACCESSOR
+
+JSAutoStructuredCloneBuffer*
+NewJSAutoStructuredCloneBuffer(JS::StructuredCloneScope scope,
+                               const JSStructuredCloneCallbacks* callbacks)
+{
+    return js_new<JSAutoStructuredCloneBuffer>(scope, callbacks, nullptr);
+}
+
+void
+DeleteJSAutoStructuredCloneBuffer(JSAutoStructuredCloneBuffer* buf)
+{
+    js_delete(buf);
+}
+
+size_t
+GetLengthOfJSStructuredCloneData(JSStructuredCloneData* data)
+{
+    assert(data != nullptr);
+
+    size_t len = 0;
+
+    auto iter = data->Iter();
+    while (!iter.Done()) {
+        size_t len_of_this_segment = iter.RemainingInSegment();
+        len += len_of_this_segment;
+        iter.Advance(*data, len_of_this_segment);
+    }
+
+    return len;
+}
+
+void
+CopyJSStructuredCloneData(JSStructuredCloneData* src, uint8_t* dest)
+{
+    assert(src != nullptr);
+    assert(dest != nullptr);
+
+    size_t bytes_copied = 0;
+
+    auto iter = src->Iter();
+    while (!iter.Done()) {
+        size_t len_of_this_segment = iter.RemainingInSegment();
+        memcpy(dest + bytes_copied, iter.Data(), len_of_this_segment);
+        bytes_copied += len_of_this_segment;
+        iter.Advance(*src, len_of_this_segment);
+    }
+}
+
+bool
+WriteBytesToJSStructuredCloneData(const uint8_t* src, size_t len, JSStructuredCloneData* dest)
+{
+    assert(src != nullptr);
+    assert(dest != nullptr);
+
+    return dest->WriteBytes(reinterpret_cast<const char*>(src), len);
+}
+
+// MSVC uses a different calling conventions for functions
+// that return non-POD values. Unfortunately, this includes anything
+// with a constructor, such as JS::Value, so we can't call these
+// from Rust. These wrapper functions are only here to
+// ensure the calling convention is right.
+// https://docs.microsoft.com/en-us/cpp/build/return-values-cpp
+// https://mozilla.logbot.info/jsapi/20180622#c14918658
+
+void
+JS_ComputeThis(JSContext* cx, JS::Value* vp, JS::Value* dest) {
+  *dest = JS::detail::ComputeThis(cx, vp);
+}
+
+void
+JS_GetModuleHostDefinedField(JSObject* module, JS::Value* dest) {
+  *dest = JS::GetModuleHostDefinedField(module);
+}
+
+void
+JS_GetPromiseResult(JS::HandleObject promise, JS::Value* dest) {
+  *dest = JS::GetPromiseResult(promise);
+}
+
+void
+JS_THIS(JSContext* cx, JS::Value* vp, JS::Value* dest) {
+  *dest = JS_THIS(cx, vp);
+}
+
+void
+JS_GetNaNValue(JSContext* cx, JS::Value* dest) {
+  *dest = JS_GetNaNValue(cx);
+}
+
+void
+JS_GetPositiveInfinityValue(JSContext* cx, JS::Value* dest) {
+  *dest = JS_GetPositiveInfinityValue(cx);
+}
+
+void
+JS_GetEmptyStringValue(JSContext* cx, JS::Value* dest) {
+  *dest = JS_GetEmptyStringValue(cx);
+}
+
+void
+JS_GetReservedSlot(JSObject* obj, uint32_t index, JS::Value* dest) {
+  *dest = JS_GetReservedSlot(obj, index);
+}
 
 } // extern "C"

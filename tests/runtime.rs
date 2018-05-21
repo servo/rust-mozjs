@@ -9,6 +9,7 @@ extern crate libc;
 use mozjs::jsapi::CompartmentOptions;
 use mozjs::jsapi::JSAutoCompartment;
 use mozjs::jsapi::JSClass;
+use mozjs::jsapi::JSCLASS_FOREGROUND_FINALIZE;
 use mozjs::jsapi::JSClassOps;
 use mozjs::jsapi::JSFreeOp;
 use mozjs::jsapi::JS_NewGlobalObject;
@@ -46,9 +47,8 @@ unsafe extern fn finalize(_fop: *mut JSFreeOp, _object: *mut JSObject) {
 static CLASS_OPS: JSClassOps = JSClassOps {
     addProperty: None,
     delProperty: None,
-    getProperty: None,
-    setProperty: None,
     enumerate: None,
+    newEnumerate: None,
     resolve: None,
     mayResolve: None,
     finalize: Some(finalize),
@@ -60,7 +60,7 @@ static CLASS_OPS: JSClassOps = JSClassOps {
 
 static CLASS: JSClass = JSClass {
     name: b"EventTargetPrototype\0" as *const u8 as *const libc::c_char,
-    flags: 0,
+    flags: JSCLASS_FOREGROUND_FINALIZE,
     cOps: &CLASS_OPS as *const JSClassOps,
     reserved: [0 as *mut _; 3]
 };

@@ -5,7 +5,7 @@
 //! Rust wrappers around the raw JS apis
 
 
-use libc::{size_t, c_uint, c_char, c_void};
+use libc::{size_t, c_uint};
 
 use mozjs_sys::jsgc::CustomAutoRooterVFTable;
 use mozjs_sys::jsgc::RootKind;
@@ -14,14 +14,17 @@ use mozjs_sys::jsgc::IntoMutableHandle as IntoRawMutableHandle;
 
 use std::char;
 use std::ffi;
+use std::mem;
 use std::ptr;
 use std::slice;
+use std::str;
 use std::u32;
 use std::default::Default;
 use std::ops::{Deref, DerefMut};
+use std::os::raw::c_void;
 use std::cell::Cell;
 use std::marker::PhantomData;
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicUsize, Ordering};
 
 use consts::{JSCLASS_RESERVED_SLOTS_MASK, JSCLASS_GLOBAL_SLOT_COUNT};
 use consts::{JSCLASS_IS_DOMJSCLASS, JSCLASS_IS_GLOBAL};
@@ -29,26 +32,28 @@ use consts::{JSCLASS_IS_DOMJSCLASS, JSCLASS_IS_GLOBAL};
 use conversions::jsstr_to_string;
 
 use jsapi;
-use jsapi::{AutoGCRooter, AutoGCRooter_CUSTOM, AutoIdVector, AutoObjectVector, ContextFriendFields};
-use jsapi::{Evaluate2, HandleValueArray, Heap};
+use jsapi::{AutoGCRooter, AutoGCRooter_CUSTOM, AutoIdVector, AutoObjectVector};
+use jsapi::{ContextOptionsRef, Evaluate2, HandleValueArray, Heap};
 use jsapi::{InitSelfHostedCode, IsWindowSlow, JS_BeginRequest};
-use jsapi::{JS_DefineFunctions, JS_DefineProperties, JS_DestroyRuntime, JS_EndRequest, JS_ShutDown};
-use jsapi::{JS_EnumerateStandardClasses, JS_GetContext, JS_GlobalObjectTraceHook};
-use jsapi::{JS_Init, JS_MayResolveStandardClass, JS_NewRuntime, JS_ResolveStandardClass};
+use jsapi::{JS_DefineFunctions, JS_DefineProperties, JS_DestroyContext, JS_EndRequest, JS_ShutDown};
+use jsapi::{JS_EnumerateStandardClasses, JS_GetRuntime, JS_GlobalObjectTraceHook};
+use jsapi::{JS_MayResolveStandardClass, JS_NewContext, JS_ResolveStandardClass};
 use jsapi::{JS_SetGCParameter, JS_SetNativeStackQuota, JS_WrapValue, JSAutoCompartment};
 use jsapi::{JSClass, JSCLASS_RESERVED_SLOTS_SHIFT, JSClassOps, JSCompartment, JSContext};
 use jsapi::{JSErrorReport, JSFunction, JSFunctionSpec, JSGCParamKey};
 use jsapi::{JSObject, JSPropertySpec, JSRuntime, JSScript};
 use jsapi::{JSString, JSTracer};
-use jsapi::{Object, ObjectGroup,ReadOnlyCompileOptions, Rooted};
-use jsapi::{RuntimeOptionsRef, SetWarningReporter, Symbol, ToBooleanSlow};
+use jsapi::{Object, ObjectGroup,ReadOnlyCompileOptions, Rooted, RootingContext};
+use jsapi::{SetWarningReporter, Symbol, ToBooleanSlow};
 use jsapi::{ToInt32Slow, ToInt64Slow, ToNumberSlow, ToStringSlow, ToUint16Slow};
-use jsapi::{ToUint32Slow, ToUint64Slow, ToWindowProxyIfWindow};
+use jsapi::{ToUint32Slow, ToUint64Slow, ToWindowProxyIfWindowSlow};
 use jsapi::{Value, jsid};
-use jsapi::{CaptureCurrentStack, BuildStackString, IsSavedFrame};
+use jsapi::{CaptureCurrentStack, BuildStackString, IsSavedFrame, StackFormat};
+use jsapi::{JS_StackCapture_AllFrames, JS_StackCapture_MaxFrames};
 use jsapi::Handle as RawHandle;
 use jsapi::MutableHandle as RawMutableHandle;
 use jsapi::HandleValue as RawHandleValue;
+use jsapi::glue::JS_Init;
 #[cfg(feature = "debugmozjs")]
 use jsapi::mozilla::detail::GuardObjectNotificationReceiver;
 
@@ -121,13 +126,13 @@ impl ToResult for bool {
 thread_local!(static CONTEXT: Cell<*mut JSContext> = Cell::new(ptr::null_mut()));
 
 lazy_static! {
+    static ref PARENT: AtomicPtr<JSRuntime> = AtomicPtr::new(ptr::null_mut());
     static ref OUTSTANDING_RUNTIMES: AtomicUsize = AtomicUsize::new(0);
     static ref SHUT_DOWN: AtomicBool = AtomicBool::new(false);
 }
 
-/// A wrapper for the `JSRuntime` and `JSContext` structures in SpiderMonkey.
+/// A wrapper for the `JSContext` structures in SpiderMonkey.
 pub struct Runtime {
-    rt: *mut JSRuntime,
     cx: *mut JSContext,
 }
 
@@ -141,36 +146,34 @@ impl Runtime {
         cx
     }
 
-    /// Creates a new `JSRuntime` and `JSContext`.
+    /// Creates a new `JSContext`.
     pub fn new() -> Result<Runtime, ()> {
-        if SHUT_DOWN.load(Ordering::SeqCst) {
-            return Err(());
-        }
-
-        OUTSTANDING_RUNTIMES.fetch_add(1, Ordering::SeqCst);
-
         unsafe {
-            struct TopRuntime(*mut JSRuntime);
-            unsafe impl Sync for TopRuntime {}
-
-            lazy_static! {
-                static ref PARENT: TopRuntime = {
-                    unsafe {
-                        assert!(JS_Init());
-                        let runtime = JS_NewRuntime(
-                            default_heapsize, ChunkSize as u32, ptr::null_mut());
-                        assert!(!runtime.is_null());
-                        let context = JS_GetContext(runtime);
-                        assert!(!context.is_null());
-                        InitSelfHostedCode(context);
-                        TopRuntime(runtime)
-                    }
-                };
+            if SHUT_DOWN.load(Ordering::SeqCst) {
+                return Err(());
             }
 
-            let js_runtime =
-                JS_NewRuntime(default_heapsize, ChunkSize as u32, PARENT.0);
-            assert!(!js_runtime.is_null());
+            let outstanding = OUTSTANDING_RUNTIMES.fetch_add(1, Ordering::SeqCst);
+
+            let js_context = if outstanding == 0 {
+                // We are creating the first JSContext, so we need to initialize
+                // the runtime.
+                assert!(JS_Init());
+                let js_context = JS_NewContext(default_heapsize, ChunkSize as u32, ptr::null_mut());
+                let parent_runtime = JS_GetRuntime(js_context);
+                assert!(!parent_runtime.is_null());
+                let old_runtime = PARENT.compare_and_swap(ptr::null_mut(), parent_runtime, Ordering::SeqCst);
+                assert!(old_runtime.is_null());
+                // TODO: should we use the internal job queues or not?
+                // assert!(UseInternalJobQueues(js_context, false));
+                js_context
+            } else {
+                let parent_runtime = PARENT.load(Ordering::SeqCst);
+                assert!(!parent_runtime.is_null());
+                JS_NewContext(default_heapsize, ChunkSize as u32, parent_runtime)
+            };
+
+            assert!(!js_context.is_null());
 
             // Unconstrain the runtime's threshold on nominal heap size, to avoid
             // triggering GC too often if operating continuously near an arbitrary
@@ -178,16 +181,13 @@ impl Runtime {
             // still in effect to cause periodical, and we hope hygienic,
             // last-ditch GCs from within the GC's allocator.
             JS_SetGCParameter(
-                js_runtime, JSGCParamKey::JSGC_MAX_BYTES, u32::MAX);
+                js_context, JSGCParamKey::JSGC_MAX_BYTES, u32::MAX);
 
             JS_SetNativeStackQuota(
-                js_runtime,
+                js_context,
                 STACK_QUOTA,
                 STACK_QUOTA - SYSTEM_CODE_BUFFER,
                 STACK_QUOTA - SYSTEM_CODE_BUFFER - TRUSTED_SCRIPT_BUFFER);
-
-            let js_context = JS_GetContext(js_runtime);
-            assert!(!js_context.is_null());
 
             CONTEXT.with(|context| {
                 assert!(context.get().is_null());
@@ -196,17 +196,16 @@ impl Runtime {
 
             InitSelfHostedCode(js_context);
 
-            let runtimeopts = RuntimeOptionsRef(js_runtime);
-            (*runtimeopts).set_baseline_(true);
-            (*runtimeopts).set_ion_(true);
-            (*runtimeopts).set_nativeRegExp_(true);
+            let contextopts = ContextOptionsRef(js_context);
+            (*contextopts).set_baseline_(true);
+            (*contextopts).set_ion_(true);
+            (*contextopts).set_nativeRegExp_(true);
 
-            SetWarningReporter(js_runtime, Some(report_warning));
+            SetWarningReporter(js_context, Some(report_warning));
 
             JS_BeginRequest(js_context);
 
             Ok(Runtime {
-                rt: js_runtime,
                 cx: js_context,
             })
         }
@@ -214,7 +213,7 @@ impl Runtime {
 
     /// Returns the `JSRuntime` object.
     pub fn rt(&self) -> *mut JSRuntime {
-        self.rt
+        PARENT.load(Ordering::SeqCst)
     }
 
     /// Returns the `JSContext` object.
@@ -258,7 +257,7 @@ impl Drop for Runtime {
     fn drop(&mut self) {
         unsafe {
             JS_EndRequest(self.cx);
-            JS_DestroyRuntime(self.rt);
+            JS_DestroyContext(self.cx);
 
             CONTEXT.with(|context| {
                 assert_eq!(context.get(), self.cx);
@@ -266,6 +265,7 @@ impl Drop for Runtime {
             });
 
             if OUTSTANDING_RUNTIMES.fetch_sub(1, Ordering::SeqCst) == 1 {
+                PARENT.store(ptr::null_mut(), Ordering::SeqCst);
                 SHUT_DOWN.store(true, Ordering::SeqCst);
                 JS_ShutDown();
             }
@@ -461,6 +461,7 @@ impl<T> CustomAutoRooter<T> {
 /// so provide trace logic via vftable when creating an object on Rust side.
 unsafe trait CustomAutoTraceable: Sized {
     const vftable: CustomAutoRooterVFTable = CustomAutoRooterVFTable {
+        padding: CustomAutoRooterVFTable::PADDING,
         trace: Self::trace,
     };
 
@@ -807,7 +808,7 @@ pub unsafe fn ToNumber(cx: *mut JSContext, v: HandleValue) -> Result<f64, ()> {
     }
 
     let mut out = Default::default();
-    if ToNumberSlow(cx, val, &mut out) {
+    if ToNumberSlow(cx, v.into_handle(), &mut out) {
         Ok(out)
     } else {
         Err(())
@@ -872,12 +873,20 @@ pub unsafe fn ToString(cx: *mut JSContext, v: HandleValue) -> *mut JSString {
     ToStringSlow(cx, v.into())
 }
 
-pub unsafe extern fn report_warning(_cx: *mut JSContext, _: *const c_char, report: *mut JSErrorReport) {
+pub unsafe fn ToWindowProxyIfWindow(obj: *mut JSObject) -> *mut JSObject {
+    if is_window(obj) {
+        ToWindowProxyIfWindowSlow(obj)
+    } else {
+        obj
+    }
+}
+
+pub unsafe extern fn report_warning(_cx: *mut JSContext, report: *mut JSErrorReport) {
     fn latin1_to_string(bytes: &[u8]) -> String {
         bytes.iter().map(|c| char::from_u32(*c as u32).unwrap()).collect()
     }
 
-    let fnptr = (*report).filename;
+    let fnptr = (*report)._base.filename;
     let fname = if !fnptr.is_null() {
         let c_str = ffi::CStr::from_ptr(fnptr);
         latin1_to_string(c_str.to_bytes())
@@ -885,13 +894,13 @@ pub unsafe extern fn report_warning(_cx: *mut JSContext, _: *const c_char, repor
         "none".to_string()
     };
 
-    let lineno = (*report).lineno;
-    let column = (*report).column;
+    let lineno = (*report)._base.lineno;
+    let column = (*report)._base.column;
 
-    let msg_ptr = (*report).ucmessage;
+    let msg_ptr = (*report)._base.message_.data_ as *const u8;
     let msg_len = (0usize..).find(|&i| *msg_ptr.offset(i as isize) == 0).unwrap();
     let msg_slice = slice::from_raw_parts(msg_ptr, msg_len);
-    let msg = String::from_utf16_lossy(msg_slice);
+    let msg = str::from_utf8_unchecked(msg_slice);
 
     warn!("Warning at {}:{}:{}: {}\n", fname, lineno, column, msg);
 }
@@ -981,8 +990,11 @@ pub unsafe fn define_properties(cx: *mut JSContext, obj: HandleObject,
                                 -> Result<(), ()> {
     assert!({
         match properties.last() {
-            Some(&JSPropertySpec { name, flags, getter, setter }) => {
-                name.is_null() && flags == 0 && getter.is_zeroed() && setter.is_zeroed()
+            Some(spec) => {
+                let zero: JSPropertySpec = mem::zeroed();
+                let zero: [usize; 6] = mem::transmute(zero);
+                let words: &[usize; 6] = mem::transmute(spec);
+                *words == zero
             },
             None => false,
         }
@@ -994,9 +1006,8 @@ pub unsafe fn define_properties(cx: *mut JSContext, obj: HandleObject,
 static SIMPLE_GLOBAL_CLASS_OPS: JSClassOps = JSClassOps {
     addProperty: None,
     delProperty: None,
-    getProperty: None,
-    setProperty: None,
     enumerate: Some(JS_EnumerateStandardClasses),
+    newEnumerate: None,
     resolve: Some(JS_ResolveStandardClass),
     mayResolve: Some(JS_MayResolveStandardClass),
     finalize: None,
@@ -1033,7 +1044,7 @@ pub unsafe fn get_object_compartment(obj: *mut JSObject) -> *mut JSCompartment {
 
 #[inline]
 pub unsafe fn get_context_compartment(cx: *mut JSContext) -> *mut JSCompartment {
-    let cx = cx as *mut ContextFriendFields;
+    let cx = cx as *mut RootingContext;
     (*cx).compartment_
 }
 
@@ -1056,7 +1067,7 @@ pub unsafe fn is_window(obj: *mut JSObject) -> bool {
 pub unsafe fn try_to_outerize(mut rval: MutableHandleValue) {
     let obj = rval.to_object();
     if is_window(obj) {
-        let obj = ToWindowProxyIfWindow(obj);
+        let obj = ToWindowProxyIfWindowSlow(obj);
         assert!(!obj.is_null());
         rval.set(ObjectValue(&mut *obj));
     }
@@ -1129,10 +1140,14 @@ impl<'a> CapturedJSStack<'a> {
     pub unsafe fn new(cx: *mut JSContext,
                       mut guard: RootedGuard<'a, *mut JSObject>,
                       max_frame_count: Option<u32>) -> Option<Self> {
-        if !CaptureCurrentStack(cx, guard.handle_mut().raw(), max_frame_count.unwrap_or(0)) {
+        let ref mut stack_capture = match max_frame_count {
+            None => JS_StackCapture_AllFrames(),
+            Some(count) => JS_StackCapture_MaxFrames(count),
+        };
+
+        if !CaptureCurrentStack(cx, guard.handle_mut().raw(), stack_capture) {
             None
-        }
-        else {
+        } else {
             Some(CapturedJSStack {
                 cx: cx,
                 stack: guard,
@@ -1140,7 +1155,7 @@ impl<'a> CapturedJSStack<'a> {
         }
     }
 
-    pub fn as_string(&self, indent: Option<usize>) -> Option<String> {
+    pub fn as_string(&self, indent: Option<usize>, format: StackFormat) -> Option<String> {
         unsafe {
             let stack_handle = self.stack.handle();
             rooted!(in(self.cx) let mut js_string = ptr::null_mut::<JSString>());
@@ -1150,7 +1165,12 @@ impl<'a> CapturedJSStack<'a> {
                 return None;
             }
 
-            if !BuildStackString(self.cx, stack_handle.into(), string_handle.raw(), indent.unwrap_or(0)) {
+            if !BuildStackString(self.cx,
+                                 stack_handle.into(),
+                                 string_handle.raw(),
+                                 indent.unwrap_or(0),
+                                 format)
+            {
                 return None;
             }
 
@@ -1196,7 +1216,7 @@ pub mod wrappers {
         (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: MutableHandle, $($rest:tt)*) => {
             wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
         };
-            (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: HandleFunction , $($rest:tt)*) => {
+        (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: HandleFunction , $($rest:tt)*) => {
             wrap!(@inner $saved <> ($($acc,)* $arg.into(),) <> $($rest)*);
         };
         (@inner $saved:tt <> ($($acc:expr,)*) <> $arg:ident: HandleId , $($rest:tt)*) => {
@@ -1257,17 +1277,20 @@ pub mod wrappers {
 
     use jsapi;
     use glue;
-    use jsapi::{IsArrayAnswer, PropertyDescriptor, ElementAdder, DetachDataDisposition};
+    use jsapi::{IsArrayAnswer, PropertyDescriptor, ElementAdder};
     use jsapi::{JSStructuredCloneCallbacks, JSStructuredCloneReader, JSStructuredCloneWriter};
-    use jsapi::{JSNative, JSObject, JSContext, JSFunction, JSRuntime, JSString};
+    use jsapi::{JSNative, JSObject, JSContext, JSFunction, JSString};
     use jsapi::{JSType};
     use jsapi::{SavedFrameResult, SavedFrameSelfHosted};
     use jsapi::{MallocSizeOf, ObjectPrivateVisitor, ObjectOpResult, TabSizes};
     use jsapi::AutoIdVector;
     use jsapi::AutoObjectVector;
+    use jsapi::CloneDataPolicy;
     use jsapi::CallArgs;
     use jsapi::CompileOptions;
     use jsapi::ESClass;
+    use jsapi::ForOfIterator;
+    use jsapi::ForOfIterator_NonIterableBehavior;
     use jsapi::JSAddonId;
     use jsapi::JSClass;
     use jsapi::JSConstDoubleSpec;
@@ -1276,23 +1299,34 @@ pub mod wrappers {
     use jsapi::JSExnType;
     use jsapi::JSFunctionSpec;
     use jsapi::JSFunctionSpecWithHelp;
-    use jsapi::jsid;
+    use jsapi::JSJitInfo;
     use jsapi::JSONWriteCallback;
+    use jsapi::JSPrincipals;
     use jsapi::JSPropertySpec;
     use jsapi::JSProtoKey;
     use jsapi::JSScript;
+    use jsapi::JSStructuredCloneData;
     use jsapi::PromiseState;
     use jsapi::PropertyCopyBehavior;
     use jsapi::ReadOnlyCompileOptions;
-    use jsapi::RegExpGuard;
+    use jsapi::ReadableStreamReaderMode;
+    use jsapi::Realm;
+    use jsapi::RefPtr;
+    use jsapi::RegExpShared;
     use jsapi::ScriptEnvironmentPreparer_Closure;
-    use jsapi::Shape;
     use jsapi::SourceBufferHolder;
+    use jsapi::StackCapture;
+    use jsapi::StructuredCloneScope;
     use jsapi::Symbol;
     use jsapi::SymbolCode;
+    use jsapi::TranscodeBuffer;
+    use jsapi::TranscodeResult;
+    use jsapi::TranscodeRange;
     use jsapi::TwoByteChars;
     use jsapi::Value;
-    use jsapi::JSJitInfo;
+    use jsapi::WasmModule;
+    use jsapi::jsid;
+    use jsapi::JS::ScriptVector;
     use libc::FILE;
     use super::*;
     include!("jsapi_wrappers.in");
@@ -1386,17 +1420,20 @@ pub mod jsapi_wrapped {
 
     use jsapi;
     use glue;
-    use jsapi::{IsArrayAnswer, PropertyDescriptor, ElementAdder, DetachDataDisposition};
+    use jsapi::{IsArrayAnswer, PropertyDescriptor, ElementAdder};
     use jsapi::{JSStructuredCloneCallbacks, JSStructuredCloneReader, JSStructuredCloneWriter};
-    use jsapi::{JSNative, JSObject, JSContext, JSFunction, JSRuntime, JSString};
+    use jsapi::{JSNative, JSObject, JSContext, JSFunction, JSString};
     use jsapi::{JSType};
     use jsapi::{SavedFrameResult, SavedFrameSelfHosted};
     use jsapi::{MallocSizeOf, ObjectPrivateVisitor, ObjectOpResult, TabSizes};
     use jsapi::AutoIdVector;
     use jsapi::AutoObjectVector;
+    use jsapi::CloneDataPolicy;
     use jsapi::CallArgs;
     use jsapi::CompileOptions;
     use jsapi::ESClass;
+    use jsapi::ForOfIterator;
+    use jsapi::ForOfIterator_NonIterableBehavior;
     use jsapi::JSAddonId;
     use jsapi::JSClass;
     use jsapi::JSConstDoubleSpec;
@@ -1405,23 +1442,33 @@ pub mod jsapi_wrapped {
     use jsapi::JSExnType;
     use jsapi::JSFunctionSpec;
     use jsapi::JSFunctionSpecWithHelp;
-    use jsapi::jsid;
+    use jsapi::JSJitInfo;
     use jsapi::JSONWriteCallback;
+    use jsapi::JSPrincipals;
     use jsapi::JSPropertySpec;
     use jsapi::JSProtoKey;
     use jsapi::JSScript;
+    use jsapi::JSStructuredCloneData;
     use jsapi::PromiseState;
     use jsapi::PropertyCopyBehavior;
     use jsapi::ReadOnlyCompileOptions;
-    use jsapi::RegExpGuard;
+    use jsapi::ReadableStreamReaderMode;
+    use jsapi::Realm;
+    use jsapi::RefPtr;
+    use jsapi::RegExpShared;
     use jsapi::ScriptEnvironmentPreparer_Closure;
-    use jsapi::Shape;
     use jsapi::SourceBufferHolder;
+    use jsapi::StackCapture;
+    use jsapi::StructuredCloneScope;
     use jsapi::Symbol;
     use jsapi::SymbolCode;
+    use jsapi::TranscodeBuffer;
+    use jsapi::TranscodeResult;
+    use jsapi::TranscodeRange;
     use jsapi::TwoByteChars;
     use jsapi::Value;
-    use jsapi::JSJitInfo;
+    use jsapi::WasmModule;
+    use jsapi::JS::ScriptVector;
     use libc::FILE;
     use super::*;
     include!("jsapi_wrappers.in");
