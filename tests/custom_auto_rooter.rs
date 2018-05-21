@@ -32,12 +32,12 @@ unsafe impl CustomTrace for TraceCheck {
 #[test]
 fn virtual_trace_called() {
     let rt = Runtime::new().unwrap();
-    let (rt, cx) = (rt.rt(), rt.cx());
+    let cx = rt.cx();
 
     let mut rooter = CustomAutoRooter::new(TraceCheck::new());
     let guard = rooter.root(cx);
 
-    unsafe { JS_GC(rt); }
+    unsafe { JS_GC(cx); }
 
     assert!(guard.trace_was_called.get());
 }

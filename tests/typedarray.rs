@@ -79,24 +79,3 @@ fn typedarray() {
         assert_eq!(view.unwrap().get_array_type(), Type::Uint32);
     }
 }
-
-#[test]
-#[should_panic]
-fn typedarray_update_panic() {
-    let rt = Runtime_::new().unwrap();
-    let cx = rt.cx();
-
-    unsafe {
-        rooted!(in(cx) let global =
-            JS_NewGlobalObject(cx, &SIMPLE_GLOBAL_CLASS, ptr::null_mut(),
-                               OnNewGlobalHookOption::FireOnNewGlobalHook,
-                               &CompartmentOptions::default())
-        );
-
-        let _ac = JSAutoCompartment::new(cx, global.get());
-        rooted!(in(cx) let mut rval = ptr::null_mut::<JSObject>());
-        let _ = Uint32Array::create(cx, CreateWith::Slice(&[1, 2, 3, 4, 5]), rval.handle_mut());
-        typedarray!(in(cx) let mut array: Uint32Array = rval.get());
-        array.as_mut().unwrap().update(&[0, 2, 4, 6, 8, 10]);
-    }
-}

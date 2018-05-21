@@ -29,11 +29,11 @@ unsafe impl CustomTrace for TraceCheck {
 #[test]
 fn custom_auto_rooter_macro() {
     let rt = Runtime::new().unwrap();
-    let (rt, cx) = (rt.rt(), rt.cx());
+    let cx = rt.cx();
 
     auto_root!(in(cx) let vec = vec![TraceCheck::new(), TraceCheck::new()]);
 
-    unsafe { JS_GC(rt); }
+    unsafe { JS_GC(cx); }
 
     vec.iter().for_each(|elem| assert!(elem.trace_was_called.get()));
 }

@@ -6,7 +6,7 @@
 
 #![deny(missing_docs)]
 
-use jsapi::{JSContext, JSErrorFormatString, JSExnType, JS_ReportErrorNumber};
+use jsapi::{JSContext, JSErrorFormatString, JSExnType, JS_ReportErrorNumberUTF8};
 use libc;
 use std::ffi::CString;
 use std::{mem, os, ptr};
@@ -55,11 +55,11 @@ unsafe extern "C" fn get_error_message(_user_ref: *mut os::raw::c_void,
 /// c_uint is u32, so this cast is safe, as is casting to/from i32 from there.
 unsafe fn throw_js_error(cx: *mut JSContext, error: &str, error_number: u32) {
     let error = CString::new(error).unwrap();
-    JS_ReportErrorNumber(cx,
-                         Some(get_error_message),
-                         ptr::null_mut(),
-                         error_number,
-                         error.as_ptr());
+    JS_ReportErrorNumberUTF8(cx,
+                             Some(get_error_message),
+                             ptr::null_mut(),
+                             error_number,
+                             error.as_ptr());
 }
 
 /// Throw a `TypeError` with the given message.
