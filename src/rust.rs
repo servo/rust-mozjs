@@ -5,17 +5,21 @@
 //! Rust wrappers around the raw JS apis
 
 
-use libc::{size_t, c_uint, c_char};
+use libc::{size_t, c_uint, c_char, c_void};
+
+use mozjs_sys::jsgc::CustomAutoRooterVFTable;
+use mozjs_sys::jsgc::RootKind;
+use mozjs_sys::jsgc::IntoHandle as IntoRawHandle;
+use mozjs_sys::jsgc::IntoMutableHandle as IntoRawMutableHandle;
 
 use std::char;
 use std::ffi;
 use std::ptr;
 use std::slice;
-use std::mem;
 use std::u32;
 use std::default::Default;
 use std::ops::{Deref, DerefMut};
-use std::cell::{Cell, UnsafeCell};
+use std::cell::Cell;
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
@@ -25,41 +29,42 @@ use consts::{JSCLASS_IS_DOMJSCLASS, JSCLASS_IS_GLOBAL};
 use conversions::jsstr_to_string;
 
 use jsapi;
-use jsapi::{AutoGCRooter, AutoIdVector, AutoObjectVector, CallArgs, CompartmentOptions, ContextFriendFields};
-use jsapi::{Evaluate2, HandleBase, HandleValueArray, Heap};
-use jsapi::{HeapObjectPostBarrier, HeapValuePostBarrier, InitSelfHostedCode, IsWindowSlow, JS_BeginRequest};
+use jsapi::{AutoGCRooter, AutoGCRooter_CUSTOM, AutoIdVector, AutoObjectVector, ContextFriendFields};
+use jsapi::{Evaluate2, HandleValueArray, Heap};
+use jsapi::{InitSelfHostedCode, IsWindowSlow, JS_BeginRequest};
 use jsapi::{JS_DefineFunctions, JS_DefineProperties, JS_DestroyRuntime, JS_EndRequest, JS_ShutDown};
-use jsapi::{JS_EnterCompartment, JS_EnumerateStandardClasses, JS_GetContext, JS_GlobalObjectTraceHook};
-use jsapi::{JS_Init, JS_LeaveCompartment, JS_MayResolveStandardClass, JS_NewRuntime, JS_ResolveStandardClass};
+use jsapi::{JS_EnumerateStandardClasses, JS_GetContext, JS_GlobalObjectTraceHook};
+use jsapi::{JS_Init, JS_MayResolveStandardClass, JS_NewRuntime, JS_ResolveStandardClass};
 use jsapi::{JS_SetGCParameter, JS_SetNativeStackQuota, JS_WrapValue, JSAutoCompartment};
 use jsapi::{JSClass, JSCLASS_RESERVED_SLOTS_SHIFT, JSClassOps, JSCompartment, JSContext};
-use jsapi::{JSErrorReport, JSFlatString, JSFunction, JSFunctionSpec, JSGCParamKey};
-use jsapi::{JSID_VOID, JSJitGetterCallArgs, JSJitMethodCallArgs, JSJitSetterCallArgs};
-use jsapi::{JSNativeWrapper, JSObject, JSPropertySpec, JSRuntime, JSScript};
-use jsapi::{JSString, JSTracer, MutableHandleBase};
-use jsapi::{NullHandleValue, Object, ObjectGroup,ReadOnlyCompileOptions, Rooted};
-use jsapi::{RootedBase, RuntimeOptionsRef, SetWarningReporter, Symbol, ToBooleanSlow};
+use jsapi::{JSErrorReport, JSFunction, JSFunctionSpec, JSGCParamKey};
+use jsapi::{JSObject, JSPropertySpec, JSRuntime, JSScript};
+use jsapi::{JSString, JSTracer};
+use jsapi::{Object, ObjectGroup,ReadOnlyCompileOptions, Rooted};
+use jsapi::{RuntimeOptionsRef, SetWarningReporter, Symbol, ToBooleanSlow};
 use jsapi::{ToInt32Slow, ToInt64Slow, ToNumberSlow, ToStringSlow, ToUint16Slow};
-use jsapi::{ToUint32Slow, ToUint64Slow, ToWindowProxyIfWindow, UndefinedHandleValue};
-use jsapi::{Value, jsid, PerThreadDataFriendFields, PerThreadDataFriendFields_RuntimeDummy};
+use jsapi::{ToUint32Slow, ToUint64Slow, ToWindowProxyIfWindow};
+use jsapi::{Value, jsid};
 use jsapi::{CaptureCurrentStack, BuildStackString, IsSavedFrame};
-use jsapi::{AutoGCRooter_jspubtd_h_unnamed_1 as AutoGCRooterTag, _vftable_CustomAutoRooter as CustomAutoRooterVFTable};
 use jsapi::Handle as RawHandle;
 use jsapi::MutableHandle as RawMutableHandle;
 use jsapi::HandleValue as RawHandleValue;
+#[cfg(feature = "debugmozjs")]
+use jsapi::mozilla::detail::GuardObjectNotificationReceiver;
 
-use jsapi::PropertyDescriptor;
-use jsval::{ObjectValue, UndefinedValue};
+use jsval::ObjectValue;
 
 use glue::{AppendToAutoObjectVector, CallFunctionTracer, CallIdTracer, CallObjectTracer};
 use glue::{CallScriptTracer, CallStringTracer, CallValueTracer, CreateAutoIdVector};
-use glue::{CreateAutoObjectVector, CreateCallArgsFromVp, DeleteAutoObjectVector};
+use glue::{CreateAutoObjectVector, DeleteAutoObjectVector};
 use glue::{DestroyAutoIdVector, DeleteCompileOptions, NewCompileOptions, SliceAutoIdVector};
 use glue::{CallObjectRootTracer, CallValueRootTracer};
 
 use panic::maybe_resume_unwind;
 
 use default_heapsize;
+
+pub use mozjs_sys::jsgc::GCMethods;
 
 // From Gecko:
 // Our "default" stack is what we use in configurations where we don't have a compelling reason to
@@ -268,59 +273,6 @@ impl Drop for Runtime {
     }
 }
 
-// ___________________________________________________________________________
-// Rooting API for standard JS things
-
-pub trait RootKind {
-    #[inline(always)]
-    fn rootKind() -> jsapi::RootKind;
-}
-
-impl RootKind for *mut JSObject {
-    #[inline(always)]
-    fn rootKind() -> jsapi::RootKind { jsapi::RootKind::Object }
-}
-
-impl RootKind for *mut JSFlatString {
-    #[inline(always)]
-    fn rootKind() -> jsapi::RootKind { jsapi::RootKind::String }
-}
-
-impl RootKind for *mut JSFunction {
-    #[inline(always)]
-    fn rootKind() -> jsapi::RootKind { jsapi::RootKind::Object }
-}
-
-impl RootKind for *mut JSString {
-    #[inline(always)]
-    fn rootKind() -> jsapi::RootKind { jsapi::RootKind::String }
-}
-
-impl RootKind for *mut Symbol {
-    #[inline(always)]
-    fn rootKind() -> jsapi::RootKind { jsapi::RootKind::Symbol }
-}
-
-impl RootKind for *mut JSScript {
-    #[inline(always)]
-    fn rootKind() -> jsapi::RootKind { jsapi::RootKind::Script }
-}
-
-impl RootKind for jsid {
-    #[inline(always)]
-    fn rootKind() -> jsapi::RootKind { jsapi::RootKind::Id }
-}
-
-impl RootKind for Value {
-    #[inline(always)]
-    fn rootKind() -> jsapi::RootKind { jsapi::RootKind::Value }
-}
-
-impl RootKind for PropertyDescriptor {
-    #[inline(always)]
-    fn rootKind() -> jsapi::RootKind { jsapi::RootKind::Traceable }
-}
-
 // Creates a C string literal `$str`.
 macro_rules! c_str {
     ($str:expr) => {
@@ -369,46 +321,6 @@ unsafe impl Trace for Heap<Value> {
 unsafe impl Trace for Heap<jsid> {
     unsafe fn trace(&self, trc: *mut JSTracer) {
         CallIdTracer(trc, self as *const _ as *mut Self, c_str!("id"));
-    }
-}
-
-impl<T> Rooted<T> {
-    pub fn new_unrooted() -> Rooted<T>
-        where T: GCMethods,
-    {
-        Rooted {
-            _base: RootedBase { _phantom0: PhantomData },
-            stack: ptr::null_mut(),
-            prev: ptr::null_mut(),
-            ptr: unsafe { T::initial() },
-        }
-    }
-
-    pub unsafe fn add_to_root_stack(&mut self, cx: *mut JSContext) where T: RootKind {
-        let ctxfriend = cx as *mut ContextFriendFields;
-        let zone = (*ctxfriend).zone_;
-        let roots: *mut _ = if !zone.is_null() {
-            &mut (*zone).stackRoots_
-        } else {
-            let rt = (*ctxfriend).runtime_;
-            let rt = rt as *mut PerThreadDataFriendFields_RuntimeDummy;
-            let main_thread = &mut (*rt).mainThread as *mut _;
-            let main_thread = main_thread as *mut PerThreadDataFriendFields;
-            &mut (*main_thread).roots.stackRoots_
-        };
-
-        let kind = T::rootKind() as usize;
-        let stack = &mut (*roots)[kind] as *mut _ as *mut _;
-
-        self.stack = stack;
-        self.prev = *stack;
-
-        *stack = self as *mut _ as usize as _;
-    }
-
-    pub unsafe fn remove_from_root_stack(&mut self) {
-        assert!(*self.stack == self as *mut _ as usize as _);
-        *self.stack = self.prev;
     }
 }
 
@@ -527,33 +439,6 @@ unsafe impl<T: CustomTrace> CustomTrace for Vec<T> {
     }
 }
 
-impl AutoGCRooter {
-    pub fn new_unrooted(tag: AutoGCRooterTag) -> AutoGCRooter {
-        AutoGCRooter {
-            down: ptr::null_mut(),
-            tag_: tag as isize,
-            stackTop: ptr::null_mut(),
-        }
-    }
-
-    unsafe fn add_to_root_stack(&mut self, cx: *mut JSContext) {
-        let autoGCRooters: &mut _ = {
-            let ctxfriend = cx as *mut ContextFriendFields;
-            &mut (*ctxfriend).roots.autoGCRooters_
-        };
-        self.stackTop = autoGCRooters;
-        self.down = *autoGCRooters;
-
-        assert!(*self.stackTop != self);
-        *self.stackTop = self;
-    }
-
-    unsafe fn remove_from_root_stack(&mut self) {
-        assert!(*self.stackTop == self);
-        *self.stackTop = self.down;
-    }
-}
-
 // This structure reimplements a C++ class that uses virtual dispatch, so
 // use C layout to guarantee that vftable in CustomAutoRooter is in right place.
 #[repr(C)]
@@ -579,7 +464,7 @@ unsafe trait CustomAutoTraceable: Sized {
         trace: Self::trace,
     };
 
-    unsafe extern "C" fn trace(this: *mut ::std::os::raw::c_void, trc: *mut JSTracer) {
+    unsafe extern "C" fn trace(this: *mut c_void, trc: *mut JSTracer) {
         let this = this as *const Self;
         let this = this.as_ref().unwrap();
         Self::do_trace(this, trc);
@@ -598,10 +483,15 @@ unsafe impl<T: CustomTrace> CustomAutoTraceable for CustomAutoRooter<T> {
 
 impl<T: CustomTrace> CustomAutoRooter<T> {
     pub fn new(data: T) -> Self {
+        let vftable = &Self::vftable;
         CustomAutoRooter {
             _base: jsapi::CustomAutoRooter {
-                _vftable: &<Self as CustomAutoTraceable>::vftable,
-                _base: AutoGCRooter::new_unrooted(AutoGCRooterTag::CUSTOM),
+                vtable_: vftable as *const _ as *const _,
+                _base: AutoGCRooter::new_unrooted(AutoGCRooter_CUSTOM),
+                #[cfg(feature = "debugmozjs")]
+                _mCheckNotUsedAsTemporary: GuardObjectNotificationReceiver {
+                    mStatementDone: false,
+                },
             },
             data,
         }
@@ -707,21 +597,6 @@ pub type MutableHandleSymbol<'a> = MutableHandle<'a, *mut Symbol>;
 pub type MutableHandleValue<'a> = MutableHandle<'a, Value>;
 
 
-impl<T> RawHandle<T> {
-    pub fn get(&self) -> T
-        where T: Copy
-    {
-        unsafe { *self.ptr }
-    }
-
-    pub unsafe fn from_marked_location(ptr: *const T) -> Self {
-        RawHandle {
-            _base: HandleBase { _phantom0: PhantomData },
-            ptr: ptr,
-        }
-    }
-}
-
 impl<'a, T> Handle<'a, T> {
     pub fn get(&self) -> T
         where T: Copy
@@ -742,9 +617,23 @@ impl<'a, T> Handle<'a, T> {
     }
 }
 
-impl<'a, T> From<Handle<'a, T>> for RawHandle<T> {
-    fn from(handle: Handle<'a, T>) -> Self {
-        unsafe { RawHandle::from_marked_location(handle.ptr) }
+impl<'a, T> IntoRawHandle for Handle<'a, T> {
+    type Target = T;
+    fn into_handle(self) -> RawHandle<T> {
+        unsafe { RawHandle::from_marked_location(self.ptr) }
+    }
+}
+
+impl<'a, T> IntoRawHandle for MutableHandle<'a, T> {
+    type Target = T;
+    fn into_handle(self) -> RawHandle<T> {
+        unsafe { RawHandle::from_marked_location(self.ptr) }
+    }
+}
+
+impl<'a, T> IntoRawMutableHandle for MutableHandle<'a, T> {
+    fn into_handle_mut(self) -> RawMutableHandle<T> {
+        unsafe { RawMutableHandle::from_marked_location(self.ptr) }
     }
 }
 
@@ -753,41 +642,6 @@ impl<'a, T> Deref for Handle<'a, T> {
 
     fn deref(&self) -> &T {
         self.ptr
-    }
-}
-
-impl<T> Deref for RawHandle<T> {
-    type Target = T;
-
-    fn deref<'a>(&'a self) -> &'a T {
-        unsafe { &*self.ptr }
-    }
-}
-
-impl<T> RawMutableHandle<T> {
-    pub unsafe fn from_marked_location(ptr: *mut T) -> Self {
-        Self {
-            _base: MutableHandleBase { _phantom0: PhantomData },
-            ptr: ptr,
-        }
-    }
-
-    pub fn handle(&self) -> RawHandle<T> {
-        unsafe {
-            RawHandle::from_marked_location(self.ptr as *const T)
-        }
-    }
-
-    pub fn get(&self) -> T
-        where T: Copy
-    {
-        unsafe { *self.ptr }
-    }
-
-    pub fn set(&self, v: T)
-        where T: Copy
-    {
-        unsafe { *self.ptr = v }
     }
 }
 
@@ -827,20 +681,6 @@ impl<'a, T> MutableHandle<'a, T> {
     }
 }
 
-impl<T> Deref for RawMutableHandle<T> {
-    type Target = T;
-
-    fn deref<'a>(&'a self) -> &'a T {
-        unsafe { &*self.ptr }
-    }
-}
-
-impl<T> DerefMut for RawMutableHandle<T> {
-    fn deref_mut<'a>(&'a mut self) -> &'a mut T {
-        unsafe { &mut *self.ptr }
-    }
-}
-
 impl<'a, T> Deref for MutableHandle<'a, T> {
     type Target = T;
 
@@ -855,49 +695,13 @@ impl<'a, T> DerefMut for MutableHandle<'a, T> {
     }
 }
 
-impl<'a, T> From<MutableHandle<'a, T>> for RawMutableHandle<T> {
-    fn from(handle: MutableHandle<'a, T>) -> Self {
-        unsafe { RawMutableHandle::from_marked_location(handle.ptr) }
-    }
-}
-
-impl RawHandleValue {
-    pub fn null() -> &'static Self {
-        unsafe {
-            &NullHandleValue
-        }
-    }
-
-    pub fn undefined() -> &'static Self {
-        unsafe {
-            &UndefinedHandleValue
-        }
-    }
-}
-
 impl HandleValue<'static> {
     pub fn null() -> Self {
-        Self::new(RawHandleValue::null())
+        unsafe { Self::from_raw(RawHandleValue::null()) }
     }
 
     pub fn undefined() -> Self {
-        Self::new(RawHandleValue::undefined())
-    }
-}
-
-impl HandleValueArray {
-    pub fn new() -> HandleValueArray {
-        HandleValueArray {
-            length_: 0,
-            elements_: ptr::null(),
-        }
-    }
-
-    pub unsafe fn from_rooted_slice(values: &[Value]) -> HandleValueArray {
-        HandleValueArray {
-            length_: values.len(),
-            elements_: values.as_ptr()
-        }
+        unsafe { Self::from_raw(RawHandleValue::undefined()) }
     }
 }
 
@@ -911,310 +715,11 @@ impl<'a> HandleObject<'a> {
     }
 }
 
-impl Default for jsid {
-    fn default() -> jsid {
-        unsafe {
-            JSID_VOID
-        }
-    }
-}
-
-impl Default for Value {
-    fn default() -> Value { UndefinedValue() }
-}
-
-impl Default for CompartmentOptions {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
-}
-
 const ChunkShift: usize = 20;
 const ChunkSize: usize = 1 << ChunkShift;
 
 #[cfg(target_pointer_width = "32")]
 const ChunkLocationOffset: usize = ChunkSize - 2 * 4 - 8;
-
-pub trait GCMethods {
-    unsafe fn initial() -> Self;
-    unsafe fn post_barrier(v: *mut Self, prev: Self, next: Self);
-}
-
-impl GCMethods for jsid {
-    unsafe fn initial() -> jsid { JSID_VOID }
-    unsafe fn post_barrier(_: *mut jsid, _: jsid, _: jsid) {}
-}
-
-impl GCMethods for *mut JSObject {
-    unsafe fn initial() -> *mut JSObject { ptr::null_mut() }
-    unsafe fn post_barrier(v: *mut *mut JSObject,
-                           prev: *mut JSObject, next: *mut JSObject) {
-        HeapObjectPostBarrier(v, prev, next);
-    }
-}
-
-impl GCMethods for *mut JSString {
-    unsafe fn initial() -> *mut JSString { ptr::null_mut() }
-    unsafe fn post_barrier(_: *mut *mut JSString, _: *mut JSString, _: *mut JSString) {}
-}
-
-impl GCMethods for *mut JSScript {
-    unsafe fn initial() -> *mut JSScript { ptr::null_mut() }
-    unsafe fn post_barrier(_: *mut *mut JSScript, _: *mut JSScript, _: *mut JSScript) { }
-}
-
-impl GCMethods for *mut JSFunction {
-    unsafe fn initial() -> *mut JSFunction { ptr::null_mut() }
-    unsafe fn post_barrier(v: *mut *mut JSFunction,
-                           prev: *mut JSFunction, next: *mut JSFunction) {
-        HeapObjectPostBarrier(mem::transmute(v),
-                              mem::transmute(prev), mem::transmute(next));
-    }
-}
-
-impl GCMethods for Value {
-    unsafe fn initial() -> Value { UndefinedValue() }
-    unsafe fn post_barrier(v: *mut Value, prev: Value, next: Value) {
-        HeapValuePostBarrier(v, &prev, &next);
-    }
-}
-
-impl GCMethods for PropertyDescriptor {
-    unsafe fn initial() -> PropertyDescriptor { PropertyDescriptor::default() }
-    unsafe fn post_barrier(_ : *mut PropertyDescriptor, _ : PropertyDescriptor, _ :PropertyDescriptor) {}
-}
-
-impl<T: GCMethods + Copy> Heap<T> {
-    /// This creates a `Box`-wrapped Heap value. Setting a value inside Heap
-    /// object triggers a barrier, referring to the Heap object location,
-    /// hence why it is not safe to construct a temporary Heap value, assign
-    /// a non-null value and move it (e.g. typical object construction).
-    ///
-    /// Using boxed Heap value guarantees that the underlying Heap value will
-    /// not be moved when constructed.
-    pub fn boxed(v: T) -> Box<Heap<T>>
-        where Heap<T>: Default
-    {
-        let boxed = Box::new(Heap::default());
-        boxed.set(v);
-        boxed
-    }
-
-    pub fn set(&self, v: T) {
-        unsafe {
-            let ptr = self.ptr.get();
-            let prev = *ptr;
-            *ptr = v;
-            T::post_barrier(ptr, prev, v);
-        }
-    }
-
-    pub fn get(&self) -> T {
-        unsafe { *self.ptr.get() }
-    }
-
-    pub fn get_unsafe(&self) -> *mut T {
-        self.ptr.get()
-    }
-
-    pub fn handle_mut(&self) -> MutableHandle<T> {
-        unsafe {
-            MutableHandle::from_marked_location(self.ptr.get())
-        }
-    }
-    /// Retrieves a Handle to the underlying value.
-    ///
-    /// # Safety
-    ///
-    /// This is only safe to do on a rooted object (which Heap is not, it needs
-    /// to be additionally rooted), like RootedGuard, so use this only if you
-    /// know what you're doing.
-    ///
-    /// # Notes
-    ///
-    /// Since Heap values need to be informed when a change to underlying
-    /// value is made (e.g. via `get()`), this does not allow to create
-    /// MutableHandle objects, which can bypass this and lead to crashes.
-    pub unsafe fn handle(&self) -> Handle<T> {
-        Handle::from_marked_location(self.ptr.get() as *const _)
-    }
-}
-
-impl<T> Default for Heap<*mut T>
-    where *mut T: GCMethods + Copy
-{
-    fn default() -> Heap<*mut T> {
-        Heap {
-            ptr: UnsafeCell::new(ptr::null_mut())
-        }
-    }
-}
-
-impl Default for Heap<Value> {
-    fn default() -> Heap<Value> {
-        Heap {
-            ptr: UnsafeCell::new(Value::default())
-        }
-    }
-}
-
-impl<T: GCMethods + Copy> Drop for Heap<T> {
-    fn drop(&mut self) {
-        unsafe {
-            let ptr = self.ptr.get();
-            T::post_barrier(ptr, *ptr, T::initial());
-        }
-    }
-}
-
-impl<T: GCMethods + Copy + PartialEq> PartialEq for Heap<T> {
-    fn eq(&self, other: &Self) -> bool {
-        self.get() == other.get()
-    }
-}
-
-// ___________________________________________________________________________
-// Implementations for various things in jsapi.rs
-
-impl JSAutoCompartment {
-    pub fn new(cx: *mut JSContext, target: *mut JSObject) -> JSAutoCompartment {
-        JSAutoCompartment {
-            cx_: cx,
-            oldCompartment_: unsafe { JS_EnterCompartment(cx, target) }
-        }
-    }
-}
-
-impl Drop for JSAutoCompartment {
-    fn drop(&mut self) {
-        unsafe { JS_LeaveCompartment(self.cx_, self.oldCompartment_); }
-    }
-}
-
-impl JSJitMethodCallArgs {
-    #[inline]
-    pub fn get(&self, i: u32) -> HandleValue {
-        unsafe {
-            if i < self._base.argc_ {
-                HandleValue::from_marked_location(
-                    self._base.argv_.offset(i as isize)
-                )
-            } else {
-                HandleValue::from_raw(UndefinedHandleValue)
-            }
-        }
-    }
-
-    #[inline]
-    pub fn index(&self, i: u32) -> HandleValue {
-        assert!(i < self._base.argc_);
-        unsafe {
-            HandleValue::from_marked_location(self._base.argv_.offset(i as isize))
-        }
-    }
-
-    #[inline]
-    pub fn index_mut(&self, i: u32) -> MutableHandleValue {
-        assert!(i < self._base.argc_);
-        unsafe {
-            MutableHandleValue::from_marked_location(self._base.argv_.offset(i as isize))
-        }
-    }
-
-    #[inline]
-    pub fn rval(&self) -> MutableHandleValue {
-        unsafe {
-            MutableHandleValue::from_marked_location(self._base.argv_.offset(-2))
-        }
-    }
-}
-
-// XXX need to hack up bindgen to convert this better so we don't have
-//     to duplicate so much code here
-impl CallArgs {
-    #[inline]
-    pub unsafe fn from_vp(vp: *mut Value, argc: u32) -> CallArgs {
-        CreateCallArgsFromVp(argc, vp)
-    }
-
-    #[inline]
-    pub fn index(&self, i: u32) -> HandleValue {
-        assert!(i < self._base.argc_);
-        unsafe {
-            HandleValue::from_marked_location(self._base.argv_.offset(i as isize))
-        }
-    }
-
-    #[inline]
-    pub fn index_mut(&self, i: u32) -> MutableHandleValue {
-        assert!(i < self._base.argc_);
-        unsafe {
-            MutableHandleValue::from_marked_location(self._base.argv_.offset(i as isize))
-        }
-    }
-
-    #[inline]
-    pub fn get(&self, i: u32) -> HandleValue {
-        unsafe {
-            if i < self._base.argc_ {
-                HandleValue::from_marked_location(self._base.argv_.offset(i as isize))
-            } else {
-                HandleValue::from_raw(UndefinedHandleValue)
-            }
-        }
-    }
-
-    #[inline]
-    pub fn rval(&self) -> MutableHandleValue {
-        unsafe {
-            MutableHandleValue::from_marked_location(self._base.argv_.offset(-2))
-        }
-    }
-
-    #[inline]
-    pub fn thisv(&self) -> HandleValue {
-        unsafe {
-            HandleValue::from_marked_location(self._base.argv_.offset(-1))
-        }
-    }
-
-    #[inline]
-    pub fn calleev(&self) -> HandleValue {
-        unsafe {
-            HandleValue::from_marked_location(self._base.argv_.offset(-2))
-        }
-    }
-
-    #[inline]
-    pub fn callee(&self) -> *mut JSObject {
-        self.calleev().to_object()
-    }
-
-    #[inline]
-    pub fn new_target(&self) -> MutableHandleValue {
-        assert!(self._base.constructing_);
-        unsafe {
-            MutableHandleValue::from_marked_location(self._base.argv_.offset(self._base.argc_ as isize))
-        }
-    }
-}
-
-impl JSJitGetterCallArgs {
-    #[inline]
-    pub fn rval(&self) -> MutableHandleValue {
-        unsafe {
-            MutableHandleValue::from_raw(self._base)
-        }
-    }
-}
-
-impl JSJitSetterCallArgs {
-    #[inline]
-    pub fn get(&self, i: u32) -> HandleValue {
-        assert!(i == 0);
-        unsafe {
-            HandleValue::from_raw(self._base.handle())
-        }
-    }
-}
 
 // ___________________________________________________________________________
 // Wrappers around things in jsglue.cpp
@@ -1389,13 +894,6 @@ pub unsafe extern fn report_warning(_cx: *mut JSContext, _: *const c_char, repor
     let msg = String::from_utf16_lossy(msg_slice);
 
     warn!("Warning at {}:{}:{}: {}\n", fname, lineno, column, msg);
-}
-
-impl JSNativeWrapper {
-    fn is_zeroed(&self) -> bool {
-        let JSNativeWrapper { op, info } = *self;
-        op.is_none() && info.is_null()
-    }
 }
 
 pub struct IdVector(*mut AutoIdVector);
@@ -1929,15 +1427,4 @@ pub mod jsapi_wrapped {
     include!("jsapi_wrappers.in");
     include!("glue_wrappers.in");
 }
-
-impl Default for PropertyDescriptor {
-    fn default() -> PropertyDescriptor {
-        PropertyDescriptor {
-            obj: ptr::null_mut(),
-            attrs: 0,
-            getter: None,
-            setter: None,
-            value: UndefinedValue()
-        }
-    }
-}
+ 
