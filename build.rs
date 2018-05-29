@@ -12,7 +12,7 @@ fn main() {
     let outdir = env::var("DEP_MOZJS_OUTDIR").unwrap();
     let include_path: PathBuf = [&outdir, "dist", "include"].iter().collect();
 
-    build
+    build.cpp(true)
         .file("src/jsglue.cpp")
         .include(include_path);
     if env::var("CARGO_FEATURE_DEBUGMOZJS").is_ok() {
