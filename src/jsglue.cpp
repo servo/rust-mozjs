@@ -574,10 +574,10 @@ GetWindowProxyClass()
     return &WindowProxyClass;
 }
 
-JS::Value
-GetProxyReservedSlot(JSObject* obj, uint32_t slot)
+void
+GetProxyReservedSlot(JSObject* obj, uint32_t slot, JS::Value* dest)
 {
-    return js::GetProxyReservedSlot(obj, slot);
+    *dest = js::GetProxyReservedSlot(obj, slot);
 }
 
 void
@@ -950,6 +950,54 @@ WriteBytesToJSStructuredCloneData(const uint8_t* src, size_t len, JSStructuredCl
     assert(dest != nullptr);
 
     return dest->WriteBytes(reinterpret_cast<const char*>(src), len);
+}
+
+// MSVC uses a different calling conventions for functions
+// that return non-POD values. Unfortunately, this includes anything
+// with a constructor, such as JS::Value, so we can't call these
+// from Rust. These wrapper functions are only here to
+// ensure the calling convention is right.
+// https://docs.microsoft.com/en-us/cpp/build/return-values-cpp
+// https://mozilla.logbot.info/jsapi/20180622#c14918658
+
+void
+JS_ComputeThis(JSContext* cx, JS::Value* vp, JS::Value* dest) {
+  *dest = JS::detail::ComputeThis(cx, vp);
+}
+
+void
+JS_GetModuleHostDefinedField(JSObject* module, JS::Value* dest) {
+  *dest = JS::GetModuleHostDefinedField(module);
+}
+
+void
+JS_GetPromiseResult(JS::HandleObject promise, JS::Value* dest) {
+  *dest = JS::GetPromiseResult(promise);
+}
+
+void
+JS_THIS(JSContext* cx, JS::Value* vp, JS::Value* dest) {
+  *dest = JS_THIS(cx, vp);
+}
+
+void
+JS_GetNaNValue(JSContext* cx, JS::Value* dest) {
+  *dest = JS_GetNaNValue(cx);
+}
+
+void
+JS_GetPositiveInfinityValue(JSContext* cx, JS::Value* dest) {
+  *dest = JS_GetPositiveInfinityValue(cx);
+}
+
+void
+JS_GetEmptyStringValue(JSContext* cx, JS::Value* dest) {
+  *dest = JS_GetEmptyStringValue(cx);
+}
+
+void
+JS_GetReservedSlot(JSObject* obj, uint32_t index, JS::Value* dest) {
+  *dest = JS_GetReservedSlot(obj, index);
 }
 
 } // extern "C"

@@ -233,7 +233,7 @@ extern "C" {
                           aHandler: *const ::libc::c_void)
      -> *mut JSObject;
     pub fn GetWindowProxyClass() -> *const Class;
-    pub fn GetProxyReservedSlot(obj: *mut JSObject, slot: u32) -> JS::Value;
+    pub fn GetProxyReservedSlot(obj: *mut JSObject, slot: u32, dest: *mut JS::Value);
     pub fn GetProxyPrivate(obj: *mut JSObject) -> Value;
     pub fn SetProxyReservedSlot(obj: *mut JSObject, slot: u32, val: *const JS::Value);
     pub fn SetProxyPrivate(obj: *mut JSObject, expando: *const JS::Value);
@@ -339,4 +339,12 @@ extern "C" {
     pub fn GetLengthOfJSStructuredCloneData(data: *mut JSStructuredCloneData) -> usize;
     pub fn CopyJSStructuredCloneData(src: *const JSStructuredCloneData, dest: *mut u8);
     pub fn WriteBytesToJSStructuredCloneData(src: *const u8, len: usize, dest: *mut JSStructuredCloneData);
+    pub fn JS_ComputeThis (cx: *mut JSContext , vp: *mut JS::Value, dest: *mut JS::Value);
+    pub fn JS_GetModuleHostDefinedField (module: *mut JSObject, dest: *mut JS::Value);
+    pub fn JS_GetPromiseResult (promise: JS::HandleObject, dest: *mut JS::Value);
+    pub fn JS_THIS (cx: *mut JSContext , vp: *mut JS::Value, dest: *mut JS::Value);
+    pub fn JS_GetNaNValue (cx: *mut JSContext, dest: *mut JS::Value);
+    pub fn JS_GetPositiveInfinityValue (cx: *mut JSContext, dest: *mut JS::Value);
+    pub fn JS_GetEmptyStringValue (cx: *mut JSContext, dest: *mut JS::Value);
+    pub fn JS_GetReservedSlot (obj: *mut JSObject , index: u32, dest: *mut JS::Value);
 }
