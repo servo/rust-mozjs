@@ -370,7 +370,7 @@ impl FromJSValConvertible for u32 {
 impl ToJSValConvertible for i64 {
     #[inline]
     unsafe fn to_jsval(&self, _cx: *mut JSContext, mut rval: MutableHandleValue) {
-        rval.set(RUST_JS_NumberValue(*self as f64));
+        RUST_JS_NumberValue(*self as f64, &mut *rval);
     }
 }
 
@@ -389,7 +389,7 @@ impl FromJSValConvertible for i64 {
 impl ToJSValConvertible for u64 {
     #[inline]
     unsafe fn to_jsval(&self, _cx: *mut JSContext, mut rval: MutableHandleValue) {
-        rval.set(RUST_JS_NumberValue(*self as f64));
+        RUST_JS_NumberValue(*self as f64, &mut *rval);
     }
 }
 
@@ -408,7 +408,7 @@ impl FromJSValConvertible for u64 {
 impl ToJSValConvertible for f32 {
     #[inline]
     unsafe fn to_jsval(&self, _cx: *mut JSContext, mut rval: MutableHandleValue) {
-        rval.set(RUST_JS_NumberValue(*self as f64));
+        RUST_JS_NumberValue(*self as f64, &mut *rval);
     }
 }
 
@@ -425,7 +425,7 @@ impl FromJSValConvertible for f32 {
 impl ToJSValConvertible for f64 {
     #[inline]
     unsafe fn to_jsval(&self, _cx: *mut JSContext, mut rval: MutableHandleValue) {
-        rval.set(RUST_JS_NumberValue(*self));
+        RUST_JS_NumberValue(*self, &mut *rval);
     }
 }
 

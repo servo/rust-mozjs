@@ -459,10 +459,10 @@ InvokeHasOwn(
         hasOwn(cx, proxy, id, bp);
 }
 
-JS::Value
-RUST_JS_NumberValue(double d)
+void
+RUST_JS_NumberValue(double d, JS::Value* dest)
 {
-    return JS_NumberValue(d);
+    *dest = JS_NumberValue(d);
 }
 
 const JSJitInfo*
@@ -592,10 +592,10 @@ NewWindowProxy(JSContext* aCx, JS::HandleObject aObj, const void* aHandler)
     return WrapperNew(aCx, aObj, aHandler, Jsvalify(&WindowProxyClass), true);
 }
 
-JS::Value
-GetProxyPrivate(JSObject* obj)
+void
+GetProxyPrivate(JSObject* obj, JS::Value* dest)
 {
-    return js::GetProxyPrivate(obj);
+    *dest = js::GetProxyPrivate(obj);
 }
 
 void

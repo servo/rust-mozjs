@@ -182,7 +182,7 @@ extern "C" {
     pub fn InvokeHasOwn(handler: *const ::libc::c_void,
                         cx: *mut JSContext, proxy: HandleObject,
                         id: HandleId, bp: *mut bool) -> bool;
-    pub fn RUST_JS_NumberValue(d: f64) -> Value;
+    pub fn RUST_JS_NumberValue(d: f64, dest: *mut JS::Value);
     pub fn RUST_FUNCTION_VALUE_TO_JITINFO(v: Value) -> *const JSJitInfo;
     pub fn CreateCallArgsFromVp(argc: u32, v: *mut Value) -> CallArgs;
     pub fn CallJitGetterOp(info: *const JSJitInfo, cx: *mut JSContext,
@@ -234,7 +234,7 @@ extern "C" {
      -> *mut JSObject;
     pub fn GetWindowProxyClass() -> *const Class;
     pub fn GetProxyReservedSlot(obj: *mut JSObject, slot: u32, dest: *mut JS::Value);
-    pub fn GetProxyPrivate(obj: *mut JSObject) -> Value;
+    pub fn GetProxyPrivate(obj: *mut JSObject, dest: *mut JS::Value);
     pub fn SetProxyReservedSlot(obj: *mut JSObject, slot: u32, val: *const JS::Value);
     pub fn SetProxyPrivate(obj: *mut JSObject, expando: *const JS::Value);
 
