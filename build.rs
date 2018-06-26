@@ -39,7 +39,6 @@ fn main() {
     if cfg!(target_os = "windows") {
         build.flag(&format!("-FI{}", confdefs_path.to_string_lossy()));
         build.define("WIN32", "");
-        build.define("XP_PC", "");
         build.flag("-Zi");
         build.flag("-GR-");
     } else {

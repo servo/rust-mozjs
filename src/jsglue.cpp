@@ -531,7 +531,7 @@ GetSecurityWrapper()
 JS::ReadOnlyCompileOptions*
 NewCompileOptions(JSContext* aCx, const char* aFile, unsigned aLine)
 {
-     JS::OwningCompileOptions *opts = new JS::OwningCompileOptions(aCx);
+    JS::OwningCompileOptions *opts = new JS::OwningCompileOptions(aCx);
     opts->setFileAndLine(aCx, aFile, aLine);
     return opts;
 }
@@ -574,18 +574,6 @@ GetWindowProxyClass()
     return &WindowProxyClass;
 }
 
-void
-GetProxyReservedSlot(JSObject* obj, uint32_t slot, JS::Value* dest)
-{
-    *dest = js::GetProxyReservedSlot(obj, slot);
-}
-
-void
-SetProxyReservedSlot(JSObject* obj, uint32_t slot, const JS::Value* val)
-{
-    js::SetProxyReservedSlot(obj, slot, *val);
-}
-
 JSObject*
 NewWindowProxy(JSContext* aCx, JS::HandleObject aObj, const void* aHandler)
 {
@@ -593,9 +581,21 @@ NewWindowProxy(JSContext* aCx, JS::HandleObject aObj, const void* aHandler)
 }
 
 void
+GetProxyReservedSlot(JSObject* obj, uint32_t slot, JS::Value* dest)
+{
+    *dest = js::GetProxyReservedSlot(obj, slot);
+}
+
+void
 GetProxyPrivate(JSObject* obj, JS::Value* dest)
 {
     *dest = js::GetProxyPrivate(obj);
+}
+
+void
+SetProxyReservedSlot(JSObject* obj, uint32_t slot, const JS::Value* val)
+{
+    js::SetProxyReservedSlot(obj, slot, *val);
 }
 
 void

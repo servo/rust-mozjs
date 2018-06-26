@@ -163,7 +163,7 @@ impl Runtime {
                 assert!(!parent_runtime.is_null());
                 let old_runtime = PARENT.compare_and_swap(ptr::null_mut(), parent_runtime, Ordering::SeqCst);
                 assert!(old_runtime.is_null());
-		assert!(UseInternalJobQueues(js_context, false));
+                assert!(UseInternalJobQueues(js_context, false));
                 js_context
             } else {
                 let parent_runtime = PARENT.load(Ordering::SeqCst);
