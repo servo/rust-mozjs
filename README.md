@@ -17,7 +17,7 @@ For installation of the Rust toolchain see [`https://rustup.rs/`](https://rustup
 #### On macOS (Homebrew)
 
 ```sh
-brew install automake pkg-config python2 cmake
+brew install automake pkg-config python2 cmake yasm
 ```
 
 ## Building the project
