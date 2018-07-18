@@ -47,7 +47,7 @@ use jsapi::{Object, ObjectGroup,ReadOnlyCompileOptions, Rooted, RootingContext};
 use jsapi::{SetWarningReporter, Symbol, ToBooleanSlow};
 use jsapi::{ToInt32Slow, ToInt64Slow, ToNumberSlow, ToStringSlow, ToUint16Slow};
 use jsapi::{ToUint32Slow, ToUint64Slow, ToWindowProxyIfWindowSlow};
-use jsapi::{UseInternalJobQueues, Value, jsid};
+use jsapi::{Value, jsid};
 use jsapi::{CaptureCurrentStack, BuildStackString, IsSavedFrame, StackFormat};
 use jsapi::{JS_StackCapture_AllFrames, JS_StackCapture_MaxFrames};
 use jsapi::Handle as RawHandle;
