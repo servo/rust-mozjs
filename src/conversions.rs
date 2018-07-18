@@ -597,6 +597,10 @@ impl<C: Clone, T: FromJSValConvertible<Config=C>> FromJSValConvertible for Vec<T
                          value: HandleValue,
                          option: C)
                          -> Result<ConversionResult<Vec<T>>, ()> {
+        if !value.is_object() {
+            return Ok(ConversionResult::Failure("Value is not an object".into()));
+        }
+
         let mut iterator = ForOfIterator {
             cx_: cx,
             iterator: RootedObject::new_unrooted(),
