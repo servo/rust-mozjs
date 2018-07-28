@@ -13,6 +13,7 @@ grep_heur() {
         grep 'pub fn' | \
         grep Handle | \
         grep -v roxyHandler | \
+        grep -v '\bIdVector\b' | # name clash between rust::IdVector and JS::IdVector \
         grep -v 'pub fn Unbox' | # this function seems to be platform specific \
         sed 's/root:://g' |
         sed 's/JS:://g' |

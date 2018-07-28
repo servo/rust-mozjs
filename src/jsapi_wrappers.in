@@ -280,7 +280,6 @@ wrap!(jsapi: pub fn JS_DeleteElement(cx: *mut JSContext, obj: HandleObject, inde
 wrap!(jsapi: pub fn JS_DeletePropertyById1(cx: *mut JSContext, obj: HandleObject, id: jsid) -> bool);
 wrap!(jsapi: pub fn JS_DeleteProperty1(cx: *mut JSContext, obj: HandleObject, name: *const ::std::os::raw::c_char) -> bool);
 wrap!(jsapi: pub fn JS_DeleteElement1(cx: *mut JSContext, obj: HandleObject, index: u32) -> bool);
-wrap!(jsapi: pub fn JS_Enumerate(cx: *mut JSContext, obj: HandleObject, props: MutableHandle<IdVector>) -> bool);
 wrap!(jsapi: pub fn JS_CallFunctionValue(cx: *mut JSContext, obj: HandleObject, fval: HandleValue, args: *const HandleValueArray, rval: MutableHandleValue) -> bool);
 wrap!(jsapi: pub fn JS_CallFunction(cx: *mut JSContext, obj: HandleObject, fun: HandleFunction, args: *const HandleValueArray, rval: MutableHandleValue) -> bool);
 wrap!(jsapi: pub fn JS_CallFunctionName(cx: *mut JSContext, obj: HandleObject, name: *const ::std::os::raw::c_char, args: *const HandleValueArray, rval: MutableHandleValue) -> bool);

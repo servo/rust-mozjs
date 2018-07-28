@@ -37,7 +37,7 @@ use jsapi::{ContextOptionsRef, Evaluate2, HandleValueArray, Heap};
 use jsapi::{InitSelfHostedCode, IsWindowSlow, JS_BeginRequest};
 use jsapi::{JS_DefineFunctions, JS_DefineProperties, JS_DestroyContext, JS_EndRequest, JS_ShutDown};
 use jsapi::{JS_EnumerateStandardClasses, JS_GetRuntime, JS_GlobalObjectTraceHook};
-use jsapi::{JS_Init, JS_MayResolveStandardClass, JS_NewContext, JS_ResolveStandardClass};
+use jsapi::{JS_MayResolveStandardClass, JS_NewContext, JS_ResolveStandardClass};
 use jsapi::{JS_SetGCParameter, JS_SetNativeStackQuota, JS_WrapValue, JSAutoCompartment};
 use jsapi::{JSClass, JSCLASS_RESERVED_SLOTS_SHIFT, JSClassOps, JSCompartment, JSContext};
 use jsapi::{JSErrorReport, JSFunction, JSFunctionSpec, JSGCParamKey};
@@ -53,6 +53,7 @@ use jsapi::{JS_StackCapture_AllFrames, JS_StackCapture_MaxFrames};
 use jsapi::Handle as RawHandle;
 use jsapi::MutableHandle as RawMutableHandle;
 use jsapi::HandleValue as RawHandleValue;
+use jsapi::glue::JS_Init;
 #[cfg(feature = "debugmozjs")]
 use jsapi::mozilla::detail::GuardObjectNotificationReceiver;
 
@@ -1290,7 +1291,6 @@ pub mod wrappers {
     use jsapi::ESClass;
     use jsapi::ForOfIterator;
     use jsapi::ForOfIterator_NonIterableBehavior;
-    use jsapi::IdVector;
     use jsapi::JSAddonId;
     use jsapi::JSClass;
     use jsapi::JSConstDoubleSpec;
@@ -1314,7 +1314,6 @@ pub mod wrappers {
     use jsapi::RefPtr;
     use jsapi::RegExpShared;
     use jsapi::ScriptEnvironmentPreparer_Closure;
-    use jsapi::ScriptVector;
     use jsapi::SourceBufferHolder;
     use jsapi::StackCapture;
     use jsapi::StructuredCloneScope;
@@ -1327,6 +1326,7 @@ pub mod wrappers {
     use jsapi::Value;
     use jsapi::WasmModule;
     use jsapi::jsid;
+    use jsapi::JS::ScriptVector;
     use libc::FILE;
     use super::*;
     include!("jsapi_wrappers.in");
@@ -1434,7 +1434,6 @@ pub mod jsapi_wrapped {
     use jsapi::ESClass;
     use jsapi::ForOfIterator;
     use jsapi::ForOfIterator_NonIterableBehavior;
-    use jsapi::IdVector;
     use jsapi::JSAddonId;
     use jsapi::JSClass;
     use jsapi::JSConstDoubleSpec;
@@ -1458,7 +1457,6 @@ pub mod jsapi_wrapped {
     use jsapi::RefPtr;
     use jsapi::RegExpShared;
     use jsapi::ScriptEnvironmentPreparer_Closure;
-    use jsapi::ScriptVector;
     use jsapi::SourceBufferHolder;
     use jsapi::StackCapture;
     use jsapi::StructuredCloneScope;
@@ -1470,6 +1468,7 @@ pub mod jsapi_wrapped {
     use jsapi::TwoByteChars;
     use jsapi::Value;
     use jsapi::WasmModule;
+    use jsapi::JS::ScriptVector;
     use libc::FILE;
     use super::*;
     include!("jsapi_wrappers.in");
