@@ -10,31 +10,6 @@ license = "MPL-2.0"
 [build-dependencies]
 cc = "1"
 
-[[test]]
-name = "callback"
-[[test]]
-name = "capture_stack"
-[[test]]
-name = "custom_auto_rooter"
-[[test]]
-name = "custom_auto_rooter_macro"
-[[test]]
-name = "enumerate"
-[[test]]
-name = "evaluate"
-[[test]]
-name = "panic"
-[[test]]
-name = "rooting"
-[[test]]
-name = "runtime"
-[[test]]
-name = "typedarray"
-[[test]]
-name = "stack_limit"
-[[test]]
-name = "vec_conversion"
-
 [lib]
 doctest = false
 
