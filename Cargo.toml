@@ -49,6 +49,3 @@ libc = "0.2"
 log = "0.4"
 num-traits = "0.1.32"
 mozjs_sys = "0.60.0"
-
-[patch.crates-io]
-mozjs_sys = { git = "https://github.com/asajeffrey/mozjs.git", branch = "smup" }
