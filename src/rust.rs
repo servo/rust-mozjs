@@ -131,7 +131,7 @@ lazy_static! {
     static ref SHUT_DOWN: AtomicBool = AtomicBool::new(false);
 }
 
-/// A wrapper for the `JSContext` structures in SpiderMonkey.
+/// A wrapper for the `JSContext` structure in SpiderMonkey.
 pub struct Runtime {
     cx: *mut JSContext,
 }
@@ -990,12 +990,7 @@ pub unsafe fn define_properties(cx: *mut JSContext, obj: HandleObject,
                                 -> Result<(), ()> {
     assert!({
         match properties.last() {
-            Some(spec) => {
-                let zero: JSPropertySpec = mem::zeroed();
-                let zero: [usize; 6] = mem::transmute(zero);
-                let words: &[usize; 6] = mem::transmute(spec);
-                *words == zero
-            },
+            Some(spec) => spec.is_zeroed(),
             None => false,
         }
     });
