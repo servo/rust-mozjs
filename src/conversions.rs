@@ -34,7 +34,7 @@ use jsapi::{ForOfIterator, ForOfIterator_NonIterableBehavior};
 use jsapi::{Heap, JS_DefineElement, JS_GetLatin1StringCharsAndLength};
 use jsapi::{JS_GetTwoByteStringCharsAndLength, JS_NewArrayObject1};
 use jsapi::{JS_NewUCStringCopyN, JSPROP_ENUMERATE, JS_StringHasLatin1Chars};
-use jsapi::{JSContext, JSObject, JSString, RootedObject};
+use jsapi::{JSContext, JSObject, JSString, RootedObject, RootedValue};
 use jsval::{BooleanValue, Int32Value, NullValue, UInt32Value, UndefinedValue};
 use jsval::{JSVal, ObjectValue, ObjectOrNullValue, StringValue};
 use rust::{ToBoolean, ToInt32, ToInt64, ToNumber, ToUint16, ToUint32, ToUint64};
@@ -370,7 +370,7 @@ impl FromJSValConvertible for u32 {
 impl ToJSValConvertible for i64 {
     #[inline]
     unsafe fn to_jsval(&self, _cx: *mut JSContext, mut rval: MutableHandleValue) {
-        rval.set(RUST_JS_NumberValue(*self as f64));
+        RUST_JS_NumberValue(*self as f64, &mut *rval);
     }
 }
 
@@ -389,7 +389,7 @@ impl FromJSValConvertible for i64 {
 impl ToJSValConvertible for u64 {
     #[inline]
     unsafe fn to_jsval(&self, _cx: *mut JSContext, mut rval: MutableHandleValue) {
-        rval.set(RUST_JS_NumberValue(*self as f64));
+        RUST_JS_NumberValue(*self as f64, &mut *rval);
     }
 }
 
@@ -408,7 +408,7 @@ impl FromJSValConvertible for u64 {
 impl ToJSValConvertible for f32 {
     #[inline]
     unsafe fn to_jsval(&self, _cx: *mut JSContext, mut rval: MutableHandleValue) {
-        rval.set(RUST_JS_NumberValue(*self as f64));
+        RUST_JS_NumberValue(*self as f64, &mut *rval);
     }
 }
 
@@ -425,7 +425,7 @@ impl FromJSValConvertible for f32 {
 impl ToJSValConvertible for f64 {
     #[inline]
     unsafe fn to_jsval(&self, _cx: *mut JSContext, mut rval: MutableHandleValue) {
-        rval.set(RUST_JS_NumberValue(*self));
+        RUST_JS_NumberValue(*self, &mut *rval);
     }
 }
 
@@ -548,7 +548,7 @@ impl<T: ToJSValConvertible> ToJSValConvertible for [T] {
             obj.to_jsval(cx, val.handle_mut());
 
             assert!(JS_DefineElement(cx, js_array.handle().into(),
-                                     index as u32, val.handle().into(), JSPROP_ENUMERATE, None, None));
+                                     index as u32, val.handle().into(), JSPROP_ENUMERATE as u32));
         }
 
         rval.set(ObjectValue(js_array.handle().get()));
@@ -597,9 +597,14 @@ impl<C: Clone, T: FromJSValConvertible<Config=C>> FromJSValConvertible for Vec<T
                          value: HandleValue,
                          option: C)
                          -> Result<ConversionResult<Vec<T>>, ()> {
+        if !value.is_object() {
+            return Ok(ConversionResult::Failure("Value is not an object".into()));
+        }
+
         let mut iterator = ForOfIterator {
             cx_: cx,
             iterator: RootedObject::new_unrooted(),
+            nextMethod: RootedValue::new_unrooted(),
             index: ::std::u32::MAX, // NOT_ARRAY
         };
         let iterator = ForOfIteratorGuard::new(cx, &mut iterator);

@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#![feature(const_fn)]
-#![feature(const_ptr_null)]
 #![cfg(feature = "debugmozjs")]
 
 #[macro_use]
@@ -30,9 +28,9 @@ use std::ptr;
 fn rooting() {
     unsafe {
         let runtime = Runtime::new().unwrap();
-        JS_SetGCZeal(runtime.rt(), 2, 1);
-
         let cx = runtime.cx();
+        JS_SetGCZeal(cx, 2, 1);
+
         let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
         let c_option = CompartmentOptions::default();
 
@@ -57,32 +55,26 @@ unsafe extern "C" fn generic_method(_: *mut JSContext, _: u32, _: *mut Value) ->
 const METHODS: &'static [JSFunctionSpec] = &[
     JSFunctionSpec {
         name: b"addEventListener\0" as *const u8 as *const libc::c_char,
-        call: JSNativeWrapper { op: Some(generic_method), info: ptr::null() },
+        call: JSNativeWrapper { op: Some(generic_method), info: 0 as *const _ },
         nargs: 2,
         flags: JSPROP_ENUMERATE as u16,
         selfHostedName: 0 as *const libc::c_char
     },
     JSFunctionSpec {
         name: b"removeEventListener\0" as *const u8 as *const libc::c_char,
-        call: JSNativeWrapper { op: Some(generic_method), info: ptr::null() },
+        call: JSNativeWrapper { op: Some(generic_method), info: 0 as *const _  },
         nargs: 2,
         flags: JSPROP_ENUMERATE as u16,
         selfHostedName: 0 as *const libc::c_char
     },
     JSFunctionSpec {
         name: b"dispatchEvent\0" as *const u8 as *const libc::c_char,
-        call: JSNativeWrapper { op: Some(generic_method), info: ptr::null() },
+        call: JSNativeWrapper { op: Some(generic_method), info: 0 as *const _  },
         nargs: 1,
         flags: JSPROP_ENUMERATE as u16,
         selfHostedName: 0 as *const libc::c_char
     },
-    JSFunctionSpec {
-        name: ptr::null(),
-        call: JSNativeWrapper { op: None, info: ptr::null() },
-        nargs: 0,
-        flags: 0,
-        selfHostedName: ptr::null()
-    }
+    JSFunctionSpec::ZERO,
 ];
 
 static CLASS: JSClass = JSClass {

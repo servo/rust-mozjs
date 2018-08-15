@@ -13,6 +13,7 @@ use mozjs::jsapi::JSContext;
 use mozjs::jsapi::JS_DefineFunction;
 use mozjs::jsapi::JS_NewGlobalObject;
 use mozjs::jsapi::OnNewGlobalHookOption;
+use mozjs::jsapi::StackFormat;
 use mozjs::jsapi::Value;
 use mozjs::jsval::UndefinedValue;
 use mozjs::rust::{Runtime, SIMPLE_GLOBAL_CLASS};
@@ -53,9 +54,9 @@ unsafe extern "C" fn print_stack(context: *mut JSContext, argc: u32, vp: *mut Va
     let args = CallArgs::from_vp(vp, argc);
 
     capture_stack!(in(context) let stack);
-    let str_stack = stack.unwrap().as_string(None).unwrap();
+    let str_stack = stack.unwrap().as_string(None, StackFormat::SpiderMonkey).unwrap();
     println!("{}", str_stack);
-    assert_eq!("foo/bar@test.js:3:21\nfoo@test.js:5:17\n@test.js:8:13\n".to_string(), str_stack);
+    assert_eq!("bar@test.js:3:21\nfoo@test.js:5:17\n@test.js:8:13\n".to_string(), str_stack);
 
     args.rval().set(UndefinedValue());
     return true;

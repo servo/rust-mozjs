@@ -2,7 +2,7 @@
 name = "mozjs"
 description = "Rust bindings to the Mozilla SpiderMonkey JavaScript engine."
 repository = "https://github.com/servo/rust-mozjs"
-version = "0.7.2"
+version = "0.8.0"
 authors = ["The Servo Project Developers"]
 build = "build.rs"
 license = "MPL-2.0"
@@ -31,6 +31,8 @@ name = "runtime"
 [[test]]
 name = "typedarray"
 [[test]]
+name = "typedarray_panic"
+[[test]]
 name = "stack_limit"
 [[test]]
 name = "vec_conversion"
@@ -40,11 +42,10 @@ doctest = false
 
 [features]
 debugmozjs = ['mozjs_sys/debugmozjs']
-promises = ['mozjs_sys/promises']
 
 [dependencies]
 lazy_static = "1"
 libc = "0.2"
 log = "0.4"
 num-traits = "0.2"
-mozjs_sys = "0.51.1"
+mozjs_sys = "0.60.0"
