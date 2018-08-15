@@ -14,7 +14,6 @@ use mozjs_sys::jsgc::IntoMutableHandle as IntoRawMutableHandle;
 
 use std::char;
 use std::ffi;
-use std::mem;
 use std::ptr;
 use std::slice;
 use std::str;

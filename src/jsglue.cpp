@@ -21,6 +21,11 @@
 #include "js/Wrapper.h"
 #include "assert.h"
 
+typedef bool(*WantToMeasure)(JSObject *obj);
+typedef size_t(*GetSize)(JSObject *obj);
+
+WantToMeasure gWantToMeasure = nullptr;
+
 struct ProxyTraps {
     bool (*enter)(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
                   js::BaseProxyHandler::Action action, bool *bp);
@@ -425,6 +430,45 @@ class ForwardingProxyHandler : public js::BaseProxyHandler
     }
 };
 
+class ServoDOMVisitor : public JS::ObjectPrivateVisitor {
+public:
+  size_t sizeOfIncludingThis(nsISupports *aSupports) {
+
+    JSObject* obj = (JSObject*)aSupports;
+    size_t result = 0;
+
+    if (get_size != nullptr && obj != nullptr) {
+      result = (*get_size)(obj);
+    }
+
+    return result;
+  }
+
+  GetSize get_size;
+
+  ServoDOMVisitor(GetSize gs, GetISupportsFun getISupports)
+  : ObjectPrivateVisitor(getISupports)
+  , get_size(gs)
+  {}
+};
+
+bool
+ShouldMeasureObject(JSObject* obj, nsISupports** iface) {
+
+  if (obj == nullptr) {
+    return false;
+  }
+
+  bool want_to_measure = (*gWantToMeasure)(obj);
+
+  if (want_to_measure) {
+    *iface = (nsISupports*)obj;
+    return true;
+  }
+  return false;
+}
+
+
 extern "C" {
 
 JSPrincipals*
@@ -804,11 +848,18 @@ static size_t MallocSizeOf(const void* aPtr)
 }
 
 bool
-CollectServoSizes(JSContext* cx, JS::ServoSizes *sizes)
+CollectServoSizes(JSContext* cx, JS::ServoSizes *sizes, GetSize gs)
 {
-    mozilla::PodZero(sizes);
-    return JS::AddServoSizeOf(cx, MallocSizeOf,
-                              /* ObjectPrivateVisitor = */ nullptr, sizes);
+  mozilla::PodZero(sizes);
+
+  ServoDOMVisitor sdv(gs, ShouldMeasureObject);
+
+  return JS::AddServoSizeOf(cx, MallocSizeOf, &sdv, sizes);
+}
+
+void
+InitializeMemoryReporter(WantToMeasure wtm){
+  gWantToMeasure = wtm;
 }
 
 void
