@@ -606,6 +606,8 @@ impl<C: Clone, T: FromJSValConvertible<Config=C>> FromJSValConvertible for Vec<T
             iterator: RootedObject::new_unrooted(),
             nextMethod: RootedValue::new_unrooted(),
             index: ::std::u32::MAX, // NOT_ARRAY
+            #[cfg(target_os = "android")]
+            __bindgen_padding_0: 0,
         };
         let iterator = ForOfIteratorGuard::new(cx, &mut iterator);
         let iterator = &mut *iterator.root;
