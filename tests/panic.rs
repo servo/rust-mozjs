@@ -19,7 +19,7 @@ use std::ptr;
 
 #[test]
 #[should_panic]
-fn panic() {
+fn test_panic() {
     let runtime = Runtime::new().unwrap();
     let context = runtime.cx();
     let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
