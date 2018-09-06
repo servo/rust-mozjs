@@ -77,5 +77,8 @@ fn typedarray() {
 
         typedarray!(in(cx) let view: ArrayBufferView = rval.get());
         assert_eq!(view.unwrap().get_array_type(), Type::Uint32);
+
+        typedarray!(in(cx) let view: ArrayBufferView = rval.get());
+        assert_eq!(view.unwrap().is_shared(), false);
     }
 }
