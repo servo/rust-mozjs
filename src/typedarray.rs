@@ -31,6 +31,7 @@ use jsapi::JS_GetFloat64ArrayData;
 use jsapi::JS_GetInt16ArrayData;
 use jsapi::JS_GetInt32ArrayData;
 use jsapi::JS_GetInt8ArrayData;
+use jsapi::JS_GetTypedArraySharedness;
 use jsapi::JS_GetUint16ArrayData;
 use jsapi::JS_GetUint32ArrayData;
 use jsapi::JS_GetUint8ArrayData;
@@ -205,6 +206,14 @@ impl<T: TypedArrayElement, S: JSObjectStorage> TypedArray<T, S> {
     pub unsafe fn as_mut_slice(&mut self) -> &mut [T::Element] {
         let (pointer, length) = self.data();
         slice::from_raw_parts_mut(pointer, length as usize)
+    }
+
+    /// # Unsafety
+    ///
+    /// Return a boolean flag which denotes whether the underlying buffer
+    /// is a SharedArrayBuffer.
+    pub unsafe fn is_shared(&self) -> bool {
+        JS_GetTypedArraySharedness(self.object.as_raw())
     }
 }
 
