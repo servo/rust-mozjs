@@ -44,6 +44,7 @@ use rust::maybe_wrap_value;
 use libc;
 use num_traits::{Bounded, Zero};
 use std::borrow::Cow;
+use std::mem;
 use std::rc::Rc;
 use std::{ptr, slice};
 
@@ -601,11 +602,18 @@ impl<C: Clone, T: FromJSValConvertible<Config=C>> FromJSValConvertible for Vec<T
             return Ok(ConversionResult::Failure("Value is not an object".into()));
         }
 
+        // Depending on the version of LLVM in use, bindgen can end up including
+        // a padding field in the ForOfIterator. To support multiple versions of
+        // LLVM that may not have the same fields as a result, we create an empty
+        // iterator instance and initialize a non-empty instance using the empty
+        // instance as a base value.
+        let zero = mem::zeroed();
         let mut iterator = ForOfIterator {
             cx_: cx,
             iterator: RootedObject::new_unrooted(),
             nextMethod: RootedValue::new_unrooted(),
             index: ::std::u32::MAX, // NOT_ARRAY
+            ..zero
         };
         let iterator = ForOfIteratorGuard::new(cx, &mut iterator);
         let iterator = &mut *iterator.root;
