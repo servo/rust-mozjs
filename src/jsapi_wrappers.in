@@ -68,6 +68,7 @@ wrap!(jsapi: pub fn IsPromiseObject(obj: HandleObject) -> bool);
 wrap!(jsapi: pub fn GetPromiseState(promise: HandleObject) -> PromiseState);
 wrap!(jsapi: pub fn GetPromiseID(promise: HandleObject) -> u64);
 wrap!(jsapi: pub fn GetPromiseResult(promise: HandleObject) -> Value);
+wrap!(jsapi: pub fn GetPromiseIsHandled(promise: HandleObject) -> bool);
 wrap!(jsapi: pub fn GetPromiseAllocationSite(promise: HandleObject) -> *mut JSObject);
 wrap!(jsapi: pub fn GetPromiseResolutionSite(promise: HandleObject) -> *mut JSObject);
 wrap!(jsapi: pub fn CallOriginalPromiseResolve(cx: *mut JSContext, resolutionValue: HandleValue) -> *mut JSObject);
