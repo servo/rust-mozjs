@@ -588,8 +588,7 @@ DeleteCompileOptions(JS::ReadOnlyCompileOptions *aOpts)
 
 JSObject*
 NewProxyObject(JSContext* aCx, const void* aHandler, JS::HandleValue aPriv,
-               JSObject* proto, JSObject* parent, JSObject* call,
-               JSObject* construct)
+               JSObject* proto)
 {
     js::ProxyOptions options;
     return js::NewProxyObject(aCx, (js::BaseProxyHandler*)aHandler, aPriv, proto,
