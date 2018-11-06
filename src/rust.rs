@@ -68,7 +68,7 @@ use panic::maybe_resume_unwind;
 
 use default_heapsize;
 
-pub use mozjs_sys::jsgc::GCMethods;
+pub use mozjs_sys::jsgc::{GCMethods, IntoHandle};
 
 // From Gecko:
 // Our "default" stack is what we use in configurations where we don't have a compelling reason to
@@ -1468,4 +1468,4 @@ pub mod jsapi_wrapped {
     include!("jsapi_wrappers.in");
     include!("glue_wrappers.in");
 }
- 
+
