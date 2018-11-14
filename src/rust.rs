@@ -128,6 +128,7 @@ lazy_static! {
     static ref PARENT: AtomicPtr<JSRuntime> = AtomicPtr::new(ptr::null_mut());
     static ref OUTSTANDING_RUNTIMES: AtomicUsize = AtomicUsize::new(0);
     static ref SHUT_DOWN: AtomicBool = AtomicBool::new(false);
+    static ref JS_INIT_CALLED: AtomicBool = AtomicBool::new(false);
 }
 
 /// A wrapper for the `JSContext` structure in SpiderMonkey.
@@ -157,7 +158,10 @@ impl Runtime {
             let js_context = if outstanding == 0 {
                 // We are creating the first JSContext, so we need to initialize
                 // the runtime.
-                assert!(JS_Init());
+                if cfg!(not(feature = "init_once")) || !JS_INIT_CALLED.load(Ordering::SeqCst) {
+                    assert!(JS_Init());
+                    JS_INIT_CALLED.store(true, Ordering::SeqCst);
+                }
                 let js_context = JS_NewContext(default_heapsize, ChunkSize as u32, ptr::null_mut());
                 let parent_runtime = JS_GetRuntime(js_context);
                 assert!(!parent_runtime.is_null());
@@ -265,8 +269,10 @@ impl Drop for Runtime {
 
             if OUTSTANDING_RUNTIMES.fetch_sub(1, Ordering::SeqCst) == 1 {
                 PARENT.store(ptr::null_mut(), Ordering::SeqCst);
-                SHUT_DOWN.store(true, Ordering::SeqCst);
-                JS_ShutDown();
+                if cfg!(not(feature = "init_once")) {
+                    SHUT_DOWN.store(true, Ordering::SeqCst);
+                    JS_ShutDown();
+                }
             }
         }
     }

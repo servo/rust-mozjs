@@ -42,6 +42,7 @@ doctest = false
 
 [features]
 debugmozjs = ['mozjs_sys/debugmozjs']
+init_once = []
 
 [dependencies]
 lazy_static = "1"
