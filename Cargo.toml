@@ -29,6 +29,8 @@ name = "rooting"
 [[test]]
 name = "runtime"
 [[test]]
+name = "runtime_no_outlive"
+[[test]]
 name = "typedarray"
 [[test]]
 name = "typedarray_panic"
@@ -42,9 +44,9 @@ doctest = false
 
 [features]
 debugmozjs = ['mozjs_sys/debugmozjs']
-init_once = []
 
 [dependencies]
+integer-atomics = "1"
 lazy_static = "1"
 libc = "0.2"
 log = "0.4"

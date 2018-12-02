@@ -4,7 +4,7 @@
 
 //! Rust wrappers around the raw JS apis
 
-
+use integer_atomics::AtomicU32;
 use libc::{size_t, c_uint};
 
 use mozjs_sys::jsgc::CustomAutoRooterVFTable;
@@ -23,7 +23,8 @@ use std::ops::{Deref, DerefMut};
 use std::os::raw::c_void;
 use std::cell::Cell;
 use std::marker::PhantomData;
-use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex};
+use std::sync::atomic::Ordering;
 
 use consts::{JSCLASS_RESERVED_SLOTS_MASK, JSCLASS_GLOBAL_SLOT_COUNT};
 use consts::{JSCLASS_IS_DOMJSCLASS, JSCLASS_IS_GLOBAL};
@@ -124,16 +125,80 @@ impl ToResult for bool {
 
 thread_local!(static CONTEXT: Cell<*mut JSContext> = Cell::new(ptr::null_mut()));
 
+#[derive(PartialEq)]
+enum EngineState {
+    Uninitialized,
+    Initialized,
+    ShutDown,
+}
+
 lazy_static! {
-    static ref PARENT: AtomicPtr<JSRuntime> = AtomicPtr::new(ptr::null_mut());
-    static ref OUTSTANDING_RUNTIMES: AtomicUsize = AtomicUsize::new(0);
-    static ref SHUT_DOWN: AtomicBool = AtomicBool::new(false);
-    static ref JS_INIT_CALLED: AtomicBool = AtomicBool::new(false);
+    static ref ENGINE_STATE: Mutex<EngineState> = Mutex::new(EngineState::Uninitialized);
+}
+
+#[derive(Debug)]
+pub enum JSEngineError {
+    AlreadyInitialized,
+    AlreadyShutDown,
+    InitFailed,
+}
+
+/// A handle that must be kept alive in order to create new Runtimes.
+/// When this handle is dropped, the engine is shut down and cannot
+/// be reinitialized.
+pub struct JSEngine(());
+
+impl JSEngine {
+    /// Initialize the JS engine to prepare for creating new JS runtimes.
+    pub fn init() -> Result<JSEngine, JSEngineError> {
+        let mut state = ENGINE_STATE.lock().unwrap();
+        match *state {
+            EngineState::Initialized => return Err(JSEngineError::AlreadyInitialized),
+            EngineState::ShutDown => return Err(JSEngineError::AlreadyShutDown),
+            EngineState::Uninitialized => (),
+        }
+        if unsafe { !JS_Init() } {
+            Err(JSEngineError::InitFailed)
+        } else {
+            *state = EngineState::Initialized;
+            Ok(JSEngine(()))
+        }
+    }
+}
+
+/// Shut down the JS engine, invalidating any existing runtimes and preventing
+/// any new ones from being created.
+impl Drop for JSEngine {
+    fn drop(&mut self) {
+        *ENGINE_STATE.lock().unwrap() = EngineState::ShutDown;
+        unsafe {
+            JS_ShutDown();
+        }
+    }
+}
+
+/// A handle to a Runtime that will be used to create a new runtime in another
+/// thread. This handle or the new runtime must be destroyed before the original
+/// runtime can be dropped.
+pub struct ParentRuntime {
+    parent: *mut JSRuntime,
+    count: Arc<AtomicU32>,
+}
+unsafe impl Send for ParentRuntime {}
+
+impl Drop for ParentRuntime {
+    fn drop(&mut self) {
+        self.count.fetch_sub(1, Ordering::SeqCst);
+    }
 }
 
 /// A wrapper for the `JSContext` structure in SpiderMonkey.
 pub struct Runtime {
     cx: *mut JSContext,
+    // Unused member, but required to maintain safety invariants of parent runtimes
+    // due to ParentRuntime's drop implementation.
+    _parent: Option<ParentRuntime>,
+    outstanding_children: Arc<AtomicU32>,
 }
 
 impl Runtime {
@@ -147,76 +212,84 @@ impl Runtime {
     }
 
     /// Creates a new `JSContext`.
-    pub fn new() -> Result<Runtime, ()> {
-        unsafe {
-            if SHUT_DOWN.load(Ordering::SeqCst) {
-                return Err(());
-            }
+    pub fn new(_engine: &JSEngine) -> Runtime {
+        unsafe { Self::create(None) }
+    }
 
-            let outstanding = OUTSTANDING_RUNTIMES.fetch_add(1, Ordering::SeqCst);
+    /// Signal that a new child runtime will be created in the future, and ensure
+    /// that this runtime will not allow itself to be destroyed before the new
+    /// child runtime. Returns a handle that can be passed to `create_with_parent`
+    /// in order to create a new runtime on another thread that is associated with
+    /// this runtime.
+    pub fn prepare_for_new_child(&self) -> ParentRuntime {
+        self.outstanding_children.fetch_add(1, Ordering::SeqCst);
+        ParentRuntime {
+            parent: self.rt(),
+            count: self.outstanding_children.clone(),
+        }
+    }
 
-            let js_context = if outstanding == 0 {
-                // We are creating the first JSContext, so we need to initialize
-                // the runtime.
-                if cfg!(not(feature = "init_once")) || !JS_INIT_CALLED.load(Ordering::SeqCst) {
-                    assert!(JS_Init());
-                    JS_INIT_CALLED.store(true, Ordering::SeqCst);
-                }
-                let js_context = JS_NewContext(default_heapsize, ChunkSize as u32, ptr::null_mut());
-                let parent_runtime = JS_GetRuntime(js_context);
-                assert!(!parent_runtime.is_null());
-                let old_runtime = PARENT.compare_and_swap(ptr::null_mut(), parent_runtime, Ordering::SeqCst);
-                assert!(old_runtime.is_null());
-                // TODO: should we use the internal job queues or not?
-                // assert!(UseInternalJobQueues(js_context, false));
-                js_context
-            } else {
-                let parent_runtime = PARENT.load(Ordering::SeqCst);
-                assert!(!parent_runtime.is_null());
-                JS_NewContext(default_heapsize, ChunkSize as u32, parent_runtime)
-            };
+    /// Creates a new `JSContext` with a parent runtime. If the parent does not outlive
+    /// the new runtime, its destructor will assert.
+    ///
+    /// Unsafety:
+    /// If panicking does not abort the program, any threads with child runtimes will
+    /// continue executing after the thread with the parent runtime panics, but they
+    /// will be in an invalid and undefined state.
+    pub unsafe fn create_with_parent(parent: ParentRuntime) -> Runtime {
+        Self::create(Some(parent))
+    }
 
-            assert!(!js_context.is_null());
+    unsafe fn create(parent: Option<ParentRuntime>) -> Runtime {
+        let parent_runtime = parent.as_ref().map_or(
+            ptr::null_mut(),
+            |r| r.parent,
+        );
+        let js_context = JS_NewContext(default_heapsize, ChunkSize as u32, parent_runtime);
+        assert!(!js_context.is_null());
 
-            // Unconstrain the runtime's threshold on nominal heap size, to avoid
-            // triggering GC too often if operating continuously near an arbitrary
-            // finite threshold. This leaves the maximum-JS_malloc-bytes threshold
-            // still in effect to cause periodical, and we hope hygienic,
-            // last-ditch GCs from within the GC's allocator.
-            JS_SetGCParameter(
-                js_context, JSGCParamKey::JSGC_MAX_BYTES, u32::MAX);
+        // Unconstrain the runtime's threshold on nominal heap size, to avoid
+        // triggering GC too often if operating continuously near an arbitrary
+        // finite threshold. This leaves the maximum-JS_malloc-bytes threshold
+        // still in effect to cause periodical, and we hope hygienic,
+        // last-ditch GCs from within the GC's allocator.
+        JS_SetGCParameter(
+            js_context, JSGCParamKey::JSGC_MAX_BYTES, u32::MAX);
 
-            JS_SetNativeStackQuota(
-                js_context,
-                STACK_QUOTA,
-                STACK_QUOTA - SYSTEM_CODE_BUFFER,
-                STACK_QUOTA - SYSTEM_CODE_BUFFER - TRUSTED_SCRIPT_BUFFER);
+        JS_SetNativeStackQuota(
+            js_context,
+            STACK_QUOTA,
+            STACK_QUOTA - SYSTEM_CODE_BUFFER,
+            STACK_QUOTA - SYSTEM_CODE_BUFFER - TRUSTED_SCRIPT_BUFFER);
 
-            CONTEXT.with(|context| {
-                assert!(context.get().is_null());
-                context.set(js_context);
-            });
+        CONTEXT.with(|context| {
+            assert!(context.get().is_null());
+            context.set(js_context);
+        });
 
-            InitSelfHostedCode(js_context);
+        InitSelfHostedCode(js_context);
 
-            let contextopts = ContextOptionsRef(js_context);
-            (*contextopts).set_baseline_(true);
-            (*contextopts).set_ion_(true);
-            (*contextopts).set_nativeRegExp_(true);
+        let contextopts = ContextOptionsRef(js_context);
+        (*contextopts).set_baseline_(true);
+        (*contextopts).set_ion_(true);
+        (*contextopts).set_nativeRegExp_(true);
 
-            SetWarningReporter(js_context, Some(report_warning));
+        SetWarningReporter(js_context, Some(report_warning));
 
-            JS_BeginRequest(js_context);
+        JS_BeginRequest(js_context);
 
-            Ok(Runtime {
-                cx: js_context,
-            })
+        Runtime {
+            _parent: parent,
+            cx: js_context,
+            outstanding_children: Arc::new(AtomicU32::new(0)),
         }
     }
 
     /// Returns the `JSRuntime` object.
     pub fn rt(&self) -> *mut JSRuntime {
-        PARENT.load(Ordering::SeqCst)
+        unsafe {
+            JS_GetRuntime(self.cx)
+        }
     }
 
     /// Returns the `JSContext` object.
@@ -258,6 +331,9 @@ impl Runtime {
 
 impl Drop for Runtime {
     fn drop(&mut self) {
+        assert_eq!(self.outstanding_children.load(Ordering::SeqCst),
+                   0,
+                   "This runtime still has live children.");
         unsafe {
             JS_EndRequest(self.cx);
             JS_DestroyContext(self.cx);
@@ -266,14 +342,6 @@ impl Drop for Runtime {
                 assert_eq!(context.get(), self.cx);
                 context.set(ptr::null_mut());
             });
-
-            if OUTSTANDING_RUNTIMES.fetch_sub(1, Ordering::SeqCst) == 1 {
-                PARENT.store(ptr::null_mut(), Ordering::SeqCst);
-                if cfg!(not(feature = "init_once")) {
-                    SHUT_DOWN.store(true, Ordering::SeqCst);
-                    JS_ShutDown();
-                }
-            }
         }
     }
 }
