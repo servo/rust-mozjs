@@ -16,14 +16,17 @@ use mozjs::jsapi::JS_NewGlobalObject;
 use mozjs::jsapi::JS_NewObject;
 use mozjs::jsapi::JSObject;
 use mozjs::jsapi::OnNewGlobalHookOption;
-use mozjs::rust::{Runtime, SIMPLE_GLOBAL_CLASS};
+use mozjs::rust::{JSEngine, Runtime, SIMPLE_GLOBAL_CLASS};
 use std::ptr;
+use std::thread;
+use std::sync::mpsc::channel;
 
 #[test]
 fn runtime() {
+    let engine = JSEngine::init().unwrap();
+    assert!(JSEngine::init().is_err());
+    let runtime = Runtime::new(&engine);
     unsafe {
-        let runtime = Runtime::new().unwrap();
-
         let cx = runtime.cx();
         let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
         let c_option = CompartmentOptions::default();
@@ -37,7 +40,15 @@ fn runtime() {
         rooted!(in(cx) let _object = JS_NewObject(cx, &CLASS as *const _));
     }
 
-    assert!(Runtime::new().is_err());
+    let parent = runtime.prepare_for_new_child();
+    let (sender, receiver) = channel();
+    thread::spawn(move || {
+        let runtime = Runtime::create_with_parent(parent);
+        assert!(!Runtime::get().is_null());
+        drop(runtime);
+        let _ = sender.send(());
+    });
+    let _ = receiver.recv();
 }
 
 unsafe extern fn finalize(_fop: *mut JSFreeOp, _object: *mut JSObject) {

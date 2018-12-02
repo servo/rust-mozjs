@@ -10,7 +10,8 @@ use mozjs::jsapi::JSAutoCompartment;
 use mozjs::jsapi::JSObject;
 use mozjs::jsapi::JS_NewGlobalObject;
 use mozjs::jsapi::OnNewGlobalHookOption;
-use mozjs::rust::Runtime as Runtime_;
+use mozjs::rust::JSEngine;
+use mozjs::rust::Runtime;
 use mozjs::rust::SIMPLE_GLOBAL_CLASS;
 use mozjs::typedarray::{CreateWith, Uint32Array};
 use std::ptr;
@@ -18,7 +19,8 @@ use std::ptr;
 #[test]
 #[should_panic]
 fn typedarray_update_panic() {
-    let rt = Runtime_::new().unwrap();
+    let engine = JSEngine::init().unwrap();
+    let rt = Runtime::new(&engine);
     let cx = rt.cx();
 
     unsafe {
