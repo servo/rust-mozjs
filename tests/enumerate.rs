@@ -15,13 +15,15 @@ use mozjs::jsapi::JS_StringEqualsAscii;
 use mozjs::jsapi::OnNewGlobalHookOption;
 use mozjs::jsval::UndefinedValue;
 use mozjs::rust::IdVector;
+use mozjs::rust::JSEngine;
 use mozjs::rust::Runtime;
 use mozjs::rust::SIMPLE_GLOBAL_CLASS;
 use std::ptr;
 
 #[test]
 fn enumerate() {
-    let rt = Runtime::new().unwrap();
+    let engine = JSEngine::init().unwrap();
+    let rt = Runtime::new(engine);
     let cx = rt.cx();
 
     unsafe {

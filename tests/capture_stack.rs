@@ -16,13 +16,14 @@ use mozjs::jsapi::OnNewGlobalHookOption;
 use mozjs::jsapi::StackFormat;
 use mozjs::jsapi::Value;
 use mozjs::jsval::UndefinedValue;
-use mozjs::rust::{Runtime, SIMPLE_GLOBAL_CLASS};
+use mozjs::rust::{JSEngine, Runtime, SIMPLE_GLOBAL_CLASS};
 
 use std::ptr;
 
 #[test]
 fn capture_stack() {
-    let runtime = Runtime::new().unwrap();
+    let engine = JSEngine::init().unwrap();
+    let runtime = Runtime::new(engine);
     let context = runtime.cx();
     let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
     let c_option = CompartmentOptions::default();

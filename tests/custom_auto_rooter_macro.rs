@@ -6,6 +6,7 @@
 extern crate mozjs;
 use mozjs::jsapi::JSTracer;
 use mozjs::jsapi::JS_GC;
+use mozjs::rust::JSEngine;
 use mozjs::rust::Runtime;
 use mozjs::rust::CustomTrace;
 use std::cell::Cell;
@@ -28,7 +29,8 @@ unsafe impl CustomTrace for TraceCheck {
 
 #[test]
 fn custom_auto_rooter_macro() {
-    let rt = Runtime::new().unwrap();
+    let engine = JSEngine::init().unwrap();
+    let rt = Runtime::new(engine);
     let cx = rt.cx();
 
     auto_root!(in(cx) let vec = vec![TraceCheck::new(), TraceCheck::new()]);

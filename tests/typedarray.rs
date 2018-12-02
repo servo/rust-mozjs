@@ -12,14 +12,16 @@ use mozjs::jsapi::JS_NewGlobalObject;
 use mozjs::jsapi::OnNewGlobalHookOption;
 use mozjs::jsapi::Type;
 use mozjs::jsval::UndefinedValue;
-use mozjs::rust::Runtime as Runtime_;
+use mozjs::rust::JSEngine;
+use mozjs::rust::Runtime;
 use mozjs::rust::SIMPLE_GLOBAL_CLASS;
 use mozjs::typedarray::{CreateWith, Uint32Array};
 use std::ptr;
 
 #[test]
 fn typedarray() {
-    let rt = Runtime_::new().unwrap();
+    let engine = JSEngine::init().unwrap();
+    let rt = Runtime::new(engine);
     let cx = rt.cx();
 
     unsafe {
