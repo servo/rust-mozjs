@@ -21,6 +21,7 @@ use mozjs::jsapi::JSPROP_ENUMERATE;
 use mozjs::jsapi::JS_SetGCZeal;
 use mozjs::jsapi::OnNewGlobalHookOption;
 use mozjs::jsapi::Value;
+use mozjs::jsapi::{JSObject, JSString, JSFunction};
 use mozjs::jsval::JSVal;
 use mozjs::rust::{Runtime, SIMPLE_GLOBAL_CLASS, define_methods};
 use std::ptr;
@@ -54,8 +55,19 @@ fn type_rooting() {
     let runtime = Runtime::new().unwrap();
     let cx = runtime.cx();
 
-    rooted!(in(cx) let root : JSVal);
-    assert_eq!(root.get().is_undefined(),true);
+    unsafe{
+        rooted!(in(cx) let root : JSVal);
+        assert_eq!(root.get().is_undefined(), true);
+
+        rooted!(in(cx) let root : *mut JSObject);
+        assert_eq!(root.get().is_null(), true);
+
+        rooted!(in(cx) let root : *mut JSString);
+        assert_eq!(root.get().is_null(), true);
+
+        rooted!(in(cx) let root : *mut JSFunction);
+        assert_eq!(root.get().is_null(), true);
+    }
 }
 
 unsafe extern "C" fn generic_method(_: *mut JSContext, _: u32, _: *mut Value) -> bool {

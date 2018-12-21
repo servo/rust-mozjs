@@ -400,11 +400,11 @@ macro_rules! rooted {
     };
     (in($cx:expr) let $name:ident: $type:ty) => {
         let mut __root = $crate::jsapi::Rooted::new_unrooted();
-        let $name = $crate::rust::RootedGuard::new($cx, &mut __root, <$type as Default>::default());
+        let $name = $crate::rust::RootedGuard::new($cx, &mut __root, <$type as GCMethods>::initial());
     };
     (in($cx:expr) let mut $name:ident: $type:ty) => {
         let mut __root = $crate::jsapi::Rooted::new_unrooted();
-        let mut $name = $crate::rust::RootedGuard::new($cx, &mut __root, <$type as Default>::default());
+        let mut $name = $crate::rust::RootedGuard::new($cx, &mut __root, <$type as GCMethods>::initial());
     };
 }
 
