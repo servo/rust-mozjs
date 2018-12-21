@@ -219,8 +219,7 @@ extern "C" {
     pub fn DeleteCompileOptions(aOpts: *mut ReadOnlyCompileOptions);
     pub fn NewProxyObject(aCx: *mut JSContext,
                           aHandler: *const ::libc::c_void, aPriv: HandleValue,
-                          proto: *mut JSObject, parent: *mut JSObject,
-                          call: *mut JSObject, construct: *mut JSObject)
+                          proto: *mut JSObject)
      -> *mut JSObject;
     pub fn WrapperNew(aCx: *mut JSContext, aObj: HandleObject,
                       aHandler: *const ::libc::c_void, aClass: *const JSClass,
