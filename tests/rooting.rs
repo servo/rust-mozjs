@@ -47,15 +47,7 @@ fn rooting() {
                                                               &CLASS as *const _,
                                                               prototype_proto.handle().into()));
         define_methods(cx, proto.handle(), METHODS).unwrap();
-    }
-}
 
-#[test]
-fn type_rooting() {
-    let runtime = Runtime::new().unwrap();
-    let cx = runtime.cx();
-
-    unsafe{
         rooted!(in(cx) let root : JSVal);
         assert_eq!(root.get().is_undefined(), true);
 
