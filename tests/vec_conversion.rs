@@ -15,13 +15,14 @@ use mozjs::jsapi::JS_InitStandardClasses;
 use mozjs::jsapi::JS_NewGlobalObject;
 use mozjs::jsapi::OnNewGlobalHookOption;
 use mozjs::jsval::UndefinedValue;
-use mozjs::rust::{Runtime, SIMPLE_GLOBAL_CLASS};
+use mozjs::rust::{JSEngine, Runtime, SIMPLE_GLOBAL_CLASS};
 
 use std::ptr;
 
 #[test]
 fn vec_conversion() {
-    let rt = Runtime::new().unwrap();
+    let engine = JSEngine::init().unwrap();
+    let rt = Runtime::new(engine);
     let cx = rt.cx();
 
     let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;

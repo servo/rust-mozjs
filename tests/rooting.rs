@@ -23,13 +23,14 @@ use mozjs::jsapi::OnNewGlobalHookOption;
 use mozjs::jsapi::Value;
 use mozjs::jsapi::{JSObject, JSString, JSFunction};
 use mozjs::jsval::JSVal;
-use mozjs::rust::{Runtime, SIMPLE_GLOBAL_CLASS, define_methods};
+use mozjs::rust::{JSEngine, Runtime, SIMPLE_GLOBAL_CLASS, define_methods};
 use std::ptr;
 
 #[test]
 fn rooting() {
     unsafe {
-        let runtime = Runtime::new().unwrap();
+        let engine = JSEngine::init().unwrap();
+        let runtime = Runtime::new(engine);
         let cx = runtime.cx();
         JS_SetGCZeal(cx, 2, 1);
 

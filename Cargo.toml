@@ -2,7 +2,7 @@
 name = "mozjs"
 description = "Rust bindings to the Mozilla SpiderMonkey JavaScript engine."
 repository = "https://github.com/servo/rust-mozjs"
-version = "0.9.5"
+version = "0.10.0"
 authors = ["The Servo Project Developers"]
 build = "build.rs"
 license = "MPL-2.0"
@@ -29,6 +29,8 @@ name = "rooting"
 [[test]]
 name = "runtime"
 [[test]]
+name = "runtime_no_outlive"
+[[test]]
 name = "typedarray"
 [[test]]
 name = "typedarray_panic"
@@ -42,7 +44,6 @@ doctest = false
 
 [features]
 debugmozjs = ['mozjs_sys/debugmozjs']
-init_once = []
 
 [dependencies]
 lazy_static = "1"

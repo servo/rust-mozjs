@@ -5,6 +5,7 @@
 extern crate mozjs;
 use mozjs::jsapi::JSTracer;
 use mozjs::jsapi::JS_GC;
+use mozjs::rust::JSEngine;
 use mozjs::rust::Runtime;
 use mozjs::rust::CustomTrace;
 use mozjs::rust::CustomAutoRooter;
@@ -31,7 +32,8 @@ unsafe impl CustomTrace for TraceCheck {
 /// by checking if appropriate virtual trace function was called.
 #[test]
 fn virtual_trace_called() {
-    let rt = Runtime::new().unwrap();
+    let engine = JSEngine::init().unwrap();
+    let rt = Runtime::new(engine);
     let cx = rt.cx();
 
     let mut rooter = CustomAutoRooter::new(TraceCheck::new());
