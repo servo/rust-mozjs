@@ -58,6 +58,9 @@ use jsapi::UnwrapUint16Array;
 use jsapi::UnwrapUint32Array;
 use jsapi::UnwrapUint8Array;
 use jsapi::UnwrapUint8ClampedArray;
+use jsapi::JS_GetDataViewByteLength;
+use jsapi::JS_GetDataViewData;
+use jsapi::JS_NewDataView;
 use rust::{HandleValue, MutableHandleObject, MutableHandleValue};
 use rust::CustomTrace;
 
@@ -318,6 +321,53 @@ macro_rules! typed_array_element {
     );
 }
 
+macro_rules! data_view_element {
+    ($t: ident,
+     $element: ty,
+     $unwrap: ident,
+     $length: ident) => (
+        pub struct $t;
+
+        impl TypedArrayElement for $t {
+            type Element = $element;
+            unsafe fn unwrap_array(obj: *mut JSObject) -> *mut JSObject {
+                $unwrap(obj)
+            }
+
+            unsafe fn length_and_data(obj: *mut JSObject) -> (u32,) {
+                ($length(obj),)
+            }
+
+        }
+    );
+
+    ($t: ident,
+     $element: ty,
+     $unwrap: ident,
+     $length: ident,
+     $create_new: ident,
+     $get_data: ident) => (
+        data_view_element!($t, $element, $unwrap, $length);
+        impl TypedArrayElementCreator for $t {
+            unsafe fn create_new(cx: *mut JSContext,array_buffer: *mut JSObject,byte_offset: u32,byte_length: u32) -> *mut JSObject {
+            $create_new(cx, array_buffer,byte_offset,byte_length)
+            }
+
+            unsafe fn get_data(obj: *mut JSObject) -> *mut Self::Element {
+                let mut shared = false;
+                let data = $get_data(obj, &mut shared, ptr::null_mut());
+                assert!(!shared);
+                data
+            }
+        }
+    );
+}
+data_view_element!(MaxTypedArrayViewType,
+                    u8,
+                    UnwrapArrayBufferView,
+                    JS_GetDataViewByteLength,
+                    JS_NewDataView,
+                    JS_GetDataViewData);
 typed_array_element!(Uint8,
                      u8,
                      UnwrapUint8Array,
@@ -392,6 +442,7 @@ macro_rules! array_alias {
     }
 }
 
+array_alias!(MaxTypedArrayViewType, HeapMaxTypedArrayViewType, ArrayBufferViewU8);
 array_alias!(Uint8ClampedArray, HeapUint8ClampedArray, ClampedU8);
 array_alias!(Uint8Array, HeapUint8Array, Uint8);
 array_alias!(Int8Array, HeapInt8Array, Int8);
