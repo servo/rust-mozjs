@@ -30,6 +30,10 @@ fn main() {
         build.flag("-MD");
     }
 
+    if env::var("CARGO_FEATURE_PROFILEMOZJS").is_ok() {
+        build.flag_if_supported("-fno-omit-frame-pointer");
+    }
+
     build.flag_if_supported("-Wno-c++0x-extensions");
     build.flag_if_supported("-Wno-return-type-c-linkage");
     build.flag_if_supported("-Wno-invalid-offsetof");
