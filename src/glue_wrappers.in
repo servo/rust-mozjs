@@ -11,3 +11,4 @@ wrap!(glue: pub fn RUST_JSID_TO_INT(id: HandleId) -> i32);
 wrap!(glue: pub fn RUST_JSID_IS_STRING(id: HandleId) -> bool);
 wrap!(glue: pub fn RUST_JSID_TO_STRING(id: HandleId) -> *mut JSString);
 wrap!(glue: pub fn JS_GetPromiseResult (promise: HandleObject, dest: *mut Value));
+wrap!(glue: pub fn EncodeStringToUTF8(cx: *mut JSContext, str: HandleString, cb: fn(*const c_char)));
