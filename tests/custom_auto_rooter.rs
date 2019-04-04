@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 extern crate mozjs;
+use mozjs::jsapi::GCReason;
 use mozjs::jsapi::JSTracer;
 use mozjs::jsapi::JS_GC;
 use mozjs::rust::JSEngine;
@@ -39,7 +40,7 @@ fn virtual_trace_called() {
     let mut rooter = CustomAutoRooter::new(TraceCheck::new());
     let guard = rooter.root(cx);
 
-    unsafe { JS_GC(cx); }
+    unsafe { JS_GC(cx, GCReason::API); }
 
     assert!(guard.trace_was_called.get());
 }

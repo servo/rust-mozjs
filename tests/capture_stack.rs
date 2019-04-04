@@ -7,12 +7,12 @@ extern crate mozjs;
 extern crate libc;
 
 use mozjs::jsapi::CallArgs;
-use mozjs::jsapi::CompartmentOptions;
-use mozjs::jsapi::JSAutoCompartment;
+use mozjs::jsapi::JSAutoRealm;
 use mozjs::jsapi::JSContext;
 use mozjs::jsapi::JS_DefineFunction;
 use mozjs::jsapi::JS_NewGlobalObject;
 use mozjs::jsapi::OnNewGlobalHookOption;
+use mozjs::jsapi::RealmOptions;
 use mozjs::jsapi::StackFormat;
 use mozjs::jsapi::Value;
 use mozjs::jsval::UndefinedValue;
@@ -26,13 +26,13 @@ fn capture_stack() {
     let runtime = Runtime::new(engine);
     let context = runtime.cx();
     let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
-    let c_option = CompartmentOptions::default();
+    let c_option = RealmOptions::default();
 
     unsafe {
         let global = JS_NewGlobalObject(context, &SIMPLE_GLOBAL_CLASS, ptr::null_mut(), h_option, &c_option);
         rooted!(in(context) let global_root = global);
         let global = global_root.handle();
-        let _ac = JSAutoCompartment::new(context, global.get());
+        let _ac = JSAutoRealm::new(context, global.get());
         let function = JS_DefineFunction(context, global.into(), b"print_stack\0".as_ptr() as *const libc::c_char,
                                          Some(print_stack), 0, 0);
         assert!(!function.is_null());

@@ -7,12 +7,12 @@ extern crate mozjs;
 
 use mozjs::glue::RUST_JSID_IS_STRING;
 use mozjs::glue::RUST_JSID_TO_STRING;
-use mozjs::jsapi::CompartmentOptions;
 use mozjs::jsapi::GetPropertyKeys;
 use mozjs::jsapi::JSITER_OWNONLY;
 use mozjs::jsapi::JS_NewGlobalObject;
 use mozjs::jsapi::JS_StringEqualsAscii;
 use mozjs::jsapi::OnNewGlobalHookOption;
+use mozjs::jsapi::RealmOptions;
 use mozjs::jsval::UndefinedValue;
 use mozjs::rust::IdVector;
 use mozjs::rust::JSEngine;
@@ -30,7 +30,7 @@ fn enumerate() {
         rooted!(in(cx) let global =
             JS_NewGlobalObject(cx, &SIMPLE_GLOBAL_CLASS, ptr::null_mut(),
                                OnNewGlobalHookOption::FireOnNewGlobalHook,
-                               &CompartmentOptions::default())
+                               &RealmOptions::default())
         );
 
         rooted!(in(cx) let mut rval = UndefinedValue());
