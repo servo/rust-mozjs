@@ -4,12 +4,12 @@ grep_heur() {
     grep -v "link_name" "$1" | \
         grep -v '"\]' | \
         grep -F -v '/\*\*' | \
-        sed -z 's/,\n */, /g' | \
-        sed -z 's/:\n */: /g' | \
-        sed -z 's/\n *->/ ->/g' | \
+        gsed -z 's/,\n */, /g' | \
+        gsed -z 's/:\n */: /g' | \
+        gsed -z 's/\n *->/ ->/g' | \
         grep -v '^\}$' | \
         sed 's/^ *pub/pub/' | \
-        sed -z 's/\;\n/\n/g' | \
+        gsed -z 's/\;\n/\n/g' | \
         grep 'pub fn' | \
         grep Handle | \
         grep -v roxyHandler | \

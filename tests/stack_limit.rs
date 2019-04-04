@@ -5,9 +5,9 @@
 #[macro_use]
 extern crate mozjs;
 
-use mozjs::jsapi::CompartmentOptions;
 use mozjs::jsapi::JS_NewGlobalObject;
 use mozjs::jsapi::OnNewGlobalHookOption;
+use mozjs::jsapi::RealmOptions;
 use mozjs::jsval::UndefinedValue;
 use mozjs::rust::{JSEngine, Runtime, SIMPLE_GLOBAL_CLASS};
 
@@ -21,7 +21,7 @@ fn stack_limit() {
 
     unsafe {
         let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
-        let c_option = CompartmentOptions::default();
+        let c_option = RealmOptions::default();
         let global = JS_NewGlobalObject(cx, &SIMPLE_GLOBAL_CLASS,
                                         ptr::null_mut(), h_option, &c_option);
         rooted!(in(cx) let global_root = global);

@@ -5,11 +5,11 @@
 #[macro_use]
 extern crate mozjs;
 
-use mozjs::jsapi::CompartmentOptions;
-use mozjs::jsapi::JSAutoCompartment;
+use mozjs::jsapi::JSAutoRealm;
 use mozjs::jsapi::JSObject;
 use mozjs::jsapi::JS_NewGlobalObject;
 use mozjs::jsapi::OnNewGlobalHookOption;
+use mozjs::jsapi::RealmOptions;
 use mozjs::rust::JSEngine;
 use mozjs::rust::Runtime;
 use mozjs::rust::SIMPLE_GLOBAL_CLASS;
@@ -27,10 +27,10 @@ fn typedarray_update_panic() {
         rooted!(in(cx) let global =
             JS_NewGlobalObject(cx, &SIMPLE_GLOBAL_CLASS, ptr::null_mut(),
                                OnNewGlobalHookOption::FireOnNewGlobalHook,
-                               &CompartmentOptions::default())
+                               &RealmOptions::default())
         );
 
-        let _ac = JSAutoCompartment::new(cx, global.get());
+        let _ac = JSAutoRealm::new(cx, global.get());
         rooted!(in(cx) let mut rval = ptr::null_mut::<JSObject>());
         let _ = Uint32Array::create(cx, CreateWith::Slice(&[1, 2, 3, 4, 5]), rval.handle_mut());
         typedarray!(in(cx) let mut array: Uint32Array = rval.get());

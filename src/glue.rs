@@ -1,5 +1,5 @@
 use jsapi::*;
-use std::os::raw::c_void;
+use std::os::raw::{c_char, c_void};
 
 pub enum Action { }
 unsafe impl Sync for ProxyTraps { }
@@ -347,4 +347,5 @@ extern "C" {
     pub fn JS_GetPositiveInfinityValue (cx: *mut JSContext, dest: *mut JS::Value);
     pub fn JS_GetEmptyStringValue (cx: *mut JSContext, dest: *mut JS::Value);
     pub fn JS_GetReservedSlot (obj: *mut JSObject , index: u32, dest: *mut JS::Value);
+    pub fn EncodeStringToUTF8(cx: *mut JSContext, str: JS::HandleString, cb: fn(*const c_char));
 }
