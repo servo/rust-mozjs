@@ -26,6 +26,8 @@ environment:
     C:\\Program Files\\Git\\cmd;\
     C:\\Program Files\\Git\\usr\\bin;\
     C:\\Program Files\\AppVeyor\\BuildAgent;"
+  CC: "clang-cl.exe"
+  CXX: "clang-cl.exe"
 
 # Uncomment to enable RDP & wait for exit.  Connection info will be printed in the log.
 #init:
