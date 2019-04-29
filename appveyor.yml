@@ -31,6 +31,7 @@ environment:
     C:\\Program Files\\AppVeyor\\BuildAgent;"
   CC: "clang-cl.exe"
   CXX: "clang-cl.exe"
+  LD: "lld-link.exe"
 
   VCVARSALL_PATH: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build
 
