@@ -8,18 +8,18 @@
 extern crate mozjs;
 extern crate libc;
 
-use mozjs::jsapi::CompartmentOptions;
-use mozjs::jsapi::JSAutoCompartment;
+use mozjs::jsapi::GetRealmObjectPrototype;
+use mozjs::jsapi::JSAutoRealm;
 use mozjs::jsapi::JSClass;
 use mozjs::jsapi::JSContext;
 use mozjs::jsapi::JSFunctionSpec;
-use mozjs::jsapi::JS_GetObjectPrototype;
 use mozjs::jsapi::JSNativeWrapper;
 use mozjs::jsapi::JS_NewGlobalObject;
 use mozjs::jsapi::JS_NewObjectWithUniqueType;
 use mozjs::jsapi::JSPROP_ENUMERATE;
 use mozjs::jsapi::JS_SetGCZeal;
 use mozjs::jsapi::OnNewGlobalHookOption;
+use mozjs::jsapi::RealmOptions;
 use mozjs::jsapi::Value;
 use mozjs::jsapi::{JSObject, JSString, JSFunction};
 use mozjs::jsval::JSVal;
@@ -35,15 +35,15 @@ fn rooting() {
         JS_SetGCZeal(cx, 2, 1);
 
         let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
-        let c_option = CompartmentOptions::default();
+        let c_option = RealmOptions::default();
 
         rooted!(in(cx) let global = JS_NewGlobalObject(cx,
                                                        &SIMPLE_GLOBAL_CLASS,
                                                        ptr::null_mut(),
                                                        h_option,
                                                        &c_option));
-        let _ac = JSAutoCompartment::new(cx, global.get());
-        rooted!(in(cx) let prototype_proto = JS_GetObjectPrototype(cx, global.handle().into()));
+        let _ac = JSAutoRealm::new(cx, global.get());
+        rooted!(in(cx) let prototype_proto = GetRealmObjectPrototype(cx));
         rooted!(in(cx) let proto = JS_NewObjectWithUniqueType(cx,
                                                               &CLASS as *const _,
                                                               prototype_proto.handle().into()));
