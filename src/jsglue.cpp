@@ -14,11 +14,16 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "js/Proxy.h"
+#include "js/BuildId.h"
 #include "js/Class.h"
+#include "js/Id.h"
 #include "js/MemoryMetrics.h"
 #include "js/Principals.h"
+#include "js/Promise.h"
+#include "js/Proxy.h"
+#include "js/StructuredClone.h"
 #include "js/Wrapper.h"
+#include "mozilla/Unused.h"
 #include "assert.h"
 
 typedef bool(*WantToMeasure)(JSObject *obj);
@@ -576,7 +581,7 @@ JS::ReadOnlyCompileOptions*
 NewCompileOptions(JSContext* aCx, const char* aFile, unsigned aLine)
 {
     JS::OwningCompileOptions *opts = new JS::OwningCompileOptions(aCx);
-    opts->setFileAndLine(aCx, aFile, aLine);
+    mozilla::Unused << opts->setFileAndLine(aCx, aFile, aLine);
     return opts;
 }
 
@@ -963,17 +968,7 @@ size_t
 GetLengthOfJSStructuredCloneData(JSStructuredCloneData* data)
 {
     assert(data != nullptr);
-
-    size_t len = 0;
-
-    auto iter = data->Iter();
-    while (!iter.Done()) {
-        size_t len_of_this_segment = iter.RemainingInSegment();
-        len += len_of_this_segment;
-        iter.Advance(*data, len_of_this_segment);
-    }
-
-    return len;
+    return data->Size();
 }
 
 void
@@ -984,13 +979,11 @@ CopyJSStructuredCloneData(JSStructuredCloneData* src, uint8_t* dest)
 
     size_t bytes_copied = 0;
 
-    auto iter = src->Iter();
-    while (!iter.Done()) {
-        size_t len_of_this_segment = iter.RemainingInSegment();
-        memcpy(dest + bytes_copied, iter.Data(), len_of_this_segment);
-        bytes_copied += len_of_this_segment;
-        iter.Advance(*src, len_of_this_segment);
-    }
+    src->ForEachDataChunk([&](const char* aData, size_t aSize) {
+        memcpy(dest + bytes_copied, aData, aSize);
+        bytes_copied += aSize;
+        return true;
+    });
 }
 
 bool
@@ -999,7 +992,7 @@ WriteBytesToJSStructuredCloneData(const uint8_t* src, size_t len, JSStructuredCl
     assert(src != nullptr);
     assert(dest != nullptr);
 
-    return dest->WriteBytes(reinterpret_cast<const char*>(src), len);
+    return dest->AppendBytes(reinterpret_cast<const char*>(src), len);
 }
 
 // MSVC uses a different calling conventions for functions
@@ -1011,23 +1004,8 @@ WriteBytesToJSStructuredCloneData(const uint8_t* src, size_t len, JSStructuredCl
 // https://mozilla.logbot.info/jsapi/20180622#c14918658
 
 void
-JS_ComputeThis(JSContext* cx, JS::Value* vp, JS::Value* dest) {
-  *dest = JS::detail::ComputeThis(cx, vp);
-}
-
-void
-JS_GetModuleHostDefinedField(JSObject* module, JS::Value* dest) {
-  *dest = JS::GetModuleHostDefinedField(module);
-}
-
-void
 JS_GetPromiseResult(JS::HandleObject promise, JS::Value* dest) {
   *dest = JS::GetPromiseResult(promise);
-}
-
-void
-JS_THIS(JSContext* cx, JS::Value* vp, JS::Value* dest) {
-  *dest = JS_THIS(cx, vp);
 }
 
 void
@@ -1048,6 +1026,15 @@ JS_GetEmptyStringValue(JSContext* cx, JS::Value* dest) {
 void
 JS_GetReservedSlot(JSObject* obj, uint32_t index, JS::Value* dest) {
   *dest = JS_GetReservedSlot(obj, index);
+}
+
+typedef void (*EncodedStringCallback)(char*);
+
+void
+EncodeStringToUTF8(JSContext* cx, JS::HandleString str, EncodedStringCallback cb)
+{
+  JS::UniqueChars chars = JS_EncodeStringToUTF8(cx, str);
+  cb(chars.get());
 }
 
 } // extern "C"

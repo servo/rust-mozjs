@@ -17,8 +17,13 @@ addons:
       - llvm-toolchain-xenial-5.0
     packages:
       - autoconf2.13
+      - gcc-6
       - g++-6
       - clang-5.0
+  homebrew:
+    packages:
+      - python
+      - python@2
 
 env:
   - FEATURES=""
@@ -30,7 +35,7 @@ before_script:
 
 script:
   - ccache -z
-  - CCACHE=$(which ccache) travis_wait cargo build --verbose $FEATURES
+  - CCACHE=$(which ccache) travis_wait 30 cargo build --verbose $FEATURES
   - CCACHE=$(which ccache) RUST_BACKTRACE=1 cargo test --verbose $FEATURES
   - ccache -s
 

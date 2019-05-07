@@ -30,14 +30,14 @@ use consts::{JSCLASS_IS_DOMJSCLASS, JSCLASS_IS_GLOBAL};
 use conversions::jsstr_to_string;
 
 use jsapi;
-use jsapi::{AutoGCRooter, AutoGCRooter_CUSTOM, AutoIdVector, AutoObjectVector};
-use jsapi::{ContextOptionsRef, Evaluate2, HandleValueArray, Heap};
-use jsapi::{InitSelfHostedCode, IsWindowSlow, JS_BeginRequest};
-use jsapi::{JS_DefineFunctions, JS_DefineProperties, JS_DestroyContext, JS_EndRequest, JS_ShutDown};
+use jsapi::{AutoGCRooter, AutoGCRooter_Tag, AutoIdVector, AutoObjectVector};
+use jsapi::{ContextOptionsRef, EvaluateUtf8, HandleValueArray, Heap};
+use jsapi::{InitSelfHostedCode, IsWindowSlow};
+use jsapi::{JS_DefineFunctions, JS_DefineProperties, JS_DestroyContext, JS_ShutDown};
 use jsapi::{JS_EnumerateStandardClasses, JS_GetRuntime, JS_GlobalObjectTraceHook};
 use jsapi::{JS_MayResolveStandardClass, JS_NewContext, JS_ResolveStandardClass};
-use jsapi::{JS_SetGCParameter, JS_SetNativeStackQuota, JS_WrapValue, JSAutoCompartment};
-use jsapi::{JSClass, JSCLASS_RESERVED_SLOTS_SHIFT, JSClassOps, JSCompartment, JSContext};
+use jsapi::{JS_SetGCParameter, JS_SetNativeStackQuota, JS_WrapValue, JSAutoRealm};
+use jsapi::{JSClass, JSCLASS_RESERVED_SLOTS_SHIFT, JSClassOps, Realm, JSContext};
 use jsapi::{JSErrorReport, JSFunction, JSFunctionSpec, JSGCParamKey};
 use jsapi::{JSObject, JSPropertySpec, JSRuntime, JSScript};
 use jsapi::{JSString, JSTracer};
@@ -46,7 +46,7 @@ use jsapi::{SetWarningReporter, Symbol, ToBooleanSlow};
 use jsapi::{ToInt32Slow, ToInt64Slow, ToNumberSlow, ToStringSlow, ToUint16Slow};
 use jsapi::{ToUint32Slow, ToUint64Slow, ToWindowProxyIfWindowSlow};
 use jsapi::{Value, jsid};
-use jsapi::{CaptureCurrentStack, BuildStackString, IsSavedFrame, StackFormat};
+use jsapi::{CaptureCurrentStack, BuildStackString, StackFormat};
 use jsapi::{JS_StackCapture_AllFrames, JS_StackCapture_MaxFrames};
 use jsapi::Handle as RawHandle;
 use jsapi::MutableHandle as RawMutableHandle;
@@ -288,8 +288,6 @@ impl Runtime {
 
         SetWarningReporter(js_context, Some(report_warning));
 
-        JS_BeginRequest(js_context);
-
         Runtime {
             engine,
             _parent_child_count: parent.map(|p| p.children_of_parent),
@@ -313,22 +311,21 @@ impl Runtime {
     pub fn evaluate_script(&self, glob: HandleObject, script: &str, filename: &str,
                            line_num: u32, rval: MutableHandleValue)
                     -> Result<(),()> {
-        let script_utf16: Vec<u16> = script.encode_utf16().collect();
         let filename_cstr = ffi::CString::new(filename.as_bytes()).unwrap();
         debug!("Evaluating script from {} with content {}", filename, script);
         // SpiderMonkey does not approve of null pointers.
-        let (ptr, len) = if script_utf16.len() == 0 {
-            static empty: &'static [u16] = &[];
+        let (ptr, len) = if script.len() == 0 {
+            static empty: &'static [u8] = &[];
             (empty.as_ptr(), 0)
         } else {
-            (script_utf16.as_ptr(), script_utf16.len() as c_uint)
+            (script.as_bytes().as_ptr(), script.len() as c_uint)
         };
         assert!(!ptr.is_null());
-        let _ac = JSAutoCompartment::new(self.cx(), glob.get());
+        let _ac = JSAutoRealm::new(self.cx(), glob.get());
         let options = CompileOptionsWrapper::new(self.cx(), filename_cstr.as_ptr(), line_num);
 
         unsafe {
-            if !Evaluate2(self.cx(), options.ptr, ptr as *const u16, len as size_t, rval.into()) {
+            if !EvaluateUtf8(self.cx(), options.ptr, ptr as *const _, len as size_t, rval.into()) {
                 debug!("...err!");
                 maybe_resume_unwind();
                 Err(())
@@ -348,7 +345,6 @@ impl Drop for Runtime {
                    1,
                    "This runtime still has live children.");
         unsafe {
-            JS_EndRequest(self.cx);
             JS_DestroyContext(self.cx);
 
             CONTEXT.with(|context| {
@@ -574,7 +570,7 @@ impl<T: CustomTrace> CustomAutoRooter<T> {
         CustomAutoRooter {
             _base: jsapi::CustomAutoRooter {
                 vtable_: vftable as *const _ as *const _,
-                _base: AutoGCRooter::new_unrooted(AutoGCRooter_CUSTOM),
+                _base: AutoGCRooter::new_unrooted(AutoGCRooter_Tag::Custom),
                 #[cfg(feature = "debugmozjs")]
                 _mCheckNotUsedAsTemporary: GuardObjectNotificationReceiver {
                     mStatementDone: false,
@@ -1119,14 +1115,14 @@ pub unsafe fn get_object_class(obj: *mut JSObject) -> *const JSClass {
 }
 
 #[inline]
-pub unsafe fn get_object_compartment(obj: *mut JSObject) -> *mut JSCompartment {
-    (*get_object_group(obj)).compartment
+pub unsafe fn get_object_realm(obj: *mut JSObject) -> *mut Realm {
+    (*get_object_group(obj)).realm
 }
 
 #[inline]
-pub unsafe fn get_context_compartment(cx: *mut JSContext) -> *mut JSCompartment {
+pub unsafe fn get_context_realm(cx: *mut JSContext) -> *mut Realm {
     let cx = cx as *mut RootingContext;
-    (*cx).compartment_
+    (*cx).realm_
 }
 
 #[inline]
@@ -1158,7 +1154,7 @@ pub unsafe fn try_to_outerize(mut rval: MutableHandleValue) {
 pub unsafe fn maybe_wrap_object_value(cx: *mut JSContext, rval: MutableHandleValue) {
     assert!(rval.is_object());
     let obj = rval.to_object();
-    if get_object_compartment(obj) != get_context_compartment(cx) {
+    if get_object_realm(obj) != get_context_realm(cx) {
         assert!(JS_WrapValue(cx, rval.into()));
     } else if is_dom_object(obj) {
         try_to_outerize(rval);
@@ -1242,11 +1238,8 @@ impl<'a> CapturedJSStack<'a> {
             rooted!(in(self.cx) let mut js_string = ptr::null_mut::<JSString>());
             let mut string_handle = js_string.handle_mut();
 
-            if !IsSavedFrame(stack_handle.get()) {
-                return None;
-            }
-
             if !BuildStackString(self.cx,
+                                 ptr::null_mut(),
                                  stack_handle.into(),
                                  string_handle.raw(),
                                  indent.unwrap_or(0),
@@ -1368,11 +1361,9 @@ pub mod wrappers {
     use jsapi::AutoObjectVector;
     use jsapi::CloneDataPolicy;
     use jsapi::CallArgs;
-    use jsapi::CompileOptions;
     use jsapi::ESClass;
     use jsapi::ForOfIterator;
     use jsapi::ForOfIterator_NonIterableBehavior;
-    use jsapi::JSAddonId;
     use jsapi::JSClass;
     use jsapi::JSConstDoubleSpec;
     use jsapi::JSConstIntegerSpec;
@@ -1388,14 +1379,17 @@ pub mod wrappers {
     use jsapi::JSScript;
     use jsapi::JSStructuredCloneData;
     use jsapi::PromiseState;
+    use jsapi::PromiseUserInputEventHandlingState;
     use jsapi::PropertyCopyBehavior;
     use jsapi::ReadOnlyCompileOptions;
+    use jsapi::ReadableStreamMode;
     use jsapi::ReadableStreamReaderMode;
+    use jsapi::ReadableStreamUnderlyingSource;
     use jsapi::Realm;
     use jsapi::RefPtr;
     use jsapi::RegExpShared;
     use jsapi::ScriptEnvironmentPreparer_Closure;
-    use jsapi::SourceBufferHolder;
+    use jsapi::SourceText;
     use jsapi::StackCapture;
     use jsapi::StructuredCloneScope;
     use jsapi::Symbol;
@@ -1404,11 +1398,13 @@ pub mod wrappers {
     use jsapi::TranscodeResult;
     use jsapi::TranscodeRange;
     use jsapi::TwoByteChars;
+    use jsapi::UniqueChars;
+    use jsapi::mozilla::Utf8Unit;
     use jsapi::Value;
     use jsapi::WasmModule;
     use jsapi::jsid;
-    use jsapi::JS::ScriptVector;
     use libc::FILE;
+    use std::os::raw::c_char;
     use super::*;
     include!("jsapi_wrappers.in");
     include!("glue_wrappers.in");
@@ -1511,11 +1507,9 @@ pub mod jsapi_wrapped {
     use jsapi::AutoObjectVector;
     use jsapi::CloneDataPolicy;
     use jsapi::CallArgs;
-    use jsapi::CompileOptions;
     use jsapi::ESClass;
     use jsapi::ForOfIterator;
     use jsapi::ForOfIterator_NonIterableBehavior;
-    use jsapi::JSAddonId;
     use jsapi::JSClass;
     use jsapi::JSConstDoubleSpec;
     use jsapi::JSConstIntegerSpec;
@@ -1531,14 +1525,17 @@ pub mod jsapi_wrapped {
     use jsapi::JSScript;
     use jsapi::JSStructuredCloneData;
     use jsapi::PromiseState;
+    use jsapi::PromiseUserInputEventHandlingState;
     use jsapi::PropertyCopyBehavior;
     use jsapi::ReadOnlyCompileOptions;
+    use jsapi::ReadableStreamMode;
     use jsapi::ReadableStreamReaderMode;
+    use jsapi::ReadableStreamUnderlyingSource;
     use jsapi::Realm;
     use jsapi::RefPtr;
     use jsapi::RegExpShared;
     use jsapi::ScriptEnvironmentPreparer_Closure;
-    use jsapi::SourceBufferHolder;
+    use jsapi::SourceText;
     use jsapi::StackCapture;
     use jsapi::StructuredCloneScope;
     use jsapi::Symbol;
@@ -1547,10 +1544,12 @@ pub mod jsapi_wrapped {
     use jsapi::TranscodeResult;
     use jsapi::TranscodeRange;
     use jsapi::TwoByteChars;
+    use jsapi::UniqueChars;
+    use jsapi::mozilla::Utf8Unit;
     use jsapi::Value;
     use jsapi::WasmModule;
-    use jsapi::JS::ScriptVector;
     use libc::FILE;
+    use std::os::raw::c_char;
     use super::*;
     include!("jsapi_wrappers.in");
     include!("glue_wrappers.in");

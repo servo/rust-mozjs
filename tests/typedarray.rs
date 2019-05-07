@@ -5,11 +5,11 @@
 #[macro_use]
 extern crate mozjs;
 
-use mozjs::jsapi::CompartmentOptions;
-use mozjs::jsapi::JSAutoCompartment;
+use mozjs::jsapi::JSAutoRealm;
 use mozjs::jsapi::JSObject;
 use mozjs::jsapi::JS_NewGlobalObject;
 use mozjs::jsapi::OnNewGlobalHookOption;
+use mozjs::jsapi::RealmOptions;
 use mozjs::jsapi::Type;
 use mozjs::jsval::UndefinedValue;
 use mozjs::rust::JSEngine;
@@ -28,10 +28,10 @@ fn typedarray() {
         rooted!(in(cx) let global =
             JS_NewGlobalObject(cx, &SIMPLE_GLOBAL_CLASS, ptr::null_mut(),
                                OnNewGlobalHookOption::FireOnNewGlobalHook,
-                               &CompartmentOptions::default())
+                               &RealmOptions::default())
         );
 
-        let _ac = JSAutoCompartment::new(cx, global.get());
+        let _ac = JSAutoRealm::new(cx, global.get());
 
         rooted!(in(cx) let mut rval = UndefinedValue());
         assert!(rt.evaluate_script(global.handle(), "new Uint8Array([0, 2, 4])",

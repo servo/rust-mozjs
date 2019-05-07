@@ -9,11 +9,11 @@ use mozjs::conversions::ConversionBehavior;
 use mozjs::conversions::ConversionResult;
 use mozjs::conversions::FromJSValConvertible;
 use mozjs::conversions::ToJSValConvertible;
-use mozjs::jsapi::CompartmentOptions;
-use mozjs::jsapi::JSAutoCompartment;
-use mozjs::jsapi::JS_InitStandardClasses;
+use mozjs::jsapi::InitRealmStandardClasses;
+use mozjs::jsapi::JSAutoRealm;
 use mozjs::jsapi::JS_NewGlobalObject;
 use mozjs::jsapi::OnNewGlobalHookOption;
+use mozjs::jsapi::RealmOptions;
 use mozjs::jsval::UndefinedValue;
 use mozjs::rust::{JSEngine, Runtime, SIMPLE_GLOBAL_CLASS};
 
@@ -26,7 +26,7 @@ fn vec_conversion() {
     let cx = rt.cx();
 
     let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
-    let c_option = CompartmentOptions::default();
+    let c_option = RealmOptions::default();
 
     unsafe {
         let global = JS_NewGlobalObject(cx, &SIMPLE_GLOBAL_CLASS,
@@ -34,8 +34,8 @@ fn vec_conversion() {
         rooted!(in(cx) let global_root = global);
         let global = global_root.handle();
 
-        let _ac = JSAutoCompartment::new(cx, global.get());
-        assert!(JS_InitStandardClasses(cx, global.into()));
+        let _ac = JSAutoRealm::new(cx, global.get());
+        assert!(InitRealmStandardClasses(cx));
 
         rooted!(in(cx) let mut rval = UndefinedValue());
 

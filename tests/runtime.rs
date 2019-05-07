@@ -6,8 +6,7 @@
 extern crate mozjs;
 extern crate libc;
 
-use mozjs::jsapi::CompartmentOptions;
-use mozjs::jsapi::JSAutoCompartment;
+use mozjs::jsapi::JSAutoRealm;
 use mozjs::jsapi::JSClass;
 use mozjs::jsapi::JSCLASS_FOREGROUND_FINALIZE;
 use mozjs::jsapi::JSClassOps;
@@ -16,6 +15,7 @@ use mozjs::jsapi::JS_NewGlobalObject;
 use mozjs::jsapi::JS_NewObject;
 use mozjs::jsapi::JSObject;
 use mozjs::jsapi::OnNewGlobalHookOption;
+use mozjs::jsapi::RealmOptions;
 use mozjs::rust::{JSEngine, Runtime, SIMPLE_GLOBAL_CLASS};
 use std::ptr;
 use std::thread;
@@ -29,14 +29,14 @@ fn runtime() {
     unsafe {
         let cx = runtime.cx();
         let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
-        let c_option = CompartmentOptions::default();
+        let c_option = RealmOptions::default();
 
         rooted!(in(cx) let global = JS_NewGlobalObject(cx,
                                                        &SIMPLE_GLOBAL_CLASS,
                                                        ptr::null_mut(),
                                                        h_option,
                                                        &c_option));
-        let _ac = JSAutoCompartment::new(cx, global.get());
+        let _ac = JSAutoRealm::new(cx, global.get());
         rooted!(in(cx) let _object = JS_NewObject(cx, &CLASS as *const _));
     }
 
