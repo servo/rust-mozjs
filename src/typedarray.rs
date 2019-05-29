@@ -18,13 +18,13 @@ use glue::GetUint16ArrayLengthAndData;
 use glue::GetUint32ArrayLengthAndData;
 use glue::GetUint8ArrayLengthAndData;
 use glue::GetUint8ClampedArrayLengthAndData;
+use jsapi::GetArrayBufferData;
 use jsapi::GetArrayBufferLengthAndData;
 use jsapi::GetArrayBufferViewLengthAndData;
 use jsapi::Heap;
 use jsapi::JSContext;
 use jsapi::JSObject;
 use jsapi::JSTracer;
-use jsapi::JS_GetArrayBufferData;
 use jsapi::JS_GetArrayBufferViewType;
 use jsapi::JS_GetFloat32ArrayData;
 use jsapi::JS_GetFloat64ArrayData;
@@ -36,7 +36,6 @@ use jsapi::JS_GetUint16ArrayData;
 use jsapi::JS_GetUint32ArrayData;
 use jsapi::JS_GetUint8ArrayData;
 use jsapi::JS_GetUint8ClampedArrayData;
-use jsapi::JS_NewArrayBuffer;
 use jsapi::JS_NewFloat32Array;
 use jsapi::JS_NewFloat64Array;
 use jsapi::JS_NewInt16Array;
@@ -46,6 +45,7 @@ use jsapi::JS_NewUint16Array;
 use jsapi::JS_NewUint32Array;
 use jsapi::JS_NewUint8Array;
 use jsapi::JS_NewUint8ClampedArray;
+use jsapi::NewArrayBuffer;
 use jsapi::Type;
 use jsapi::UnwrapArrayBuffer;
 use jsapi::UnwrapArrayBufferView;
@@ -376,8 +376,8 @@ typed_array_element!(ArrayBufferU8,
                      u8,
                      UnwrapArrayBuffer,
                      GetArrayBufferLengthAndData,
-                     JS_NewArrayBuffer,
-                     JS_GetArrayBufferData);
+                     NewArrayBuffer,
+                     GetArrayBufferData);
 typed_array_element!(ArrayBufferViewU8,
                      u8,
                      UnwrapArrayBufferView,

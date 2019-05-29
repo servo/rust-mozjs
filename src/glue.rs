@@ -42,8 +42,9 @@ pub struct ProxyTraps {
                                            -> bool>,
     pub enumerate: ::std::option::Option<unsafe extern "C" fn
                                              (cx: *mut JSContext,
-                                              proxy: HandleObject)
-                                             -> *mut JSObject>,
+                                              proxy: HandleObject,
+                                              props: *mut AutoIdVector)
+                                             -> bool>,
     pub getPrototypeIfOrdinary: ::std::option::Option<unsafe extern "C" fn
                                                           (cx: *mut JSContext,
                                                            proxy: HandleObject,
@@ -83,13 +84,6 @@ pub struct ProxyTraps {
                                              (cx: *mut JSContext,
                                               proxy: HandleObject,
                                               args: *const CallArgs) -> bool>,
-    pub getPropertyDescriptor: ::std::option::Option<unsafe extern "C" fn
-                                                         (cx: *mut JSContext,
-                                                          proxy: HandleObject,
-                                                          id: HandleId,
-                                                          desc:
-                                                              MutableHandle<PropertyDescriptor>)
-                                                         -> bool>,
     pub hasOwn: ::std::option::Option<unsafe extern "C" fn
                                           (cx: *mut JSContext,
                                            proxy: HandleObject, id: HandleId,
@@ -255,7 +249,8 @@ extern "C" {
     pub fn GetProxyHandler(obj: *mut JSObject) -> *const ::libc::c_void;
     pub fn ReportError(aCx: *mut JSContext, aError: *const i8);
     pub fn IsWrapper(obj: *mut JSObject) -> bool;
-    pub fn UnwrapObject(obj: *mut JSObject, stopAtOuter: u8) -> *mut JSObject;
+    pub fn UnwrapObjectStatic(obj: *mut JSObject) -> *mut JSObject;
+    pub fn UnwrapObjectDynamic(obj: *mut JSObject, cx: *mut JSContext, stopAtOuter: u8) -> *mut JSObject;
     pub fn UncheckedUnwrapObject(obj: *mut JSObject, stopAtOuter: u8) -> *mut JSObject;
     pub fn CreateAutoIdVector(cx: *mut JSContext) -> *mut AutoIdVector;
     pub fn AppendToAutoIdVector(v: *mut AutoIdVector, id: jsid) -> bool;
