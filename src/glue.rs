@@ -7,6 +7,21 @@ unsafe impl Sync for ProxyTraps { }
 
 #[repr(C)]
 #[derive(Copy, Clone)]
+pub struct JobQueueTraps {
+    pub getIncumbentGlobal: ::std::option::Option<
+            unsafe extern "C" fn(queue: *const c_void, cx: *mut JSContext) -> *mut JSObject>,
+    pub enqueuePromiseJob: ::std::option::Option<
+            unsafe extern "C" fn(queue: *const c_void, cx: *mut JSContext, promise: HandleObject,
+                                 job: HandleObject, allocationSite: HandleObject,
+                                 incumbentGlobal: HandleObject) -> bool>,
+    pub empty: ::std::option::Option<unsafe extern "C" fn(queue: *const c_void) -> bool>,
+}
+impl ::std::default::Default for JobQueueTraps {
+    fn default() -> JobQueueTraps { unsafe { ::std::mem::zeroed() } }
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
 pub struct ProxyTraps {
     pub enter: ::std::option::Option<unsafe extern "C" fn
                                          (cx: *mut JSContext,
@@ -343,4 +358,6 @@ extern "C" {
     pub fn JS_GetEmptyStringValue (cx: *mut JSContext, dest: *mut JS::Value);
     pub fn JS_GetReservedSlot (obj: *mut JSObject , index: u32, dest: *mut JS::Value);
     pub fn EncodeStringToUTF8(cx: *mut JSContext, str: JS::HandleString, cb: fn(*const c_char));
+    pub fn CreateJobQueue(traps: *const JobQueueTraps, queue: *const c_void) -> *mut JS::JobQueue;
+    pub fn DeleteJobQueue(queue: *mut JS::JobQueue);
 }
