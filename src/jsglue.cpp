@@ -31,6 +31,50 @@ typedef size_t(*GetSize)(JSObject *obj);
 
 WantToMeasure gWantToMeasure = nullptr;
 
+struct JobQueueTraps {
+  JSObject* (*getIncumbentGlobal)(void* queue, JSContext* cx);
+  bool (*enqueuePromiseJob)(void* queue, JSContext* cx, JS::HandleObject promise,
+                            JS::HandleObject job, JS::HandleObject allocationSite,
+                            JS::HandleObject incumbentGlobal) = 0;
+  bool (*empty)(void* queue);
+};
+
+class RustJobQueue : public JS::JobQueue{
+  JobQueueTraps mTraps;
+  void* mQueue;
+public:
+  RustJobQueue(const JobQueueTraps& aTraps, void* aQueue)
+  : mTraps(aTraps)
+  , mQueue(aQueue)
+  {
+  }
+
+  virtual JSObject* getIncumbentGlobal(JSContext* cx) {
+    return mTraps.getIncumbentGlobal(mQueue, cx);
+  }
+
+  bool enqueuePromiseJob(JSContext* cx, JS::HandleObject promise,
+                         JS::HandleObject job, JS::HandleObject allocationSite,
+                         JS::HandleObject incumbentGlobal)
+  {
+    return mTraps.enqueuePromiseJob(mQueue, cx, promise, job, allocationSite, incumbentGlobal);
+  }
+
+  virtual bool empty() const {
+    return mTraps.empty(mQueue);
+  }
+
+  virtual void runJobs(JSContext* cx) {
+    MOZ_ASSERT("runJobs should not be invoked");
+  }
+
+private:
+  virtual js::UniquePtr<SavedJobQueue> saveJobQueue(JSContext* cx) {
+    MOZ_ASSERT("saveJobQueue should not be invoked");
+    return nullptr;
+  }
+};
+
 struct ProxyTraps {
     bool (*enter)(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
                   js::BaseProxyHandler::Action action, bool *bp);
@@ -47,7 +91,7 @@ struct ProxyTraps {
     bool (*delete_)(JSContext *cx, JS::HandleObject proxy,
                     JS::HandleId id, JS::ObjectOpResult &result);
 
-    bool (*enumerate)(JSContext *cx, JS::HandleObject proxy, JS::AutoIdVector& props);
+    bool (*enumerate)(JSContext *cx, JS::HandleObject proxy, js::AutoIdVector& props);
 
     bool (*getPrototypeIfOrdinary)(JSContext *cx, JS::HandleObject proxy,
                                    bool *isOrdinary, JS::MutableHandleObject protop);
@@ -1023,6 +1067,18 @@ EncodeStringToUTF8(JSContext* cx, JS::HandleString str, EncodedStringCallback cb
 {
   JS::UniqueChars chars = JS_EncodeStringToUTF8(cx, str);
   cb(chars.get());
+}
+
+JS::JobQueue*
+CreateJobQueue(const JobQueueTraps* aTraps, void* aQueue)
+{
+  return new RustJobQueue(*aTraps, aQueue);
+}
+
+void
+DeleteJobQueue(JS::JobQueue* queue)
+{
+  delete queue;
 }
 
 } // extern "C"
