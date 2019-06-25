@@ -65,12 +65,12 @@ public:
   }
 
   virtual void runJobs(JSContext* cx) {
-    MOZ_ASSERT("runJobs should not be invoked");
+    MOZ_ASSERT(false, "runJobs should not be invoked");
   }
 
 private:
   virtual js::UniquePtr<SavedJobQueue> saveJobQueue(JSContext* cx) {
-    MOZ_ASSERT("saveJobQueue should not be invoked");
+    MOZ_ASSERT(false, "saveJobQueue should not be invoked");
     return nullptr;
   }
 };
