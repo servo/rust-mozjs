@@ -31,6 +31,50 @@ typedef size_t(*GetSize)(JSObject *obj);
 
 WantToMeasure gWantToMeasure = nullptr;
 
+struct JobQueueTraps {
+  JSObject* (*getIncumbentGlobal)(void* queue, JSContext* cx);
+  bool (*enqueuePromiseJob)(void* queue, JSContext* cx, JS::HandleObject promise,
+                            JS::HandleObject job, JS::HandleObject allocationSite,
+                            JS::HandleObject incumbentGlobal) = 0;
+  bool (*empty)(void* queue);
+};
+
+class RustJobQueue : public JS::JobQueue{
+  JobQueueTraps mTraps;
+  void* mQueue;
+public:
+  RustJobQueue(const JobQueueTraps& aTraps, void* aQueue)
+  : mTraps(aTraps)
+  , mQueue(aQueue)
+  {
+  }
+
+  virtual JSObject* getIncumbentGlobal(JSContext* cx) {
+    return mTraps.getIncumbentGlobal(mQueue, cx);
+  }
+
+  bool enqueuePromiseJob(JSContext* cx, JS::HandleObject promise,
+                         JS::HandleObject job, JS::HandleObject allocationSite,
+                         JS::HandleObject incumbentGlobal)
+  {
+    return mTraps.enqueuePromiseJob(mQueue, cx, promise, job, allocationSite, incumbentGlobal);
+  }
+
+  virtual bool empty() const {
+    return mTraps.empty(mQueue);
+  }
+
+  virtual void runJobs(JSContext* cx) {
+    MOZ_ASSERT(false, "runJobs should not be invoked");
+  }
+
+private:
+  virtual js::UniquePtr<SavedJobQueue> saveJobQueue(JSContext* cx) {
+    MOZ_ASSERT(false, "saveJobQueue should not be invoked");
+    return nullptr;
+  }
+};
+
 struct ProxyTraps {
     bool (*enter)(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
                   js::BaseProxyHandler::Action action, bool *bp);
@@ -47,7 +91,7 @@ struct ProxyTraps {
     bool (*delete_)(JSContext *cx, JS::HandleObject proxy,
                     JS::HandleId id, JS::ObjectOpResult &result);
 
-    JSObject* (*enumerate)(JSContext *cx, JS::HandleObject proxy);
+    bool (*enumerate)(JSContext *cx, JS::HandleObject proxy, js::AutoIdVector& props);
 
     bool (*getPrototypeIfOrdinary)(JSContext *cx, JS::HandleObject proxy,
                                    bool *isOrdinary, JS::MutableHandleObject protop);
@@ -73,9 +117,6 @@ struct ProxyTraps {
     bool (*construct)(JSContext *cx, JS::HandleObject proxy,
                       const JS::CallArgs &args);
 
-    bool (*getPropertyDescriptor)(JSContext *cx, JS::HandleObject proxy,
-                                  JS::HandleId id,
-                                  JS::MutableHandle<JS::PropertyDescriptor> desc);
     bool (*hasOwn)(JSContext *cx, JS::HandleObject proxy,
                    JS::HandleId id, bool *bp);
     bool (*getOwnEnumerablePropertyKeys)(JSContext *cx, JS::HandleObject proxy,
@@ -111,12 +152,13 @@ static int HandlerFamily;
 #define DEFER_TO_TRAP_OR_BASE_CLASS(_base)                                      \
                                                                                 \
     /* Standard internal methods. */                                            \
-    virtual JSObject* enumerate(JSContext *cx,                                  \
-                                JS::HandleObject proxy) const override          \
+    virtual bool enumerate(JSContext *cx,                                       \
+                           JS::HandleObject proxy,                              \
+                           js::AutoIdVector& props) const override              \
     {                                                                           \
         return mTraps.enumerate                                                 \
-               ? mTraps.enumerate(cx, proxy)                                    \
-               : _base::enumerate(cx, proxy);                                   \
+            ? mTraps.enumerate(cx, proxy, props)                                \
+            : _base::enumerate(cx, proxy, props);                               \
     }                                                                           \
                                                                                 \
     virtual bool has(JSContext* cx, JS::HandleObject proxy,                     \
@@ -319,15 +361,6 @@ class WrapperProxyHandler : public js::Wrapper
                ? mTraps.isExtensible(cx, proxy, succeeded)
                : js::Wrapper::isExtensible(cx, proxy, succeeded);
     }
-
-    virtual bool getPropertyDescriptor(JSContext *cx, JS::HandleObject proxy,
-                                       JS::HandleId id,
-                                       JS::MutableHandle<JS::PropertyDescriptor> desc) const override
-    {
-        return mTraps.getPropertyDescriptor
-               ? mTraps.getPropertyDescriptor(cx, proxy, id, desc)
-               : js::Wrapper::getPropertyDescriptor(cx, proxy, id, desc);
-    }
 };
 
 class RustJSPrincipal : public JSPrincipals
@@ -425,13 +458,6 @@ class ForwardingProxyHandler : public js::BaseProxyHandler
                               bool *succeeded) const override
     {
         return mTraps.isExtensible(cx, proxy, succeeded);
-    }
-
-    virtual bool getPropertyDescriptor(JSContext *cx, JS::HandleObject proxy,
-                                       JS::HandleId id,
-                                       JS::MutableHandle<JS::PropertyDescriptor> desc) const override
-    {
-        return mTraps.getPropertyDescriptor(cx, proxy, id, desc);
     }
 };
 
@@ -768,9 +794,15 @@ IsWrapper(JSObject* obj)
 }
 
 JSObject*
-UnwrapObject(JSObject* obj, bool stopAtOuter)
+UnwrapObjectStatic(JSObject* obj)
 {
-    return js::CheckedUnwrap(obj, stopAtOuter);
+  return js::CheckedUnwrapStatic(obj);
+}
+
+JSObject*
+UnwrapObjectDynamic(JSObject* obj, JSContext* cx, bool stopAtOuter)
+{
+    return js::CheckedUnwrapDynamic(obj, cx, stopAtOuter);
 }
 
 JSObject*
@@ -1035,6 +1067,18 @@ EncodeStringToUTF8(JSContext* cx, JS::HandleString str, EncodedStringCallback cb
 {
   JS::UniqueChars chars = JS_EncodeStringToUTF8(cx, str);
   cb(chars.get());
+}
+
+JS::JobQueue*
+CreateJobQueue(const JobQueueTraps* aTraps, void* aQueue)
+{
+  return new RustJobQueue(*aTraps, aQueue);
+}
+
+void
+DeleteJobQueue(JS::JobQueue* queue)
+{
+  delete queue;
 }
 
 } // extern "C"

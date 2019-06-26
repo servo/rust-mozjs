@@ -62,6 +62,8 @@ wrap!(jsapi: pub fn GetWasmModule(obj: HandleObject) -> RefPtr<WasmModule>);
 wrap!(jsapi: pub fn CaptureCurrentStack(cx: *mut JSContext, stackp: MutableHandleObject, capture: *mut StackCapture) -> bool);
 wrap!(jsapi: pub fn BuildStackString(cx: *mut JSContext, principals: *mut JSPrincipals, stack: HandleObject, stringp: MutableHandleString, indent: usize, stackFormat: StackFormat) -> bool);
 wrap!(jsapi: pub fn ForceLexicalInitialization(cx: *mut JSContext, obj: HandleObject) -> bool);
+wrap!(jsapi: pub fn DetachArrayBuffer(cx: *mut JSContext, obj: HandleObject) -> bool);
+wrap!(jsapi: pub fn StealArrayBufferContents(cx: *mut JSContext, obj: HandleObject) -> *mut ::std::os::raw::c_void);
 wrap!(jsapi: pub fn CloneAndExecuteScript(cx: *mut JSContext, script: Handle<*mut JSScript>, rval: MutableHandle<Value>) -> bool);
 wrap!(jsapi: pub fn CloneAndExecuteScript1(cx: *mut JSContext, envChain: *mut u8, script: Handle<*mut JSScript>, rval: MutableHandle<Value>) -> bool);
 wrap!(jsapi: pub fn Evaluate(cx: *mut JSContext, options: *const ReadOnlyCompileOptions, srcBuf: *mut SourceText<u16>, rval: MutableHandle<Value>) -> bool);
@@ -105,6 +107,7 @@ wrap!(jsapi: pub fn AddPromiseReactions(cx: *mut JSContext, promise: HandleObjec
 wrap!(jsapi: pub fn GetPromiseUserInputEventHandlingState(promise: HandleObject) -> PromiseUserInputEventHandlingState);
 wrap!(jsapi: pub fn SetPromiseUserInputEventHandlingState(promise: HandleObject, state: PromiseUserInputEventHandlingState) -> bool);
 wrap!(jsapi: pub fn GetSavedFrameSource(cx: *mut JSContext, principals: *mut JSPrincipals, savedFrame: HandleObject, sourcep: MutableHandle<*mut JSString>, selfHosted: SavedFrameSelfHosted) -> SavedFrameResult);
+wrap!(jsapi: pub fn GetSavedFrameSourceId(cx: *mut JSContext, principals: *mut JSPrincipals, savedFrame: HandleObject, sourceIdp: *mut u32, selfHosted: SavedFrameSelfHosted) -> SavedFrameResult);
 wrap!(jsapi: pub fn GetSavedFrameLine(cx: *mut JSContext, principals: *mut JSPrincipals, savedFrame: HandleObject, linep: *mut u32, selfHosted: SavedFrameSelfHosted) -> SavedFrameResult);
 wrap!(jsapi: pub fn GetSavedFrameColumn(cx: *mut JSContext, principals: *mut JSPrincipals, savedFrame: HandleObject, columnp: *mut u32, selfHosted: SavedFrameSelfHosted) -> SavedFrameResult);
 wrap!(jsapi: pub fn GetSavedFrameFunctionDisplayName(cx: *mut JSContext, principals: *mut JSPrincipals, savedFrame: HandleObject, namep: MutableHandle<*mut JSString>, selfHosted: SavedFrameSelfHosted) -> SavedFrameResult);
@@ -276,6 +279,7 @@ wrap!(jsapi: pub fn JS_DeleteElement(cx: *mut JSContext, obj: HandleObject, inde
 wrap!(jsapi: pub fn JS_DeletePropertyById1(cx: *mut JSContext, obj: HandleObject, id: jsid) -> bool);
 wrap!(jsapi: pub fn JS_DeleteProperty1(cx: *mut JSContext, obj: HandleObject, name: *const ::std::os::raw::c_char) -> bool);
 wrap!(jsapi: pub fn JS_DeleteElement1(cx: *mut JSContext, obj: HandleObject, index: u32) -> bool);
+wrap!(jsapi: pub fn JS_AssignObject(cx: *mut JSContext, target: HandleObject, src: HandleObject) -> bool);
 wrap!(jsapi: pub fn JS_CallFunctionValue(cx: *mut JSContext, obj: HandleObject, fval: HandleValue, args: *const HandleValueArray, rval: MutableHandleValue) -> bool);
 wrap!(jsapi: pub fn JS_CallFunction(cx: *mut JSContext, obj: HandleObject, fun: HandleFunction, args: *const HandleValueArray, rval: MutableHandleValue) -> bool);
 wrap!(jsapi: pub fn JS_CallFunctionName(cx: *mut JSContext, obj: HandleObject, name: *const ::std::os::raw::c_char, args: *const HandleValueArray, rval: MutableHandleValue) -> bool);
@@ -293,8 +297,6 @@ wrap!(jsapi: pub fn JS_IsArrayObject(cx: *mut JSContext, value: HandleValue, isA
 wrap!(jsapi: pub fn JS_IsArrayObject1(cx: *mut JSContext, obj: HandleObject, isArray: *mut bool) -> bool);
 wrap!(jsapi: pub fn JS_GetArrayLength(cx: *mut JSContext, obj: HandleObject, lengthp: *mut u32) -> bool);
 wrap!(jsapi: pub fn JS_SetArrayLength(cx: *mut JSContext, obj: HandleObject, length: u32) -> bool);
-wrap!(jsapi: pub fn JS_StealArrayBufferContents(cx: *mut JSContext, obj: HandleObject) -> *mut ::std::os::raw::c_void);
-wrap!(jsapi: pub fn JS_ExternalizeArrayBufferContents(cx: *mut JSContext, obj: HandleObject) -> *mut ::std::os::raw::c_void);
 wrap!(jsapi: pub fn JS_GetFunctionLength(cx: *mut JSContext, fun: HandleFunction, length: *mut u16) -> bool);
 wrap!(jsapi: pub fn JS_DefineFunctions(cx: *mut JSContext, obj: HandleObject, fs: *const JSFunctionSpec) -> bool);
 wrap!(jsapi: pub fn JS_DefineFunction(cx: *mut JSContext, obj: HandleObject, name: *const ::std::os::raw::c_char, call: JSNative, nargs: ::std::os::raw::c_uint, attrs: ::std::os::raw::c_uint) -> *mut JSFunction);
@@ -350,7 +352,6 @@ wrap!(jsapi: pub fn JS_NewUint32ArrayWithBuffer(cx: *mut JSContext, arrayBuffer:
 wrap!(jsapi: pub fn JS_NewFloat32ArrayWithBuffer(cx: *mut JSContext, arrayBuffer: HandleObject, byteOffset: u32, length: i32) -> *mut JSObject);
 wrap!(jsapi: pub fn JS_NewFloat64ArrayWithBuffer(cx: *mut JSContext, arrayBuffer: HandleObject, byteOffset: u32, length: i32) -> *mut JSObject);
 wrap!(jsapi: pub fn JS_GetArrayBufferViewBuffer(cx: *mut JSContext, obj: HandleObject, isSharedMemory: *mut bool) -> *mut JSObject);
-wrap!(jsapi: pub fn JS_DetachArrayBuffer(cx: *mut JSContext, obj: HandleObject) -> bool);
 wrap!(jsapi: pub fn JS_NewDataView(cx: *mut JSContext, buffer: HandleObject, byteOffset: u32, byteLength: i32) -> *mut JSObject);
 wrap!(jsapi: pub fn JS_Utf8BufferIsCompilableUnit(cx: *mut JSContext, obj: HandleObject, utf8: *const ::std::os::raw::c_char, length: usize) -> bool);
 wrap!(jsapi: pub fn JS_ExecuteScript(cx: *mut JSContext, script: Handle<*mut JSScript>, rval: MutableHandle<Value>) -> bool);
