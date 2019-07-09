@@ -34,12 +34,9 @@ environment:
   CXX: "clang-cl.exe"
   LINKER: "lld-link.exe"
 
-  VCVARSALL_PATH: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build
-
   matrix:
-    - TARGET: i686-pc-windows-msvc
-      CROSS_COMPILE: 1
-    - TARGET: x86_64-pc-windows-msvc
+    - DEBUGMOZJS: --features debugmozjs
+    - DEBUGMOZJS: ''
 
 # Uncomment to enable RDP & wait for exit.  Connection info will be printed in the log.
 #init:
@@ -55,7 +52,6 @@ install:
   - appveyor-retry appveyor DownloadFile https://win.rustup.rs/ -FileName rustup-init.exe
   - rustup-init.exe -y --default-host=x86_64-pc-windows-msvc
   - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
-  - if "%CROSS_COMPILE%" == "1" rustup target add %TARGET%
   - set MOZTOOLS_PATH=C:\mozilla-build\msys\bin;C:\mozilla-build\mozmake;C:\mozilla-build\yasm
   - set NATIVE_WIN32_PYTHON=C:/Python27/python.exe
   - set AUTOCONF=C:/mozilla-build/msys/local/bin/autoconf-2.13
@@ -66,5 +62,4 @@ build_script:
   - echo PATH %PATH%
   - echo MOZTOOLS_PATH %MOZTOOLS_PATH%
   - cd %APPVEYOR_BUILD_FOLDER%
-  - cargo build --verbose --verbose --target %TARGET%
-  - if "%CROSS_COMPILE%" == "" cargo test --verbose --verbose --target %TARGET%
+  - cargo test --verbose --verbose --target %DEBUGMOZJS%
