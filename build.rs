@@ -25,8 +25,6 @@ fn main() {
             build.flag("-g");
             build.flag("-O0");
         }
-    } else if cfg!(target_os = "windows") {
-        build.flag("-MD");
     }
 
     if cfg!(target_os = "windows") {
