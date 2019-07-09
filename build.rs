@@ -19,7 +19,7 @@ fn main() {
         build.define("DEBUG", "");
         build.define("_DEBUG", "");
 
-        if cfg!(target_os = "windows")  
+        if cfg!(target_os = "windows") {
             build.flag("-Od");
         } else {
             build.flag("-g");
