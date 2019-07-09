@@ -19,8 +19,7 @@ fn main() {
         build.define("DEBUG", "");
         build.define("_DEBUG", "");
 
-        if cfg!(target_os = "windows") {
-            build.flag("-MDd");
+        if cfg!(target_os = "windows")  
             build.flag("-Od");
         } else {
             build.flag("-g");
@@ -28,6 +27,10 @@ fn main() {
         }
     } else if cfg!(target_os = "windows") {
         build.flag("-MD");
+    }
+
+    if cfg!(target_os = "windows") {
+            build.flag("-MD");
     }
 
     if env::var("CARGO_FEATURE_PROFILEMOZJS").is_ok() {
