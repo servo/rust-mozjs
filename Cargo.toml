@@ -51,4 +51,5 @@ lazy_static = "1"
 libc = "0.2"
 log = "0.4"
 num-traits = "0.2"
-mozjs_sys = { git = "https://github.com/servo/mozjs", rev = "2b97c2dc648c84164a6a12418dce0e9cd3b62038" }
+#mozjs_sys = { git = "https://github.com/servo/mozjs", rev = "2b97c2dc648c84164a6a12418dce0e9cd3b62038" }
+mozjs_sys = { git = "https://github.com/jdm/mozjs", branch = "fix-debug-mozjs-harder" }
