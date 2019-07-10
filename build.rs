@@ -28,7 +28,7 @@ fn main() {
     }
 
     if cfg!(target_os = "windows") {
-            build.flag("-MD");
+            build.static_crt(true);
     }
 
     if env::var("CARGO_FEATURE_PROFILEMOZJS").is_ok() {
