@@ -248,14 +248,15 @@ extern "C" {
 
     pub fn RUST_JSID_IS_INT(id: HandleId) -> bool;
     pub fn RUST_JSID_TO_INT(id: HandleId) -> i32;
-    pub fn int_to_jsid(i: i32) -> jsid;
+    pub fn int_to_jsid(i: i32, id: MutableHandleId);
     pub fn RUST_JSID_IS_STRING(id: HandleId) -> bool;
     pub fn RUST_JSID_TO_STRING(id: HandleId) -> *mut JSString;
-    pub fn RUST_SYMBOL_TO_JSID(sym: *mut Symbol) -> jsid;
+    pub fn RUST_SYMBOL_TO_JSID(sym: *mut Symbol, id: MutableHandleId);
     pub fn SetBuildId(buildId: *mut JS::BuildIdCharVector, chars: *const u8, len: usize) -> bool;
     pub fn RUST_SET_JITINFO(func: *mut JSFunction, info: *const JSJitInfo);
     pub fn RUST_INTERNED_STRING_TO_JSID(cx: *mut JSContext,
-                                        str: *mut JSString) -> jsid;
+                                        str: *mut JSString,
+                                        id: MutableHandleId);
     pub fn RUST_js_GetErrorMessage(userRef: *mut ::libc::c_void,
                                    errorNumber: u32)
      -> *const JSErrorFormatString;
@@ -268,7 +269,7 @@ extern "C" {
     pub fn UnwrapObjectDynamic(obj: *mut JSObject, cx: *mut JSContext, stopAtOuter: u8) -> *mut JSObject;
     pub fn UncheckedUnwrapObject(obj: *mut JSObject, stopAtOuter: u8) -> *mut JSObject;
     pub fn CreateAutoIdVector(cx: *mut JSContext) -> *mut AutoIdVector;
-    pub fn AppendToAutoIdVector(v: *mut AutoIdVector, id: jsid) -> bool;
+    pub fn AppendToAutoIdVector(v: *mut AutoIdVector, id: HandleId) -> bool;
     pub fn SliceAutoIdVector(v: *const AutoIdVector, length: *mut usize) -> *const jsid;
     pub fn DestroyAutoIdVector(v: *mut AutoIdVector);
     pub fn CreateAutoObjectVector(aCx: *mut JSContext)

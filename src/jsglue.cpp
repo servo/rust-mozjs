@@ -684,10 +684,10 @@ RUST_JSID_IS_INT(JS::HandleId id)
     return JSID_IS_INT(id);
 }
 
-jsid
-int_to_jsid(int32_t i)
+void
+int_to_jsid(int32_t i, JS::MutableHandleId id)
 {
-    return INT_TO_JSID(i);
+    id.set(INT_TO_JSID(i));
 }
 
 int32_t
@@ -708,10 +708,10 @@ RUST_JSID_TO_STRING(JS::HandleId id)
     return JSID_TO_STRING(id);
 }
 
-jsid
-RUST_SYMBOL_TO_JSID(JS::Symbol* sym)
+void
+RUST_SYMBOL_TO_JSID(JS::Symbol* sym, JS::MutableHandleId id)
 {
-    return SYMBOL_TO_JSID(sym);
+    id.set(SYMBOL_TO_JSID(sym));
 }
 
 bool
@@ -725,9 +725,9 @@ RUST_SET_JITINFO(JSFunction* func, const JSJitInfo* info) {
     SET_JITINFO(func, info);
 }
 
-jsid
-RUST_INTERNED_STRING_TO_JSID(JSContext* cx, JSString* str) {
-    return INTERNED_STRING_TO_JSID(cx, str);
+void
+RUST_INTERNED_STRING_TO_JSID(JSContext* cx, JSString* str, JS::MutableHandleId id) {
+    id.set(INTERNED_STRING_TO_JSID(cx, str));
 }
 
 const JSErrorFormatString*
@@ -818,9 +818,9 @@ CreateAutoIdVector(JSContext* cx)
 }
 
 bool
-AppendToAutoIdVector(JS::AutoIdVector* v, jsid id)
+AppendToAutoIdVector(JS::AutoIdVector* v, JS::HandleId id)
 {
-    return v->append(id);
+    return v->append(id.get());
 }
 
 const jsid*
