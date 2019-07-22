@@ -7,9 +7,8 @@ extern crate mozjs;
 
 use mozjs::jsapi::JS_NewGlobalObject;
 use mozjs::jsapi::OnNewGlobalHookOption;
-use mozjs::jsapi::RealmOptions;
 use mozjs::jsval::UndefinedValue;
-use mozjs::rust::{JSEngine, Runtime, SIMPLE_GLOBAL_CLASS};
+use mozjs::rust::{JSEngine, RealmOptions, Runtime, SIMPLE_GLOBAL_CLASS};
 
 use std::ptr;
 
@@ -23,7 +22,7 @@ fn stack_limit() {
         let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
         let c_option = RealmOptions::default();
         let global = JS_NewGlobalObject(cx, &SIMPLE_GLOBAL_CLASS,
-                                        ptr::null_mut(), h_option, &c_option);
+                                        ptr::null_mut(), h_option, &*c_option);
         rooted!(in(cx) let global_root = global);
         let global = global_root.handle();
         rooted!(in(cx) let mut rval = UndefinedValue());

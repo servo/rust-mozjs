@@ -51,7 +51,7 @@ use jsapi::{JS_StackCapture_AllFrames, JS_StackCapture_MaxFrames};
 use jsapi::Handle as RawHandle;
 use jsapi::MutableHandle as RawMutableHandle;
 use jsapi::HandleValue as RawHandleValue;
-use jsapi::glue::JS_Init;
+use jsapi::glue::{JS_Init, JS_NewRealmOptions, DeleteRealmOptions};
 #[cfg(feature = "debugmozjs")]
 use jsapi::mozilla::detail::GuardObjectNotificationReceiver;
 
@@ -120,6 +120,33 @@ impl ToResult for bool {
 
 // ___________________________________________________________________________
 // friendly Rustic API to runtimes
+
+pub struct RealmOptions(*mut jsapi::RealmOptions);
+
+impl Deref for RealmOptions {
+    type Target = jsapi::RealmOptions;
+    fn deref(&self) -> &Self::Target {
+        unsafe { &*self.0 }
+    }
+}
+
+impl DerefMut for RealmOptions {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { &mut *self.0 }
+    }
+}
+
+impl Default for RealmOptions {
+    fn default() -> RealmOptions {
+        RealmOptions(unsafe { JS_NewRealmOptions() })
+    }
+}
+
+impl Drop for RealmOptions {
+    fn drop(&mut self) {
+        unsafe { DeleteRealmOptions(self.0) }
+    }
+}
 
 thread_local!(static CONTEXT: Cell<*mut JSContext> = Cell::new(ptr::null_mut()));
 

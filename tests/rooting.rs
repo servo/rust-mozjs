@@ -19,11 +19,10 @@ use mozjs::jsapi::JS_NewObjectWithUniqueType;
 use mozjs::jsapi::JSPROP_ENUMERATE;
 use mozjs::jsapi::JS_SetGCZeal;
 use mozjs::jsapi::OnNewGlobalHookOption;
-use mozjs::jsapi::RealmOptions;
 use mozjs::jsapi::Value;
 use mozjs::jsapi::{JSObject, JSString, JSFunction};
 use mozjs::jsval::JSVal;
-use mozjs::rust::{JSEngine, Runtime, SIMPLE_GLOBAL_CLASS, define_methods};
+use mozjs::rust::{JSEngine, RealmOptions, Runtime, SIMPLE_GLOBAL_CLASS, define_methods};
 use std::ptr;
 
 #[test]
@@ -41,7 +40,7 @@ fn rooting() {
                                                        &SIMPLE_GLOBAL_CLASS,
                                                        ptr::null_mut(),
                                                        h_option,
-                                                       &c_option));
+                                                       &*c_option));
         let _ac = JSAutoRealm::new(cx, global.get());
         rooted!(in(cx) let prototype_proto = GetRealmObjectPrototype(cx));
         rooted!(in(cx) let proto = JS_NewObjectWithUniqueType(cx,

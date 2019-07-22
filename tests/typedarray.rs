@@ -9,10 +9,10 @@ use mozjs::jsapi::JSAutoRealm;
 use mozjs::jsapi::JSObject;
 use mozjs::jsapi::JS_NewGlobalObject;
 use mozjs::jsapi::OnNewGlobalHookOption;
-use mozjs::jsapi::RealmOptions;
 use mozjs::jsapi::Type;
 use mozjs::jsval::UndefinedValue;
 use mozjs::rust::JSEngine;
+use mozjs::rust::RealmOptions;
 use mozjs::rust::Runtime;
 use mozjs::rust::SIMPLE_GLOBAL_CLASS;
 use mozjs::typedarray::{CreateWith, Uint32Array};
@@ -25,10 +25,11 @@ fn typedarray() {
     let cx = rt.cx();
 
     unsafe {
+        let options = RealmOptions::default();
         rooted!(in(cx) let global =
             JS_NewGlobalObject(cx, &SIMPLE_GLOBAL_CLASS, ptr::null_mut(),
                                OnNewGlobalHookOption::FireOnNewGlobalHook,
-                               &RealmOptions::default())
+                               &*options)
         );
 
         let _ac = JSAutoRealm::new(cx, global.get());

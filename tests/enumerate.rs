@@ -12,10 +12,10 @@ use mozjs::jsapi::JSITER_OWNONLY;
 use mozjs::jsapi::JS_NewGlobalObject;
 use mozjs::jsapi::JS_StringEqualsAscii;
 use mozjs::jsapi::OnNewGlobalHookOption;
-use mozjs::jsapi::RealmOptions;
 use mozjs::jsval::UndefinedValue;
 use mozjs::rust::IdVector;
 use mozjs::rust::JSEngine;
+use mozjs::rust::RealmOptions;
 use mozjs::rust::Runtime;
 use mozjs::rust::SIMPLE_GLOBAL_CLASS;
 use std::ptr;
@@ -25,12 +25,13 @@ fn enumerate() {
     let engine = JSEngine::init().unwrap();
     let rt = Runtime::new(engine);
     let cx = rt.cx();
+    let options = RealmOptions::default();
 
     unsafe {
         rooted!(in(cx) let global =
             JS_NewGlobalObject(cx, &SIMPLE_GLOBAL_CLASS, ptr::null_mut(),
                                OnNewGlobalHookOption::FireOnNewGlobalHook,
-                               &RealmOptions::default())
+                               &*options)
         );
 
         rooted!(in(cx) let mut rval = UndefinedValue());
