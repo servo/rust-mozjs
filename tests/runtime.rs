@@ -15,8 +15,7 @@ use mozjs::jsapi::JS_NewGlobalObject;
 use mozjs::jsapi::JS_NewObject;
 use mozjs::jsapi::JSObject;
 use mozjs::jsapi::OnNewGlobalHookOption;
-use mozjs::jsapi::RealmOptions;
-use mozjs::rust::{JSEngine, Runtime, SIMPLE_GLOBAL_CLASS};
+use mozjs::rust::{JSEngine, RealmOptions, Runtime, SIMPLE_GLOBAL_CLASS};
 use std::ptr;
 use std::thread;
 use std::sync::mpsc::channel;
@@ -35,7 +34,7 @@ fn runtime() {
                                                        &SIMPLE_GLOBAL_CLASS,
                                                        ptr::null_mut(),
                                                        h_option,
-                                                       &c_option));
+                                                       &*c_option));
         let _ac = JSAutoRealm::new(cx, global.get());
         rooted!(in(cx) let _object = JS_NewObject(cx, &CLASS as *const _));
     }

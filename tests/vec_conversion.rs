@@ -13,9 +13,8 @@ use mozjs::jsapi::InitRealmStandardClasses;
 use mozjs::jsapi::JSAutoRealm;
 use mozjs::jsapi::JS_NewGlobalObject;
 use mozjs::jsapi::OnNewGlobalHookOption;
-use mozjs::jsapi::RealmOptions;
 use mozjs::jsval::UndefinedValue;
-use mozjs::rust::{JSEngine, Runtime, SIMPLE_GLOBAL_CLASS};
+use mozjs::rust::{JSEngine, RealmOptions, Runtime, SIMPLE_GLOBAL_CLASS};
 
 use std::ptr;
 
@@ -30,7 +29,7 @@ fn vec_conversion() {
 
     unsafe {
         let global = JS_NewGlobalObject(cx, &SIMPLE_GLOBAL_CLASS,
-                                        ptr::null_mut(), h_option, &c_option);
+                                        ptr::null_mut(), h_option, &*c_option);
         rooted!(in(cx) let global_root = global);
         let global = global_root.handle();
 

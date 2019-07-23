@@ -14,10 +14,9 @@ use mozjs::jsapi::JS_DefineFunction;
 use mozjs::jsapi::JS_NewGlobalObject;
 use mozjs::jsapi::JS_ReportErrorASCII;
 use mozjs::jsapi::OnNewGlobalHookOption;
-use mozjs::jsapi::RealmOptions;
 use mozjs::jsapi::Value;
 use mozjs::jsval::UndefinedValue;
-use mozjs::rust::{JSEngine, Runtime, SIMPLE_GLOBAL_CLASS};
+use mozjs::rust::{JSEngine, RealmOptions, Runtime, SIMPLE_GLOBAL_CLASS};
 
 use std::ffi::CStr;
 use std::ptr;
@@ -32,7 +31,7 @@ fn callback() {
     let c_option = RealmOptions::default();
 
     unsafe {
-        let global = JS_NewGlobalObject(context, &SIMPLE_GLOBAL_CLASS, ptr::null_mut(), h_option, &c_option);
+        let global = JS_NewGlobalObject(context, &SIMPLE_GLOBAL_CLASS, ptr::null_mut(), h_option, &*c_option);
         rooted!(in(context) let global_root = global);
         let global = global_root.handle();
         let _ac = JSAutoRealm::new(context, global.get());
