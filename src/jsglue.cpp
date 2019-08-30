@@ -1036,8 +1036,8 @@ WriteBytesToJSStructuredCloneData(const uint8_t* src, size_t len, JSStructuredCl
 // https://mozilla.logbot.info/jsapi/20180622#c14918658
 
 void
-JS_GetPromiseResult(JS::HandleObject promise, JS::Value* dest) {
-  *dest = JS::GetPromiseResult(promise);
+JS_GetPromiseResult(JS::HandleObject promise, JS::MutableHandleValue dest) {
+  dest.set(JS::GetPromiseResult(promise));
 }
 
 void
