@@ -352,7 +352,7 @@ extern "C" {
     pub fn WriteBytesToJSStructuredCloneData(src: *const u8, len: usize, dest: *mut JSStructuredCloneData);
     pub fn JS_ComputeThis (cx: *mut JSContext , vp: *mut JS::Value, dest: *mut JS::Value);
     pub fn JS_GetModuleHostDefinedField (module: *mut JSObject, dest: *mut JS::Value);
-    pub fn JS_GetPromiseResult (promise: JS::HandleObject, dest: *mut JS::Value);
+    pub fn JS_GetPromiseResult (promise: JS::HandleObject, dest: JS::MutableHandleValue);
     pub fn JS_THIS (cx: *mut JSContext , vp: *mut JS::Value, dest: *mut JS::Value);
     pub fn JS_GetNaNValue (cx: *mut JSContext, dest: *mut JS::Value);
     pub fn JS_GetPositiveInfinityValue (cx: *mut JSContext, dest: *mut JS::Value);
