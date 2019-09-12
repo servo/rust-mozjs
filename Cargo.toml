@@ -45,10 +45,11 @@ doctest = false
 [features]
 debugmozjs = ['mozjs_sys/debugmozjs']
 profilemozjs = ['mozjs_sys/profilemozjs']
+uwp = ['mozjs_sys/uwp']
 
 [dependencies]
 lazy_static = "1"
 libc = "0.2"
 log = "0.4"
 num-traits = "0.2"
-mozjs_sys = { git = "https://github.com/servo/mozjs", rev = "2bf4912a6ff1f5ea333afb1cb53dfe9361157b14" }
+mozjs_sys = { git = "https://github.com/servo/mozjs", rev = "9ad6d4b2b5478521b7731c700c8f56e25597e520" }
