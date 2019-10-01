@@ -46,10 +46,11 @@ doctest = false
 debugmozjs = ['mozjs_sys/debugmozjs']
 profilemozjs = ['mozjs_sys/profilemozjs']
 uwp = ['mozjs_sys/uwp']
+vslatestinstalled = ['mozjs_sys/vslatestinstalled']
 
 [dependencies]
 lazy_static = "1"
 libc = "0.2"
 log = "0.4"
 num-traits = "0.2"
-mozjs_sys = { git = "https://github.com/servo/mozjs", rev = "8e3ac9b0228f9cd92ac2ce718cf1436860f18a8f" }
+mozjs_sys = { git = "https://github.com/servo/mozjs", rev = "dd175ee73a179ce218286c4be4ab80e1a75348be" }
