@@ -361,4 +361,9 @@ extern "C" {
     pub fn EncodeStringToUTF8(cx: *mut JSContext, str: JS::HandleString, cb: fn(*const c_char));
     pub fn CreateJobQueue(traps: *const JobQueueTraps, queue: *const c_void) -> *mut JS::JobQueue;
     pub fn DeleteJobQueue(queue: *mut JS::JobQueue);
+    pub fn DispatchableRun(cx: *mut JSContext, ptr: *mut JS::Dispatchable, mb: JS::Dispatchable_MaybeShuttingDown);
+    pub fn StreamConsumerConsumeChunk(sc: *mut JS::StreamConsumer, begin: *const u8, length: usize) -> bool;
+    pub fn StreamConsumerStreamEnd(cx: *mut JS::StreamConsumer);
+    pub fn StreamConsumerStreamError(cx: *mut JS::StreamConsumer, errorCode: usize);
+    pub fn StreamConsumerNoteResponseURLs(sc: *mut JS::StreamConsumer, maybeUrl: *const c_char, maybeSourceMapUrl: *const c_char);
 }
