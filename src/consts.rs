@@ -24,4 +24,4 @@ pub const JSCLASS_IS_PROXY: c_uint =
     1 << (JSCLASS_HIGH_FLAGS_SHIFT + 4);
 
 pub const JSCLASS_GLOBAL_SLOT_COUNT: c_uint =
-    JSCLASS_GLOBAL_APPLICATION_SLOTS + JSProtoKey::JSProto_LIMIT as c_uint * 3 + 36;
+    JSCLASS_GLOBAL_APPLICATION_SLOTS + JSProtoKey::JSProto_LIMIT as c_uint * 2 + 38;
