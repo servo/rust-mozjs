@@ -1081,4 +1081,33 @@ DeleteJobQueue(JS::JobQueue* queue)
   delete queue;
 }
 
+void
+DispatchableRun(JSContext* cx, JS::Dispatchable* ptr, JS::Dispatchable::MaybeShuttingDown mb) {
+  ptr->run(cx, mb);
+}
+
+bool
+StreamConsumerConsumeChunk(JS::StreamConsumer* sc, const uint8_t* begin, size_t length) {
+  return sc->consumeChunk(begin, length);
+}
+
+void
+StreamConsumerStreamEnd(JS::StreamConsumer* sc) {
+  sc->streamEnd();
+}
+
+void
+StreamConsumerStreamError(JS::StreamConsumer* sc, size_t errorCode) {
+  sc->streamError(errorCode);
+}
+
+void
+StreamConsumerNoteResponseURLs(
+    JS::StreamConsumer* sc,
+    const char* maybeUrl,
+    const char* maybeSourceMapUrl
+) {
+  sc->noteResponseURLs(maybeUrl, maybeSourceMapUrl);
+}
+
 } // extern "C"
