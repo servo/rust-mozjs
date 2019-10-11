@@ -6,7 +6,7 @@ use std::any::Any;
 use std::cell::RefCell;
 use std::panic::{UnwindSafe, catch_unwind, resume_unwind};
 
-thread_local!(static PANIC_RESULT: RefCell<Option<Box<Any + Send>>> = RefCell::new(None));
+thread_local!(static PANIC_RESULT: RefCell<Option<Box<dyn Any + Send>>> = RefCell::new(None));
 
 /// If there is a pending panic, resume unwinding.
 pub fn maybe_resume_unwind() {

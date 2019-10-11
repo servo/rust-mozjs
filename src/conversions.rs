@@ -231,9 +231,9 @@ unsafe fn convert_int_from_jsval<T, M>(cx: *mut JSContext, value: HandleValue,
           f64: As<T>
 {
     match option {
-        ConversionBehavior::Default => Ok(ConversionResult::Success(try!(convert_fn(cx, value)).cast())),
-        ConversionBehavior::EnforceRange => enforce_range(cx, try!(ToNumber(cx, value))),
-        ConversionBehavior::Clamp => Ok(ConversionResult::Success(clamp_to(try!(ToNumber(cx, value))))),
+        ConversionBehavior::Default => Ok(ConversionResult::Success(convert_fn(cx, value)?.cast())),
+        ConversionBehavior::EnforceRange => enforce_range(cx, ToNumber(cx, value)?),
+        ConversionBehavior::Clamp => Ok(ConversionResult::Success(clamp_to(ToNumber(cx, value)?))),
     }
 }
 
@@ -529,7 +529,7 @@ impl<T: FromJSValConvertible> FromJSValConvertible for Option<T> {
         if value.get().is_null_or_undefined() {
             Ok(ConversionResult::Success(None))
         } else {
-            Ok(match try!(FromJSValConvertible::from_jsval(cx, value, option)) {
+            Ok(match FromJSValConvertible::from_jsval(cx, value, option)? {
                 ConversionResult::Success(v) => ConversionResult::Success(Some(v)),
                 ConversionResult::Failure(v) => ConversionResult::Failure(v),
             })
@@ -639,7 +639,7 @@ impl<C: Clone, T: FromJSValConvertible<Config=C>> FromJSValConvertible for Vec<T
                 break;
             }
 
-            ret.push(match try!(T::from_jsval(cx, val.handle(), option.clone())) {
+            ret.push(match T::from_jsval(cx, val.handle(), option.clone())? {
                 ConversionResult::Success(v) => v,
                 ConversionResult::Failure(e) => return Ok(ConversionResult::Failure(e)),
             });
