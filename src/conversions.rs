@@ -641,7 +641,10 @@ impl<C: Clone, T: FromJSValConvertible<Config=C>> FromJSValConvertible for Vec<T
 
             ret.push(match T::from_jsval(cx, val.handle(), option.clone())? {
                 ConversionResult::Success(v) => v,
-                ConversionResult::Failure(e) => return Ok(ConversionResult::Failure(e)),
+                ConversionResult::Failure(e) => {
+                    throw_type_error(cx, &e);
+                    return Err(());
+                },
             });
         }
 
