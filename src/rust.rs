@@ -23,6 +23,7 @@ use std::os::raw::c_void;
 use std::cell::Cell;
 use std::marker::PhantomData;
 use std::sync::{Arc, Mutex};
+use std::sync::atomic::{AtomicU32, Ordering};
 
 use consts::{JSCLASS_RESERVED_SLOTS_MASK, JSCLASS_GLOBAL_SLOT_COUNT};
 use consts::{JSCLASS_IS_DOMJSCLASS, JSCLASS_IS_GLOBAL};
@@ -172,11 +173,31 @@ pub enum JSEngineError {
 /// A handle that must be kept alive in order to create new Runtimes.
 /// When this handle is dropped, the engine is shut down and cannot
 /// be reinitialized.
-pub struct JSEngine(());
+pub struct JSEngine {
+    /// The count of alive handles derived from this initialized instance.
+    outstanding_handles: Arc<AtomicU32>,
+    // Ensure this type cannot be sent between threads.
+    marker: PhantomData<*mut ()>,
+}
+
+pub struct JSEngineHandle(Arc<AtomicU32>);
+
+impl Clone for JSEngineHandle {
+    fn clone(&self) -> JSEngineHandle {
+        self.0.fetch_add(1, Ordering::SeqCst);
+        JSEngineHandle(self.0.clone())
+    }
+}
+
+impl Drop for JSEngineHandle {
+    fn drop(&mut self) {
+        self.0.fetch_sub(1, Ordering::SeqCst);
+    }
+}
 
 impl JSEngine {
     /// Initialize the JS engine to prepare for creating new JS runtimes.
-    pub fn init() -> Result<Arc<JSEngine>, JSEngineError> {
+    pub fn init() -> Result<JSEngine, JSEngineError> {
         let mut state = ENGINE_STATE.lock().unwrap();
         match *state {
             EngineState::Initialized => return Err(JSEngineError::AlreadyInitialized),
@@ -189,8 +210,21 @@ impl JSEngine {
             Err(JSEngineError::InitFailed)
         } else {
             *state = EngineState::Initialized;
-            Ok(Arc::new(JSEngine(())))
+            Ok(JSEngine {
+                outstanding_handles: Arc::new(AtomicU32::new(0)),
+                marker: PhantomData,
+            })
         }
+    }
+
+    pub fn can_shutdown(&self) -> bool {
+        self.outstanding_handles.load(Ordering::SeqCst) == 0
+    }
+
+    /// Create a handle to this engine.
+    pub fn handle(&self) -> JSEngineHandle {
+        self.outstanding_handles.fetch_add(1, Ordering::SeqCst);
+        JSEngineHandle(self.outstanding_handles.clone())
     }
 }
 
@@ -200,6 +234,11 @@ impl Drop for JSEngine {
     fn drop(&mut self) {
         let mut state = ENGINE_STATE.lock().unwrap();
         if *state == EngineState::Initialized {
+            assert_eq!(
+                self.outstanding_handles.load(Ordering::SeqCst),
+                0,
+                "There are outstanding JS engine handles"
+            );
             *state = EngineState::ShutDown;
             unsafe {
                 JS_ShutDown();
@@ -215,7 +254,7 @@ pub struct ParentRuntime {
     /// Raw pointer to the underlying SpiderMonkey runtime.
     parent: *mut JSRuntime,
     /// Handle to ensure the JS engine remains running while this handle exists.
-    engine: Arc<JSEngine>,
+    engine: JSEngineHandle,
     /// The number of children of the runtime that created this ParentRuntime value.
     children_of_parent: Arc<()>,
 }
@@ -226,7 +265,7 @@ pub struct Runtime {
     /// Raw pointer to the underlying SpiderMonkey context.
     cx: *mut JSContext,
     /// The engine that this runtime is associated with.
-    engine: Arc<JSEngine>,
+    engine: JSEngineHandle,
     /// If this Runtime was created with a parent, this member exists to ensure
     /// that that parent's count of outstanding children (see [outstanding_children])
     /// remains accurate and will be automatically decreased when this Runtime value
@@ -251,7 +290,7 @@ impl Runtime {
     }
 
     /// Creates a new `JSContext`.
-    pub fn new(engine: Arc<JSEngine>) -> Runtime {
+    pub fn new(engine: JSEngineHandle) -> Runtime {
         unsafe { Self::create(engine, None) }
     }
 
@@ -279,7 +318,7 @@ impl Runtime {
         Self::create(parent.engine.clone(), Some(parent))
     }
 
-    unsafe fn create(engine: Arc<JSEngine>, parent: Option<ParentRuntime>) -> Runtime {
+    unsafe fn create(engine: JSEngineHandle, parent: Option<ParentRuntime>) -> Runtime {
         let parent_runtime = parent.as_ref().map_or(
             ptr::null_mut(),
             |r| r.parent,
