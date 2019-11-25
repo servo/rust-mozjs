@@ -24,7 +24,7 @@ use std::sync::mpsc::channel;
 fn runtime() {
     let engine = JSEngine::init().unwrap();
     assert!(JSEngine::init().is_err());
-    let runtime = Runtime::new(engine);
+    let runtime = Runtime::new(engine.handle());
     unsafe {
         let cx = runtime.cx();
         let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;

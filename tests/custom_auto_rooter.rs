@@ -34,7 +34,7 @@ unsafe impl CustomTrace for TraceCheck {
 #[test]
 fn virtual_trace_called() {
     let engine = JSEngine::init().unwrap();
-    let rt = Runtime::new(engine);
+    let rt = Runtime::new(engine.handle());
     let cx = rt.cx();
 
     let mut rooter = CustomAutoRooter::new(TraceCheck::new());
