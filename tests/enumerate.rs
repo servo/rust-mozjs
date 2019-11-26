@@ -23,7 +23,7 @@ use std::ptr;
 #[test]
 fn enumerate() {
     let engine = JSEngine::init().unwrap();
-    let rt = Runtime::new(engine);
+    let rt = Runtime::new(engine.handle());
     let cx = rt.cx();
     let options = RealmOptions::default();
 

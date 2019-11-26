@@ -21,7 +21,7 @@ use std::ptr;
 #[test]
 fn vec_conversion() {
     let engine = JSEngine::init().unwrap();
-    let rt = Runtime::new(engine);
+    let rt = Runtime::new(engine.handle());
     let cx = rt.cx();
 
     let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
