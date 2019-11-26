@@ -715,6 +715,12 @@ RUST_SYMBOL_TO_JSID(JS::Symbol* sym, JS::MutableHandleId id)
 }
 
 bool
+RUST_JSID_IS_VOID(JS::HandleId id)
+{
+    return JSID_IS_VOID(id);
+}
+
+bool
 SetBuildId(JS::BuildIdCharVector* buildId, const char* chars, size_t len) {
     buildId->clear();
     return buildId->append(chars, len);
