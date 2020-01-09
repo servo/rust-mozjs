@@ -513,6 +513,20 @@ impl<T: ToJSValConvertible> ToJSValConvertible for Option<T> {
     }
 }
 
+impl<T: ToJSValConvertible> ToJSValConvertible for &'_ T {
+    #[inline]
+    unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
+        (**self).to_jsval(cx, rval)
+    }
+}
+
+impl<T: ToJSValConvertible> ToJSValConvertible for Box<T> {
+    #[inline]
+    unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
+        (**self).to_jsval(cx, rval)
+    }
+}
+
 impl<T: ToJSValConvertible> ToJSValConvertible for Rc<T> {
     #[inline]
     unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
