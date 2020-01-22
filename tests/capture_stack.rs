@@ -56,7 +56,7 @@ unsafe extern "C" fn print_stack(context: *mut JSContext, argc: u32, vp: *mut Va
     capture_stack!(in(context) let stack);
     let str_stack = stack.unwrap().as_string(None, StackFormat::SpiderMonkey).unwrap();
     println!("{}", str_stack);
-    assert_eq!("bar@test.js:3:21\nfoo@test.js:5:17\n@test.js:8:13\n".to_string(), str_stack);
+    assert_eq!("bar@test.js:3:21\nfoo@test.js:5:17\n@test.js:8:16\n".to_string(), str_stack);
 
     args.rval().set(UndefinedValue());
     return true;

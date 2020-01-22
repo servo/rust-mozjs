@@ -40,8 +40,8 @@ fn enumerate() {
         assert!(rval.is_object());
 
         rooted!(in(cx) let object = rval.to_object());
-        let ids = IdVector::new(cx);
-        assert!(GetPropertyKeys(cx, object.handle().into(), JSITER_OWNONLY, ids.get()));
+        let mut ids = IdVector::new(cx);
+        assert!(GetPropertyKeys(cx, object.handle().into(), JSITER_OWNONLY, ids.handle_mut()));
 
         assert_eq!(ids.len(), 1);
         rooted!(in(cx) let id = ids[0]);

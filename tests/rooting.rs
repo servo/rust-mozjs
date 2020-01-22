@@ -14,6 +14,7 @@ use mozjs::jsapi::JSClass;
 use mozjs::jsapi::JSContext;
 use mozjs::jsapi::JSFunctionSpec;
 use mozjs::jsapi::JSNativeWrapper;
+use mozjs::jsapi::JSPropertySpec_Name;
 use mozjs::jsapi::JS_NewGlobalObject;
 use mozjs::jsapi::JS_NewObjectWithUniqueType;
 use mozjs::jsapi::JSPROP_ENUMERATE;
@@ -68,21 +69,21 @@ unsafe extern "C" fn generic_method(_: *mut JSContext, _: u32, _: *mut Value) ->
 
 const METHODS: &'static [JSFunctionSpec] = &[
     JSFunctionSpec {
-        name: b"addEventListener\0" as *const u8 as *const libc::c_char,
+        name: JSPropertySpec_Name { string_: b"addEventListener\0" as *const u8 as *const libc::c_char },
         call: JSNativeWrapper { op: Some(generic_method), info: 0 as *const _ },
         nargs: 2,
         flags: JSPROP_ENUMERATE as u16,
         selfHostedName: 0 as *const libc::c_char
     },
     JSFunctionSpec {
-        name: b"removeEventListener\0" as *const u8 as *const libc::c_char,
+        name: JSPropertySpec_Name { string_: b"removeEventListener\0" as *const u8 as *const libc::c_char },
         call: JSNativeWrapper { op: Some(generic_method), info: 0 as *const _  },
         nargs: 2,
         flags: JSPROP_ENUMERATE as u16,
         selfHostedName: 0 as *const libc::c_char
     },
     JSFunctionSpec {
-        name: b"dispatchEvent\0" as *const u8 as *const libc::c_char,
+        name: JSPropertySpec_Name { string_: b"dispatchEvent\0" as *const u8 as *const libc::c_char },
         call: JSNativeWrapper { op: Some(generic_method), info: 0 as *const _  },
         nargs: 1,
         flags: JSPROP_ENUMERATE as u16,
@@ -95,5 +96,7 @@ static CLASS: JSClass = JSClass {
     name: b"EventTargetPrototype\0" as *const u8 as *const libc::c_char,
     flags: 0,
     cOps: 0 as *const _,
-    reserved: [0 as *mut _; 3]
+    spec: ptr::null(),
+    ext: ptr::null(),
+    oOps: ptr::null(),
 };

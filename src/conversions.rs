@@ -92,7 +92,6 @@ impl_as!(u64, u64);
 /// A trait to convert Rust types to `JSVal`s.
 pub trait ToJSValConvertible {
     /// Convert `self` to a `JSVal`. JSAPI failure causes a panic.
-    #[inline]
     unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue);
 }
 

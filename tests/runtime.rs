@@ -72,5 +72,7 @@ static CLASS: JSClass = JSClass {
     name: b"EventTargetPrototype\0" as *const u8 as *const libc::c_char,
     flags: JSCLASS_FOREGROUND_FINALIZE,
     cOps: &CLASS_OPS as *const JSClassOps,
-    reserved: [0 as *mut _; 3]
+    spec: ptr::null(),
+    ext: ptr::null(),
+    oOps: ptr::null(),
 };

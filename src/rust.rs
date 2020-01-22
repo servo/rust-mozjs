@@ -4,7 +4,7 @@
 
 //! Rust wrappers around the raw JS apis
 
-use libc::{size_t, c_uint};
+use libc::c_uint;
 
 use mozjs_sys::jsgc::CustomAutoRooterVFTable;
 use mozjs_sys::jsgc::RootKind;
@@ -31,8 +31,8 @@ use consts::{JSCLASS_IS_DOMJSCLASS, JSCLASS_IS_GLOBAL};
 use conversions::jsstr_to_string;
 
 use jsapi;
-use jsapi::{AutoGCRooter, AutoGCRooter_Tag, AutoIdVector, AutoObjectVector};
-use jsapi::{ContextOptionsRef, EvaluateUtf8, HandleValueArray, Heap};
+use jsapi::{AutoGCRooter, AutoGCRooter_Tag};
+use jsapi::{Evaluate2, HandleValueArray, Heap};
 use jsapi::{InitSelfHostedCode, IsWindowSlow};
 use jsapi::{JS_DefineFunctions, JS_DefineProperties, JS_DestroyContext, JS_ShutDown};
 use jsapi::{JS_EnumerateStandardClasses, JS_GetRuntime, JS_GlobalObjectTraceHook};
@@ -41,28 +41,30 @@ use jsapi::{JS_SetGCParameter, JS_SetNativeStackQuota, JS_WrapValue, JSAutoRealm
 use jsapi::{JSClass, JSCLASS_RESERVED_SLOTS_SHIFT, JSClassOps, Realm, JSContext};
 use jsapi::{JSErrorReport, JSFunction, JSFunctionSpec, JSGCParamKey};
 use jsapi::{JSObject, JSPropertySpec, JSRuntime, JSScript};
-use jsapi::{JSString, JSTracer};
-use jsapi::{Object, ObjectGroup,ReadOnlyCompileOptions, Rooted, RootingContext};
-use jsapi::{SetWarningReporter, Symbol, ToBooleanSlow};
+use jsapi::{JSString, JSTracer, Object, ObjectGroup, PersistentRootedIdVector};
+use jsapi::{PersistentRootedObjectVector, ReadOnlyCompileOptions, Rooted, RootingContext};
+use jsapi::{SetWarningReporter, SourceText, Symbol, ToBooleanSlow};
 use jsapi::{ToInt32Slow, ToInt64Slow, ToNumberSlow, ToStringSlow, ToUint16Slow};
 use jsapi::{ToUint32Slow, ToUint64Slow, ToWindowProxyIfWindowSlow};
 use jsapi::{Value, jsid};
 use jsapi::{CaptureCurrentStack, BuildStackString, StackFormat};
 use jsapi::{JS_StackCapture_AllFrames, JS_StackCapture_MaxFrames};
 use jsapi::Handle as RawHandle;
-use jsapi::MutableHandle as RawMutableHandle;
+use jsapi::HandleObjectVector as RawHandleObjectVector;
 use jsapi::HandleValue as RawHandleValue;
+use jsapi::MutableHandle as RawMutableHandle;
+use jsapi::MutableHandleIdVector as RawMutableHandleIdVector;
 use jsapi::glue::{JS_Init, JS_NewRealmOptions, DeleteRealmOptions};
 #[cfg(feature = "debugmozjs")]
 use jsapi::mozilla::detail::GuardObjectNotificationReceiver;
 
 use jsval::ObjectValue;
 
-use glue::{AppendToAutoObjectVector, CallFunctionTracer, CallIdTracer, CallObjectTracer};
-use glue::{CallScriptTracer, CallStringTracer, CallValueTracer, CreateAutoIdVector};
-use glue::{CreateAutoObjectVector, DeleteAutoObjectVector};
-use glue::{DestroyAutoIdVector, DeleteCompileOptions, NewCompileOptions, SliceAutoIdVector};
-use glue::{CallObjectRootTracer, CallValueRootTracer};
+use glue::{AppendToRootedObjectVector, CallFunctionTracer, CallIdTracer, CallObjectRootTracer};
+use glue::{CallObjectTracer, CallScriptTracer, CallStringTracer, CallValueRootTracer};
+use glue::{CallValueTracer, CreateRootedIdVector, CreateRootedObjectVector};
+use glue::{DeleteCompileOptions, DeleteRootedObjectVector, DestroyRootedIdVector};
+use glue::{GetIdVectorAddress, GetObjectVectorAddress, NewCompileOptions, SliceRootedIdVector};
 
 use panic::maybe_resume_unwind;
 
@@ -323,7 +325,7 @@ impl Runtime {
             ptr::null_mut(),
             |r| r.parent,
         );
-        let js_context = JS_NewContext(default_heapsize, ChunkSize as u32, parent_runtime);
+        let js_context = JS_NewContext(default_heapsize + (ChunkSize as u32), parent_runtime);
         assert!(!js_context.is_null());
 
         // Unconstrain the runtime's threshold on nominal heap size, to avoid
@@ -346,11 +348,6 @@ impl Runtime {
         });
 
         InitSelfHostedCode(js_context);
-
-        let contextopts = ContextOptionsRef(js_context);
-        (*contextopts).set_baseline_(true);
-        (*contextopts).set_ion_(true);
-        (*contextopts).set_nativeRegExp_(true);
 
         SetWarningReporter(js_context, Some(report_warning));
 
@@ -379,19 +376,20 @@ impl Runtime {
                     -> Result<(),()> {
         let filename_cstr = ffi::CString::new(filename.as_bytes()).unwrap();
         debug!("Evaluating script from {} with content {}", filename, script);
-        // SpiderMonkey does not approve of null pointers.
-        let (ptr, len) = if script.len() == 0 {
-            static empty: &'static [u8] = &[];
-            (empty.as_ptr(), 0)
-        } else {
-            (script.as_bytes().as_ptr(), script.len() as c_uint)
-        };
-        assert!(!ptr.is_null());
+
         let _ac = JSAutoRealm::new(self.cx(), glob.get());
-        let options = CompileOptionsWrapper::new(self.cx(), filename_cstr.as_ptr(), line_num);
+        let options = unsafe {
+            CompileOptionsWrapper::new(self.cx(), filename_cstr.as_ptr(), line_num)
+        };
 
         unsafe {
-            if !EvaluateUtf8(self.cx(), options.ptr, ptr as *const _, len as size_t, rval.into()) {
+            let mut source = SourceText {
+                units_: script.as_ptr() as *const _,
+                length_: script.len() as u32,
+                ownsUnits_: false,
+                _phantom_0: std::marker::PhantomData,
+            };
+            if !Evaluate2(self.cx(), options.ptr, &mut source, rval.into()) {
                 debug!("...err!");
                 maybe_resume_unwind();
                 Err(())
@@ -873,29 +871,35 @@ const ChunkLocationOffset: usize = ChunkSize - 2 * 4 - 8;
 // ___________________________________________________________________________
 // Wrappers around things in jsglue.cpp
 
-pub struct AutoObjectVectorWrapper {
-    pub ptr: *mut AutoObjectVector
+pub struct RootedObjectVectorWrapper {
+    pub ptr: *mut PersistentRootedObjectVector
 }
 
-impl AutoObjectVectorWrapper {
-    pub fn new(cx: *mut JSContext) -> AutoObjectVectorWrapper {
-        AutoObjectVectorWrapper {
+impl RootedObjectVectorWrapper {
+    pub fn new(cx: *mut JSContext) -> RootedObjectVectorWrapper {
+        RootedObjectVectorWrapper {
             ptr: unsafe {
-                 CreateAutoObjectVector(cx)
+                 CreateRootedObjectVector(cx)
             }
         }
     }
 
     pub fn append(&self, obj: *mut JSObject) -> bool {
         unsafe {
-            AppendToAutoObjectVector(self.ptr, obj)
+            AppendToRootedObjectVector(self.ptr, obj)
+        }
+    }
+
+    pub fn handle(&self) -> RawHandleObjectVector {
+        RawHandleObjectVector {
+            ptr: unsafe { GetObjectVectorAddress(self.ptr) }
         }
     }
 }
 
-impl Drop for AutoObjectVectorWrapper {
+impl Drop for RootedObjectVectorWrapper {
     fn drop(&mut self) {
-        unsafe { DeleteAutoObjectVector(self.ptr) }
+        unsafe { DeleteRootedObjectVector(self.ptr) }
     }
 }
 
@@ -904,10 +908,10 @@ pub struct CompileOptionsWrapper {
 }
 
 impl CompileOptionsWrapper {
-    pub fn new(cx: *mut JSContext, file: *const ::libc::c_char, line: c_uint) -> CompileOptionsWrapper {
-        CompileOptionsWrapper {
-            ptr: unsafe { NewCompileOptions(cx, file, line) }
-        }
+    pub unsafe fn new(cx: *mut JSContext, file: *const ::libc::c_char, line: c_uint) -> Self {
+        let ptr = NewCompileOptions(cx, file, line);
+        assert!(!ptr.is_null());
+        Self { ptr }
     }
 }
 
@@ -1053,24 +1057,26 @@ pub unsafe extern fn report_warning(_cx: *mut JSContext, report: *mut JSErrorRep
     warn!("Warning at {}:{}:{}: {}\n", fname, lineno, column, msg);
 }
 
-pub struct IdVector(*mut AutoIdVector);
+pub struct IdVector(*mut PersistentRootedIdVector);
 
 impl IdVector {
     pub unsafe fn new(cx: *mut JSContext) -> IdVector {
-        let vector = CreateAutoIdVector(cx);
+        let vector = CreateRootedIdVector(cx);
         assert!(!vector.is_null());
         IdVector(vector)
     }
 
-    pub fn get(&self) -> *mut AutoIdVector {
-        self.0
+    pub fn handle_mut(&mut self) -> RawMutableHandleIdVector {
+        RawMutableHandleIdVector {
+            ptr: unsafe { GetIdVectorAddress(self.0) }
+        }
     }
 }
 
 impl Drop for IdVector {
     fn drop(&mut self) {
         unsafe {
-            DestroyAutoIdVector(self.0)
+            DestroyRootedIdVector(self.0)
         }
     }
 }
@@ -1081,7 +1087,7 @@ impl Deref for IdVector {
     fn deref(&self) -> &[jsid] {
         unsafe {
             let mut length = 0;
-            let pointer = SliceAutoIdVector(self.0 as *const _, &mut length);
+            let pointer = SliceRootedIdVector(self.0, &mut length);
             slice::from_raw_parts(pointer, length)
         }
     }
@@ -1108,7 +1114,7 @@ pub unsafe fn define_methods(cx: *mut JSContext, obj: HandleObject,
     assert!({
         match methods.last() {
             Some(&JSFunctionSpec { name, call, nargs, flags, selfHostedName }) => {
-                name.is_null() && call.is_zeroed() && nargs == 0 && flags == 0 &&
+                name.string_.is_null() && call.is_zeroed() && nargs == 0 && flags == 0 &&
                 selfHostedName.is_null()
             },
             None => false,
@@ -1165,7 +1171,9 @@ pub static SIMPLE_GLOBAL_CLASS: JSClass = JSClass {
     name: b"Global\0" as *const u8 as *const _,
     flags: JSCLASS_IS_GLOBAL | ((JSCLASS_GLOBAL_SLOT_COUNT & JSCLASS_RESERVED_SLOTS_MASK) << JSCLASS_RESERVED_SLOTS_SHIFT),
     cOps: &SIMPLE_GLOBAL_CLASS_OPS as *const JSClassOps,
-    reserved: [0 as *mut _; 3]
+    spec: ptr::null(),
+    ext: ptr::null(),
+    oOps: ptr::null(),
 };
 
 #[inline]
@@ -1423,13 +1431,15 @@ pub mod wrappers {
     use jsapi::{JSType};
     use jsapi::{SavedFrameResult, SavedFrameSelfHosted};
     use jsapi::{MallocSizeOf, ObjectPrivateVisitor, ObjectOpResult, TabSizes};
-    use jsapi::AutoIdVector;
-    use jsapi::AutoObjectVector;
-    use jsapi::CloneDataPolicy;
     use jsapi::CallArgs;
+    use jsapi::CloneDataPolicy;
+    use jsapi::CompartmentTransplantCallback;
     use jsapi::ESClass;
+    use jsapi::ExceptionStackBehavior;
     use jsapi::ForOfIterator;
     use jsapi::ForOfIterator_NonIterableBehavior;
+    use jsapi::HandleIdVector;
+    use jsapi::HandleObjectVector;
     use jsapi::JSClass;
     use jsapi::JSConstDoubleSpec;
     use jsapi::JSConstIntegerSpec;
@@ -1441,9 +1451,12 @@ pub mod wrappers {
     use jsapi::JSONWriteCallback;
     use jsapi::JSPrincipals;
     use jsapi::JSPropertySpec;
+    use jsapi::JSPropertySpec_Name;
     use jsapi::JSProtoKey;
     use jsapi::JSScript;
     use jsapi::JSStructuredCloneData;
+    use jsapi::MutableHandleIdVector;
+    use jsapi::PersistentRootedIdVector;
     use jsapi::PromiseState;
     use jsapi::PromiseUserInputEventHandlingState;
     use jsapi::PropertyCopyBehavior;
@@ -1465,11 +1478,11 @@ pub mod wrappers {
     use jsapi::TranscodeRange;
     use jsapi::TwoByteChars;
     use jsapi::UniqueChars;
+    use jsapi::mozilla::TimeDuration;
     use jsapi::mozilla::Utf8Unit;
     use jsapi::Value;
     use jsapi::WasmModule;
     use jsapi::jsid;
-    use libc::FILE;
     use std::os::raw::c_char;
     use super::*;
     include!("jsapi_wrappers.in");
@@ -1569,13 +1582,15 @@ pub mod jsapi_wrapped {
     use jsapi::{JSType};
     use jsapi::{SavedFrameResult, SavedFrameSelfHosted};
     use jsapi::{MallocSizeOf, ObjectPrivateVisitor, ObjectOpResult, TabSizes};
-    use jsapi::AutoIdVector;
-    use jsapi::AutoObjectVector;
-    use jsapi::CloneDataPolicy;
     use jsapi::CallArgs;
+    use jsapi::CloneDataPolicy;
+    use jsapi::CompartmentTransplantCallback;
     use jsapi::ESClass;
+    use jsapi::ExceptionStackBehavior;
     use jsapi::ForOfIterator;
     use jsapi::ForOfIterator_NonIterableBehavior;
+    use jsapi::HandleIdVector;
+    use jsapi::HandleObjectVector;
     use jsapi::JSClass;
     use jsapi::JSConstDoubleSpec;
     use jsapi::JSConstIntegerSpec;
@@ -1587,9 +1602,12 @@ pub mod jsapi_wrapped {
     use jsapi::JSONWriteCallback;
     use jsapi::JSPrincipals;
     use jsapi::JSPropertySpec;
+    use jsapi::JSPropertySpec_Name;
     use jsapi::JSProtoKey;
     use jsapi::JSScript;
     use jsapi::JSStructuredCloneData;
+    use jsapi::MutableHandleIdVector;
+    use jsapi::PersistentRootedIdVector;
     use jsapi::PromiseState;
     use jsapi::PromiseUserInputEventHandlingState;
     use jsapi::PropertyCopyBehavior;
@@ -1611,10 +1629,10 @@ pub mod jsapi_wrapped {
     use jsapi::TranscodeRange;
     use jsapi::TwoByteChars;
     use jsapi::UniqueChars;
+    use jsapi::mozilla::TimeDuration;
     use jsapi::mozilla::Utf8Unit;
     use jsapi::Value;
     use jsapi::WasmModule;
-    use libc::FILE;
     use std::os::raw::c_char;
     use super::*;
     include!("jsapi_wrappers.in");
