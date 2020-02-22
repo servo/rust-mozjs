@@ -10,6 +10,11 @@ license = "MPL-2.0"
 [build-dependencies]
 cc = "1"
 
+[[example]]
+name = "minimal"
+[[example]]
+name = "eval"
+
 [[test]]
 name = "callback"
 [[test]]
