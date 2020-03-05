@@ -48,7 +48,7 @@ pub struct ProxyTraps {
     pub ownPropertyKeys: ::std::option::Option<unsafe extern "C" fn
                                                    (cx: *mut JSContext,
                                                     proxy: HandleObject,
-                                                    props: *mut AutoIdVector)
+                                                    props: MutableHandleIdVector)
                                                    -> bool>,
     pub delete_: ::std::option::Option<unsafe extern "C" fn
                                            (cx: *mut JSContext,
@@ -58,7 +58,7 @@ pub struct ProxyTraps {
     pub enumerate: ::std::option::Option<unsafe extern "C" fn
                                              (cx: *mut JSContext,
                                               proxy: HandleObject,
-                                              props: *mut AutoIdVector)
+                                              props: MutableHandleIdVector)
                                              -> bool>,
     pub getPrototypeIfOrdinary: ::std::option::Option<unsafe extern "C" fn
                                                           (cx: *mut JSContext,
@@ -109,7 +109,7 @@ pub struct ProxyTraps {
                                                                  proxy:
                                                                      HandleObject,
                                                                  props:
-                                                                     *mut AutoIdVector)
+                                                                     MutableHandleIdVector)
                                                                 -> bool>,
     pub nativeCall: ::std::option::Option<unsafe extern "C" fn
                                               (cx: *mut JSContext,
@@ -211,16 +211,6 @@ extern "C" {
      -> *const ::libc::c_void;
     pub fn CreateWrapperProxyHandler(aTraps: *const ProxyTraps)
      -> *const ::libc::c_void;
-    pub fn CreateRustJSPrincipal(origin: *const ::libc::c_void,
-                                  destroy: Option<unsafe extern "C" fn
-                                                  (principal: *mut JSPrincipals)>,
-                                  write: Option<unsafe extern "C" fn
-                                                (cx: *mut JSContext,
-                                                 writer: *mut JSStructuredCloneWriter)
-                                                 -> bool>)
-     -> *mut JSPrincipals;
-    pub fn GetPrincipalOrigin(principal: *const JSPrincipals)
-     -> *const ::libc::c_void;
     pub fn GetCrossCompartmentWrapper() -> *const ::libc::c_void;
     pub fn GetSecurityWrapper() -> *const ::libc::c_void;
     pub fn NewCompileOptions(aCx: *mut JSContext, aFile: *const ::libc::c_char,
@@ -240,7 +230,7 @@ extern "C" {
     pub fn NewWindowProxy(aCx: *mut JSContext, aObj: HandleObject,
                           aHandler: *const ::libc::c_void)
      -> *mut JSObject;
-    pub fn GetWindowProxyClass() -> *const Class;
+    pub fn GetWindowProxyClass() -> *const JSClass;
     pub fn GetProxyReservedSlot(obj: *mut JSObject, slot: u32, dest: *mut JS::Value);
     pub fn GetProxyPrivate(obj: *mut JSObject, dest: *mut JS::Value);
     pub fn SetProxyReservedSlot(obj: *mut JSObject, slot: u32, val: *const JS::Value);
@@ -269,15 +259,17 @@ extern "C" {
     pub fn UnwrapObjectStatic(obj: *mut JSObject) -> *mut JSObject;
     pub fn UnwrapObjectDynamic(obj: *mut JSObject, cx: *mut JSContext, stopAtOuter: u8) -> *mut JSObject;
     pub fn UncheckedUnwrapObject(obj: *mut JSObject, stopAtOuter: u8) -> *mut JSObject;
-    pub fn CreateAutoIdVector(cx: *mut JSContext) -> *mut AutoIdVector;
-    pub fn AppendToAutoIdVector(v: *mut AutoIdVector, id: HandleId) -> bool;
-    pub fn SliceAutoIdVector(v: *const AutoIdVector, length: *mut usize) -> *const jsid;
-    pub fn DestroyAutoIdVector(v: *mut AutoIdVector);
-    pub fn CreateAutoObjectVector(aCx: *mut JSContext)
-     -> *mut AutoObjectVector;
-    pub fn AppendToAutoObjectVector(v: *mut AutoObjectVector,
+    pub fn CreateRootedIdVector(cx: *mut JSContext) -> *mut PersistentRootedIdVector;
+    pub fn GetIdVectorAddress(v: *mut PersistentRootedIdVector) -> *mut ::libc::c_void;
+    pub fn SliceRootedIdVector(v: *const PersistentRootedIdVector, length: *mut usize) -> *const jsid;
+    pub fn AppendToIdVector(v: MutableHandleIdVector, id: HandleId) -> bool;
+    pub fn DestroyRootedIdVector(v: *mut PersistentRootedIdVector);
+    pub fn CreateRootedObjectVector(aCx: *mut JSContext)
+     -> *mut PersistentRootedObjectVector;
+    pub fn AppendToRootedObjectVector(v: *mut PersistentRootedObjectVector,
                                     obj: *mut JSObject) -> bool;
-    pub fn DeleteAutoObjectVector(v: *mut AutoObjectVector);
+    pub fn GetObjectVectorAddress(v: *mut PersistentRootedObjectVector) -> *mut ::libc::c_void;
+    pub fn DeleteRootedObjectVector(v: *mut PersistentRootedObjectVector);
     pub fn CollectServoSizes(cx: *mut JSContext, sizes: *mut ServoSizes, get_size: Option<unsafe extern "C" fn (obj: *mut JSObject) -> usize>) -> bool;
     pub fn InitializeMemoryReporter(want_to_measure: Option<unsafe extern "C" fn (obj: *mut JSObject) -> bool>);
     pub fn CallIdTracer(trc: *mut JSTracer, idp: *mut Heap<jsid>,

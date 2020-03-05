@@ -14,20 +14,17 @@ fn main() {
 
     build.cpp(true)
         .file("src/jsglue.cpp")
+        .flag("-DSTATIC_JS_API")
         .include(include_path);
     if env::var("CARGO_FEATURE_DEBUGMOZJS").is_ok() {
         build.define("DEBUG", "");
-        build.define("_DEBUG", "");
 
         if cfg!(target_os = "windows") {
-            build.flag("-MDd");
             build.flag("-Od");
         } else {
             build.flag("-g");
             build.flag("-O0");
         }
-    } else if cfg!(target_os = "windows") {
-        build.flag("-MD");
     }
 
     if env::var("CARGO_FEATURE_PROFILEMOZJS").is_ok() {
