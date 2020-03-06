@@ -57,6 +57,7 @@ use jsapi::MutableHandleIdVector as RawMutableHandleIdVector;
 use jsapi::glue::{JS_Init, JS_NewRealmOptions, DeleteRealmOptions};
 #[cfg(feature = "debugmozjs")]
 use jsapi::mozilla::detail::GuardObjectNotificationReceiver;
+use jsapi::mozilla::Utf8Unit;
 
 use jsval::ObjectValue;
 
@@ -249,6 +250,24 @@ impl Drop for JSEngine {
     }
 }
 
+pub fn transform_str_to_source_text(source: &str) -> SourceText<Utf8Unit> {
+    SourceText {
+        units_: source.as_ptr() as *const _,
+        length_: source.len() as u32,
+        ownsUnits_: false,
+        _phantom_0: PhantomData,
+    }
+}
+
+pub fn transform_u16_to_source_text(source: &[u16]) -> SourceText<u16> {
+    SourceText {
+        units_: source.as_ptr() as *const _,
+        length_: source.len() as u32,
+        ownsUnits_: false,
+        _phantom_0: PhantomData,
+    }
+}
+
 /// A handle to a Runtime that will be used to create a new runtime in another
 /// thread. This handle and the new runtime must be destroyed before the original
 /// runtime can be dropped.
@@ -383,12 +402,7 @@ impl Runtime {
         };
 
         unsafe {
-            let mut source = SourceText {
-                units_: script.as_ptr() as *const _,
-                length_: script.len() as u32,
-                ownsUnits_: false,
-                _phantom_0: std::marker::PhantomData,
-            };
+            let mut source = transform_str_to_source_text(&script);
             if !Evaluate2(self.cx(), options.ptr, &mut source, rval.into()) {
                 debug!("...err!");
                 maybe_resume_unwind();
