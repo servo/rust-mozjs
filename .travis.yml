@@ -13,7 +13,6 @@ addons:
       - llvm-toolchain-xenial-8
     packages:
       - autoconf2.13
-      - clang-8
   homebrew:
     update: true
     packages:
@@ -28,7 +27,7 @@ env:
   - FEATURES=""
 
 before_script:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export CC=clang; export CXX=clang++; sudo apt -y --purge remove clang-7; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export CC=clang; export CXX=clang++; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PYTHON3="/usr/local/opt/python/bin/python3"; fi
 
 script:
