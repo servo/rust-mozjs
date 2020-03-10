@@ -1,14 +1,10 @@
 language: rust
 rust:
-  - nightly
-  - beta
   - stable
 sudo: 9000
 dist: xenial
 os:
   - linux
-  - osx
-osx_image: xcode11
 
 addons:
   apt:
@@ -30,7 +26,6 @@ addons:
 
 env:
   - FEATURES=""
-  - FEATURES="--features debugmozjs"
 
 before_script:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export CC=clang; export CXX=clang++; fi
@@ -38,8 +33,8 @@ before_script:
 
 script:
   - ccache -z
-  - CCACHE=$(which ccache) travis_wait 30 cargo build --verbose $FEATURES
-  - CCACHE=$(which ccache) RUST_BACKTRACE=1 cargo test --verbose $FEATURES
+  - CCACHE=$(which ccache) travis_wait 30 cargo build --verbose --features "$FEATURES"
+  - CCACHE=$(which ccache) RUST_BACKTRACE=1 cargo test --verbose --features "$FEATURES"
   - ccache -s
 
 cache: ccache
