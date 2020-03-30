@@ -20,7 +20,6 @@ addons:
     update: true
     packages:
       - python
-      - python@2
       - autoconf@2.13
       - ccache
       - llvm
@@ -32,7 +31,7 @@ env:
 
 before_script:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export CC=clang; export CXX=clang++; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PYTHON3="/usr/local/opt/python/bin/python3"; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PYTHON3="/usr/local/opt/python/bin/python3" && brew install "https://raw.githubusercontent.com/Homebrew/homebrew-core/3a877e3525d93cfeb076fc57579bdd589defc585/Formula/python@2.rb"; fi
 
 script:
   - ccache -z
