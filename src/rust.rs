@@ -55,6 +55,7 @@ use jsapi::HandleValue as RawHandleValue;
 use jsapi::MutableHandle as RawMutableHandle;
 use jsapi::MutableHandleIdVector as RawMutableHandleIdVector;
 use jsapi::glue::{JS_Init, JS_NewRealmOptions, DeleteRealmOptions};
+use jsapi::JS::RegExpFlags;
 #[cfg(feature = "debugmozjs")]
 use jsapi::mozilla::detail::GuardObjectNotificationReceiver;
 use jsapi::mozilla::Utf8Unit;
