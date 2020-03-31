@@ -49,6 +49,7 @@ doctest = false
 
 [features]
 debugmozjs = ['mozjs_sys/debugmozjs']
+jitspew = ['mozjs_sys/jitspew']
 profilemozjs = ['mozjs_sys/profilemozjs']
 uwp = ['mozjs_sys/uwp']
 
@@ -57,4 +58,4 @@ lazy_static = "1"
 libc = "0.2"
 log = "0.4"
 num-traits = "0.2"
-mozjs_sys = { git = "https://github.com/servo/mozjs", rev = "ef2d1cc249f2662b2acb31d1c1328d7960161da4" }
+mozjs_sys = { git = "https://github.com/servo/mozjs", rev = "d4370798ee17ad16d52ff2e83c9055d19a98b26f" }
