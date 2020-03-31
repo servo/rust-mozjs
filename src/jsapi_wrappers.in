@@ -143,6 +143,13 @@ wrap!(jsapi: pub fn AddPromiseReactions(cx: *mut JSContext, promise: HandleObjec
 wrap!(jsapi: pub fn GetPromiseUserInputEventHandlingState(promise: HandleObject) -> PromiseUserInputEventHandlingState);
 wrap!(jsapi: pub fn SetPromiseUserInputEventHandlingState(promise: HandleObject, state: PromiseUserInputEventHandlingState) -> bool);
 wrap!(jsapi: pub fn GetWaitForAllPromise(cx: *mut JSContext, promises: HandleObjectVector) -> *mut JSObject);
+wrap!(jsapi: pub fn SetRegExpInput(cx: *mut JSContext, obj: HandleObject, input: Handle<*mut JSString>) -> bool);
+wrap!(jsapi: pub fn ClearRegExpStatics(cx: *mut JSContext, obj: HandleObject) -> bool);
+wrap!(jsapi: pub fn ExecuteRegExp(cx: *mut JSContext, obj: HandleObject, reobj: HandleObject, chars: *mut u16, length: usize, indexp: *mut usize, test: bool, rval: MutableHandle<Value>) -> bool);
+wrap!(jsapi: pub fn ExecuteRegExpNoStatics(cx: *mut JSContext, reobj: HandleObject, chars: *const u16, length: usize, indexp: *mut usize, test: bool, rval: MutableHandle<Value>) -> bool);
+wrap!(jsapi: pub fn ObjectIsRegExp(cx: *mut JSContext, obj: HandleObject, isRegExp: *mut bool) -> bool);
+wrap!(jsapi: pub fn GetRegExpFlags(cx: *mut JSContext, obj: HandleObject) -> RegExpFlags);
+wrap!(jsapi: pub fn GetRegExpSource(cx: *mut JSContext, obj: HandleObject) -> *mut JSString);
 wrap!(jsapi: pub fn GetSavedFrameSource(cx: *mut JSContext, principals: *mut JSPrincipals, savedFrame: HandleObject, sourcep: MutableHandle<*mut JSString>, selfHosted: SavedFrameSelfHosted) -> SavedFrameResult);
 wrap!(jsapi: pub fn GetSavedFrameSourceId(cx: *mut JSContext, principals: *mut JSPrincipals, savedFrame: HandleObject, sourceIdp: *mut u32, selfHosted: SavedFrameSelfHosted) -> SavedFrameResult);
 wrap!(jsapi: pub fn GetSavedFrameLine(cx: *mut JSContext, principals: *mut JSPrincipals, savedFrame: HandleObject, linep: *mut u32, selfHosted: SavedFrameSelfHosted) -> SavedFrameResult);
