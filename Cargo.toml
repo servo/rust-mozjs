@@ -58,4 +58,4 @@ lazy_static = "1"
 libc = "0.2"
 log = "0.4"
 num-traits = "0.2"
-mozjs_sys = { git = "https://github.com/servo/mozjs", rev = "d4370798ee17ad16d52ff2e83c9055d19a98b26f" }
+mozjs_sys = { git = "https://github.com/servo/mozjs", rev = "288c49b19b5bc56125de4096c7059db0a92c524e" }
