@@ -1098,4 +1098,21 @@ StreamConsumerNoteResponseURLs(
   sc->noteResponseURLs(maybeUrl, maybeSourceMapUrl);
 }
 
+bool
+DescribeScriptedCaller(
+    JSContext* cx,
+    char* buffer,
+    size_t buflen,
+    uint32_t* line,
+    uint32_t* col
+)
+{
+  JS::AutoFilename filename;
+  if (!JS::DescribeScriptedCaller(cx, &filename, line, col)) {
+    return false;
+  }
+  strncpy(buffer, filename.get(), buflen);
+  return true;
+}
+
 } // extern "C"

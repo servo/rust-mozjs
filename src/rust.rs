@@ -18,6 +18,7 @@ use std::slice;
 use std::str;
 use std::u32;
 use std::default::Default;
+use std::ffi::CStr;
 use std::ops::{Deref, DerefMut};
 use std::os::raw::c_void;
 use std::cell::Cell;
@@ -65,7 +66,7 @@ use jsval::ObjectValue;
 use glue::{AppendToRootedObjectVector, CallFunctionTracer, CallIdTracer, CallObjectRootTracer};
 use glue::{CallObjectTracer, CallScriptTracer, CallStringTracer, CallValueRootTracer};
 use glue::{CallValueTracer, CreateRootedIdVector, CreateRootedObjectVector};
-use glue::{DeleteCompileOptions, DeleteRootedObjectVector, DestroyRootedIdVector};
+use glue::{DeleteCompileOptions, DeleteRootedObjectVector, DescribeScriptedCaller, DestroyRootedIdVector};
 use glue::{GetIdVectorAddress, GetObjectVectorAddress, NewCompileOptions, SliceRootedIdVector};
 
 use panic::maybe_resume_unwind;
@@ -1295,6 +1296,28 @@ macro_rules! new_jsjitinfo_bitfield_1 {
             (($isTypedMethod as u32) << 21u32) |
             (($slotIndex as u32) << 22u32)
     }
+}
+
+#[derive(Debug, Default)]
+pub struct ScriptedCaller {
+    pub filename: String,
+    pub line: u32,
+    pub col: u32,
+}
+
+pub unsafe fn describe_scripted_caller(cx: *mut JSContext) -> Result<ScriptedCaller, ()> {
+    let mut buf = [0; 1024];
+    let mut line = 0;
+    let mut col = 0;
+    if !DescribeScriptedCaller(cx, buf.as_mut_ptr(), buf.len(), &mut line, &mut col) {
+        return Err(());
+    }
+    let filename = CStr::from_ptr((&buf) as *const _ as *const _);
+    Ok(ScriptedCaller {
+        filename: String::from_utf8_lossy(filename.to_bytes()).into_owned(),
+        line,
+        col,
+    })
 }
 
 pub struct CapturedJSStack<'a> {
