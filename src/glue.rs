@@ -359,4 +359,5 @@ extern "C" {
     pub fn StreamConsumerStreamEnd(cx: *mut JS::StreamConsumer);
     pub fn StreamConsumerStreamError(cx: *mut JS::StreamConsumer, errorCode: usize);
     pub fn StreamConsumerNoteResponseURLs(sc: *mut JS::StreamConsumer, maybeUrl: *const c_char, maybeSourceMapUrl: *const c_char);
+    pub fn DescribeScriptedCaller(cx: *mut JSContext, buffer: *mut u8, buflen: usize, line: *mut u32, col: *mut u32) -> bool;
 }
