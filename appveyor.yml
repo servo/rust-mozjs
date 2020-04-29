@@ -38,8 +38,6 @@ environment:
   VCVARSALL_PATH: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build
 
   matrix:
-    - TARGET: i686-pc-windows-msvc
-      CROSS_COMPILE: 1
     - TARGET: x86_64-pc-windows-msvc
     - TARGET: x86_64-pc-windows-msvc
       FEATURES: "--features debugmozjs"
@@ -58,7 +56,6 @@ install:
   - appveyor-retry appveyor DownloadFile https://win.rustup.rs/ -FileName rustup-init.exe
   - rustup-init.exe -y --default-host=x86_64-pc-windows-msvc
   - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
-  - if "%CROSS_COMPILE%" == "1" rustup target add %TARGET%
   - set MOZTOOLS_PATH=C:\mozilla-build\msys\bin;C:\mozilla-build\mozmake;C:\mozilla-build\yasm
   - set NATIVE_WIN32_PYTHON=C:/Python27/python.exe
   - set AUTOCONF=C:/mozilla-build/msys/local/bin/autoconf-2.13
@@ -71,4 +68,4 @@ build_script:
   - cd %APPVEYOR_BUILD_FOLDER%
   - set MOZJS_FORCE_RERUN=1
   - cargo build --verbose --verbose --target %TARGET% %FEATURES%
-  - if "%CROSS_COMPILE%" == "" cargo test --verbose --verbose --target %TARGET% %FEATURES%
+  - cargo test --verbose --verbose --target %TARGET% %FEATURES%
