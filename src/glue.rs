@@ -21,6 +21,27 @@ impl ::std::default::Default for JobQueueTraps {
 }
 
 #[repr(C)]
+#[derive(Copy, Clone, Default)]
+pub struct ReadableStreamUnderlyingSourceTraps {
+    pub requestData: ::std::option::Option<
+            unsafe extern "C" fn(source: *const c_void, cx: *mut JSContext, stream: HandleObject,
+                                 desiredSize: usize)>,
+    pub writeIntoReadRequestBuffer: ::std::option::Option<
+            unsafe extern "C" fn(source: *const c_void, cx: *mut JSContext, stream: HandleObject,
+                                 buffer: *mut c_void, length: usize, bytesWritten: *mut usize)>,
+    pub cancel: ::std::option::Option<
+            unsafe extern "C" fn(source: *const c_void, cx: *mut JSContext, stream: HandleObject,
+                                 reason: HandleValue, resolve_to: *mut JS::Value)>,
+    pub onClosed: ::std::option::Option<
+            unsafe extern "C" fn(source: *const c_void, cx: *mut JSContext, stream: HandleObject)>,
+    pub onErrored: ::std::option::Option<
+            unsafe extern "C" fn(source: *const c_void, cx: *mut JSContext, stream: HandleObject,
+                                 reason: HandleValue)>,
+    pub finalize: ::std::option::Option<
+            unsafe extern "C" fn(source: *mut JS::ReadableStreamUnderlyingSource)>,
+}
+
+#[repr(C)]
 #[derive(Copy, Clone)]
 pub struct ProxyTraps {
     pub enter: ::std::option::Option<unsafe extern "C" fn
@@ -354,6 +375,8 @@ extern "C" {
     pub fn EncodeStringToUTF8(cx: *mut JSContext, str: JS::HandleString, cb: fn(*const c_char));
     pub fn CreateJobQueue(traps: *const JobQueueTraps, queue: *const c_void) -> *mut JS::JobQueue;
     pub fn DeleteJobQueue(queue: *mut JS::JobQueue);
+    pub fn CreateReadableStreamUnderlyingSource(traps: *const ReadableStreamUnderlyingSourceTraps, source: *const c_void) -> *mut JS::ReadableStreamUnderlyingSource;
+    pub fn DeleteReadableStreamUnderlyingSource(source: *mut JS::ReadableStreamUnderlyingSource);
     pub fn DispatchableRun(cx: *mut JSContext, ptr: *mut JS::Dispatchable, mb: JS::Dispatchable_MaybeShuttingDown);
     pub fn StreamConsumerConsumeChunk(sc: *mut JS::StreamConsumer, begin: *const u8, length: usize) -> bool;
     pub fn StreamConsumerStreamEnd(cx: *mut JS::StreamConsumer);

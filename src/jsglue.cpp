@@ -22,6 +22,7 @@
 #include "js/Principals.h"
 #include "js/Promise.h"
 #include "js/Proxy.h"
+#include "js/Stream.h"
 #include "js/StructuredClone.h"
 #include "js/Wrapper.h"
 #include "mozilla/Unused.h"
@@ -73,6 +74,54 @@ private:
   virtual js::UniquePtr<SavedJobQueue> saveJobQueue(JSContext* cx) {
     MOZ_ASSERT(false, "saveJobQueue should not be invoked");
     return nullptr;
+  }
+};
+
+struct ReadableStreamUnderlyingSourceTraps {
+  void (*requestData)(void* source, JSContext* cx, JS::HandleObject stream, size_t desiredSize);
+  void (*writeIntoReadRequestBuffer)(void* source, JSContext* cx, JS::HandleObject stream, void* buffer, size_t length, size_t* bytesWritten);
+  void (*cancel)(void* source, JSContext* cx, JS::HandleObject stream, JS::HandleValue reason, JS::Value* resolve_to);
+  void (*onClosed)(void* source, JSContext* cx, JS::HandleObject stream);
+  void (*onErrored)(void* source, JSContext* cx, JS::HandleObject stream, JS::HandleValue reason);
+  void (*finalize)(JS::ReadableStreamUnderlyingSource* source);
+};
+
+class RustReadableStreamUnderlyingSource : public JS::ReadableStreamUnderlyingSource {
+  ReadableStreamUnderlyingSourceTraps mTraps;
+  void* mSource;
+public:
+  RustReadableStreamUnderlyingSource(const ReadableStreamUnderlyingSourceTraps& aTraps, void* aSource)
+  : mTraps(aTraps)
+  , mSource(aSource)
+  {
+  }
+
+  virtual void requestData(JSContext* cx, JS::HandleObject stream, size_t desiredSize) {
+  	return mTraps.requestData(mSource, cx, stream, desiredSize);
+  }
+
+  virtual void writeIntoReadRequestBuffer(JSContext* cx, JS::HandleObject stream, void* buffer, size_t length, size_t* bytesWritten) {
+	return mTraps.writeIntoReadRequestBuffer(mSource, cx, stream, buffer, length, bytesWritten);
+  }
+
+  virtual JS::Value cancel(JSContext* cx, JS::HandleObject stream, JS::HandleValue reason) {
+	JS::Value resolve_to;
+	mTraps.cancel(mSource, cx, stream, reason, &resolve_to);
+	return resolve_to;
+  }
+
+
+  virtual void onClosed(JSContext* cx, JS::HandleObject stream) {
+	return mTraps.onClosed(mSource, cx, stream);
+  }
+
+
+  virtual void onErrored(JSContext* cx, JS::HandleObject stream, JS::HandleValue reason) {
+	return mTraps.onErrored(mSource, cx, stream, reason);
+  }
+
+  virtual void finalize() {
+	return mTraps.finalize(this);
   }
 };
 
@@ -1067,6 +1116,18 @@ void
 DeleteJobQueue(JS::JobQueue* queue)
 {
   delete queue;
+}
+
+JS::ReadableStreamUnderlyingSource*
+CreateReadableStreamUnderlyingSource(const ReadableStreamUnderlyingSourceTraps* aTraps, void* aSource)
+{
+  return new RustReadableStreamUnderlyingSource(*aTraps, aSource);
+}
+
+void
+DeleteReadableStreamUnderlyingSource(JS::ReadableStreamUnderlyingSource* source)
+{
+  delete source;
 }
 
 void
