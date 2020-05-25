@@ -4,7 +4,7 @@
 
 use std::any::Any;
 use std::cell::RefCell;
-use std::panic::{UnwindSafe, catch_unwind, resume_unwind};
+use std::panic::{AssertUnwindSafe, catch_unwind, resume_unwind};
 
 thread_local!(static PANIC_PAYLOAD: RefCell<Option<Box<dyn Any + Send>>> = RefCell::new(None));
 
@@ -16,18 +16,17 @@ pub fn maybe_resume_unwind() {
 }
 
 /// Generic wrapper for JS engine callbacks panic-catching
-pub fn wrap_panic<F, R>(function: F, generic_return_type: R) -> R
-    where F: FnOnce() -> R + UnwindSafe
-{
-    let result = catch_unwind(function);
-    match result {
-        Ok(result) => result,
-        Err(error) => {
-            PANIC_PAYLOAD.with(|result| {
-                assert!(result.borrow().is_none());
-                *result.borrow_mut() = Some(error);
+// https://github.com/servo/servo/issues/26585
+#[inline(never)]
+pub fn wrap_panic(function: &mut dyn FnMut()) {
+    match catch_unwind(AssertUnwindSafe(function)) {
+        Ok(()) => {},
+        Err(payload) => {
+            PANIC_PAYLOAD.with(|opt_payload| {
+                let mut opt_payload = opt_payload.borrow_mut();
+                assert!(opt_payload.is_none());
+                *opt_payload = Some(payload);
             });
-            generic_return_type
         }
     }
 }
