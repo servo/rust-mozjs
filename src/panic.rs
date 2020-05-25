@@ -6,11 +6,11 @@ use std::any::Any;
 use std::cell::RefCell;
 use std::panic::{UnwindSafe, catch_unwind, resume_unwind};
 
-thread_local!(static PANIC_RESULT: RefCell<Option<Box<dyn Any + Send>>> = RefCell::new(None));
+thread_local!(static PANIC_PAYLOAD: RefCell<Option<Box<dyn Any + Send>>> = RefCell::new(None));
 
 /// If there is a pending panic, resume unwinding.
 pub fn maybe_resume_unwind() {
-    if let Some(error) = PANIC_RESULT.with(|result| result.borrow_mut().take()) {
+    if let Some(error) = PANIC_PAYLOAD.with(|result| result.borrow_mut().take()) {
         resume_unwind(error);
     }
 }
@@ -23,7 +23,7 @@ pub fn wrap_panic<F, R>(function: F, generic_return_type: R) -> R
     match result {
         Ok(result) => result,
         Err(error) => {
-            PANIC_RESULT.with(|result| {
+            PANIC_PAYLOAD.with(|result| {
                 assert!(result.borrow().is_none());
                 *result.borrow_mut() = Some(error);
             });
