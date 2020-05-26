@@ -42,7 +42,13 @@ fn test_panic() {
 }
 
 unsafe extern "C" fn test(_cx: *mut JSContext, _argc: u32, _vp: *mut Value) -> bool {
-    wrap_panic(|| {
-        panic!()
-    }, false)
+    let mut result = false;
+    wrap_panic(&mut || {
+        panic!();
+        #[allow(unreachable_code)]
+        {
+            result = true
+        }
+    });
+    result
 }
