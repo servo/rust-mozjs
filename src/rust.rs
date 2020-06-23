@@ -19,6 +19,7 @@ use std::str;
 use std::u32;
 use std::default::Default;
 use std::ffi::CStr;
+use std::mem::MaybeUninit;
 use std::ops::{Deref, DerefMut};
 use std::os::raw::c_void;
 use std::cell::Cell;
@@ -1329,10 +1330,12 @@ impl<'a> CapturedJSStack<'a> {
     pub unsafe fn new(cx: *mut JSContext,
                       mut guard: RootedGuard<'a, *mut JSObject>,
                       max_frame_count: Option<u32>) -> Option<Self> {
-        let ref mut stack_capture = match max_frame_count {
-            None => JS_StackCapture_AllFrames(),
-            Some(count) => JS_StackCapture_MaxFrames(count),
+        let ref mut stack_capture = MaybeUninit::uninit();
+        match max_frame_count {
+            None => JS_StackCapture_AllFrames(stack_capture.as_mut_ptr()),
+            Some(count) => JS_StackCapture_MaxFrames(count, stack_capture.as_mut_ptr()),
         };
+        let ref mut stack_capture = stack_capture.assume_init();
 
         if !CaptureCurrentStack(cx, guard.handle_mut().raw(), stack_capture) {
             None
