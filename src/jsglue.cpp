@@ -19,6 +19,7 @@
 #include "js/Class.h"
 #include "js/Id.h"
 #include "js/MemoryMetrics.h"
+#include "js/Modules.h"  // include for JS::GetModulePrivate
 #include "js/Principals.h"
 #include "js/Promise.h"
 #include "js/Proxy.h"
@@ -1075,6 +1076,16 @@ WriteBytesToJSStructuredCloneData(const uint8_t* src, size_t len, JSStructuredCl
 void
 JS_GetPromiseResult(JS::HandleObject promise, JS::MutableHandleValue dest) {
   dest.set(JS::GetPromiseResult(promise));
+}
+
+void
+JS_GetScriptPrivate(JSScript* script, JS::MutableHandleValue dest) {
+    dest.set(JS::GetScriptPrivate(script));
+}
+
+void
+JS_GetModulePrivate(JSObject* module, JS::MutableHandleValue dest) {
+    dest.set(JS::GetModulePrivate(module));
 }
 
 void
