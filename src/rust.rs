@@ -396,12 +396,11 @@ impl Runtime {
     pub fn evaluate_script(&self, glob: HandleObject, script: &str, filename: &str,
                            line_num: u32, rval: MutableHandleValue)
                     -> Result<(),()> {
-        let filename_cstr = ffi::CString::new(filename.as_bytes()).unwrap();
         debug!("Evaluating script from {} with content {}", filename, script);
 
         let _ac = JSAutoRealm::new(self.cx(), glob.get());
         let options = unsafe {
-            CompileOptionsWrapper::new(self.cx(), filename_cstr.as_ptr(), line_num)
+            CompileOptionsWrapper::new(self.cx(), filename, line_num)
         };
 
         unsafe {
@@ -925,8 +924,9 @@ pub struct CompileOptionsWrapper {
 }
 
 impl CompileOptionsWrapper {
-    pub unsafe fn new(cx: *mut JSContext, file: *const ::libc::c_char, line: c_uint) -> Self {
-        let ptr = NewCompileOptions(cx, file, line);
+    pub unsafe fn new(cx: *mut JSContext, filename: &str, line: u32) -> Self {
+        let filename_cstr = ffi::CString::new(filename.as_bytes()).unwrap();
+        let ptr = NewCompileOptions(cx, filename_cstr.as_ptr(), line);
         assert!(!ptr.is_null());
         Self { ptr }
     }
