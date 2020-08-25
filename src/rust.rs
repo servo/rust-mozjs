@@ -767,7 +767,7 @@ impl<'a, T> Handle<'a, T> {
         *self.ptr
     }
 
-    pub fn new(ptr: &'a T) -> Self {
+    fn new(ptr: &'a T) -> Self {
         Handle { ptr: ptr }
     }
 
