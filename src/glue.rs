@@ -240,8 +240,7 @@ extern "C" {
     pub fn NewProxyObject(aCx: *mut JSContext,
                           aHandler: *const ::libc::c_void, aPriv: HandleValue,
                           proto: *mut JSObject,
-                          classp: *const JSClass,
-                          singleton: bool)
+                          classp: *const JSClass)
      -> *mut JSObject;
     pub fn WrapperNew(aCx: *mut JSContext, aObj: HandleObject,
                       aHandler: *const ::libc::c_void, aClass: *const JSClass,

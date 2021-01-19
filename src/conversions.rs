@@ -32,8 +32,8 @@ use glue::RUST_JS_NumberValue;
 use jsapi::AssertSameCompartment;
 use jsapi::{ForOfIterator, ForOfIterator_NonIterableBehavior};
 use jsapi::{Heap, JS_DefineElement, JS_GetLatin1StringCharsAndLength};
-use jsapi::{JS_GetTwoByteStringCharsAndLength, JS_NewArrayObject1};
-use jsapi::{JS_NewUCStringCopyN, JSPROP_ENUMERATE, JS_StringHasLatin1Chars};
+use jsapi::{JS_GetTwoByteStringCharsAndLength, NewArrayObject1};
+use jsapi::{JS_NewUCStringCopyN, JSPROP_ENUMERATE, JS_DeprecatedStringHasLatin1Chars};
 use jsapi::{JSContext, JSObject, JSString, RootedObject, RootedValue};
 use jsval::{BooleanValue, Int32Value, NullValue, UInt32Value, UndefinedValue};
 use jsval::{JSVal, ObjectValue, ObjectOrNullValue, StringValue};
@@ -440,7 +440,7 @@ impl FromJSValConvertible for f64 {
 /// Converts a `JSString`, encoded in "Latin1" (i.e. U+0000-U+00FF encoded as 0x00-0xFF) into a
 /// `String`.
 pub unsafe fn latin1_to_string(cx: *mut JSContext, s: *mut JSString) -> String {
-    assert!(JS_StringHasLatin1Chars(s));
+    assert!(JS_DeprecatedStringHasLatin1Chars(s));
 
     let mut length = 0;
     let chars = JS_GetLatin1StringCharsAndLength(cx, ptr::null(), s, &mut length);
@@ -454,7 +454,7 @@ pub unsafe fn latin1_to_string(cx: *mut JSContext, s: *mut JSString) -> String {
 
 /// Converts a `JSString` into a `String`, regardless of used encoding.
 pub unsafe fn jsstr_to_string(cx: *mut JSContext, jsstr: *mut JSString) -> String {
-    if JS_StringHasLatin1Chars(jsstr) {
+    if JS_DeprecatedStringHasLatin1Chars(jsstr) {
         return latin1_to_string(cx, jsstr);
     }
 
@@ -554,7 +554,7 @@ impl<T: FromJSValConvertible> FromJSValConvertible for Option<T> {
 impl<T: ToJSValConvertible> ToJSValConvertible for [T] {
     #[inline]
     unsafe fn to_jsval(&self, cx: *mut JSContext, mut rval: MutableHandleValue) {
-        rooted!(in(cx) let js_array = JS_NewArrayObject1(cx, self.len() as libc::size_t));
+        rooted!(in(cx) let js_array = NewArrayObject1(cx, self.len() as libc::size_t));
         assert!(!js_array.handle().is_null());
 
         rooted!(in(cx) let mut val = UndefinedValue());
