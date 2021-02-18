@@ -26,6 +26,9 @@
 #include "js/Stream.h"
 #include "js/StructuredClone.h"
 #include "js/Wrapper.h"
+#include "js/friend/ErrorMessages.h"
+#include "js/experimental/JitInfo.h"
+#include "js/experimental/TypedData.h"
 #include "mozilla/Unused.h"
 #include "assert.h"
 
@@ -642,13 +645,12 @@ NewCompileOptions(
 
 JSObject*
 NewProxyObject(JSContext* aCx, const void* aHandler, JS::HandleValue aPriv,
-               JSObject* proto, JSClass* aClass, bool singleton)
+               JSObject* proto, JSClass* aClass)
 {
     js::ProxyOptions options;
     if (aClass) {
       options.setClass(aClass);
     }
-    options.setSingleton(singleton);
     return js::NewProxyObject(aCx, (js::BaseProxyHandler*)aHandler, aPriv, proto,
                               options);
 }
@@ -661,7 +663,9 @@ WrapperNew(JSContext* aCx, JS::HandleObject aObj, const void* aHandler,
     if (aClass) {
         options.setClass(aClass);
     }
-    options.setSingleton(aSingleton);
+    if (aSingleton) {
+      return js::Wrapper::NewSingleton(aCx, aObj, (const js::Wrapper*)aHandler, options);
+    }
     return js::Wrapper::New(aCx, aObj, (const js::Wrapper*)aHandler, options);
 }
 
@@ -760,7 +764,7 @@ RUST_SET_JITINFO(JSFunction* func, const JSJitInfo* info) {
 
 void
 RUST_INTERNED_STRING_TO_JSID(JSContext* cx, JSString* str, JS::MutableHandleId id) {
-    id.set(INTERNED_STRING_TO_JSID(cx, str));
+    id.set(JS::PropertyKey::fromPinnedString(str));
 }
 
 const JSErrorFormatString*
@@ -1109,7 +1113,7 @@ JS_GetEmptyStringValue(JSContext* cx, JS::Value* dest) {
 
 void
 JS_GetReservedSlot(JSObject* obj, uint32_t index, JS::Value* dest) {
-  *dest = JS_GetReservedSlot(obj, index);
+  *dest = JS::GetReservedSlot(obj, index);
 }
 
 typedef void (*EncodedStringCallback)(char*);
