@@ -1466,6 +1466,7 @@ pub mod wrappers {
     use jsapi::{MallocSizeOf, ObjectPrivateVisitor, ObjectOpResult, TabSizes};
     use jsapi::CallArgs;
     use jsapi::CompartmentTransplantCallback;
+    use jsapi::DynamicImportStatus;
     use jsapi::ESClass;
     use jsapi::ExceptionStackBehavior;
     use jsapi::ForOfIterator;
@@ -1503,6 +1504,7 @@ pub mod wrappers {
     use jsapi::Symbol;
     use jsapi::SymbolCode;
     use jsapi::TranscodeBuffer;
+    use jsapi::TranscodeRange;
     use jsapi::TranscodeResult;
     use jsapi::TwoByteChars;
     use jsapi::UniqueChars;
@@ -1611,6 +1613,7 @@ pub mod jsapi_wrapped {
     use jsapi::{MallocSizeOf, ObjectPrivateVisitor, ObjectOpResult, TabSizes};
     use jsapi::CallArgs;
     use jsapi::CompartmentTransplantCallback;
+    use jsapi::DynamicImportStatus;
     use jsapi::ESClass;
     use jsapi::ExceptionStackBehavior;
     use jsapi::ForOfIterator;
@@ -1648,6 +1651,7 @@ pub mod jsapi_wrapped {
     use jsapi::Symbol;
     use jsapi::SymbolCode;
     use jsapi::TranscodeBuffer;
+    use jsapi::TranscodeRange;
     use jsapi::TranscodeResult;
     use jsapi::TwoByteChars;
     use jsapi::UniqueChars;

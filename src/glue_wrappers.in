@@ -3,7 +3,7 @@ wrap!(glue: pub fn InvokeHasOwn(handler: *const ::libc::c_void, cx: *mut JSConte
 wrap!(glue: pub fn CallJitGetterOp(info: *const JSJitInfo, cx: *mut JSContext, thisObj: HandleObject, specializedThis: *mut ::libc::c_void, argc: u32, vp: *mut Value) -> bool);
 wrap!(glue: pub fn CallJitSetterOp(info: *const JSJitInfo, cx: *mut JSContext, thisObj: HandleObject, specializedThis: *mut ::libc::c_void, argc: u32, vp: *mut Value) -> bool);
 wrap!(glue: pub fn CallJitMethodOp(info: *const JSJitInfo, cx: *mut JSContext, thisObj: HandleObject, specializedThis: *mut ::libc::c_void, argc: u32, vp: *mut Value) -> bool);
-wrap!(glue: pub fn NewProxyObject(aCx: *mut JSContext, aHandler: *const ::libc::c_void, aPriv: HandleValue, proto: *mut JSObject, class: *const JSClass) -> *mut JSObject);
+wrap!(glue: pub fn NewProxyObject(aCx: *mut JSContext, aHandler: *const ::libc::c_void, aPriv: HandleValue, proto: *mut JSObject, classp: *const JSClass) -> *mut JSObject);
 wrap!(glue: pub fn WrapperNew(aCx: *mut JSContext, aObj: HandleObject, aHandler: *const ::libc::c_void, aClass: *const JSClass, aSingleton: bool) -> *mut JSObject);
 wrap!(glue: pub fn NewWindowProxy(aCx: *mut JSContext, aObj: HandleObject, aHandler: *const ::libc::c_void) -> *mut JSObject);
 wrap!(glue: pub fn RUST_JSID_IS_INT(id: HandleId) -> bool);
@@ -14,7 +14,6 @@ wrap!(glue: pub fn RUST_JSID_TO_STRING(id: HandleId) -> *mut JSString);
 wrap!(glue: pub fn RUST_SYMBOL_TO_JSID(sym: *mut Symbol, id: MutableHandleId));
 wrap!(glue: pub fn RUST_JSID_IS_VOID(id: HandleId) -> bool);
 wrap!(glue: pub fn RUST_INTERNED_STRING_TO_JSID(cx: *mut JSContext, str: *mut JSString, id: MutableHandleId));
-wrap!(glue: pub fn GetIdVectorAddress(v: *mut PersistentRootedIdVector) -> *mut ::libc::c_void);
 wrap!(glue: pub fn AppendToIdVector(v: MutableHandleIdVector, id: HandleId) -> bool);
 wrap!(glue: pub fn JS_GetPromiseResult (promise: HandleObject, dest: MutableHandleValue));
 wrap!(glue: pub fn JS_GetScriptPrivate(script: *mut JSScript, dest: MutableHandleValue));
