@@ -16,7 +16,7 @@ use mozjs::jsapi::JSFunctionSpec;
 use mozjs::jsapi::JSNativeWrapper;
 use mozjs::jsapi::JSPropertySpec_Name;
 use mozjs::jsapi::JS_NewGlobalObject;
-use mozjs::jsapi::JS_NewObjectWithUniqueType;
+use mozjs::jsapi::JS_NewObjectWithGivenProto;
 use mozjs::jsapi::JSPROP_ENUMERATE;
 use mozjs::jsapi::JS_SetGCZeal;
 use mozjs::jsapi::OnNewGlobalHookOption;
@@ -44,7 +44,7 @@ fn rooting() {
                                                        &*c_option));
         let _ac = JSAutoRealm::new(cx, global.get());
         rooted!(in(cx) let prototype_proto = GetRealmObjectPrototype(cx));
-        rooted!(in(cx) let proto = JS_NewObjectWithUniqueType(cx,
+        rooted!(in(cx) let proto = JS_NewObjectWithGivenProto(cx,
                                                               &CLASS as *const _,
                                                               prototype_proto.handle().into()));
         define_methods(cx, proto.handle(), METHODS).unwrap();
