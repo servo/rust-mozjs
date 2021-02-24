@@ -37,7 +37,7 @@ fn main() {
     build.flag_if_supported("-Wno-unused-parameter");
 
     let confdefs_path: PathBuf = [&outdir, "js", "src", "js-confdefs.h"].iter().collect();
-    if cfg!(target_os = "windows") {
+    if build.get_compiler().is_like_msvc() {
         build.flag(&format!("-FI{}", confdefs_path.to_string_lossy()));
         build.define("WIN32", "");
         build.flag("-Zi");
