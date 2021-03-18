@@ -657,15 +657,13 @@ NewProxyObject(JSContext* aCx, const void* aHandler, JS::HandleValue aPriv,
 
 JSObject*
 WrapperNew(JSContext* aCx, JS::HandleObject aObj, const void* aHandler,
-           const JSClass* aClass, bool aSingleton)
+           const JSClass* aClass)
 {
     js::WrapperOptions options;
     if (aClass) {
         options.setClass(aClass);
     }
-    if (aSingleton) {
-      return js::Wrapper::NewSingleton(aCx, aObj, (const js::Wrapper*)aHandler, options);
-    }
+
     return js::Wrapper::New(aCx, aObj, (const js::Wrapper*)aHandler, options);
 }
 
@@ -682,7 +680,7 @@ GetWindowProxyClass()
 JSObject*
 NewWindowProxy(JSContext* aCx, JS::HandleObject aObj, const void* aHandler)
 {
-    return WrapperNew(aCx, aObj, aHandler, &WindowProxyClass, true);
+    return WrapperNew(aCx, aObj, aHandler, &WindowProxyClass);
 }
 
 void
@@ -1010,7 +1008,7 @@ IsDebugBuild()
 
 #define JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Type, type)                         \
     void                                                                       \
-    Get ## Type ## ArrayLengthAndData(JSObject* obj, uint32_t* length,         \
+    Get ## Type ## ArrayLengthAndData(JSObject* obj, size_t* length,         \
                                       bool* isSharedMemory, type** data)       \
     {                                                                          \
         js::Get ## Type ## ArrayLengthAndData(obj, length, isSharedMemory,     \
