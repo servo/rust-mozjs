@@ -34,6 +34,11 @@ fn typedarray() {
 
         let _ac = JSAutoRealm::new(cx, global.get());
 
+        rooted!(in(cx) let mut rval0 = UndefinedValue());
+        assert!(rt.evaluate_script(global.handle(), "new DataView(buffer,12,4)",
+                                   "test", 1, rval0.handle_mut()).is_ok());
+        assert!(rval0.is_object());
+
         rooted!(in(cx) let mut rval = UndefinedValue());
         assert!(rt.evaluate_script(global.handle(), "new Uint8Array([0, 2, 4])",
                                    "test", 1, rval.handle_mut()).is_ok());
