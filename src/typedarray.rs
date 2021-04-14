@@ -6,9 +6,9 @@
 //! typed arrays or wrapping existing JS reflectors, and prevents reinterpreting
 //! existing buffers as different types except in well-defined cases.
 
-use conversions::ToJSValConvertible;
 use conversions::ConversionResult;
 use conversions::FromJSValConvertible;
+use conversions::ToJSValConvertible;
 use glue::GetFloat32ArrayLengthAndData;
 use glue::GetFloat64ArrayLengthAndData;
 use glue::GetInt16ArrayLengthAndData;
@@ -58,12 +58,12 @@ use jsapi::UnwrapUint16Array;
 use jsapi::UnwrapUint32Array;
 use jsapi::UnwrapUint8Array;
 use jsapi::UnwrapUint8ClampedArray;
-use rust::{HandleValue, MutableHandleObject, MutableHandleValue};
 use rust::CustomTrace;
+use rust::{HandleValue, MutableHandleObject, MutableHandleValue};
 
+use std::cell::Cell;
 use std::ptr;
 use std::slice;
-use std::cell::Cell;
 
 /// Trait that specifies how pointers to wrapped objects are stored. It supports
 /// two variants, one with bare pointer (to be rooted on stack using
@@ -76,12 +76,18 @@ pub trait JSObjectStorage {
 }
 
 impl JSObjectStorage for *mut JSObject {
-    fn as_raw(&self) -> *mut JSObject { *self }
-    fn from_raw(raw: *mut JSObject) -> Self { raw }
+    fn as_raw(&self) -> *mut JSObject {
+        *self
+    }
+    fn from_raw(raw: *mut JSObject) -> Self {
+        raw
+    }
 }
 
 impl JSObjectStorage for Box<Heap<*mut JSObject>> {
-    fn as_raw(&self) -> *mut JSObject { self.get() }
+    fn as_raw(&self) -> *mut JSObject {
+        self.get()
+    }
     fn from_raw(raw: *mut JSObject) -> Self {
         let boxed = Box::new(Heap::default());
         boxed.set(raw);
@@ -91,10 +97,11 @@ impl JSObjectStorage for Box<Heap<*mut JSObject>> {
 
 impl<T: TypedArrayElement, S: JSObjectStorage> FromJSValConvertible for TypedArray<T, S> {
     type Config = ();
-    unsafe fn from_jsval(_cx: *mut JSContext,
-                         value: HandleValue,
-                         _option: ())
-                         -> Result<ConversionResult<Self>, ()> {
+    unsafe fn from_jsval(
+        _cx: *mut JSContext,
+        value: HandleValue,
+        _option: (),
+    ) -> Result<ConversionResult<Self>, ()> {
         if value.get().is_object() {
             Self::from(value.get().to_object()).map(ConversionResult::Success)
         } else {
@@ -121,7 +128,10 @@ pub struct TypedArray<T: TypedArrayElement, S: JSObjectStorage> {
     computed: Cell<Option<(*mut T::Element, usize)>>,
 }
 
-unsafe impl<T> CustomTrace for TypedArray<T, *mut JSObject> where T: TypedArrayElement {
+unsafe impl<T> CustomTrace for TypedArray<T, *mut JSObject>
+where
+    T: TypedArrayElement,
+{
     fn trace(&self, trc: *mut JSTracer) {
         self.object.trace(trc);
     }
@@ -177,7 +187,8 @@ impl<T: TypedArrayElement, S: JSObjectStorage> TypedArray<T, S> {
 
     /// Retrieves an owned data that's represented by the typed array.
     pub fn to_vec(&self) -> Vec<T::Element>
-        where T::Element: Clone
+    where
+        T::Element: Clone,
     {
         // This is safe, because we immediately copy from the underlying buffer
         // to an owned collection. Otherwise, one needs to be careful, since
@@ -218,10 +229,11 @@ impl<T: TypedArrayElement, S: JSObjectStorage> TypedArray<T, S> {
 impl<T: TypedArrayElementCreator + TypedArrayElement, S: JSObjectStorage> TypedArray<T, S> {
     /// Create a new JS typed array, optionally providing initial data that will
     /// be copied into the newly-allocated buffer. Returns the new JS reflector.
-    pub unsafe fn create(cx: *mut JSContext,
-                         with: CreateWith<T::Element>,
-                         mut result: MutableHandleObject)
-                         -> Result<(), ()> {
+    pub unsafe fn create(
+        cx: *mut JSContext,
+        with: CreateWith<T::Element>,
+        mut result: MutableHandleObject,
+    ) -> Result<(), ()> {
         let length = match with {
             CreateWith::Length(len) => len,
             CreateWith::Slice(slice) => slice.len(),
@@ -274,7 +286,7 @@ macro_rules! typed_array_element {
     ($t: ident,
      $element: ty,
      $unwrap: ident,
-     $length_and_data: ident) => (
+     $length_and_data: ident) => {
         /// A kind of typed array.
         pub struct $t;
 
@@ -293,14 +305,14 @@ macro_rules! typed_array_element {
                 (data, len)
             }
         }
-    );
+    };
 
     ($t: ident,
      $element: ty,
      $unwrap: ident,
      $length_and_data: ident,
      $create_new: ident,
-     $get_data: ident) => (
+     $get_data: ident) => {
         typed_array_element!($t, $element, $unwrap, $length_and_data);
 
         impl TypedArrayElementCreator for $t {
@@ -315,73 +327,95 @@ macro_rules! typed_array_element {
                 data
             }
         }
-    );
+    };
 }
 
-typed_array_element!(Uint8,
-                     u8,
-                     UnwrapUint8Array,
-                     GetUint8ArrayLengthAndData,
-                     JS_NewUint8Array,
-                     JS_GetUint8ArrayData);
-typed_array_element!(Uint16,
-                     u16,
-                     UnwrapUint16Array,
-                     GetUint16ArrayLengthAndData,
-                     JS_NewUint16Array,
-                     JS_GetUint16ArrayData);
-typed_array_element!(Uint32,
-                     u32,
-                     UnwrapUint32Array,
-                     GetUint32ArrayLengthAndData,
-                     JS_NewUint32Array,
-                     JS_GetUint32ArrayData);
-typed_array_element!(Int8,
-                     i8,
-                     UnwrapInt8Array,
-                     GetInt8ArrayLengthAndData,
-                     JS_NewInt8Array,
-                     JS_GetInt8ArrayData);
-typed_array_element!(Int16,
-                     i16,
-                     UnwrapInt16Array,
-                     GetInt16ArrayLengthAndData,
-                     JS_NewInt16Array,
-                     JS_GetInt16ArrayData);
-typed_array_element!(Int32,
-                     i32,
-                     UnwrapInt32Array,
-                     GetInt32ArrayLengthAndData,
-                     JS_NewInt32Array,
-                     JS_GetInt32ArrayData);
-typed_array_element!(Float32,
-                     f32,
-                     UnwrapFloat32Array,
-                     GetFloat32ArrayLengthAndData,
-                     JS_NewFloat32Array,
-                     JS_GetFloat32ArrayData);
-typed_array_element!(Float64,
-                     f64,
-                     UnwrapFloat64Array,
-                     GetFloat64ArrayLengthAndData,
-                     JS_NewFloat64Array,
-                     JS_GetFloat64ArrayData);
-typed_array_element!(ClampedU8,
-                     u8,
-                     UnwrapUint8ClampedArray,
-                     GetUint8ClampedArrayLengthAndData,
-                     JS_NewUint8ClampedArray,
-                     JS_GetUint8ClampedArrayData);
-typed_array_element!(ArrayBufferU8,
-                     u8,
-                     UnwrapArrayBuffer,
-                     GetArrayBufferLengthAndData,
-                     NewArrayBuffer,
-                     GetArrayBufferData);
-typed_array_element!(ArrayBufferViewU8,
-                     u8,
-                     UnwrapArrayBufferView,
-                     GetArrayBufferViewLengthAndData);
+typed_array_element!(
+    Uint8,
+    u8,
+    UnwrapUint8Array,
+    GetUint8ArrayLengthAndData,
+    JS_NewUint8Array,
+    JS_GetUint8ArrayData
+);
+typed_array_element!(
+    Uint16,
+    u16,
+    UnwrapUint16Array,
+    GetUint16ArrayLengthAndData,
+    JS_NewUint16Array,
+    JS_GetUint16ArrayData
+);
+typed_array_element!(
+    Uint32,
+    u32,
+    UnwrapUint32Array,
+    GetUint32ArrayLengthAndData,
+    JS_NewUint32Array,
+    JS_GetUint32ArrayData
+);
+typed_array_element!(
+    Int8,
+    i8,
+    UnwrapInt8Array,
+    GetInt8ArrayLengthAndData,
+    JS_NewInt8Array,
+    JS_GetInt8ArrayData
+);
+typed_array_element!(
+    Int16,
+    i16,
+    UnwrapInt16Array,
+    GetInt16ArrayLengthAndData,
+    JS_NewInt16Array,
+    JS_GetInt16ArrayData
+);
+typed_array_element!(
+    Int32,
+    i32,
+    UnwrapInt32Array,
+    GetInt32ArrayLengthAndData,
+    JS_NewInt32Array,
+    JS_GetInt32ArrayData
+);
+typed_array_element!(
+    Float32,
+    f32,
+    UnwrapFloat32Array,
+    GetFloat32ArrayLengthAndData,
+    JS_NewFloat32Array,
+    JS_GetFloat32ArrayData
+);
+typed_array_element!(
+    Float64,
+    f64,
+    UnwrapFloat64Array,
+    GetFloat64ArrayLengthAndData,
+    JS_NewFloat64Array,
+    JS_GetFloat64ArrayData
+);
+typed_array_element!(
+    ClampedU8,
+    u8,
+    UnwrapUint8ClampedArray,
+    GetUint8ClampedArrayLengthAndData,
+    JS_NewUint8ClampedArray,
+    JS_GetUint8ClampedArrayData
+);
+typed_array_element!(
+    ArrayBufferU8,
+    u8,
+    UnwrapArrayBuffer,
+    GetArrayBufferLengthAndData,
+    NewArrayBuffer,
+    GetArrayBufferData
+);
+typed_array_element!(
+    ArrayBufferViewU8,
+    u8,
+    UnwrapArrayBufferView,
+    GetArrayBufferViewLengthAndData
+);
 
 // Default type aliases, uses bare pointer by default, since stack lifetime
 // should be the most common scenario
@@ -389,7 +423,7 @@ macro_rules! array_alias {
     ($arr: ident, $heap_arr: ident, $elem: ty) => {
         pub type $arr = TypedArray<$elem, *mut JSObject>;
         pub type $heap_arr = TypedArray<$elem, Box<Heap<*mut JSObject>>>;
-    }
+    };
 }
 
 array_alias!(Uint8ClampedArray, HeapUint8ClampedArray, ClampedU8);
@@ -413,15 +447,15 @@ impl<S: JSObjectStorage> TypedArray<ArrayBufferViewU8, S> {
 #[macro_export]
 macro_rules! typedarray {
     (in($cx:expr) let $name:ident : $ty:ident = $init:expr) => {
-        let mut __array = $crate::typedarray::$ty::from($init)
-            .map($crate::rust::CustomAutoRooter::new);
+        let mut __array =
+            $crate::typedarray::$ty::from($init).map($crate::rust::CustomAutoRooter::new);
 
         let $name = __array.as_mut().map(|ok| ok.root($cx));
     };
     (in($cx:expr) let mut $name:ident : $ty:ident = $init:expr) => {
-        let mut __array = $crate::typedarray::$ty::from($init)
-            .map($crate::rust::CustomAutoRooter::new);
+        let mut __array =
+            $crate::typedarray::$ty::from($init).map($crate::rust::CustomAutoRooter::new);
 
         let mut $name = __array.as_mut().map(|ok| ok.root($cx));
-    }
+    };
 }

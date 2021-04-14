@@ -12,7 +12,8 @@ fn main() {
     let outdir = env::var("DEP_MOZJS_OUTDIR").unwrap();
     let include_path: PathBuf = [&outdir, "dist", "include"].iter().collect();
 
-    build.cpp(true)
+    build
+        .cpp(true)
         .file("src/jsglue.cpp")
         .flag("-DSTATIC_JS_API")
         .include(include_path);

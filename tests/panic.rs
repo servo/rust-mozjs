@@ -26,18 +26,27 @@ fn test_panic() {
     let c_option = RealmOptions::default();
 
     unsafe {
-        let global = JS_NewGlobalObject(context, &SIMPLE_GLOBAL_CLASS,
-                                        ptr::null_mut(), h_option, &*c_option);
+        let global = JS_NewGlobalObject(
+            context,
+            &SIMPLE_GLOBAL_CLASS,
+            ptr::null_mut(),
+            h_option,
+            &*c_option,
+        );
         rooted!(in(context) let global_root = global);
         let global = global_root.handle();
         let _ac = JSAutoRealm::new(context, global.get());
-        let function = JS_DefineFunction(context, global.into(),
-                                         b"test\0".as_ptr() as *const _,
-                                         Some(test), 0, 0);
+        let function = JS_DefineFunction(
+            context,
+            global.into(),
+            b"test\0".as_ptr() as *const _,
+            Some(test),
+            0,
+            0,
+        );
         assert!(!function.is_null());
         rooted!(in(context) let mut rval = UndefinedValue());
-        let _ = runtime.evaluate_script(global, "test();", "test.js", 0,
-                                        rval.handle_mut());
+        let _ = runtime.evaluate_script(global, "test();", "test.js", 0, rval.handle_mut());
     }
 }
 

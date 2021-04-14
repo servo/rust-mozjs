@@ -6,19 +6,21 @@ extern crate mozjs;
 use mozjs::jsapi::GCReason;
 use mozjs::jsapi::JSTracer;
 use mozjs::jsapi::JS_GC;
+use mozjs::rust::CustomAutoRooter;
+use mozjs::rust::CustomTrace;
 use mozjs::rust::JSEngine;
 use mozjs::rust::Runtime;
-use mozjs::rust::CustomTrace;
-use mozjs::rust::CustomAutoRooter;
 use std::cell::Cell;
 
 struct TraceCheck {
-    trace_was_called: Cell<bool>
+    trace_was_called: Cell<bool>,
 }
 
 impl TraceCheck {
     fn new() -> TraceCheck {
-        TraceCheck { trace_was_called: Cell::new(false) }
+        TraceCheck {
+            trace_was_called: Cell::new(false),
+        }
     }
 }
 
@@ -40,8 +42,9 @@ fn virtual_trace_called() {
     let mut rooter = CustomAutoRooter::new(TraceCheck::new());
     let guard = rooter.root(cx);
 
-    unsafe { JS_GC(cx, GCReason::API); }
+    unsafe {
+        JS_GC(cx, GCReason::API);
+    }
 
     assert!(guard.trace_was_called.get());
 }
-

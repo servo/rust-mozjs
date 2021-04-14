@@ -28,12 +28,24 @@ fn capture_stack() {
     let c_option = RealmOptions::default();
 
     unsafe {
-        let global = JS_NewGlobalObject(context, &SIMPLE_GLOBAL_CLASS, ptr::null_mut(), h_option, &*c_option);
+        let global = JS_NewGlobalObject(
+            context,
+            &SIMPLE_GLOBAL_CLASS,
+            ptr::null_mut(),
+            h_option,
+            &*c_option,
+        );
         rooted!(in(context) let global_root = global);
         let global = global_root.handle();
         let _ac = JSAutoRealm::new(context, global.get());
-        let function = JS_DefineFunction(context, global.into(), b"print_stack\0".as_ptr() as *const libc::c_char,
-                                         Some(print_stack), 0, 0);
+        let function = JS_DefineFunction(
+            context,
+            global.into(),
+            b"print_stack\0".as_ptr() as *const libc::c_char,
+            Some(print_stack),
+            0,
+            0,
+        );
         assert!(!function.is_null());
         let javascript = "
             function foo(arg1) {
@@ -54,9 +66,15 @@ unsafe extern "C" fn print_stack(context: *mut JSContext, argc: u32, vp: *mut Va
     let args = CallArgs::from_vp(vp, argc);
 
     capture_stack!(in(context) let stack);
-    let str_stack = stack.unwrap().as_string(None, StackFormat::SpiderMonkey).unwrap();
+    let str_stack = stack
+        .unwrap()
+        .as_string(None, StackFormat::SpiderMonkey)
+        .unwrap();
     println!("{}", str_stack);
-    assert_eq!("bar@test.js:3:21\nfoo@test.js:5:17\n@test.js:8:16\n".to_string(), str_stack);
+    assert_eq!(
+        "bar@test.js:3:21\nfoo@test.js:5:17\n@test.js:8:16\n".to_string(),
+        str_stack
+    );
 
     args.rval().set(UndefinedValue());
     return true;

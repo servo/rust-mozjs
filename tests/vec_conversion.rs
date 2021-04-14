@@ -28,8 +28,13 @@ fn vec_conversion() {
     let c_option = RealmOptions::default();
 
     unsafe {
-        let global = JS_NewGlobalObject(cx, &SIMPLE_GLOBAL_CLASS,
-                                        ptr::null_mut(), h_option, &*c_option);
+        let global = JS_NewGlobalObject(
+            cx,
+            &SIMPLE_GLOBAL_CLASS,
+            ptr::null_mut(),
+            h_option,
+            &*c_option,
+        );
         rooted!(in(cx) let global_root = global);
         let global = global_root.handle();
 
@@ -46,22 +51,21 @@ fn vec_conversion() {
 
         let orig_vec: Vec<i32> = vec![1, 2, 3];
         orig_vec.to_jsval(cx, rval.handle_mut());
-        let converted = Vec::<i32>::from_jsval(cx, rval.handle(),
-                                               ConversionBehavior::Default).unwrap();
-
-        assert_eq!(&orig_vec, converted.get_success_value().unwrap());
-
-        rt.evaluate_script(global, "new Set([1, 2, 3])",
-                           "test", 1, rval.handle_mut()).unwrap();
         let converted =
-          Vec::<i32>::from_jsval(cx, rval.handle(),
-                                 ConversionBehavior::Default).unwrap();
+            Vec::<i32>::from_jsval(cx, rval.handle(), ConversionBehavior::Default).unwrap();
 
         assert_eq!(&orig_vec, converted.get_success_value().unwrap());
 
-        rt.evaluate_script(global, "({})", "test", 1, rval.handle_mut()).unwrap();
-        let converted = Vec::<i32>::from_jsval(cx, rval.handle(),
-                                               ConversionBehavior::Default);
+        rt.evaluate_script(global, "new Set([1, 2, 3])", "test", 1, rval.handle_mut())
+            .unwrap();
+        let converted =
+            Vec::<i32>::from_jsval(cx, rval.handle(), ConversionBehavior::Default).unwrap();
+
+        assert_eq!(&orig_vec, converted.get_success_value().unwrap());
+
+        rt.evaluate_script(global, "({})", "test", 1, rval.handle_mut())
+            .unwrap();
+        let converted = Vec::<i32>::from_jsval(cx, rval.handle(), ConversionBehavior::Default);
         assert!(match converted {
             Ok(ConversionResult::Failure(_)) => true,
             _ => false,
