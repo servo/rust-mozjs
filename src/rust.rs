@@ -4,7 +4,7 @@
 
 //! Rust wrappers around the raw JS apis
 
-use mozjs_sys::jsgc::CustomAutoRooterVFTable;
+use mozjs_sys::{jsapi::JS::shadow::BaseShape, jsgc::CustomAutoRooterVFTable};
 use mozjs_sys::jsgc::RootKind;
 use mozjs_sys::jsgc::IntoHandle as IntoRawHandle;
 use mozjs_sys::jsgc::IntoMutableHandle as IntoRawMutableHandle;
@@ -41,7 +41,7 @@ use jsapi::{JS_SetGCParameter, JS_SetNativeStackQuota, JS_WrapValue, JSAutoRealm
 use jsapi::{JSClass, JSCLASS_RESERVED_SLOTS_SHIFT, JSClassOps, Realm, JSContext};
 use jsapi::{JSErrorReport, JSFunction, JSFunctionSpec, JSGCParamKey};
 use jsapi::{JSObject, JSPropertySpec, JSRuntime, JSScript};
-use jsapi::{JSString, JSTracer, Object, ObjectGroup, PersistentRootedIdVector};
+use jsapi::{JSString, JSTracer, Object, PersistentRootedIdVector};
 use jsapi::{PersistentRootedObjectVector, ReadOnlyCompileOptions, Rooted, RootingContext};
 use jsapi::{SetWarningReporter, SourceText, Symbol, ToBooleanSlow};
 use jsapi::{ToInt32Slow, ToInt64Slow, ToNumberSlow, ToStringSlow, ToUint16Slow};
@@ -1186,10 +1186,10 @@ pub static SIMPLE_GLOBAL_CLASS: JSClass = JSClass {
 };
 
 #[inline]
-unsafe fn get_object_group(obj: *mut JSObject) -> *mut ObjectGroup {
+unsafe fn get_object_group(obj: *mut JSObject) -> *mut BaseShape {
     assert!(!obj.is_null());
     let obj = obj as *mut Object;
-    (*obj).group
+    (*(*obj).shape).base
 }
 
 #[inline]
