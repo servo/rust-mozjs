@@ -8,17 +8,17 @@ extern crate libc;
 
 use mozjs::jsapi::JSAutoRealm;
 use mozjs::jsapi::JSClass;
-use mozjs::jsapi::JSCLASS_FOREGROUND_FINALIZE;
 use mozjs::jsapi::JSClassOps;
 use mozjs::jsapi::JSFreeOp;
+use mozjs::jsapi::JSObject;
 use mozjs::jsapi::JS_NewGlobalObject;
 use mozjs::jsapi::JS_NewObject;
-use mozjs::jsapi::JSObject;
 use mozjs::jsapi::OnNewGlobalHookOption;
+use mozjs::jsapi::JSCLASS_FOREGROUND_FINALIZE;
 use mozjs::rust::{JSEngine, RealmOptions, Runtime, SIMPLE_GLOBAL_CLASS};
 use std::ptr;
-use std::thread;
 use std::sync::mpsc::channel;
+use std::thread;
 
 #[test]
 fn runtime() {
@@ -50,7 +50,7 @@ fn runtime() {
     let _ = receiver.recv();
 }
 
-unsafe extern fn finalize(_fop: *mut JSFreeOp, _object: *mut JSObject) {
+unsafe extern "C" fn finalize(_fop: *mut JSFreeOp, _object: *mut JSObject) {
     assert!(!Runtime::get().is_null());
 }
 

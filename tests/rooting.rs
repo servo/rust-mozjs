@@ -17,13 +17,13 @@ use mozjs::jsapi::JSNativeWrapper;
 use mozjs::jsapi::JSPropertySpec_Name;
 use mozjs::jsapi::JS_NewGlobalObject;
 use mozjs::jsapi::JS_NewObjectWithGivenProto;
-use mozjs::jsapi::JSPROP_ENUMERATE;
 use mozjs::jsapi::JS_SetGCZeal;
 use mozjs::jsapi::OnNewGlobalHookOption;
 use mozjs::jsapi::Value;
-use mozjs::jsapi::{JSObject, JSString, JSFunction};
+use mozjs::jsapi::JSPROP_ENUMERATE;
+use mozjs::jsapi::{JSFunction, JSObject, JSString};
 use mozjs::jsval::JSVal;
-use mozjs::rust::{JSEngine, RealmOptions, Runtime, SIMPLE_GLOBAL_CLASS, define_methods};
+use mozjs::rust::{define_methods, JSEngine, RealmOptions, Runtime, SIMPLE_GLOBAL_CLASS};
 use std::ptr;
 
 #[test]
@@ -69,25 +69,40 @@ unsafe extern "C" fn generic_method(_: *mut JSContext, _: u32, _: *mut Value) ->
 
 const METHODS: &'static [JSFunctionSpec] = &[
     JSFunctionSpec {
-        name: JSPropertySpec_Name { string_: b"addEventListener\0" as *const u8 as *const libc::c_char },
-        call: JSNativeWrapper { op: Some(generic_method), info: 0 as *const _ },
+        name: JSPropertySpec_Name {
+            string_: b"addEventListener\0" as *const u8 as *const libc::c_char,
+        },
+        call: JSNativeWrapper {
+            op: Some(generic_method),
+            info: 0 as *const _,
+        },
         nargs: 2,
         flags: JSPROP_ENUMERATE as u16,
-        selfHostedName: 0 as *const libc::c_char
+        selfHostedName: 0 as *const libc::c_char,
     },
     JSFunctionSpec {
-        name: JSPropertySpec_Name { string_: b"removeEventListener\0" as *const u8 as *const libc::c_char },
-        call: JSNativeWrapper { op: Some(generic_method), info: 0 as *const _  },
+        name: JSPropertySpec_Name {
+            string_: b"removeEventListener\0" as *const u8 as *const libc::c_char,
+        },
+        call: JSNativeWrapper {
+            op: Some(generic_method),
+            info: 0 as *const _,
+        },
         nargs: 2,
         flags: JSPROP_ENUMERATE as u16,
-        selfHostedName: 0 as *const libc::c_char
+        selfHostedName: 0 as *const libc::c_char,
     },
     JSFunctionSpec {
-        name: JSPropertySpec_Name { string_: b"dispatchEvent\0" as *const u8 as *const libc::c_char },
-        call: JSNativeWrapper { op: Some(generic_method), info: 0 as *const _  },
+        name: JSPropertySpec_Name {
+            string_: b"dispatchEvent\0" as *const u8 as *const libc::c_char,
+        },
+        call: JSNativeWrapper {
+            op: Some(generic_method),
+            info: 0 as *const _,
+        },
         nargs: 1,
         flags: JSPROP_ENUMERATE as u16,
-        selfHostedName: 0 as *const libc::c_char
+        selfHostedName: 0 as *const libc::c_char,
     },
     JSFunctionSpec::ZERO,
 ];

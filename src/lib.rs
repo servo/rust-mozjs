@@ -4,8 +4,12 @@
 
 #![crate_name = "mozjs"]
 #![crate_type = "rlib"]
-
-#![allow(non_upper_case_globals, non_camel_case_types, non_snake_case, improper_ctypes)]
+#![allow(
+    non_upper_case_globals,
+    non_camel_case_types,
+    non_snake_case,
+    improper_ctypes
+)]
 
 //!
 //! This crate contains Rust bindings to the [SpiderMonkey Javascript engine][1]
@@ -33,15 +37,15 @@ extern crate mozjs_sys;
 extern crate num_traits;
 
 pub mod jsapi {
-    pub use mozjs_sys::jsapi::*;
-    pub use mozjs_sys::jsapi::JS::*;
-    pub use mozjs_sys::jsapi::js::*;
-    pub use mozjs_sys::jsapi::js::detail::*;
-    pub use mozjs_sys::jsapi::JS::detail::*;
-    pub use mozjs_sys::jsapi::JS::shadow::{Object, ObjectGroup};
-    pub use mozjs_sys::jsapi::js::Scalar::{Type};
-    pub use mozjs_sys::jsapi::mozilla::{MallocSizeOf};
     pub use mozjs_sys::jsapi::glue::*;
+    pub use mozjs_sys::jsapi::js::detail::*;
+    pub use mozjs_sys::jsapi::js::Scalar::Type;
+    pub use mozjs_sys::jsapi::js::*;
+    pub use mozjs_sys::jsapi::mozilla::MallocSizeOf;
+    pub use mozjs_sys::jsapi::JS::detail::*;
+    pub use mozjs_sys::jsapi::JS::shadow::Object;
+    pub use mozjs_sys::jsapi::JS::*;
+    pub use mozjs_sys::jsapi::*;
 }
 
 #[macro_use]
@@ -55,7 +59,7 @@ pub mod panic;
 pub mod typedarray;
 
 pub use consts::*;
-pub use mozjs_sys::jsval as jsval;
+pub use mozjs_sys::jsval;
 
 pub use jsval::JS_ARGV;
 pub use jsval::JS_CALLEE;

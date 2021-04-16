@@ -4,7 +4,7 @@
 
 use std::any::Any;
 use std::cell::RefCell;
-use std::panic::{AssertUnwindSafe, catch_unwind, resume_unwind};
+use std::panic::{catch_unwind, resume_unwind, AssertUnwindSafe};
 
 thread_local!(static PANIC_PAYLOAD: RefCell<Option<Box<dyn Any + Send>>> = RefCell::new(None));
 
@@ -20,7 +20,7 @@ pub fn maybe_resume_unwind() {
 #[inline(never)]
 pub fn wrap_panic(function: &mut dyn FnMut()) {
     match catch_unwind(AssertUnwindSafe(function)) {
-        Ok(()) => {},
+        Ok(()) => {}
         Err(payload) => {
             PANIC_PAYLOAD.with(|opt_payload| {
                 let mut opt_payload = opt_payload.borrow_mut();

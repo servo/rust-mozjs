@@ -35,8 +35,15 @@ fn typedarray() {
         let _ac = JSAutoRealm::new(cx, global.get());
 
         rooted!(in(cx) let mut rval = UndefinedValue());
-        assert!(rt.evaluate_script(global.handle(), "new Uint8Array([0, 2, 4])",
-                                   "test", 1, rval.handle_mut()).is_ok());
+        assert!(rt
+            .evaluate_script(
+                global.handle(),
+                "new Uint8Array([0, 2, 4])",
+                "test",
+                1,
+                rval.handle_mut()
+            )
+            .is_ok());
         assert!(rval.is_object());
 
         typedarray!(in(cx) let array: Uint8Array = rval.to_object());
