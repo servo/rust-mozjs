@@ -24,5 +24,6 @@ grep_heur() {
 }
 
 rustfmt ../target/debug/build/mozjs_sys-*/out/build/jsapi.rs --config max_width=500
+rustfmt glue.rs --config max_width=500
 grep_heur ../target/debug/build/mozjs_sys-*/out/build/jsapi.rs | sed 's/\(.*\)/wrap!(jsapi: \1);/g'  > jsapi_wrappers.in
 grep_heur glue.rs | sed 's/\(.*\)/wrap!(glue: \1);/g'  > glue_wrappers.in
