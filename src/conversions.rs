@@ -545,6 +545,24 @@ impl<T: ToJSValConvertible> ToJSValConvertible for Option<T> {
     }
 }
 
+impl<T: FromJSValConvertible> FromJSValConvertible for Option<T> {
+    type Config = T::Config;
+    unsafe fn from_jsval(
+        cx: *mut JSContext,
+        value: HandleValue,
+        option: T::Config,
+    ) -> Result<ConversionResult<Option<T>>, ()> {
+        if value.get().is_null_or_undefined() {
+            Ok(ConversionResult::Success(None))
+        } else {
+            Ok(match FromJSValConvertible::from_jsval(cx, value, option)? {
+                ConversionResult::Success(v) => ConversionResult::Success(Some(v)),
+                ConversionResult::Failure(v) => ConversionResult::Failure(v),
+            })
+        }
+    }
+}
+
 impl<T: ToJSValConvertible> ToJSValConvertible for &'_ T {
     #[inline]
     unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
@@ -563,24 +581,6 @@ impl<T: ToJSValConvertible> ToJSValConvertible for Rc<T> {
     #[inline]
     unsafe fn to_jsval(&self, cx: *mut JSContext, rval: MutableHandleValue) {
         (**self).to_jsval(cx, rval)
-    }
-}
-
-impl<T: FromJSValConvertible> FromJSValConvertible for Option<T> {
-    type Config = T::Config;
-    unsafe fn from_jsval(
-        cx: *mut JSContext,
-        value: HandleValue,
-        option: T::Config,
-    ) -> Result<ConversionResult<Option<T>>, ()> {
-        if value.get().is_null_or_undefined() {
-            Ok(ConversionResult::Success(None))
-        } else {
-            Ok(match FromJSValConvertible::from_jsval(cx, value, option)? {
-                ConversionResult::Success(v) => ConversionResult::Success(Some(v)),
-                ConversionResult::Failure(v) => ConversionResult::Failure(v),
-            })
-        }
     }
 }
 
