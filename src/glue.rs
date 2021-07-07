@@ -134,6 +134,24 @@ pub struct ProxyTraps {
             protop: MutableHandleObject,
         ) -> bool,
     >,
+    pub getPrototype: ::std::option::Option<
+        unsafe extern "C" fn(
+            cx: *mut JSContext,
+            proxy: HandleObject,
+            protop: MutableHandleObject,
+        ) -> bool,
+    >,
+    pub setPrototype: ::std::option::Option<
+        unsafe extern "C" fn(
+            cx: *mut JSContext,
+            proxy: HandleObject,
+            proto: HandleObject,
+            result: *mut ObjectOpResult,
+        ) -> bool,
+    >,
+    pub setImmutablePrototype: ::std::option::Option<
+        unsafe extern "C" fn(cx: *mut JSContext, proxy: HandleObject, succeeded: *mut bool) -> bool,
+    >,
     pub preventExtensions: ::std::option::Option<
         unsafe extern "C" fn(
             cx: *mut JSContext,

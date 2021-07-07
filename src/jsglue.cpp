@@ -149,9 +149,13 @@ struct ProxyTraps {
 
     bool (*getPrototypeIfOrdinary)(JSContext *cx, JS::HandleObject proxy,
                                    bool *isOrdinary, JS::MutableHandleObject protop);
-    // getPrototype
-    // setPrototype
-    // setImmutablePrototype
+    bool (*getPrototype)(JSContext *cx, JS::HandleObject proxy,
+                         JS::MutableHandleObject protop);
+    bool (*setPrototype)(JSContext *cx, JS::HandleObject proxy,
+                         JS::HandleObject proto,
+                         JS::ObjectOpResult &result);
+    bool (*setImmutablePrototype)(JSContext *cx, JS::HandleObject proxy,
+                                  bool *succeeded);
 
     bool (*preventExtensions)(JSContext *cx, JS::HandleObject proxy,
                               JS::ObjectOpResult &result);
@@ -349,6 +353,31 @@ static int HandlerFamily;
         return mTraps.isConstructor                                                          \
                    ? mTraps.isConstructor(obj)                                               \
                    : _base::isConstructor(obj);                                              \
+    }                                                                                        \
+                                                                                             \
+    virtual bool getPrototype(JSContext* cx, JS::HandleObject proxy,                         \
+                              JS::MutableHandleObject protop) const override                 \
+    {                                                                                        \
+        return mTraps.getPrototype                                                           \
+                   ? mTraps.getPrototype(cx, proxy, protop)                                  \
+                   : _base::getPrototype(cx, proxy, protop);                                 \
+    }                                                                                        \
+                                                                                             \
+    virtual bool setPrototype(JSContext* cx, JS::HandleObject proxy,                         \
+                              JS::HandleObject proto,                                        \
+                              JS::ObjectOpResult& result)  const override                    \
+    {                                                                                        \
+        return mTraps.setPrototype                                                           \
+                   ? mTraps.setPrototype(cx, proxy, proto, result)                           \
+                   : _base::setPrototype(cx, proxy, proto, result);                          \
+    }                                                                                        \
+                                                                                             \
+    virtual bool setImmutablePrototype(JSContext* cx, JS::HandleObject proxy,                \
+                                       bool* succeeded) const override                       \
+    {                                                                                        \
+        return mTraps.setImmutablePrototype                                                  \
+                   ? mTraps.setImmutablePrototype(cx, proxy, succeeded)                      \
+                   : _base::setImmutablePrototype(cx, proxy, succeeded);                     \
     }
 
 class WrapperProxyHandler : public js::Wrapper
