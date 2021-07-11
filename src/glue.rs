@@ -299,7 +299,27 @@ impl ::std::default::Default for ForwardingProxyHandler {
     }
 }
 
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct JSPrincipalsCallbacks {
+    pub write: ::std::option::Option<
+        unsafe extern "C" fn(
+            *mut JSPrincipals,
+            *mut JSContext,
+            *mut JSStructuredCloneWriter,
+        ) -> bool,
+    >,
+    pub isSystemOrAddonPrincipal:
+        ::std::option::Option<unsafe extern "C" fn(*mut JSPrincipals) -> bool>,
+}
+
 extern "C" {
+    pub fn CreateRustJSPrincipals(
+        callbacks: *const JSPrincipalsCallbacks,
+        private: *mut ::libc::c_void,
+    ) -> *mut JSPrincipals;
+    pub fn DestroyRustJSPrincipals(principals: *const JSPrincipals);
+    pub fn GetRustJSPrincipalsPrivate(principals: *const JSPrincipals) -> *mut ::libc::c_void;
     pub fn InvokeGetOwnPropertyDescriptor(
         handler: *const ::libc::c_void,
         cx: *mut JSContext,
