@@ -534,6 +534,34 @@ public:
   {}
 };
 
+struct JSPrincipalsCallbacks {
+    bool (*write)(JSPrincipals *, JSContext* cx, JSStructuredCloneWriter* writer);
+    bool (*isSystemOrAddonPrincipal)(JSPrincipals *);
+};
+
+class RustJSPrincipals final : public JSPrincipals
+{
+    JSPrincipalsCallbacks callbacks;
+    void *privateData;
+
+  public:
+    RustJSPrincipals(const JSPrincipalsCallbacks &callbacks, void *privateData)
+    : JSPrincipals{}, callbacks{callbacks}, privateData{privateData} {}
+
+    void *getPrivateData() const { return this->privateData; }
+
+    bool write(JSContext* cx, JSStructuredCloneWriter* writer) override {
+        return this->callbacks.write
+             ? this->callbacks.write(this, cx, writer)
+             : false;
+    }
+
+
+    bool isSystemOrAddonPrincipal() override {
+        return this->callbacks.isSystemOrAddonPrincipal(this);
+    }
+};
+
 bool
 ShouldMeasureObject(JSObject* obj, nsISupports** iface) {
 
@@ -552,6 +580,23 @@ ShouldMeasureObject(JSObject* obj, nsISupports** iface) {
 
 
 extern "C" {
+
+JSPrincipals*
+CreateRustJSPrincipals(const JSPrincipalsCallbacks &callbacks, void* privateData) {
+    return new RustJSPrincipals(callbacks, privateData);
+}
+
+void
+DestroyRustJSPrincipals(JSPrincipals *principals) {
+    delete static_cast<RustJSPrincipals *>(principals);
+}
+
+void*
+GetRustJSPrincipalsPrivate(JSPrincipals *principals) {
+    return principals
+        ? static_cast<RustJSPrincipals *>(principals)->getPrivateData()
+        : nullptr;
+}
 
 bool
 InvokeGetOwnPropertyDescriptor(
