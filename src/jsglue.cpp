@@ -719,12 +719,13 @@ NewCompileOptions(
 
 JSObject*
 NewProxyObject(JSContext* aCx, const void* aHandler, JS::HandleValue aPriv,
-               JSObject* proto, JSClass* aClass)
+               JSObject* proto, JSClass* aClass, bool aLazyProto)
 {
     js::ProxyOptions options;
     if (aClass) {
       options.setClass(aClass);
     }
+    options.setLazyProto(aLazyProto);
     return js::NewProxyObject(aCx, (js::BaseProxyHandler*)aHandler, aPriv, proto,
                               options);
 }

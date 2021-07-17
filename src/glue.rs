@@ -380,6 +380,7 @@ extern "C" {
         aPriv: HandleValue,
         proto: *mut JSObject,
         classp: *const JSClass,
+        aLazyProto: bool,
     ) -> *mut JSObject;
     pub fn WrapperNew(
         aCx: *mut JSContext,
