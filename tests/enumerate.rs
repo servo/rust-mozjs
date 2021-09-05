@@ -5,34 +5,30 @@
 #[macro_use]
 extern crate mozjs;
 
-use mozjs::glue::RUST_JSID_IS_STRING;
-use mozjs::glue::RUST_JSID_TO_STRING;
-use mozjs::jsapi::GetPropertyKeys;
-use mozjs::jsapi::JS_NewGlobalObject;
-use mozjs::jsapi::JS_StringEqualsAscii;
-use mozjs::jsapi::OnNewGlobalHookOption;
+use std::ptr;
+
+use mozjs::glue::{RUST_JSID_IS_STRING, RUST_JSID_TO_STRING};
+use mozjs::jsapi::{GetPropertyKeys, JS_NewGlobalObject, JS_StringEqualsAscii, OnNewGlobalHookOption};
 use mozjs::jsapi::JSITER_OWNONLY;
 use mozjs::jsval::UndefinedValue;
-use mozjs::rust::IdVector;
-use mozjs::rust::JSEngine;
-use mozjs::rust::RealmOptions;
-use mozjs::rust::Runtime;
-use mozjs::rust::SIMPLE_GLOBAL_CLASS;
-use std::ptr;
+use mozjs::rust::{IdVector, JSEngine, RealmOptions, Runtime, SIMPLE_GLOBAL_CLASS};
 
 #[test]
 fn enumerate() {
     let engine = JSEngine::init().unwrap();
-    let rt = Runtime::new(engine.handle());
-    let cx = rt.cx();
-    let options = RealmOptions::default();
+    let runtime = Runtime::new(engine.handle());
+    let context = runtime.cx();
+    let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
+    let c_option = RealmOptions::default();
 
     unsafe {
-        rooted!(in(cx) let global =
-            JS_NewGlobalObject(cx, &SIMPLE_GLOBAL_CLASS, ptr::null_mut(),
-                               OnNewGlobalHookOption::FireOnNewGlobalHook,
-                               &*options)
-        );
+        rooted!(in(context) let global = JS_NewGlobalObject(
+            context,
+            &SIMPLE_GLOBAL_CLASS,
+            ptr::null_mut(),
+            h_option,
+            &*c_option,
+        ));
 
         rooted!(in(cx) let mut rval = UndefinedValue());
         assert!(rt
@@ -52,7 +48,7 @@ fn enumerate() {
             cx,
             object.handle().into(),
             JSITER_OWNONLY,
-            ids.handle_mut()
+            ids.handle_mut(),
         ));
 
         assert_eq!(ids.len(), 1);

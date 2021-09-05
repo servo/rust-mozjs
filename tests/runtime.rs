@@ -2,39 +2,35 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+extern crate libc;
 #[macro_use]
 extern crate mozjs;
-extern crate libc;
 
-use mozjs::jsapi::JSAutoRealm;
-use mozjs::jsapi::JSClass;
-use mozjs::jsapi::JSClassOps;
-use mozjs::jsapi::JSFreeOp;
-use mozjs::jsapi::JSObject;
-use mozjs::jsapi::JS_NewGlobalObject;
-use mozjs::jsapi::JS_NewObject;
-use mozjs::jsapi::OnNewGlobalHookOption;
-use mozjs::jsapi::JSCLASS_FOREGROUND_FINALIZE;
-use mozjs::rust::{JSEngine, RealmOptions, Runtime, SIMPLE_GLOBAL_CLASS};
 use std::ptr;
 use std::sync::mpsc::channel;
 use std::thread;
 
+use mozjs::jsapi::JSCLASS_FOREGROUND_FINALIZE;
+use mozjs::jsapi::{JSAutoRealm, JSClass, JSClassOps, JSFreeOp, JSObject, OnNewGlobalHookOption};
+use mozjs::jsapi::{JS_NewGlobalObject, JS_NewObject};
+use mozjs::rust::{JSEngine, RealmOptions, Runtime, SIMPLE_GLOBAL_CLASS};
+
 #[test]
 fn runtime() {
     let engine = JSEngine::init().unwrap();
-    assert!(JSEngine::init().is_err());
     let runtime = Runtime::new(engine.handle());
-    unsafe {
-        let cx = runtime.cx();
-        let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
-        let c_option = RealmOptions::default();
+    let context = runtime.cx();
+    let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
+    let c_option = RealmOptions::default();
 
-        rooted!(in(cx) let global = JS_NewGlobalObject(cx,
-                                                       &SIMPLE_GLOBAL_CLASS,
-                                                       ptr::null_mut(),
-                                                       h_option,
-                                                       &*c_option));
+    unsafe {
+        rooted!(in(context) let global = JS_NewGlobalObject(
+            context,
+            &SIMPLE_GLOBAL_CLASS,
+            ptr::null_mut(),
+            h_option,
+            &*c_option,
+        ));
         let _ac = JSAutoRealm::new(cx, global.get());
         rooted!(in(cx) let _object = JS_NewObject(cx, &CLASS as *const _));
     }

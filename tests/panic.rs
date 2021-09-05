@@ -5,16 +5,13 @@
 #[macro_use]
 extern crate mozjs;
 
-use mozjs::jsapi::JSAutoRealm;
-use mozjs::jsapi::JSContext;
-use mozjs::jsapi::JS_DefineFunction;
-use mozjs::jsapi::JS_NewGlobalObject;
-use mozjs::jsapi::OnNewGlobalHookOption;
-use mozjs::jsapi::Value;
+use std::ptr;
+
+use mozjs::jsapi::{JSAutoRealm, JSContext, OnNewGlobalHookOption, Value};
+use mozjs::jsapi::{JS_DefineFunction, JS_NewGlobalObject};
 use mozjs::jsval::UndefinedValue;
 use mozjs::panic::wrap_panic;
 use mozjs::rust::{JSEngine, RealmOptions, Runtime, SIMPLE_GLOBAL_CLASS};
-use std::ptr;
 
 #[test]
 #[should_panic]
@@ -26,27 +23,28 @@ fn test_panic() {
     let c_option = RealmOptions::default();
 
     unsafe {
-        let global = JS_NewGlobalObject(
+        rooted!(in(context) let global = JS_NewGlobalObject(
             context,
             &SIMPLE_GLOBAL_CLASS,
             ptr::null_mut(),
             h_option,
             &*c_option,
-        );
-        rooted!(in(context) let global_root = global);
-        let global = global_root.handle();
+        ));
         let _ac = JSAutoRealm::new(context, global.get());
+
         let function = JS_DefineFunction(
             context,
-            global.into(),
+            global.handle().into(),
             b"test\0".as_ptr() as *const _,
             Some(test),
             0,
             0,
         );
         assert!(!function.is_null());
+
         rooted!(in(context) let mut rval = UndefinedValue());
-        let _ = runtime.evaluate_script(global, "test();", "test.js", 0, rval.handle_mut());
+        let _ =
+            runtime.evaluate_script(global.handle(), "test();", "test.js", 0, rval.handle_mut());
     }
 }
 

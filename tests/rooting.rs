@@ -4,61 +4,56 @@
 
 #![cfg(feature = "debugmozjs")]
 
+extern crate libc;
 #[macro_use]
 extern crate mozjs;
-extern crate libc;
 
-use mozjs::jsapi::GetRealmObjectPrototype;
-use mozjs::jsapi::JSAutoRealm;
-use mozjs::jsapi::JSClass;
-use mozjs::jsapi::JSContext;
-use mozjs::jsapi::JSFunctionSpec;
-use mozjs::jsapi::JSNativeWrapper;
-use mozjs::jsapi::JSPropertySpec_Name;
-use mozjs::jsapi::JS_NewGlobalObject;
-use mozjs::jsapi::JS_NewObjectWithGivenProto;
-use mozjs::jsapi::JS_SetGCZeal;
-use mozjs::jsapi::OnNewGlobalHookOption;
-use mozjs::jsapi::Value;
+use std::ptr;
+
 use mozjs::jsapi::JSPROP_ENUMERATE;
-use mozjs::jsapi::{JSFunction, JSObject, JSString};
+use mozjs::jsapi::{
+    GetRealmObjectPrototype, JS_NewGlobalObject, JS_NewObjectWithGivenProto, JS_SetGCZeal,
+};
+use mozjs::jsapi::{
+    JSAutoRealm, JSClass, JSContext, JSFunction, JSFunctionSpec, JSNativeWrapper, JSObject,
+    JSPropertySpec_Name, JSString, OnNewGlobalHookOption, Value,
+};
 use mozjs::jsval::JSVal;
 use mozjs::rust::{define_methods, JSEngine, RealmOptions, Runtime, SIMPLE_GLOBAL_CLASS};
-use std::ptr;
 
 #[test]
 fn rooting() {
+    let engine = JSEngine::init().unwrap();
+    let runtime = Runtime::new(engine.handle());
+    let context = runtime.cx();
+    let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
+    let c_option = RealmOptions::default();
+
     unsafe {
-        let engine = JSEngine::init().unwrap();
-        let runtime = Runtime::new(engine.handle());
-        let cx = runtime.cx();
         JS_SetGCZeal(cx, 2, 1);
+        rooted!(in(context) let global = JS_NewGlobalObject(
+            context,
+            &SIMPLE_GLOBAL_CLASS,
+            ptr::null_mut(),
+            h_option,
+            &*c_option,
+        ));
+        let _ac = JSAutoRealm::new(context, global.get());
 
-        let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
-        let c_option = RealmOptions::default();
-
-        rooted!(in(cx) let global = JS_NewGlobalObject(cx,
-                                                       &SIMPLE_GLOBAL_CLASS,
-                                                       ptr::null_mut(),
-                                                       h_option,
-                                                       &*c_option));
-        let _ac = JSAutoRealm::new(cx, global.get());
-        rooted!(in(cx) let prototype_proto = GetRealmObjectPrototype(cx));
-        rooted!(in(cx) let proto = JS_NewObjectWithGivenProto(cx,
-                                                              &CLASS as *const _,
-                                                              prototype_proto.handle().into()));
+        rooted!(in(cx) let prototype_proto = GetRealmObjectPrototype(context));
+        rooted!(in(cx) let proto = JS_NewObjectWithGivenProto(context, &CLASS as *const _, prototype_proto.handle().into()));
         define_methods(cx, proto.handle(), METHODS).unwrap();
 
-        rooted!(in(cx) let root : JSVal);
+        rooted!(in(cx) let root: JSVal);
         assert_eq!(root.get().is_undefined(), true);
 
-        rooted!(in(cx) let root : *mut JSObject);
+        rooted!(in(cx) let root: *mut JSObject);
         assert_eq!(root.get().is_null(), true);
 
-        rooted!(in(cx) let root : *mut JSString);
+        rooted!(in(cx) let root: *mut JSString);
         assert_eq!(root.get().is_null(), true);
 
-        rooted!(in(cx) let root : *mut JSFunction);
+        rooted!(in(cx) let root: *mut JSFunction);
         assert_eq!(root.get().is_null(), true);
     }
 }

@@ -2,25 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+extern crate libc;
 #[macro_use]
 extern crate mozjs;
-extern crate libc;
-
-use mozjs::glue::EncodeStringToUTF8;
-use mozjs::jsapi::CallArgs;
-use mozjs::jsapi::JSAutoRealm;
-use mozjs::jsapi::JSContext;
-use mozjs::jsapi::JS_DefineFunction;
-use mozjs::jsapi::JS_NewGlobalObject;
-use mozjs::jsapi::JS_ReportErrorASCII;
-use mozjs::jsapi::OnNewGlobalHookOption;
-use mozjs::jsapi::Value;
-use mozjs::jsval::UndefinedValue;
-use mozjs::rust::{JSEngine, RealmOptions, Runtime, SIMPLE_GLOBAL_CLASS};
 
 use std::ffi::CStr;
 use std::ptr;
 use std::str;
+
+use mozjs::glue::EncodeStringToUTF8;
+use mozjs::jsapi::{CallArgs, JSAutoRealm, JSContext, OnNewGlobalHookOption, Value};
+use mozjs::jsapi::{JS_DefineFunction, JS_NewGlobalObject, JS_ReportErrorASCII};
+use mozjs::jsval::UndefinedValue;
+use mozjs::rust::{JSEngine, RealmOptions, Runtime, SIMPLE_GLOBAL_CLASS};
 
 #[test]
 fn callback() {
@@ -31,28 +25,30 @@ fn callback() {
     let c_option = RealmOptions::default();
 
     unsafe {
-        let global = JS_NewGlobalObject(
+        rooted!(in(context) let global = JS_NewGlobalObject(
             context,
             &SIMPLE_GLOBAL_CLASS,
             ptr::null_mut(),
             h_option,
             &*c_option,
-        );
-        rooted!(in(context) let global_root = global);
-        let global = global_root.handle();
+        ));
         let _ac = JSAutoRealm::new(context, global.get());
+
         let function = JS_DefineFunction(
             context,
-            global.into(),
+            global.handle().into(),
             b"puts\0".as_ptr() as *const libc::c_char,
             Some(puts),
             1,
             0,
         );
         assert!(!function.is_null());
+
         let javascript = "puts('Test Iñtërnâtiônàlizætiøn ┬─┬ノ( º _ ºノ) ');";
         rooted!(in(context) let mut rval = UndefinedValue());
-        let _ = runtime.evaluate_script(global, javascript, "test.js", 0, rval.handle_mut());
+        assert!(runtime
+            .evaluate_script(global.handle(), javascript, "test.js", 0, rval.handle_mut())
+            .is_ok());
     }
 }
 
@@ -78,5 +74,5 @@ unsafe extern "C" fn puts(context: *mut JSContext, argc: u32, vp: *mut Value) ->
     });
 
     args.rval().set(UndefinedValue());
-    return true;
+    true
 }

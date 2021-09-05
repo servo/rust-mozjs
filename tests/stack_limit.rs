@@ -5,35 +5,32 @@
 #[macro_use]
 extern crate mozjs;
 
-use mozjs::jsapi::JS_NewGlobalObject;
-use mozjs::jsapi::OnNewGlobalHookOption;
+use std::ptr;
+
+use mozjs::jsapi::{JS_NewGlobalObject, OnNewGlobalHookOption};
 use mozjs::jsval::UndefinedValue;
 use mozjs::rust::{JSEngine, RealmOptions, Runtime, SIMPLE_GLOBAL_CLASS};
-
-use std::ptr;
 
 #[test]
 fn stack_limit() {
     let engine = JSEngine::init().unwrap();
-    let rt = Runtime::new(engine.handle());
-    let cx = rt.cx();
+    let runtime = Runtime::new(engine.handle());
+    let context = runtime.cx();
+    let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
+    let c_option = RealmOptions::default();
 
     unsafe {
-        let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
-        let c_option = RealmOptions::default();
-        let global = JS_NewGlobalObject(
-            cx,
+        rooted!(in(context) let global = JS_NewGlobalObject(
+            context,
             &SIMPLE_GLOBAL_CLASS,
             ptr::null_mut(),
             h_option,
             &*c_option,
-        );
-        rooted!(in(cx) let global_root = global);
-        let global = global_root.handle();
+        ));
         rooted!(in(cx) let mut rval = UndefinedValue());
         assert!(rt
             .evaluate_script(
-                global,
+                global.handle(),
                 "function f() { f.apply() } f()",
                 "test",
                 1,
