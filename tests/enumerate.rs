@@ -30,8 +30,8 @@ fn enumerate() {
             &*c_option,
         ));
 
-        rooted!(in(cx) let mut rval = UndefinedValue());
-        assert!(rt
+        rooted!(in(context) let mut rval = UndefinedValue());
+        assert!(runtime
             .evaluate_script(
                 global.handle(),
                 "({ 'a': 7 })",
@@ -42,24 +42,24 @@ fn enumerate() {
             .is_ok());
         assert!(rval.is_object());
 
-        rooted!(in(cx) let object = rval.to_object());
-        let mut ids = IdVector::new(cx);
+        rooted!(in(context) let object = rval.to_object());
+        let mut ids = IdVector::new(context);
         assert!(GetPropertyKeys(
-            cx,
+            context,
             object.handle().into(),
             JSITER_OWNONLY,
             ids.handle_mut(),
         ));
 
         assert_eq!(ids.len(), 1);
-        rooted!(in(cx) let id = ids[0]);
+        rooted!(in(context) let id = ids[0]);
 
         assert!(RUST_JSID_IS_STRING(id.handle().into()));
-        rooted!(in(cx) let id = RUST_JSID_TO_STRING(id.handle().into()));
+        rooted!(in(context) let id = RUST_JSID_TO_STRING(id.handle().into()));
 
         let mut matches = false;
         assert!(JS_StringEqualsAscii(
-            cx,
+            context,
             id.get(),
             b"a\0" as *const _ as *const _,
             &mut matches

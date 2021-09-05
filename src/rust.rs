@@ -23,7 +23,6 @@ use std::slice;
 use std::str;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
-use std::u32;
 
 use consts::{JSCLASS_GLOBAL_SLOT_COUNT, JSCLASS_RESERVED_SLOTS_MASK};
 use consts::{JSCLASS_IS_DOMJSCLASS, JSCLASS_IS_GLOBAL};
@@ -1516,7 +1515,6 @@ pub mod wrappers {
     use jsapi::JSStructuredCloneData;
     use jsapi::JSType;
     use jsapi::MutableHandleIdVector;
-    use jsapi::PersistentRootedIdVector;
     use jsapi::PromiseState;
     use jsapi::PromiseUserInputEventHandlingState;
     use jsapi::ReadOnlyCompileOptions;
@@ -1662,7 +1660,6 @@ pub mod jsapi_wrapped {
     use jsapi::JSStructuredCloneData;
     use jsapi::JSType;
     use jsapi::MutableHandleIdVector;
-    use jsapi::PersistentRootedIdVector;
     use jsapi::PromiseState;
     use jsapi::PromiseUserInputEventHandlingState;
     use jsapi::ReadOnlyCompileOptions;

@@ -16,7 +16,7 @@ use mozjs::typedarray::{CreateWith, Uint32Array};
 fn typedarray() {
     let engine = JSEngine::init().unwrap();
     let runtime = Runtime::new(engine.handle());
-    let context = runtime.context();
+    let context = runtime.cx();
     let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
     let c_option = RealmOptions::default();
 
@@ -31,7 +31,7 @@ fn typedarray() {
         let _ac = JSAutoRealm::new(context, global.get());
 
         rooted!(in(context) let mut rval = UndefinedValue());
-        assert!(rt
+        assert!(runtime
             .evaluate_script(
                 global.handle(),
                 "new Uint8Array([0, 2, 4])",

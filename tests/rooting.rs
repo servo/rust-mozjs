@@ -30,7 +30,7 @@ fn rooting() {
     let c_option = RealmOptions::default();
 
     unsafe {
-        JS_SetGCZeal(cx, 2, 1);
+        JS_SetGCZeal(context, 2, 1);
         rooted!(in(context) let global = JS_NewGlobalObject(
             context,
             &SIMPLE_GLOBAL_CLASS,
@@ -40,20 +40,20 @@ fn rooting() {
         ));
         let _ac = JSAutoRealm::new(context, global.get());
 
-        rooted!(in(cx) let prototype_proto = GetRealmObjectPrototype(context));
-        rooted!(in(cx) let proto = JS_NewObjectWithGivenProto(context, &CLASS as *const _, prototype_proto.handle().into()));
-        define_methods(cx, proto.handle(), METHODS).unwrap();
+        rooted!(in(context) let prototype_proto = GetRealmObjectPrototype(context));
+        rooted!(in(context) let proto = JS_NewObjectWithGivenProto(context, &CLASS as *const _, prototype_proto.handle().into()));
+        define_methods(context, proto.handle(), METHODS).unwrap();
 
-        rooted!(in(cx) let root: JSVal);
+        rooted!(in(context) let root: JSVal);
         assert_eq!(root.get().is_undefined(), true);
 
-        rooted!(in(cx) let root: *mut JSObject);
+        rooted!(in(context) let root: *mut JSObject);
         assert_eq!(root.get().is_null(), true);
 
-        rooted!(in(cx) let root: *mut JSString);
+        rooted!(in(context) let root: *mut JSString);
         assert_eq!(root.get().is_null(), true);
 
-        rooted!(in(cx) let root: *mut JSFunction);
+        rooted!(in(context) let root: *mut JSFunction);
         assert_eq!(root.get().is_null(), true);
     }
 }

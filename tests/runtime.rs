@@ -31,8 +31,8 @@ fn runtime() {
             h_option,
             &*c_option,
         ));
-        let _ac = JSAutoRealm::new(cx, global.get());
-        rooted!(in(cx) let _object = JS_NewObject(cx, &CLASS as *const _));
+        let _ac = JSAutoRealm::new(context, global.get());
+        rooted!(in(context) let _object = JS_NewObject(context, &CLASS as *const _));
     }
 
     let parent = runtime.prepare_for_new_child();

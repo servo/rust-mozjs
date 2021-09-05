@@ -27,8 +27,8 @@ fn stack_limit() {
             h_option,
             &*c_option,
         ));
-        rooted!(in(cx) let mut rval = UndefinedValue());
-        assert!(rt
+        rooted!(in(context) let mut rval = UndefinedValue());
+        assert!(runtime
             .evaluate_script(
                 global.handle(),
                 "function f() { f.apply() } f()",

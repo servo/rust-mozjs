@@ -40,7 +40,7 @@ fn virtual_trace_called() {
     let guard = rooter.root(context);
 
     unsafe {
-        JS_GC(cx, GCReason::API);
+        JS_GC(context, GCReason::API);
     }
 
     assert!(guard.trace_was_called.get());

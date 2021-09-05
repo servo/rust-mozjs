@@ -28,10 +28,10 @@ fn evaluate() {
             &*c_option,
         ));
 
-        rooted!(in(cx) let mut rval = UndefinedValue());
-        assert!(rt
+        rooted!(in(context) let mut rval = UndefinedValue());
+        assert!(runtime
             .evaluate_script(global.handle(), "1 + 1", "test", 1, rval.handle_mut())
             .is_ok());
-        assert_eq!(rval.get().to_number(), 2);
+        assert_eq!(rval.get().to_int32(), 2);
     }
 }
