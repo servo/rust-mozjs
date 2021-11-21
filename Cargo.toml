@@ -30,6 +30,8 @@ name = "evaluate"
 [[test]]
 name = "panic"
 [[test]]
+name = "property_descriptor"
+[[test]]
 name = "rooting"
 [[test]]
 name = "runtime"

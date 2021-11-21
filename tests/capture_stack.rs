@@ -2,22 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+extern crate libc;
 #[macro_use]
 extern crate mozjs;
-extern crate libc;
-
-use mozjs::jsapi::CallArgs;
-use mozjs::jsapi::JSAutoRealm;
-use mozjs::jsapi::JSContext;
-use mozjs::jsapi::JS_DefineFunction;
-use mozjs::jsapi::JS_NewGlobalObject;
-use mozjs::jsapi::OnNewGlobalHookOption;
-use mozjs::jsapi::StackFormat;
-use mozjs::jsapi::Value;
-use mozjs::jsval::UndefinedValue;
-use mozjs::rust::{JSEngine, RealmOptions, Runtime, SIMPLE_GLOBAL_CLASS};
 
 use std::ptr;
+
+use mozjs::jsapi::{CallArgs, JSAutoRealm, JSContext, OnNewGlobalHookOption, StackFormat, Value};
+use mozjs::jsapi::{JS_DefineFunction, JS_NewGlobalObject};
+use mozjs::jsval::UndefinedValue;
+use mozjs::rust::{JSEngine, RealmOptions, Runtime, SIMPLE_GLOBAL_CLASS};
 
 #[test]
 fn capture_stack() {
@@ -28,25 +22,25 @@ fn capture_stack() {
     let c_option = RealmOptions::default();
 
     unsafe {
-        let global = JS_NewGlobalObject(
+        rooted!(in(context) let global = JS_NewGlobalObject(
             context,
             &SIMPLE_GLOBAL_CLASS,
             ptr::null_mut(),
             h_option,
             &*c_option,
-        );
-        rooted!(in(context) let global_root = global);
-        let global = global_root.handle();
+        ));
         let _ac = JSAutoRealm::new(context, global.get());
+
         let function = JS_DefineFunction(
             context,
-            global.into(),
+            global.handle().into(),
             b"print_stack\0".as_ptr() as *const libc::c_char,
             Some(print_stack),
             0,
             0,
         );
         assert!(!function.is_null());
+
         let javascript = "
             function foo(arg1) {
                 var bar = function() {
@@ -58,7 +52,9 @@ fn capture_stack() {
             foo(\"arg1-value\");
         ";
         rooted!(in(context) let mut rval = UndefinedValue());
-        let _ = runtime.evaluate_script(global, javascript, "test.js", 0, rval.handle_mut());
+        assert!(runtime
+            .evaluate_script(global.handle(), javascript, "test.js", 0, rval.handle_mut())
+            .is_ok());
     }
 }
 
@@ -77,5 +73,5 @@ unsafe extern "C" fn print_stack(context: *mut JSContext, argc: u32, vp: *mut Va
     );
 
     args.rval().set(UndefinedValue());
-    return true;
+    true
 }

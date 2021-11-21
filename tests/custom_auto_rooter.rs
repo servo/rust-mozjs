@@ -3,14 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 extern crate mozjs;
-use mozjs::jsapi::GCReason;
-use mozjs::jsapi::JSTracer;
-use mozjs::jsapi::JS_GC;
-use mozjs::rust::CustomAutoRooter;
-use mozjs::rust::CustomTrace;
-use mozjs::rust::JSEngine;
-use mozjs::rust::Runtime;
+
 use std::cell::Cell;
+
+use mozjs::jsapi::{GCReason, JSTracer, JS_GC};
+use mozjs::rust::{CustomAutoRooter, CustomTrace, JSEngine, Runtime};
 
 struct TraceCheck {
     trace_was_called: Cell<bool>,
@@ -36,14 +33,14 @@ unsafe impl CustomTrace for TraceCheck {
 #[test]
 fn virtual_trace_called() {
     let engine = JSEngine::init().unwrap();
-    let rt = Runtime::new(engine.handle());
-    let cx = rt.cx();
+    let runtime = Runtime::new(engine.handle());
+    let context = runtime.cx();
 
     let mut rooter = CustomAutoRooter::new(TraceCheck::new());
-    let guard = rooter.root(cx);
+    let guard = rooter.root(context);
 
     unsafe {
-        JS_GC(cx, GCReason::API);
+        JS_GC(context, GCReason::API);
     }
 
     assert!(guard.trace_was_called.get());

@@ -4,13 +4,11 @@
 
 #[macro_use]
 extern crate mozjs;
-use mozjs::jsapi::GCReason;
-use mozjs::jsapi::JSTracer;
-use mozjs::jsapi::JS_GC;
-use mozjs::rust::CustomTrace;
-use mozjs::rust::JSEngine;
-use mozjs::rust::Runtime;
+
 use std::cell::Cell;
+
+use mozjs::jsapi::{GCReason, JSTracer, JS_GC};
+use mozjs::rust::{CustomTrace, JSEngine, Runtime};
 
 struct TraceCheck {
     trace_was_called: Cell<bool>,
@@ -33,13 +31,13 @@ unsafe impl CustomTrace for TraceCheck {
 #[test]
 fn custom_auto_rooter_macro() {
     let engine = JSEngine::init().unwrap();
-    let rt = Runtime::new(engine.handle());
-    let cx = rt.cx();
+    let runtime = Runtime::new(engine.handle());
+    let context = runtime.cx();
 
-    auto_root!(in(cx) let vec = vec![TraceCheck::new(), TraceCheck::new()]);
+    auto_root!(in(context) let vec = vec![TraceCheck::new(), TraceCheck::new()]);
 
     unsafe {
-        JS_GC(cx, GCReason::API);
+        JS_GC(context, GCReason::API);
     }
 
     vec.iter()

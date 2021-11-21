@@ -5,37 +5,33 @@
 #[macro_use]
 extern crate mozjs;
 
-use mozjs::glue::RUST_JSID_IS_STRING;
-use mozjs::glue::RUST_JSID_TO_STRING;
-use mozjs::jsapi::GetPropertyKeys;
-use mozjs::jsapi::JS_NewGlobalObject;
-use mozjs::jsapi::JS_StringEqualsAscii;
-use mozjs::jsapi::OnNewGlobalHookOption;
+use std::ptr;
+
+use mozjs::glue::{RUST_JSID_IS_STRING, RUST_JSID_TO_STRING};
+use mozjs::jsapi::{GetPropertyKeys, JS_NewGlobalObject, JS_StringEqualsAscii, OnNewGlobalHookOption};
 use mozjs::jsapi::JSITER_OWNONLY;
 use mozjs::jsval::UndefinedValue;
-use mozjs::rust::IdVector;
-use mozjs::rust::JSEngine;
-use mozjs::rust::RealmOptions;
-use mozjs::rust::Runtime;
-use mozjs::rust::SIMPLE_GLOBAL_CLASS;
-use std::ptr;
+use mozjs::rust::{IdVector, JSEngine, RealmOptions, Runtime, SIMPLE_GLOBAL_CLASS};
 
 #[test]
 fn enumerate() {
     let engine = JSEngine::init().unwrap();
-    let rt = Runtime::new(engine.handle());
-    let cx = rt.cx();
-    let options = RealmOptions::default();
+    let runtime = Runtime::new(engine.handle());
+    let context = runtime.cx();
+    let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
+    let c_option = RealmOptions::default();
 
     unsafe {
-        rooted!(in(cx) let global =
-            JS_NewGlobalObject(cx, &SIMPLE_GLOBAL_CLASS, ptr::null_mut(),
-                               OnNewGlobalHookOption::FireOnNewGlobalHook,
-                               &*options)
-        );
+        rooted!(in(context) let global = JS_NewGlobalObject(
+            context,
+            &SIMPLE_GLOBAL_CLASS,
+            ptr::null_mut(),
+            h_option,
+            &*c_option,
+        ));
 
-        rooted!(in(cx) let mut rval = UndefinedValue());
-        assert!(rt
+        rooted!(in(context) let mut rval = UndefinedValue());
+        assert!(runtime
             .evaluate_script(
                 global.handle(),
                 "({ 'a': 7 })",
@@ -46,24 +42,24 @@ fn enumerate() {
             .is_ok());
         assert!(rval.is_object());
 
-        rooted!(in(cx) let object = rval.to_object());
-        let mut ids = IdVector::new(cx);
+        rooted!(in(context) let object = rval.to_object());
+        let mut ids = IdVector::new(context);
         assert!(GetPropertyKeys(
-            cx,
+            context,
             object.handle().into(),
             JSITER_OWNONLY,
-            ids.handle_mut()
+            ids.handle_mut(),
         ));
 
         assert_eq!(ids.len(), 1);
-        rooted!(in(cx) let id = ids[0]);
+        rooted!(in(context) let id = ids[0]);
 
         assert!(RUST_JSID_IS_STRING(id.handle().into()));
-        rooted!(in(cx) let id = RUST_JSID_TO_STRING(id.handle().into()));
+        rooted!(in(context) let id = RUST_JSID_TO_STRING(id.handle().into()));
 
         let mut matches = false;
         assert!(JS_StringEqualsAscii(
-            cx,
+            context,
             id.get(),
             b"a\0" as *const _ as *const _,
             &mut matches
