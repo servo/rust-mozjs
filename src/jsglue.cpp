@@ -396,11 +396,23 @@ class WrapperProxyHandler : public js::Wrapper
 
     virtual bool getOwnPropertyDescriptor(JSContext *cx, JS::HandleObject proxy,
                                           JS::HandleId id,
-                                          JS::MutableHandle<JS::PropertyDescriptor> desc) const override
+                                          JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc) const override
     {
-        return mTraps.getOwnPropertyDescriptor
-               ? mTraps.getOwnPropertyDescriptor(cx, proxy, id, desc)
-               : js::Wrapper::getOwnPropertyDescriptor(cx, proxy, id, desc);
+        if (mTraps.getOwnPropertyDescriptor)
+        {
+            JS::Rooted<JS::PropertyDescriptor> mpd(cx);
+            if (desc.isSome())
+            {
+                mpd.set(*desc);
+            }
+            bool result = mTraps.getOwnPropertyDescriptor(cx, proxy, id, &mpd);
+            desc.set(mozilla::ToMaybeRef(&mpd));
+            return result;
+        }
+        else
+        {
+            return js::Wrapper::getOwnPropertyDescriptor(cx, proxy, id, desc);
+        }
     }
 
     virtual bool defineProperty(JSContext *cx,
@@ -467,9 +479,16 @@ class ForwardingProxyHandler : public js::BaseProxyHandler
 
     virtual bool getOwnPropertyDescriptor(JSContext *cx, JS::HandleObject proxy,
                                           JS::HandleId id,
-                                          JS::MutableHandle<JS::PropertyDescriptor> desc) const override
+                                          JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc) const override
     {
-        return mTraps.getOwnPropertyDescriptor(cx, proxy, id, desc);
+        JS::Rooted<JS::PropertyDescriptor> mpd(cx);
+        if (desc.isSome())
+        {
+            mpd.set(*desc);
+        }
+        bool result = mTraps.getOwnPropertyDescriptor(cx, proxy, id, &mpd);
+        desc.set(mozilla::ToMaybeRef(&mpd));
+        return result;
     }
 
     virtual bool defineProperty(JSContext *cx,
@@ -604,8 +623,14 @@ InvokeGetOwnPropertyDescriptor(
         JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
         JS::MutableHandle<JS::PropertyDescriptor> desc)
 {
-    return static_cast<const ForwardingProxyHandler*>(handler)->
-        getOwnPropertyDescriptor(cx, proxy, id, desc);
+    JS::Rooted<mozilla::Maybe<JS::PropertyDescriptor>> mpd(cx);
+    bool result = static_cast<const ForwardingProxyHandler*>(handler)->
+        getOwnPropertyDescriptor(cx, proxy, id, &mpd);
+    if (mpd.isSome())
+    {
+        desc.set(*mpd);
+    }
+    return result;
 }
 
 bool
@@ -1062,13 +1087,13 @@ CallUnbarrieredObjectTracer(JSTracer* trc, JSObject** objp, const char* name)
 void
 CallObjectRootTracer(JSTracer* trc, JSObject** objp, const char* name)
 {
-    JS::UnsafeTraceRoot(trc, objp, name);
+    JS::TraceRoot(trc, objp, name);
 }
 
 void
 CallValueRootTracer(JSTracer* trc, JS::Value* valp, const char* name)
 {
-    JS::UnsafeTraceRoot(trc, valp, name);
+    JS::TraceRoot(trc, valp, name);
 }
 
 bool

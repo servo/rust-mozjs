@@ -361,7 +361,7 @@ impl Runtime {
             context.set(js_context);
         });
 
-        InitSelfHostedCode(js_context);
+        InitSelfHostedCode(js_context, Default::default(), None);
 
         SetWarningReporter(js_context, Some(report_warning));
 
@@ -1500,12 +1500,12 @@ pub mod wrappers {
     use jsapi::ForOfIterator_NonIterableBehavior;
     use jsapi::HandleIdVector;
     use jsapi::HandleObjectVector;
+    use jsapi::InstantiateOptions;
     use jsapi::JSClass;
     use jsapi::JSErrorReport;
     use jsapi::JSExnType;
     use jsapi::JSFunctionSpec;
     use jsapi::JSFunctionSpecWithHelp;
-    use jsapi::JSJitInfo;
     use jsapi::JSONWriteCallback;
     use jsapi::JSPrincipals;
     use jsapi::JSPropertySpec;
@@ -1530,8 +1530,6 @@ pub mod wrappers {
     use jsapi::Symbol;
     use jsapi::SymbolCode;
     use jsapi::TranscodeBuffer;
-    use jsapi::TranscodeRange;
-    use jsapi::TranscodeResult;
     use jsapi::TwoByteChars;
     use jsapi::UniqueChars;
     use jsapi::Value;
@@ -1645,12 +1643,12 @@ pub mod jsapi_wrapped {
     use jsapi::ForOfIterator_NonIterableBehavior;
     use jsapi::HandleIdVector;
     use jsapi::HandleObjectVector;
+    use jsapi::InstantiateOptions;
     use jsapi::JSClass;
     use jsapi::JSErrorReport;
     use jsapi::JSExnType;
     use jsapi::JSFunctionSpec;
     use jsapi::JSFunctionSpecWithHelp;
-    use jsapi::JSJitInfo;
     use jsapi::JSONWriteCallback;
     use jsapi::JSPrincipals;
     use jsapi::JSPropertySpec;
@@ -1675,8 +1673,6 @@ pub mod jsapi_wrapped {
     use jsapi::Symbol;
     use jsapi::SymbolCode;
     use jsapi::TranscodeBuffer;
-    use jsapi::TranscodeRange;
-    use jsapi::TranscodeResult;
     use jsapi::TwoByteChars;
     use jsapi::UniqueChars;
     use jsapi::Value;
