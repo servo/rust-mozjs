@@ -1506,6 +1506,7 @@ pub mod wrappers {
     use jsapi::JSExnType;
     use jsapi::JSFunctionSpec;
     use jsapi::JSFunctionSpecWithHelp;
+    use jsapi::JSJitInfo;
     use jsapi::JSONWriteCallback;
     use jsapi::JSPrincipals;
     use jsapi::JSPropertySpec;
@@ -1649,6 +1650,7 @@ pub mod jsapi_wrapped {
     use jsapi::JSExnType;
     use jsapi::JSFunctionSpec;
     use jsapi::JSFunctionSpecWithHelp;
+    use jsapi::JSJitInfo;
     use jsapi::JSONWriteCallback;
     use jsapi::JSPrincipals;
     use jsapi::JSPropertySpec;
