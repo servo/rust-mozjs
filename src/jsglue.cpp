@@ -59,7 +59,7 @@ public:
     return mTraps.getIncumbentGlobal(mQueue, cx);
   }
 
-  bool enqueuePromiseJob(JSContext* cx, JS::HandleObject promise,
+  virtual bool enqueuePromiseJob(JSContext* cx, JS::HandleObject promise,
                          JS::HandleObject job, JS::HandleObject allocationSite,
                          JS::HandleObject incumbentGlobal)
   {
@@ -114,11 +114,9 @@ public:
 	return resolve_to;
   }
 
-
   virtual void onClosed(JSContext* cx, JS::HandleObject stream) {
 	return mTraps.onClosed(mSource, cx, stream);
   }
-
 
   virtual void onErrored(JSContext* cx, JS::HandleObject stream, JS::HandleValue reason) {
 	return mTraps.onErrored(mSource, cx, stream, reason);
@@ -126,6 +124,30 @@ public:
 
   virtual void finalize() {
 	return mTraps.finalize(this);
+  }
+};
+
+struct JSExternalStringCallbacksTraps {
+  void (*finalize)(void* privateData, char16_t* chars);
+  size_t (*sizeOfBuffer)(void* privateData, const char16_t* chars, mozilla::MallocSizeOf mallocSizeOf);
+};
+
+class RustJSExternalStringCallbacks final : public JSExternalStringCallbacks {
+  JSExternalStringCallbacksTraps mTraps;
+  void *privateData;
+public:
+  RustJSExternalStringCallbacks(const JSExternalStringCallbacksTraps& aTraps, void* privateData)
+  : mTraps(aTraps)
+  , privateData(privateData)
+  {
+  }
+
+  void finalize(char16_t* chars) const override {
+    return mTraps.finalize(privateData, chars);
+  }
+
+  size_t sizeOfBuffer(const char16_t* chars, mozilla::MallocSizeOf mallocSizeOf) const override {
+    return mTraps.sizeOfBuffer(privateData, chars, mallocSizeOf);
   }
 };
 
@@ -555,7 +577,6 @@ class RustJSPrincipals final : public JSPrincipals
              ? this->callbacks.write(this, cx, writer)
              : false;
     }
-
 
     bool isSystemOrAddonPrincipal() override {
         return this->callbacks.isSystemOrAddonPrincipal(this);
@@ -1220,6 +1241,17 @@ void
 DeleteReadableStreamUnderlyingSource(JS::ReadableStreamUnderlyingSource* source)
 {
   delete source;
+}
+
+JSExternalStringCallbacks*
+CreateRustJSExternalStringCallbacks(const JSExternalStringCallbacksTraps* aTraps, void* privateData)
+{
+  return new RustJSExternalStringCallbacks(*aTraps, privateData);
+}
+
+void DeleteRustJSExternalStringCallbacks(JSExternalStringCallbacks* callbacks)
+{
+  delete static_cast<RustJSExternalStringCallbacks*>(callbacks);
 }
 
 void

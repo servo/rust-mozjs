@@ -76,6 +76,17 @@ pub struct ReadableStreamUnderlyingSourceTraps {
 }
 
 #[repr(C)]
+#[derive(Copy, Clone, Default)]
+pub struct JSExternalStringCallbacksTraps {
+    pub finalize: ::std::option::Option<
+        unsafe extern "C" fn(*const c_void, *mut ::libc::wchar_t)
+    >,
+    pub sizeOfBuffer: ::std::option::Option<
+        unsafe extern "C" fn(*const c_void, *const ::libc::wchar_t, MallocSizeOf) -> ::libc::size_t
+    >,
+}
+
+#[repr(C)]
 #[derive(Copy, Clone)]
 pub struct ProxyTraps {
     pub enter: ::std::option::Option<
@@ -578,6 +589,11 @@ extern "C" {
         source: *const c_void,
     ) -> *mut JS::ReadableStreamUnderlyingSource;
     pub fn DeleteReadableStreamUnderlyingSource(source: *mut JS::ReadableStreamUnderlyingSource);
+    pub fn CreateJSExternalStringCallbacks(
+        traps: *const JSExternalStringCallbacksTraps,
+        privateData: *const c_void,
+    ) -> *mut JSExternalStringCallbacks;
+    pub fn DeleteJSExternalStringCallbacks(callbacks: *mut JSExternalStringCallbacks);
     pub fn DispatchableRun(
         cx: *mut JSContext,
         ptr: *mut JS::Dispatchable,

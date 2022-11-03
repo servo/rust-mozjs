@@ -15,7 +15,7 @@ wrap!(glue: pub fn RUST_SYMBOL_TO_JSID(sym: *mut Symbol, id: MutableHandleId));
 wrap!(glue: pub fn RUST_JSID_IS_VOID(id: HandleId) -> bool);
 wrap!(glue: pub fn RUST_INTERNED_STRING_TO_JSID(cx: *mut JSContext, str: *mut JSString, id: MutableHandleId));
 wrap!(glue: pub fn AppendToIdVector(v: MutableHandleIdVector, id: HandleId) -> bool);
-wrap!(glue: pub fn JS_GetPromiseResult (promise: HandleObject, dest: MutableHandleValue));
+wrap!(glue: pub fn JS_GetPromiseResult(promise: HandleObject, dest: MutableHandleValue));
 wrap!(glue: pub fn JS_GetScriptPrivate(script: *mut JSScript, dest: MutableHandleValue));
 wrap!(glue: pub fn JS_GetModulePrivate(module: *mut JSObject, dest: MutableHandleValue));
 wrap!(glue: pub fn EncodeStringToUTF8(cx: *mut JSContext, str: HandleString, cb: fn(*const c_char)));
