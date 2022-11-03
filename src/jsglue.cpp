@@ -1244,9 +1244,9 @@ DeleteReadableStreamUnderlyingSource(JS::ReadableStreamUnderlyingSource* source)
 }
 
 JSExternalStringCallbacks*
-CreateRustJSExternalStringCallbacks(const JSExternalStringCallbacksTraps* aTraps, void* aCallbacks)
+CreateRustJSExternalStringCallbacks(const JSExternalStringCallbacksTraps* aTraps, void* privateData)
 {
-  return new RustJSExternalStringCallbacks(*aTraps, aCallbacks);
+  return new RustJSExternalStringCallbacks(*aTraps, privateData);
 }
 
 void DeleteRustJSExternalStringCallbacks(JSExternalStringCallbacks* callbacks)
