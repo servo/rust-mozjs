@@ -22,6 +22,7 @@
 //! | double                  | `Finite<f64>`                    |
 //! | USVString               | `String`                         |
 //! | object                  | `*mut JSObject`                  |
+//! | symbol                  | `*mut Symbol`                    |
 //! | nullable types          | `Option<T>`                      |
 //! | sequences               | `Vec<T>`                         |
 
@@ -30,13 +31,14 @@
 use error::throw_type_error;
 use glue::RUST_JS_NumberValue;
 use jsapi::AssertSameCompartment;
+use jsapi::JS;
 use jsapi::{ForOfIterator, ForOfIterator_NonIterableBehavior};
 use jsapi::{Heap, JS_DefineElement, JS_GetLatin1StringCharsAndLength};
 use jsapi::{JSContext, JSObject, JSString, RootedObject, RootedValue};
 use jsapi::{JS_DeprecatedStringHasLatin1Chars, JS_NewUCStringCopyN, JSPROP_ENUMERATE};
 use jsapi::{JS_GetTwoByteStringCharsAndLength, NewArrayObject1};
 use jsval::{BooleanValue, Int32Value, NullValue, UInt32Value, UndefinedValue};
-use jsval::{JSVal, ObjectOrNullValue, ObjectValue, StringValue};
+use jsval::{JSVal, ObjectOrNullValue, ObjectValue, StringValue, SymbolValue};
 use libc;
 use num_traits::{Bounded, Zero};
 use rust::maybe_wrap_value;
@@ -750,5 +752,29 @@ impl FromJSValConvertible for *mut JSObject {
         AssertSameCompartment(cx, value.to_object());
 
         Ok(ConversionResult::Success(value.to_object()))
+    }
+}
+
+impl ToJSValConvertible for *mut JS::Symbol {
+    #[inline]
+    unsafe fn to_jsval(&self, _: *mut JSContext, mut rval: MutableHandleValue) {
+        rval.set(SymbolValue(&**self));
+    }
+}
+
+impl FromJSValConvertible for *mut JS::Symbol {
+    type Config = ();
+    #[inline]
+    unsafe fn from_jsval(
+        cx: *mut JSContext,
+        value: HandleValue,
+        _option: (),
+    ) -> Result<ConversionResult<*mut JS::Symbol>, ()> {
+        if !value.is_symbol() {
+            throw_type_error(cx, "value is not a symbol");
+            return Err(());
+        }
+
+        Ok(ConversionResult::Success(value.to_symbol()))
     }
 }
