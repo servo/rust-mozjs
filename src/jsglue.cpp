@@ -1244,12 +1244,12 @@ DeleteReadableStreamUnderlyingSource(JS::ReadableStreamUnderlyingSource* source)
 }
 
 JSExternalStringCallbacks*
-CreateRustJSExternalStringCallbacks(const JSExternalStringCallbacksTraps* aTraps, void* privateData)
+CreateJSExternalStringCallbacks(const JSExternalStringCallbacksTraps* aTraps, void* privateData)
 {
   return new RustJSExternalStringCallbacks(*aTraps, privateData);
 }
 
-void DeleteRustJSExternalStringCallbacks(JSExternalStringCallbacks* callbacks)
+void DeleteJSExternalStringCallbacks(JSExternalStringCallbacks* callbacks)
 {
   delete static_cast<RustJSExternalStringCallbacks*>(callbacks);
 }
