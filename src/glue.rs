@@ -79,10 +79,10 @@ pub struct ReadableStreamUnderlyingSourceTraps {
 #[derive(Copy, Clone, Default)]
 pub struct JSExternalStringCallbacksTraps {
     pub finalize: ::std::option::Option<
-        unsafe extern "C" fn(*const c_void, *mut ::libc::wchar_t)
+        unsafe extern "C" fn(*const c_void, *mut u16)
     >,
     pub sizeOfBuffer: ::std::option::Option<
-        unsafe extern "C" fn(*const c_void, *const ::libc::wchar_t, MallocSizeOf) -> ::libc::size_t
+        unsafe extern "C" fn(*const c_void, *const u16, MallocSizeOf) -> ::libc::size_t
     >,
 }
 
